@@ -1,0 +1,696 @@
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+
+const API = (path, options = {}) => fetch(`http://localhost:8080${path}`, {
+  ...options,
+  credentials: 'include',
+  headers: {
+    'Content-Type': 'application/json',
+    ...options.headers
+  }
+}).then(r => r.json());
+
+export default function Benefits() {
+  const [activeTab, setActiveTab] = useState("enrollment");
+  const [employees, setEmployees] = useState([]);
+  const [benefits, setBenefits] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
+  const [insurancePlans, setInsurancePlans] = useState([]);
+  const [retirementPlans, setRetirementPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddBenefit, setShowAddBenefit] = useState(false);
+  const [showEnrollEmployee, setShowEnrollEmployee] = useState(false);
+
+  const tabs = [
+    { id: "enrollment", name: "Benefits Enrollment", icon: "📋" },
+    { id: "insurance", name: "Insurance Plans", icon: "🏥" },
+    { id: "retirement", name: "Retirement Plans", icon: "💰" },
+    { id: "analytics", name: "Benefits Analytics", icon: "📊" }
+  ];
+
+  useEffect(() => {
+    loadBenefitsData();
+  }, []);
+
+  const loadBenefitsData = async () => {
+    try {
+      // Mock data for now - in production this would come from API
+      const mockEmployees = [
+        {
+          id: 1,
+          name: "Sarah Johnson",
+          department: "Engineering",
+          benefits_enrolled: ["Health", "Dental", "Vision", "401k"],
+          enrollment_date: "2024-01-15",
+          dependents: 2
+        },
+        {
+          id: 2,
+          name: "Michael Chen",
+          department: "Human Resources",
+          benefits_enrolled: ["Health", "Dental", "401k"],
+          enrollment_date: "2024-06-01",
+          dependents: 1
+        }
+      ];
+
+      const mockBenefits = [
+        {
+          id: 1,
+          name: "Health Insurance",
+          type: "Medical",
+          provider: "Blue Cross Blue Shield",
+          employee_cost: 150,
+          employer_cost: 450,
+          coverage: "Family",
+          status: "Active"
+        },
+        {
+          id: 2,
+          name: "Dental Insurance",
+          type: "Dental",
+          provider: "Delta Dental",
+          employee_cost: 25,
+          employer_cost: 75,
+          coverage: "Individual",
+          status: "Active"
+        },
+        {
+          id: 3,
+          name: "Vision Insurance",
+          type: "Vision",
+          provider: "VSP",
+          employee_cost: 15,
+          employer_cost: 35,
+          coverage: "Family",
+          status: "Active"
+        }
+      ];
+
+      const mockEnrollments = [
+        {
+          id: 1,
+          employee_id: 1,
+          employee_name: "Sarah Johnson",
+          benefit_name: "Health Insurance",
+          enrollment_date: "2024-01-15",
+          coverage_level: "Family",
+          dependents: 2,
+          status: "Active",
+          effective_date: "2024-02-01"
+        },
+        {
+          id: 2,
+          employee_id: 1,
+          employee_name: "Sarah Johnson",
+          benefit_name: "401k Retirement",
+          enrollment_date: "2024-01-15",
+          contribution_percentage: 6,
+          employer_match: 3,
+          status: "Active",
+          effective_date: "2024-02-01"
+        }
+      ];
+
+      const mockInsurancePlans = [
+        {
+          id: 1,
+          name: "Health Insurance",
+          type: "Medical",
+          provider: "Blue Cross Blue Shield",
+          plan_level: "Gold",
+          deductible: 1000,
+          copay: 25,
+          coinsurance: "80/20",
+          monthly_premium: 600,
+          coverage_details: "Comprehensive health coverage including prescription drugs"
+        },
+        {
+          id: 2,
+          name: "Dental Insurance",
+          type: "Dental",
+          provider: "Delta Dental",
+          plan_level: "Silver",
+          deductible: 100,
+          copay: 15,
+          coinsurance: "90/10",
+          monthly_premium: 100,
+          coverage_details: "Basic and major dental procedures covered"
+        }
+      ];
+
+      const mockRetirementPlans = [
+        {
+          id: 1,
+          name: "401k Plan",
+          provider: "Fidelity",
+          employer_match: "3% up to 6%",
+          vesting_schedule: "3-year graded",
+          investment_options: 15,
+          current_balance: 25000,
+          contribution_limit: 19500
+        },
+        {
+          id: 2,
+          name: "Roth 401k",
+          provider: "Fidelity",
+          employer_match: "3% up to 6%",
+          vesting_schedule: "3-year graded",
+          investment_options: 15,
+          current_balance: 12000,
+          contribution_limit: 19500
+        }
+      ];
+
+      setEmployees(mockEmployees);
+      setBenefits(mockBenefits);
+      setEnrollments(mockEnrollments);
+      setInsurancePlans(mockInsurancePlans);
+      setRetirementPlans(mockRetirementPlans);
+    } catch (error) {
+      console.error("Error loading benefits data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderEnrollment = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Benefits Enrollment</h3>
+        <button
+          onClick={() => setShowEnrollEmployee(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          + Enroll Employee
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {enrollments.map((enrollment) => (
+          <motion.div
+            key={enrollment.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-6"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h4 className="text-lg font-semibold">{enrollment.employee_name}</h4>
+                <p className="text-sm text-neutral-400">{enrollment.benefit_name}</p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  enrollment.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {enrollment.status}
+                </span>
+                <div className="text-right">
+                  <div className="text-sm text-neutral-400">Effective Date</div>
+                  <div className="text-sm font-medium">{enrollment.effective_date}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-neutral-400">Enrollment Date:</span>
+                <div className="text-neutral-300">{enrollment.enrollment_date}</div>
+              </div>
+              <div>
+                <span className="font-medium text-neutral-400">Coverage Level:</span>
+                <div className="text-neutral-300">{enrollment.coverage_level}</div>
+              </div>
+              {enrollment.dependents && (
+                <div>
+                  <span className="font-medium text-neutral-400">Dependents:</span>
+                  <div className="text-neutral-300">{enrollment.dependents}</div>
+                </div>
+              )}
+              {enrollment.contribution_percentage && (
+                <div>
+                  <span className="font-medium text-neutral-400">Contribution:</span>
+                  <div className="text-neutral-300">{enrollment.contribution_percentage}%</div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-neutral-700">
+              <div className="flex justify-end space-x-2">
+                <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  Edit Enrollment
+                </button>
+                <button className="text-red-400 hover:text-red-300 transition-colors">
+                  Terminate
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderInsurance = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Insurance Plans</h3>
+        <button
+          onClick={() => setShowAddBenefit(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          + Add Plan
+        </button>
+      </div>
+
+      <div className="grid gap-4">
+        {insurancePlans.map((plan) => (
+          <motion.div
+            key={plan.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-6"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h4 className="text-lg font-semibold">{plan.name}</h4>
+                <p className="text-sm text-neutral-400">{plan.provider} - {plan.plan_level}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-green-400">${plan.monthly_premium}</div>
+                <div className="text-xs text-neutral-400">Monthly Premium</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              <div>
+                <span className="font-medium text-neutral-400">Deductible:</span>
+                <div className="text-neutral-300">${plan.deductible}</div>
+              </div>
+              <div>
+                <span className="font-medium text-neutral-400">Copay:</span>
+                <div className="text-neutral-300">${plan.copay}</div>
+              </div>
+              <div>
+                <span className="font-medium text-neutral-400">Coinsurance:</span>
+                <div className="text-neutral-300">{plan.coinsurance}</div>
+              </div>
+              <div>
+                <span className="font-medium text-neutral-400">Type:</span>
+                <div className="text-neutral-300">{plan.type}</div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <span className="font-medium text-neutral-400">Coverage Details:</span>
+              <p className="text-sm text-neutral-300 mt-1">{plan.coverage_details}</p>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                Edit Plan
+              </button>
+              <button className="text-green-400 hover:text-green-300 transition-colors">
+                View Details
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderRetirement = () => (
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold">Retirement Plans</h3>
+      
+      <div className="grid gap-4">
+        {retirementPlans.map((plan) => (
+          <motion.div
+            key={plan.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="card p-6"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h4 className="text-lg font-semibold">{plan.name}</h4>
+                <p className="text-sm text-neutral-400">{plan.provider}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-blue-400">${plan.current_balance.toLocaleString()}</div>
+                <div className="text-xs text-neutral-400">Current Balance</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+              <div>
+                <span className="font-medium text-neutral-400">Employer Match:</span>
+                <div className="text-neutral-300">{plan.employer_match}</div>
+              </div>
+              <div>
+                <span className="font-medium text-neutral-400">Vesting Schedule:</span>
+                <div className="text-neutral-300">{plan.vesting_schedule}</div>
+              </div>
+              <div>
+                <span className="font-medium text-neutral-400">Investment Options:</span>
+                <div className="text-neutral-300">{plan.investment_options}</div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <span className="font-medium text-neutral-400">Annual Contribution Limit:</span>
+              <div className="text-neutral-300">${plan.contribution_limit.toLocaleString()}</div>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                Manage Plan
+              </button>
+              <button className="text-green-400 hover:text-green-300 transition-colors">
+                View Investments
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderAnalytics = () => (
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold">Benefits Analytics</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card p-4 text-center">
+          <div className="text-2xl font-bold text-green-400">95%</div>
+          <div className="text-sm text-neutral-400">Enrollment Rate</div>
+        </div>
+        <div className="card p-4 text-center">
+          <div className="text-2xl font-bold text-blue-400">$2.4M</div>
+          <div className="text-sm text-neutral-400">Total Benefits Cost</div>
+        </div>
+        <div className="card p-4 text-center">
+          <div className="text-2xl font-bold text-purple-400">$1.8M</div>
+          <div className="text-sm text-neutral-400">Employer Contribution</div>
+        </div>
+        <div className="card p-4 text-center">
+          <div className="text-2xl font-bold text-indigo-400">$600K</div>
+          <div className="text-sm text-neutral-400">Employee Contribution</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="card p-6">
+          <h4 className="text-lg font-semibold mb-4">Benefits Cost by Category</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Health Insurance</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-24 bg-neutral-700 rounded-full h-2">
+                  <div className="bg-green-400 h-2 rounded-full" style={{ width: '60%' }}></div>
+                </div>
+                <span className="text-sm text-neutral-400">60%</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Retirement Plans</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-24 bg-neutral-700 rounded-full h-2">
+                  <div className="bg-blue-400 h-2 rounded-full" style={{ width: '25%' }}></div>
+                </div>
+                <span className="text-sm text-neutral-400">25%</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Other Benefits</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-24 bg-neutral-700 rounded-full h-2">
+                  <div className="bg-purple-400 h-2 rounded-full" style={{ width: '15%' }}></div>
+                </div>
+                <span className="text-sm text-neutral-400">15%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card p-6">
+          <h4 className="text-lg font-semibold mb-4">Enrollment Trends</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Q1 2024</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-24 bg-neutral-700 rounded-full h-2">
+                  <div className="bg-indigo-400 h-2 rounded-full" style={{ width: '92%' }}></div>
+                </div>
+                <span className="text-sm text-neutral-400">92%</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Q2 2024</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-24 bg-neutral-700 rounded-full h-2">
+                  <div className="bg-green-400 h-2 rounded-full" style={{ width: '95%' }}></div>
+                </div>
+                <span className="text-sm text-neutral-400">95%</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Q3 2024</span>
+              <div className="flex items-center space-x-2">
+                <div className="w-24 bg-neutral-700 rounded-full h-2">
+                  <div className="bg-blue-400 h-2 rounded-full" style={{ width: '93%' }}></div>
+                </div>
+                <span className="text-sm text-neutral-400">93%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading benefits data...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">Benefits Administration</h1>
+        <p className="text-neutral-400 mt-1">Manage employee benefits, insurance, and retirement plans</p>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex flex-wrap gap-1 mb-6 bg-neutral-800 p-1 rounded-lg">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === tab.id
+                ? "bg-indigo-600 text-white"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-700"
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span className="hidden sm:inline">{tab.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Tab Content */}
+      <div className="space-y-6">
+        {activeTab === "enrollment" && renderEnrollment()}
+        {activeTab === "insurance" && renderInsurance()}
+        {activeTab === "retirement" && renderRetirement()}
+        {activeTab === "analytics" && renderAnalytics()}
+      </div>
+
+      {/* Add Benefit Modal */}
+      {showAddBenefit && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Add Insurance Plan</h3>
+              <form className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Plan Name</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="e.g., Health Insurance"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Provider</label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="e.g., Blue Cross Blue Shield"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Type</label>
+                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                      <option value="Medical">Medical</option>
+                      <option value="Dental">Dental</option>
+                      <option value="Vision">Vision</option>
+                      <option value="Life">Life</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Plan Level</label>
+                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                      <option value="Bronze">Bronze</option>
+                      <option value="Silver">Silver</option>
+                      <option value="Gold">Gold</option>
+                      <option value="Platinum">Platinum</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Deductible</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="1000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Copay</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="25"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Monthly Premium</label>
+                    <input
+                      type="number"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="600"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Coverage Details</label>
+                  <textarea
+                    rows={3}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Describe the coverage details..."
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddBenefit(false)}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Add Plan
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Enroll Employee Modal */}
+      {showEnrollEmployee && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Enroll Employee in Benefits</h3>
+              <form className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Employee</label>
+                  <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <option>Select Employee</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>{emp.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Benefit Plan</label>
+                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                      <option>Select Benefit</option>
+                      {benefits.map(benefit => (
+                        <option key={benefit.id} value={benefit.id}>{benefit.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Coverage Level</label>
+                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                      <option value="Individual">Individual</option>
+                      <option value="Employee + Spouse">Employee + Spouse</option>
+                      <option value="Employee + Children">Employee + Children</option>
+                      <option value="Family">Family</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Enrollment Date</label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Effective Date</label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowEnrollEmployee(false)}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Enroll Employee
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}

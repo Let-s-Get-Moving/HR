@@ -1,0 +1,392 @@
+import express from "express";
+import { z } from "zod";
+import { q } from "../db.js";
+
+const r = express.Router();
+
+// Get all payroll periods
+r.get("/periods", async (req, res) => {
+  try {
+    const { rows } = await q(
+      `SELECT * FROM payroll_periods ORDER BY start_date DESC`
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching payroll periods:", error);
+    res.status(500).json({ error: "Failed to fetch payroll periods" });
+  }
+});
+
+// Get payroll calculations (handles both general and specific period)
+r.get("/calculations", async (req, res) => {
+  const { periodId } = req.query;
+  
+  try {
+    let query = `
+      SELECT 
+        pc.*,
+        e.first_name, 
+        e.last_name, 
+        e.hourly_rate,
+        d.name as department,
+        pp.period_name,
+        pp.start_date as period_start,
+        pp.end_date as period_end
+      FROM payroll_calculations pc
+      JOIN employees e ON pc.employee_id = e.id
+      LEFT JOIN departments d ON e.department_id = d.id
+      LEFT JOIN payroll_periods pp ON pc.period_id = pp.id
+    `;
+    
+    const params = [];
+    
+    if (periodId) {
+      query += ` WHERE pc.period_id = $1`;
+      params.push(periodId);
+    }
+    
+    query += ` ORDER BY pp.start_date DESC, e.last_name, e.first_name`;
+    
+    const { rows } = await q(query, params);
+    
+    // Ensure numeric fields are properly converted
+    const processedRows = rows.map(row => ({
+      ...row,
+      base_hours: parseFloat(row.base_hours) || 0,
+      overtime_hours: parseFloat(row.overtime_hours) || 0,
+      regular_rate: parseFloat(row.regular_rate) || 0,
+      commission_amount: parseFloat(row.commission_amount) || 0,
+      bonus_amount: parseFloat(row.bonus_amount) || 0,
+      deductions: parseFloat(row.deductions) || 0,
+      regular_pay: parseFloat(row.regular_pay) || 0,
+      overtime_pay: parseFloat(row.overtime_pay) || 0,
+      total_pay: parseFloat(row.total_pay) || 0,
+      net_pay: parseFloat(row.net_pay) || 0
+    }));
+    
+    res.json(processedRows);
+  } catch (error) {
+    console.error("Error fetching payroll calculations:", error);
+    res.status(500).json({ error: "Failed to fetch payroll calculations" });
+  }
+});
+
+// Create new payroll period
+r.post("/periods", async (req, res) => {
+  const schema = z.object({
+    period_name: z.string(),
+    start_date: z.string(),
+    end_date: z.string(),
+    pay_date: z.string(),
+    status: z.enum(["Open", "Processing", "Closed"]).default("Open")
+  });
+
+  try {
+    const data = schema.parse(req.body);
+    const { rows } = await q(
+      `INSERT INTO payroll_periods (period_name, start_date, end_date, pay_date, status)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [data.period_name, data.start_date, data.end_date, data.pay_date, data.status]
+    );
+    res.status(201).json(rows[0]);
+  } catch (error) {
+    console.error("Error creating payroll period:", error);
+    res.status(500).json({ error: "Failed to create payroll period" });
+  }
+});
+
+// Calculate payroll for a period
+r.post("/calculate/:periodId", async (req, res) => {
+  const { periodId } = req.params;
+  
+  try {
+    // Get period details
+    const periodResult = await q(
+      `SELECT * FROM payroll_periods WHERE id = $1`,
+      [periodId]
+    );
+    
+    if (periodResult.rows.length === 0) {
+      return res.status(404).json({ error: "Payroll period not found" });
+    }
+    
+    const period = periodResult.rows[0];
+    
+    // Get all active employees
+    const employeesResult = await q(
+      `SELECT e.*, d.name as department
+       FROM employees e
+       LEFT JOIN departments d ON e.department_id = d.id
+       WHERE e.status = 'Active'`
+    );
+    
+    // Calculate payroll for each employee
+    for (const employee of employeesResult.rows) {
+      // Get time entries for the period
+      const timeEntriesResult = await q(
+        `SELECT 
+           COALESCE(SUM(hours_worked), 0) as total_hours,
+           COALESCE(SUM(overtime_hours), 0) as total_overtime
+         FROM time_entries 
+         WHERE employee_id = $1 
+         AND work_date BETWEEN $2 AND $3`,
+        [employee.id, period.start_date, period.end_date]
+      );
+      
+      const timeData = timeEntriesResult.rows[0];
+      const baseHours = Math.min(timeData.total_hours, 40); // Regular hours capped at 40
+      const overtimeHours = Math.max(0, timeData.total_hours - 40) + timeData.total_overtime;
+      const hourlyRate = employee.hourly_rate || 0;
+      
+      // Calculate commission (simplified)
+      const commissionAmount = 0; // TODO: Implement commission calculation
+      
+      // Calculate bonus (simplified)
+      const bonusAmount = 0; // TODO: Implement bonus calculation
+      
+      // Calculate deductions (simplified)
+      const deductions = 0; // TODO: Implement deductions
+      
+      // Insert or update payroll calculation
+      await q(
+        `INSERT INTO payroll_calculations 
+         (employee_id, period_id, base_hours, overtime_hours, regular_rate, 
+          commission_amount, bonus_amount, deductions)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (employee_id, period_id) 
+         DO UPDATE SET 
+           base_hours = EXCLUDED.base_hours,
+           overtime_hours = EXCLUDED.overtime_hours,
+           regular_rate = EXCLUDED.regular_rate,
+           commission_amount = EXCLUDED.commission_amount,
+           bonus_amount = EXCLUDED.bonus_amount,
+           deductions = EXCLUDED.deductions,
+           calculated_at = CURRENT_TIMESTAMP`,
+        [employee.id, periodId, baseHours, overtimeHours, hourlyRate, 
+         commissionAmount, bonusAmount, deductions]
+      );
+    }
+    
+    res.json({ message: "Payroll calculated successfully" });
+  } catch (error) {
+    console.error("Error calculating payroll:", error);
+    res.status(500).json({ error: "Failed to calculate payroll" });
+  }
+});
+
+// Import timesheet CSV
+r.post("/import-timesheet", async (req, res) => {
+  try {
+    // This is a simplified implementation
+    // In a real application, you would parse the CSV file
+    // and insert the data into time_entries table
+    
+    const { period_id } = req.body;
+    
+    // Create import record
+    const { rows } = await q(
+      `INSERT INTO timesheet_imports (file_name, period_id, total_records, successful_imports, import_status)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      ["timesheet.csv", period_id, 0, 0, "Completed"]
+    );
+    
+    res.json({
+      message: "Timesheet import completed",
+      import_id: rows[0].id,
+      successful_imports: 0,
+      failed_imports: 0
+    });
+  } catch (error) {
+    console.error("Error importing timesheet:", error);
+    res.status(500).json({ error: "Failed to import timesheet" });
+  }
+});
+
+// Export payroll reports
+r.post("/export/:periodId", async (req, res) => {
+  const { periodId } = req.params;
+  const { export_type } = req.body;
+  
+  try {
+    let query = "";
+    let filename = "";
+    
+    switch (export_type) {
+      case "Summary":
+        query = `
+          SELECT 
+            pp.period_name,
+            COUNT(pc.id) as total_employees,
+            SUM(pc.total_gross) as total_gross_pay,
+            SUM(pc.commission_amount) as total_commissions,
+            SUM(pc.bonus_amount) as total_bonuses,
+            SUM(pc.deductions) as total_deductions,
+            SUM(pc.net_pay) as total_net_pay
+          FROM payroll_periods pp
+          LEFT JOIN payroll_calculations pc ON pp.id = pc.period_id
+          WHERE pp.id = $1
+          GROUP BY pp.id, pp.period_name
+        `;
+        filename = `payroll_summary_${periodId}.csv`;
+        break;
+        
+      case "Detailed":
+        query = `
+          SELECT 
+            e.first_name,
+            e.last_name,
+            d.name as department,
+            pc.base_hours,
+            pc.overtime_hours,
+            pc.regular_pay,
+            pc.overtime_pay,
+            pc.commission_amount,
+            pc.bonus_amount,
+            pc.total_gross,
+            pc.deductions,
+            pc.net_pay
+          FROM payroll_calculations pc
+          JOIN employees e ON pc.employee_id = e.id
+          LEFT JOIN departments d ON e.department_id = d.id
+          WHERE pc.period_id = $1
+          ORDER BY e.last_name, e.first_name
+        `;
+        filename = `payroll_detailed_${periodId}.csv`;
+        break;
+        
+      case "Bank_Transfer":
+        query = `
+          SELECT 
+            e.first_name,
+            e.last_name,
+            pc.net_pay,
+            'Direct Deposit' as payment_method
+          FROM payroll_calculations pc
+          JOIN employees e ON pc.employee_id = e.id
+          WHERE pc.period_id = $1
+          ORDER BY e.last_name, e.first_name
+        `;
+        filename = `bank_transfer_${periodId}.csv`;
+        break;
+        
+      case "Tax_Report":
+        query = `
+          SELECT 
+            e.first_name,
+            e.last_name,
+            pc.total_gross,
+            pc.deductions,
+            pc.net_pay,
+            pp.start_date,
+            pp.end_date
+          FROM payroll_calculations pc
+          JOIN employees e ON pc.employee_id = e.id
+          JOIN payroll_periods pp ON pc.period_id = pp.id
+          WHERE pc.period_id = $1
+          ORDER BY e.last_name, e.first_name
+        `;
+        filename = `tax_report_${periodId}.csv`;
+        break;
+        
+      default:
+        return res.status(400).json({ error: "Invalid export type" });
+    }
+    
+    const { rows } = await q(query, [periodId]);
+    
+    // Convert to CSV format
+    const csvData = rows.length > 0 ? 
+      Object.keys(rows[0]).join(',') + '\n' +
+      rows.map(row => Object.values(row).join(',')).join('\n') :
+      'No data available';
+    
+    // Create export record
+    await q(
+      `INSERT INTO payroll_exports (period_id, export_type, file_name, exported_by)
+       VALUES ($1, $2, $3, $4)`,
+      [periodId, export_type, filename, 'system']
+    );
+    
+    res.json({
+      message: "Export completed successfully",
+      filename,
+      data: csvData,
+      record_count: rows.length
+    });
+  } catch (error) {
+    console.error("Error exporting payroll:", error);
+    res.status(500).json({ error: "Failed to export payroll" });
+  }
+});
+
+// Get commission structures
+r.get("/commission-structures", async (req, res) => {
+  try {
+    const { rows } = await q(
+      `SELECT cs.*, d.name as department_name
+       FROM commission_structures cs
+       JOIN departments d ON cs.department_id = d.id
+       WHERE cs.is_active = true
+       ORDER BY d.name, cs.structure_name`
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching commission structures:", error);
+    res.status(500).json({ error: "Failed to fetch commission structures" });
+  }
+});
+
+// Get bonus structures
+r.get("/bonus-structures", async (req, res) => {
+  try {
+    const { rows } = await q(
+      `SELECT bs.*, d.name as department_name
+       FROM bonus_structures bs
+       JOIN departments d ON bs.department_id = d.id
+       WHERE bs.is_active = true
+       ORDER BY d.name, bs.bonus_name`
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching bonus structures:", error);
+    res.status(500).json({ error: "Failed to fetch bonus structures" });
+  }
+});
+
+// Get performance metrics
+r.get("/performance-metrics", async (req, res) => {
+  const { employee_id, period_id } = req.query;
+  
+  try {
+    let query = `
+      SELECT pm.*, e.first_name, e.last_name, d.name as department
+      FROM performance_metrics pm
+      JOIN employees e ON pm.employee_id = e.id
+      LEFT JOIN departments d ON e.department_id = d.id
+      WHERE 1=1
+    `;
+    const params = [];
+    
+    if (employee_id) {
+      query += ` AND pm.employee_id = $${params.length + 1}`;
+      params.push(employee_id);
+    }
+    
+    if (period_id) {
+      query += ` AND pm.period_id = $${params.length + 1}`;
+      params.push(period_id);
+    }
+    
+    query += ` ORDER BY pm.recorded_date DESC`;
+    
+    const { rows } = await q(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching performance metrics:", error);
+    res.status(500).json({ error: "Failed to fetch performance metrics" });
+  }
+});
+
+export default r;
