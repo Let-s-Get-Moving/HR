@@ -71,6 +71,53 @@ r.get("/calculations", async (req, res) => {
   }
 });
 
+// Get payroll calculations for specific period (by period ID in URL)
+r.get("/calculations/:periodId", async (req, res) => {
+  const { periodId } = req.params;
+  
+  try {
+    const query = `
+      SELECT 
+        pc.*,
+        e.first_name, 
+        e.last_name, 
+        e.hourly_rate,
+        d.name as department,
+        pp.period_name,
+        pp.start_date as period_start,
+        pp.end_date as period_end
+      FROM payroll_calculations pc
+      JOIN employees e ON pc.employee_id = e.id
+      LEFT JOIN departments d ON e.department_id = d.id
+      LEFT JOIN payroll_periods pp ON pc.period_id = pp.id
+      WHERE pc.period_id = $1
+      ORDER BY e.last_name, e.first_name
+    `;
+    
+    const { rows } = await q(query, [periodId]);
+    
+    // Ensure numeric fields are properly converted
+    const processedRows = rows.map(row => ({
+      ...row,
+      base_hours: parseFloat(row.base_hours) || 0,
+      overtime_hours: parseFloat(row.overtime_hours) || 0,
+      regular_rate: parseFloat(row.regular_rate) || 0,
+      commission_amount: parseFloat(row.commission_amount) || 0,
+      bonus_amount: parseFloat(row.bonus_amount) || 0,
+      deductions: parseFloat(row.deductions) || 0,
+      regular_pay: parseFloat(row.regular_pay) || 0,
+      overtime_pay: parseFloat(row.overtime_pay) || 0,
+      total_pay: parseFloat(row.total_pay) || 0,
+      net_pay: parseFloat(row.net_pay) || 0
+    }));
+    
+    res.json(processedRows);
+  } catch (error) {
+    console.error("Error fetching payroll calculations for period:", error);
+    res.status(500).json({ error: "Failed to fetch payroll calculations for period" });
+  }
+});
+
 // Create new payroll period
 r.post("/periods", async (req, res) => {
   const schema = z.object({

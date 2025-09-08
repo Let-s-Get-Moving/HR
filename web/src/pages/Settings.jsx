@@ -370,7 +370,7 @@ export default function Settings() {
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "bg-primary text-white"
-                : "text-secondary hover:text-white hover:bg-neutral-700"
+                : "text-secondary hover:text-white hover:bg-tertiary"
             }`}
           >
             <span>{tab.icon}</span>

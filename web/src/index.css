@@ -79,11 +79,11 @@
   --bg-hover: #334155;
   --bg-active: #475569;
   
-  /* Text Colors */
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
-  --text-muted: #64748b;
+  /* Text Colors - High Contrast */
+  --text-primary: #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-tertiary: #cbd5e1;
+  --text-muted: #94a3b8;
   --text-inverse: #0f172a;
   
   /* Border Colors */
