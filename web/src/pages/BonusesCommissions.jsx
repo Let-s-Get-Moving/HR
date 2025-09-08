@@ -404,7 +404,7 @@ export default function BonusesCommissions() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      structure.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      structure.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-secondary/10 text-secondary'
                     }`}>
                       {structure.status}
                     </span>
@@ -467,7 +467,7 @@ export default function BonusesCommissions() {
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      structure.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      structure.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-secondary/10 text-secondary'
                     }`}>
                       {structure.status}
                     </span>

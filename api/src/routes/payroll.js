@@ -125,7 +125,14 @@ r.get("/calculations/:periodId", async (req, res) => {
     res.json(processedRows);
   } catch (error) {
     console.error("Error fetching payroll calculations for period:", error);
-    res.status(500).json({ error: "Failed to fetch payroll calculations for period" });
+    // Check if it's a database connection issue
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+      res.status(500).json({ error: "Database connection failed" });
+    } else if (error.code === '42P01') {
+      res.status(500).json({ error: "Database table not found" });
+    } else {
+      res.status(500).json({ error: "Failed to fetch payroll calculations for period" });
+    }
   }
 });
 

@@ -181,15 +181,15 @@ export default function App() {
                   <span className="text-white font-bold text-lg">HR</span>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900 dark:text-white">HR Management System</h1>
-                  <p className="text-xs text-slate-600 dark:text-neutral-400">Professional HR Solutions</p>
+                  <h1 className="text-xl font-bold text-primary">HR Management System</h1>
+                  <p className="text-xs text-secondary">Professional HR Solutions</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block text-sm">
-                <div className="text-slate-900 dark:text-neutral-300 font-medium">Welcome, {user.username}</div>
-                <div className="text-xs text-slate-600 dark:text-neutral-400">Last login: {new Date().toLocaleDateString()}</div>
+                <div className="text-primary font-medium">Welcome, {user.username}</div>
+                <div className="text-xs text-secondary">Last login: {new Date().toLocaleDateString()}</div>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -212,7 +212,7 @@ export default function App() {
         }`}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-6 lg:hidden">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Navigation</h2>
+              <h2 className="text-lg font-semibold text-primary">Navigation</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="p-2 rounded-lg hover:bg-hover transition-colors"

@@ -1,7 +1,7 @@
 import express from "express";
 import { z } from "zod";
 import { q } from "../db.js";
-import { requireAuth } from "../session.js";
+import { requireAuth, optionalAuth } from "../session.js";
 
 const r = express.Router();
 
@@ -67,7 +67,7 @@ r.put("/system/:key", requireAuth, async (req, res) => {
 });
 
 // Get user preferences
-r.get("/preferences", requireAuth, async (req, res) => {
+r.get("/preferences", optionalAuth, async (req, res) => {
   try {
     const { rows } = await q(`
       SELECT 
@@ -119,7 +119,7 @@ r.put("/preferences/:key", requireAuth, async (req, res) => {
 });
 
 // Get notification settings
-r.get("/notifications", requireAuth, async (req, res) => {
+r.get("/notifications", optionalAuth, async (req, res) => {
   try {
     const { rows } = await q(`
       SELECT 
@@ -166,7 +166,7 @@ r.put("/notifications/:key", requireAuth, async (req, res) => {
 });
 
 // Get security settings
-r.get("/security", requireAuth, async (req, res) => {
+r.get("/security", optionalAuth, async (req, res) => {
   try {
     const { rows } = await q(`
       SELECT 
@@ -209,7 +209,7 @@ r.put("/security/:key", requireAuth, async (req, res) => {
 });
 
 // Get backup and maintenance settings
-r.get("/maintenance", requireAuth, async (req, res) => {
+r.get("/maintenance", optionalAuth, async (req, res) => {
   try {
     const { rows } = await q(`
       SELECT 
