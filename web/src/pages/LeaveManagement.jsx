@@ -92,7 +92,7 @@ export default function LeaveManagement() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="container mx-auto p-6 space-y-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -125,31 +125,29 @@ export default function LeaveManagement() {
       {/* Leave Requests Tab */}
       {activeTab === "requests" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* New Request Form */}
             <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">New Leave Request</h3>
-              <form onSubmit={handleSubmitRequest} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
+              <form onSubmit={handleSubmitRequest} className="space-y-6">
+                <div className="form-group">
+                  <label>
                     Employee ID
                   </label>
                   <input
                     type="number"
                     value={newRequest.employee_id}
                     onChange={(e) => setNewRequest({...newRequest, employee_id: e.target.value})}
-                    className="w-full px-3 py-2 rounded-md"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
+                <div className="form-group">
+                  <label>
                     Leave Type
                   </label>
                   <select
                     value={newRequest.leave_type_id}
                     onChange={(e) => setNewRequest({...newRequest, leave_type_id: e.target.value})}
-                    className="w-full px-3 py-2 rounded-md"
                     required
                   >
                     <option value="">Select leave type</option>
@@ -158,46 +156,43 @@ export default function LeaveManagement() {
                     <option value="3">Personal Leave</option>
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="form-group">
+                    <label>
                       Start Date
                     </label>
                     <input
                       type="date"
                       value={newRequest.start_date}
                       onChange={(e) => setNewRequest({...newRequest, start_date: e.target.value})}
-                      className="w-full px-3 py-2 rounded-md"
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
+                  <div className="form-group">
+                    <label>
                       End Date
                     </label>
                     <input
                       type="date"
                       value={newRequest.end_date}
                       onChange={(e) => setNewRequest({...newRequest, end_date: e.target.value})}
-                      className="w-full px-3 py-2 rounded-md"
                       required
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
+                <div className="form-group">
+                  <label>
                     Reason
                   </label>
                   <textarea
                     value={newRequest.reason}
                     onChange={(e) => setNewRequest({...newRequest, reason: e.target.value})}
-                    className="w-full px-3 py-2 rounded-md"
                     rows="3"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full btn-primary"
+                  className="w-full btn-primary btn-lg"
                 >
                   Submit Request
                 </button>
@@ -233,16 +228,16 @@ export default function LeaveManagement() {
                         <p className="text-sm text-secondary mb-3">{request.reason}</p>
                       )}
                       {request.status === 'Pending' && (
-                        <div className="flex space-x-2">
+                        <div className="flex gap-3">
                           <button
                             onClick={() => handleStatusUpdate(request.id, 'Approved')}
-                            className="px-3 py-1 btn-primary text-sm"
+                            className="btn-primary btn-sm"
                           >
                             Approve
                           </button>
                           <button
                             onClick={() => handleStatusUpdate(request.id, 'Rejected')}
-                            className="px-3 py-1 btn-secondary text-sm"
+                            className="btn-secondary btn-sm"
                           >
                             Reject
                           </button>
@@ -262,7 +257,7 @@ export default function LeaveManagement() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="card p-6">
             <h3 className="text-lg font-semibold mb-4">Leave Balances</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {balances.length === 0 ? (
                 <p className="text-muted text-center py-8 col-span-full">No leave balances found</p>
               ) : (
