@@ -86,7 +86,8 @@ export class SessionManager {
 // Middleware for session authentication
 export const requireAuth = (req, res, next) => {
   const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
-                   req.cookies?.sessionId;
+                   req.cookies?.sessionId ||
+                   req.headers['x-session-id'];
   
   if (!sessionId) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -106,7 +107,8 @@ export const requireAuth = (req, res, next) => {
 // Optional auth middleware
 export const optionalAuth = (req, res, next) => {
   const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
-                   req.cookies?.sessionId;
+                   req.cookies?.sessionId ||
+                   req.headers['x-session-id'];
   
   if (sessionId) {
     const session = SessionManager.getSession(sessionId);
