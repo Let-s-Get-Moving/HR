@@ -15,8 +15,23 @@ import analytics from "./routes/analytics.js";
 import metrics from "./routes/metrics.js";
 
 const app = express();
-app.use(helmet());
-app.use(cors({ origin: true, credentials: true }));
+
+// Configure CORS before other middleware
+app.use(cors({
+  origin: [
+    'https://hr-web.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+}));
+
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: false
+}));
 app.use(cookieParser());
 app.use(express.json({ limit: "5mb" }));
 app.use(morgan("dev"));
@@ -24,6 +39,15 @@ app.use(morgan("dev"));
 // Simple test route
 app.get("/api/test", (req, res) => {
   res.json({ message: "Server is working" });
+});
+
+// CORS test route
+app.get("/api/cors-test", (req, res) => {
+  res.json({ 
+    message: "CORS is working", 
+    origin: req.headers.origin,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Test route
