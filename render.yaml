@@ -3,7 +3,7 @@ services:
     name: hr-api
     runtime: node
     plan: starter
-    buildCommand: cd api && npm install
+    buildCommand: cd api && npm install && npm run db:init
     startCommand: cd api && npm start
     envVars:
       - key: NODE_ENV
