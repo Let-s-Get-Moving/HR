@@ -26,10 +26,16 @@
   --card-border: rgba(255, 255, 255, 0.2);
 }
 
-/* Apply theme variables */
-body {
+/* Apply theme variables globally */
+html, body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Apply theme to all elements */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Subtle glass card */
@@ -37,6 +43,26 @@ body {
   @apply rounded-2xl backdrop-blur-md shadow-lg;
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Ensure all text elements use theme colors */
+h1, h2, h3, h4, h5, h6, p, span, div, label, input, select, textarea, button {
+  color: var(--text-primary);
+}
+
+/* Theme-aware input and form elements */
+input, select, textarea {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Theme-aware buttons */
+button {
+  background-color: var(--bg-tertiary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
 }
 
 /* Custom scrollbar */

@@ -23,8 +23,14 @@ export default function Settings() {
 
   useEffect(() => {
     loadSettings();
-    loadLocalSettings();
   }, []);
+
+  // Load local settings after initial settings are loaded
+  useEffect(() => {
+    if (userPreferences.length > 0) {
+      loadLocalSettings();
+    }
+  }, [userPreferences.length]);
 
   const loadLocalSettings = () => {
     // Load settings from localStorage and update state
@@ -45,17 +51,21 @@ export default function Settings() {
     applyTheme();
   };
 
-  const applyTheme = () => {
-    const theme = localStorage.getItem('preferences_theme') || 'dark';
+  const applyTheme = (themeValue = null) => {
+    const theme = themeValue || localStorage.getItem('preferences_theme') || 'dark';
     const root = document.documentElement;
+
+    // Remove all theme classes first
+    root.classList.remove('dark', 'light');
     
+    // Add the correct theme class
     if (theme === 'light') {
-      root.classList.remove('dark');
       root.classList.add('light');
     } else {
-      root.classList.remove('light');
       root.classList.add('dark');
     }
+    
+    console.log('Applied theme:', theme);
   };
 
   const applyLanguage = (language) => {
@@ -132,7 +142,7 @@ export default function Settings() {
         updateState(userPreferences, setUserPreferences);
         // Apply specific preference changes immediately
         if (key === 'theme') {
-          applyTheme();
+          applyTheme(value);
         } else if (key === 'language') {
           applyLanguage(value);
         } else if (key === 'timezone') {
