@@ -23,27 +23,27 @@ export const API = (path, options = {}) => {
   }).then(async (response) => {
     console.log('API response status:', response.status);
     
-    // If this is a login response, store the session ID
-    if (path.includes('/auth/login') && response.ok) {
-      const data = await response.json();
-      if (data.sessionId) {
-        localStorage.setItem('sessionId', data.sessionId);
-        console.log('Stored session ID:', data.sessionId);
-      }
-    }
-    
-    // If this is a logout response, clear the session ID
-    if (path.includes('/auth/logout') && response.ok) {
-      localStorage.removeItem('sessionId');
-      console.log('Cleared session ID');
-    }
-    
     if (!response.ok) {
       const error = await response.text();
       console.error('API error:', error);
       throw new Error(`HTTP ${response.status}: ${error}`);
     }
-    return response.json();
+    
+    const data = await response.json();
+    
+    // If this is a login response, store the session ID
+    if (path.includes('/auth/login') && data.sessionId) {
+      localStorage.setItem('sessionId', data.sessionId);
+      console.log('Stored session ID:', data.sessionId);
+    }
+    
+    // If this is a logout response, clear the session ID
+    if (path.includes('/auth/logout')) {
+      localStorage.removeItem('sessionId');
+      console.log('Cleared session ID');
+    }
+    
+    return data;
   }).catch(error => {
     console.error('API request failed:', error);
     throw error;
