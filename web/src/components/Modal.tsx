@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { BaseComponentProps } from '@/types';
 import Button from './Button';
+import FocusTrap from './FocusTrap';
 
 interface ModalProps extends BaseComponentProps {
   isOpen: boolean;
@@ -81,24 +82,25 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-        {/* Overlay */}
-        <div
-          className="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity"
-          onClick={handleOverlayClick}
-        />
-        
-        {/* Modal */}
-        <div
-          ref={modalRef}
-          className={`relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full ${sizeClasses[size]} ${className}`}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={title ? 'modal-title' : undefined}
-          aria-describedby={description ? 'modal-description' : undefined}
-          tabIndex={-1}
-        >
+    <FocusTrap active={isOpen}>
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity"
+            onClick={handleOverlayClick}
+          />
+          
+          {/* Modal */}
+          <div
+            ref={modalRef}
+            className={`relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full ${sizeClasses[size]} ${className}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? 'modal-title' : undefined}
+            aria-describedby={description ? 'modal-description' : undefined}
+            tabIndex={-1}
+          >
           {/* Header */}
           {(title || showCloseButton) && (
             <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
@@ -145,9 +147,10 @@ const Modal: React.FC<ModalProps> = ({
               {actions}
             </div>
           )}
+          </div>
         </div>
       </div>
-    </div>
+    </FocusTrap>
   );
 };
 

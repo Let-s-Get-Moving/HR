@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import { ValidationError } from '@/types';
+import { formAccessibility, generateId } from '@/utils/accessibility';
 
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -21,10 +22,15 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
   className = '',
   containerClassName = '',
   id,
+  name,
   ...props
 }, ref) => {
-  const inputId = id || `input-${Math.random().toString(36).substr(2, 9)}`;
+  const fieldName = name || 'input';
+  const inputId = id || formAccessibility.getFieldId(fieldName);
+  const errorId = formAccessibility.getErrorId(fieldName);
+  const helpId = formAccessibility.getHelpId(fieldName);
   const hasError = !!error;
+  const hasHelp = !!helperText;
 
   const inputClasses = `
     w-full px-3 py-2 border rounded-lg transition-colors duration-200
@@ -65,7 +71,10 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
         <input
           ref={ref}
           id={inputId}
+          name={fieldName}
           className={inputClasses}
+          aria-invalid={hasError}
+          aria-describedby={[hasError ? errorId : null, hasHelp ? helpId : null].filter(Boolean).join(' ') || undefined}
           {...props}
         />
         
@@ -79,13 +88,21 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
       </div>
       
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p 
+          id={errorId}
+          className="text-sm text-red-600 dark:text-red-400"
+          role="alert"
+          aria-live="polite"
+        >
           {error.message}
         </p>
       )}
       
       {helperText && !error && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p 
+          id={helpId}
+          className="text-sm text-slate-500 dark:text-slate-400"
+        >
           {helperText}
         </p>
       )}
