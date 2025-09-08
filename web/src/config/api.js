@@ -17,7 +17,7 @@ export const API = (path, options = {}) => {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(sessionId && { 'X-Session-ID': sessionId }),
+      ...(sessionId && { 'x-session-id': sessionId }),
       ...options.headers,
     },
     ...options,
