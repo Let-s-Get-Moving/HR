@@ -227,7 +227,7 @@ export default function BonusesCommissions() {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h4 className="text-lg font-semibold">{bonus.employee_name}</h4>
-                <p className="text-sm text-neutral-400">{bonus.bonus_type} - {bonus.period}</p>
+                <p className="text-sm text-tertiary">{bonus.bonus_type} - {bonus.period}</p>
               </div>
               <div className="flex items-center space-x-3">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -239,18 +239,18 @@ export default function BonusesCommissions() {
                 </span>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-green-400">${bonus.amount.toLocaleString()}</div>
-                  <div className="text-xs text-neutral-400">{bonus.percentage}% of base</div>
+                  <div className="text-xs text-tertiary">{bonus.percentage}% of base</div>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <span className="font-medium text-neutral-400">Criteria:</span>
+                <span className="font-medium text-tertiary">Criteria:</span>
                 <p className="text-sm text-neutral-300 mt-1">{bonus.criteria}</p>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Payment Date:</span>
+                <span className="font-medium text-tertiary">Payment Date:</span>
                 <div className="text-sm text-neutral-300">
                   {bonus.payment_date || 'Pending'}
                 </div>
@@ -258,7 +258,7 @@ export default function BonusesCommissions() {
             </div>
 
             <div className="mt-4 pt-4 border-t border-neutral-700">
-              <div className="flex justify-between items-center text-sm text-neutral-400">
+              <div className="flex justify-between items-center text-sm text-tertiary">
                 <span>Approved by: {bonus.approved_by || 'Pending'}</span>
                 <div className="flex space-x-2">
                   <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
@@ -304,7 +304,7 @@ export default function BonusesCommissions() {
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h4 className="text-lg font-semibold">{commission.employee_name}</h4>
-                <p className="text-sm text-neutral-400">{commission.commission_type} - {commission.period}</p>
+                <p className="text-sm text-tertiary">{commission.commission_type} - {commission.period}</p>
               </div>
               <div className="flex items-center space-x-3">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -314,26 +314,26 @@ export default function BonusesCommissions() {
                 </span>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-blue-400">${commission.commission_amount.toLocaleString()}</div>
-                  <div className="text-xs text-neutral-400">{commission.commission_rate}% rate</div>
+                  <div className="text-xs text-tertiary">{commission.commission_rate}% rate</div>
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
-                <span className="font-medium text-neutral-400">Base Amount:</span>
+                <span className="font-medium text-tertiary">Base Amount:</span>
                 <div className="text-sm text-neutral-300">${commission.base_amount.toLocaleString()}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Commission Rate:</span>
+                <span className="font-medium text-tertiary">Commission Rate:</span>
                 <div className="text-sm text-neutral-300">{commission.commission_rate}%</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Sales Target:</span>
+                <span className="font-medium text-tertiary">Sales Target:</span>
                 <div className="text-sm text-neutral-300">${commission.sales_target.toLocaleString()}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Achievement:</span>
+                <span className="font-medium text-tertiary">Achievement:</span>
                 <div className="text-sm text-neutral-300">{commission.target_achievement}%</div>
               </div>
             </div>
@@ -341,7 +341,7 @@ export default function BonusesCommissions() {
             <div className="mb-4">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Target Achievement</span>
-                <span className="text-sm text-neutral-400">{commission.target_achievement}%</span>
+                <span className="text-sm text-tertiary">{commission.target_achievement}%</span>
               </div>
               <div className="w-full bg-neutral-700 rounded-full h-2">
                 <div 
@@ -355,7 +355,7 @@ export default function BonusesCommissions() {
             </div>
 
             <div className="mt-4 pt-4 border-t border-neutral-700">
-              <div className="flex justify-between items-center text-sm text-neutral-400">
+              <div className="flex justify-between items-center text-sm text-tertiary">
                 <span>Payment Date: {commission.payment_date}</span>
                 <div className="flex space-x-2">
                   <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
@@ -400,7 +400,7 @@ export default function BonusesCommissions() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h5 className="text-lg font-semibold">{structure.name}</h5>
-                    <p className="text-sm text-neutral-400">{structure.department} - {structure.type}</p>
+                    <p className="text-sm text-tertiary">{structure.department} - {structure.type}</p>
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -415,16 +415,16 @@ export default function BonusesCommissions() {
                 </div>
 
                 <div className="mb-4">
-                  <span className="font-medium text-neutral-400">Calculation Method:</span>
+                  <span className="font-medium text-tertiary">Calculation Method:</span>
                   <p className="text-sm text-neutral-300 mt-1">{structure.calculation_method}</p>
                 </div>
 
                 <div className="mb-4">
-                  <span className="font-medium text-neutral-400">Bonus Tiers:</span>
+                  <span className="font-medium text-tertiary">Bonus Tiers:</span>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
                     {structure.tiers.map((tier, index) => (
                       <div key={index} className="bg-neutral-800 p-2 rounded text-sm">
-                        <div className="text-neutral-400">{tier.min_performance}-{tier.max_performance}%</div>
+                        <div className="text-tertiary">{tier.min_performance}-{tier.max_performance}%</div>
                         <div className="text-green-400 font-medium">{tier.bonus_percentage}% bonus</div>
                       </div>
                     ))}
@@ -432,7 +432,7 @@ export default function BonusesCommissions() {
                 </div>
 
                 <div className="mb-4">
-                  <span className="font-medium text-neutral-400">Eligibility Criteria:</span>
+                  <span className="font-medium text-tertiary">Eligibility Criteria:</span>
                   <p className="text-sm text-neutral-300 mt-1">{structure.eligibility_criteria}</p>
                 </div>
 
@@ -463,7 +463,7 @@ export default function BonusesCommissions() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h5 className="text-lg font-semibold">{structure.name}</h5>
-                    <p className="text-sm text-neutral-400">{structure.department}</p>
+                    <p className="text-sm text-tertiary">{structure.department}</p>
                   </div>
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -479,29 +479,29 @@ export default function BonusesCommissions() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <span className="font-medium text-neutral-400">Base Rate:</span>
+                    <span className="font-medium text-tertiary">Base Rate:</span>
                     <div className="text-sm text-neutral-300">{structure.base_rate}%</div>
                   </div>
                   <div>
-                    <span className="font-medium text-neutral-400">Acceleration Rate:</span>
+                    <span className="font-medium text-tertiary">Acceleration Rate:</span>
                     <div className="text-sm text-neutral-300">{structure.acceleration_rate}%</div>
                   </div>
                   <div>
-                    <span className="font-medium text-neutral-400">Threshold:</span>
+                    <span className="font-medium text-tertiary">Threshold:</span>
                     <div className="text-sm text-neutral-300">${structure.threshold.toLocaleString()}</div>
                   </div>
                   <div>
-                    <span className="font-medium text-neutral-400">Calculation:</span>
+                    <span className="font-medium text-tertiary">Calculation:</span>
                     <div className="text-sm text-neutral-300">{structure.calculation_method}</div>
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <span className="font-medium text-neutral-400">Commission Tiers:</span>
+                  <span className="font-medium text-tertiary">Commission Tiers:</span>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-2">
                     {structure.tiers.map((tier, index) => (
                       <div key={index} className="bg-neutral-800 p-2 rounded text-sm">
-                        <div className="text-neutral-400">${tier.min_sales.toLocaleString()}-${tier.max_sales.toLocaleString()}</div>
+                        <div className="text-tertiary">${tier.min_sales.toLocaleString()}-${tier.max_sales.toLocaleString()}</div>
                         <div className="text-blue-400 font-medium">{tier.rate}% rate</div>
                       </div>
                     ))}
@@ -531,19 +531,19 @@ export default function BonusesCommissions() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-green-400">$20.5K</div>
-          <div className="text-sm text-neutral-400">Total Bonuses Q4</div>
+          <div className="text-sm text-tertiary">Total Bonuses Q4</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-blue-400">$17.7K</div>
-          <div className="text-sm text-neutral-400">Total Commissions Q4</div>
+          <div className="text-sm text-tertiary">Total Commissions Q4</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-purple-400">$38.2K</div>
-          <div className="text-sm text-neutral-400">Total Variable Pay</div>
+          <div className="text-sm text-tertiary">Total Variable Pay</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-indigo-400">12.3%</div>
-          <div className="text-sm text-neutral-400">Avg Bonus % of Base</div>
+          <div className="text-sm text-tertiary">Avg Bonus % of Base</div>
         </div>
       </div>
 
@@ -557,7 +557,7 @@ export default function BonusesCommissions() {
                 <div className="w-24 bg-neutral-700 rounded-full h-2">
                   <div className="bg-green-400 h-2 rounded-full" style={{ width: '65%' }}></div>
                 </div>
-                <span className="text-sm text-neutral-400">$13.3K</span>
+                <span className="text-sm text-tertiary">$13.3K</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -566,7 +566,7 @@ export default function BonusesCommissions() {
                 <div className="w-24 bg-neutral-700 rounded-full h-2">
                   <div className="bg-blue-400 h-2 rounded-full" style={{ width: '35%' }}></div>
                 </div>
-                <span className="text-sm text-neutral-400">$7.2K</span>
+                <span className="text-sm text-tertiary">$7.2K</span>
               </div>
             </div>
           </div>
@@ -581,7 +581,7 @@ export default function BonusesCommissions() {
                 <div className="w-24 bg-neutral-700 rounded-full h-2">
                   <div className="bg-green-400 h-2 rounded-full" style={{ width: '119%' }}></div>
                 </div>
-                <span className="text-sm text-neutral-400">119%</span>
+                <span className="text-sm text-tertiary">119%</span>
               </div>
             </div>
             <div className="flex items-center justify-between">
@@ -590,7 +590,7 @@ export default function BonusesCommissions() {
                 <div className="w-24 bg-neutral-700 rounded-full h-2">
                   <div className="bg-blue-400 h-2 rounded-full" style={{ width: '7%' }}></div>
                 </div>
-                <span className="text-sm text-neutral-400">7.0%</span>
+                <span className="text-sm text-tertiary">7.0%</span>
               </div>
             </div>
           </div>
@@ -627,7 +627,7 @@ export default function BonusesCommissions() {
                     <td className="py-3 px-4">
                       <div>
                         <div className="font-medium">{employee.name}</div>
-                        <div className="text-sm text-neutral-400">{employee.position}</div>
+                        <div className="text-sm text-tertiary">{employee.position}</div>
                       </div>
                     </td>
                     <td className="py-3 px-4">{employee.department}</td>
@@ -675,7 +675,7 @@ export default function BonusesCommissions() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Bonuses & Commissions</h1>
-        <p className="text-neutral-400 mt-1">Manage performance-based compensation and sales commissions</p>
+        <p className="text-tertiary mt-1">Manage performance-based compensation and sales commissions</p>
       </div>
 
       {/* Tab Navigation */}
@@ -687,7 +687,7 @@ export default function BonusesCommissions() {
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "bg-indigo-600 text-white"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-700"
+                : "text-tertiary hover:text-white hover:bg-neutral-700"
             }`}
           >
             <span>{tab.icon}</span>
@@ -768,7 +768,7 @@ export default function BonusesCommissions() {
                   <button
                     type="button"
                     onClick={() => setShowAddBonus(false)}
-                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
@@ -857,7 +857,7 @@ export default function BonusesCommissions() {
                   <button
                     type="button"
                     onClick={() => setShowAddCommission(false)}
-                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
@@ -943,7 +943,7 @@ export default function BonusesCommissions() {
                   <button
                     type="button"
                     onClick={() => setShowAddStructure(false)}
-                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
                   >
                     Cancel
                   </button>

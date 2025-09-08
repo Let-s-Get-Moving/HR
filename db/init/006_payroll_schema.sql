@@ -199,6 +199,21 @@ INSERT INTO payroll_periods (period_name, start_date, end_date, pay_date, status
 ('December 2024', '2024-12-01', '2024-12-31', '2025-01-05', 'Open'),
 ('January 2025', '2025-01-01', '2025-01-31', '2025-02-05', 'Open');
 
+-- Insert sample payroll calculations for recent periods
+INSERT INTO payroll_calculations (employee_id, period_id, base_hours, overtime_hours, regular_rate, commission_amount, bonus_amount, deductions, status) VALUES
+-- January 2025 calculations (period_id 13)
+(1, 13, 160.0, 8.0, 25.00, 500.00, 200.00, 150.00, 'Calculated'),
+(2, 13, 160.0, 4.0, 22.00, 300.00, 150.00, 120.00, 'Calculated'),
+(3, 13, 160.0, 12.0, 28.00, 800.00, 300.00, 180.00, 'Calculated'),
+(4, 13, 160.0, 6.0, 24.00, 400.00, 100.00, 140.00, 'Calculated'),
+(5, 13, 160.0, 10.0, 26.00, 600.00, 250.00, 160.00, 'Calculated'),
+-- December 2024 calculations (period_id 12)
+(1, 12, 160.0, 6.0, 25.00, 450.00, 180.00, 145.00, 'Calculated'),
+(2, 12, 160.0, 8.0, 22.00, 350.00, 120.00, 115.00, 'Calculated'),
+(3, 12, 160.0, 4.0, 28.00, 700.00, 280.00, 175.00, 'Calculated'),
+(4, 12, 160.0, 12.0, 24.00, 380.00, 90.00, 135.00, 'Calculated'),
+(5, 12, 160.0, 2.0, 26.00, 550.00, 220.00, 155.00, 'Calculated');
+
 -- Create view for commission calculations
 CREATE OR REPLACE VIEW v_commission_calculations AS
 SELECT 

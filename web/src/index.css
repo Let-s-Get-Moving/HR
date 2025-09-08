@@ -72,15 +72,15 @@
   --nav-text-active: #ffffff;
 }
 
-/* Professional Dark Theme */
+/* Professional Dark Theme - Ultra Dark & Professional */
 .dark {
-  /* Background Colors */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --bg-quaternary: #475569;
-  --bg-hover: #334155;
-  --bg-active: #475569;
+  /* Background Colors - Much Darker */
+  --bg-primary: #000000;
+  --bg-secondary: #0a0a0a;
+  --bg-tertiary: #1a1a1a;
+  --bg-quaternary: #2a2a2a;
+  --bg-hover: #1a1a1a;
+  --bg-active: #2a2a2a;
   
   /* Text Colors - High Contrast */
   --text-primary: #ffffff;
@@ -95,10 +95,10 @@
   --border-focus: #60a5fa;
   --border-error: #f87171;
   
-  /* Card Colors */
-  --card-bg: #1e293b;
-  --card-border: #475569;
-  --card-shadow: rgba(0, 0, 0, 0.3);
+  /* Card Colors - Darker */
+  --card-bg: #0a0a0a;
+  --card-border: #1a1a1a;
+  --card-shadow: rgba(0, 0, 0, 0.5);
   
   /* Status Colors */
   --success-bg: #064e3b;

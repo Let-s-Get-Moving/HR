@@ -143,11 +143,17 @@ export default function Payroll() {
             }}
             className="w-full px-3 py-2 input-md"
           >
-            {payrollPeriods.map(period => (
-              <option key={period.id} value={period.id}>
-                {period.period_name} ({period.start_date} - {period.end_date})
-              </option>
-            ))}
+            {payrollPeriods.map(period => {
+              const startDate = new Date(period.start_date);
+              const endDate = new Date(period.end_date);
+              const startMonth = startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+              const endMonth = endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+              return (
+                <option key={period.id} value={period.id}>
+                  {startMonth === endMonth ? startMonth : `${startMonth} - ${endMonth}`}
+                </option>
+              );
+            })}
           </select>
         </div>
 

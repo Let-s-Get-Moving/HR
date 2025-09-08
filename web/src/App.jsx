@@ -126,12 +126,17 @@ export default function App() {
 
     // Check for existing session on app load using sessionManager
     const checkSession = async () => {
-      const sessionData = await sessionManager.checkSession(API);
-      if (sessionData && sessionData.user) {
-        setUser(sessionData.user);
-        console.log('Session valid, user logged in');
+      // Only check session if we have a session ID
+      if (sessionManager.hasSession()) {
+        const sessionData = await sessionManager.checkSession(API);
+        if (sessionData && sessionData.user) {
+          setUser(sessionData.user);
+          console.log('Session valid, user logged in');
+        } else {
+          console.log('No valid session found');
+        }
       } else {
-        console.log('No valid session found');
+        console.log('No session ID found, skipping session check');
       }
     };
 

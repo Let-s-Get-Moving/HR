@@ -183,7 +183,7 @@ export default function Recruiting() {
                     {job.status}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-neutral-400">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-tertiary">
                   <div>
                     <span className="font-medium">Department:</span> {job.department}
                   </div>
@@ -197,7 +197,7 @@ export default function Recruiting() {
                     <span className="font-medium">Salary:</span> {job.salary_range}
                   </div>
                 </div>
-                <div className="mt-3 text-sm text-neutral-400">
+                <div className="mt-3 text-sm text-tertiary">
                   <span className="font-medium">Applications:</span> {job.applications} | 
                   <span className="font-medium ml-2">Posted:</span> {job.created_at}
                 </div>
@@ -245,7 +245,7 @@ export default function Recruiting() {
                 <td className="py-3 px-4">
                   <div>
                     <div className="font-medium">{candidate.name}</div>
-                    <div className="text-sm text-neutral-400">{candidate.email}</div>
+                    <div className="text-sm text-tertiary">{candidate.email}</div>
                   </div>
                 </td>
                 <td className="py-3 px-4">{candidate.position}</td>
@@ -286,19 +286,19 @@ export default function Recruiting() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-blue-400">35</div>
-          <div className="text-sm text-neutral-400">Applications</div>
+          <div className="text-sm text-tertiary">Applications</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-yellow-400">12</div>
-          <div className="text-sm text-neutral-400">In Review</div>
+          <div className="text-sm text-tertiary">In Review</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-purple-400">8</div>
-          <div className="text-sm text-neutral-400">Interviews</div>
+          <div className="text-sm text-tertiary">Interviews</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-green-400">3</div>
-          <div className="text-sm text-neutral-400">Offers</div>
+          <div className="text-sm text-tertiary">Offers</div>
         </div>
       </div>
 
@@ -311,7 +311,7 @@ export default function Recruiting() {
               <div className="w-32 bg-neutral-700 rounded-full h-2">
                 <div className="bg-blue-400 h-2 rounded-full" style={{ width: '100%' }}></div>
               </div>
-              <span className="text-sm text-neutral-400">35</span>
+              <span className="text-sm text-tertiary">35</span>
             </div>
           </div>
           <div className="flex items-center justify-between">
@@ -320,7 +320,7 @@ export default function Recruiting() {
               <div className="w-32 bg-neutral-700 rounded-full h-2">
                 <div className="bg-yellow-400 h-2 rounded-full" style={{ width: '34%' }}></div>
               </div>
-              <span className="text-sm text-neutral-400">12</span>
+              <span className="text-sm text-tertiary">12</span>
             </div>
           </div>
           <div className="flex items-center justify-between">
@@ -329,7 +329,7 @@ export default function Recruiting() {
               <div className="w-32 bg-neutral-700 rounded-full h-2">
                 <div className="bg-purple-400 h-2 rounded-full" style={{ width: '23%' }}></div>
               </div>
-              <span className="text-sm text-neutral-400">8</span>
+              <span className="text-sm text-tertiary">8</span>
             </div>
           </div>
           <div className="flex items-center justify-between">
@@ -338,7 +338,7 @@ export default function Recruiting() {
               <div className="w-32 bg-neutral-700 rounded-full h-2">
                 <div className="bg-green-400 h-2 rounded-full" style={{ width: '9%' }}></div>
               </div>
-              <span className="text-sm text-neutral-400">3</span>
+              <span className="text-sm text-tertiary">3</span>
             </div>
           </div>
         </div>
@@ -353,19 +353,19 @@ export default function Recruiting() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card p-4">
           <div className="text-2xl font-bold">{analytics.total_postings}</div>
-          <div className="text-sm text-neutral-400">Total Job Postings</div>
+          <div className="text-sm text-tertiary">Total Job Postings</div>
         </div>
         <div className="card p-4">
           <div className="text-2xl font-bold">{analytics.open_positions}</div>
-          <div className="text-sm text-neutral-400">Open Positions</div>
+          <div className="text-sm text-tertiary">Open Positions</div>
         </div>
         <div className="card p-4">
           <div className="text-2xl font-bold">{analytics.total_applications}</div>
-          <div className="text-sm text-neutral-400">Total Applications</div>
+          <div className="text-sm text-tertiary">Total Applications</div>
         </div>
         <div className="card p-4">
           <div className="text-2xl font-bold">{analytics.avg_time_to_fill} days</div>
-          <div className="text-sm text-neutral-400">Avg Time to Fill</div>
+          <div className="text-sm text-tertiary">Avg Time to Fill</div>
         </div>
       </div>
 
@@ -380,7 +380,7 @@ export default function Recruiting() {
                   <div className="w-24 bg-neutral-700 rounded-full h-2">
                     <div className="bg-indigo-400 h-2 rounded-full" style={{ width: `${percentage}%` }}></div>
                   </div>
-                  <span className="text-sm text-neutral-400">{percentage}%</span>
+                  <span className="text-sm text-tertiary">{percentage}%</span>
                 </div>
               </div>
             ))}
@@ -397,7 +397,7 @@ export default function Recruiting() {
                   <div className="w-24 bg-neutral-700 rounded-full h-2">
                     <div className="bg-green-400 h-2 rounded-full" style={{ width: `${percentage}%` }}></div>
                   </div>
-                  <span className="text-sm text-neutral-400">{percentage}%</span>
+                  <span className="text-sm text-tertiary">{percentage}%</span>
                 </div>
               </div>
             ))}
@@ -419,7 +419,7 @@ export default function Recruiting() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Recruiting</h1>
-        <p className="text-neutral-400 mt-1">Manage job postings and candidate pipeline</p>
+        <p className="text-tertiary mt-1">Manage job postings and candidate pipeline</p>
       </div>
 
       {/* Tab Navigation */}
@@ -431,7 +431,7 @@ export default function Recruiting() {
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "bg-indigo-600 text-white"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-700"
+                : "text-tertiary hover:text-white hover:bg-neutral-700"
             }`}
           >
             <span>{tab.icon}</span>
@@ -550,7 +550,7 @@ export default function Recruiting() {
                   <button
                     type="button"
                     onClick={() => setShowAddJob(false)}
-                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
                   >
                     Cancel
                   </button>
