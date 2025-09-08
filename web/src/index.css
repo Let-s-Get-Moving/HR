@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Design System */
+@import './styles/design-system.css';
+
 /* Professional Light Theme */
 .light {
   /* Background Colors */
