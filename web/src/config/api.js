@@ -43,8 +43,9 @@ export const API = (path, options = {}) => {
       // If session expired, clear it from localStorage
       if (response.status === 401 && (error.includes('Invalid or expired session') || error.includes('No session') || error.includes('Authentication required'))) {
         localStorage.removeItem('sessionId');
+        localStorage.removeItem('user');
         if (import.meta.env.DEV) {
-          console.log('Cleared expired session ID');
+          console.log('Cleared expired session ID and user data');
         }
       }
       

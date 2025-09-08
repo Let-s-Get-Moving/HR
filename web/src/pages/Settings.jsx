@@ -6,6 +6,14 @@ import { sessionManager } from '../utils/sessionManager.js';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("system");
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    // Reload settings when switching to user-specific tabs
+    if (['preferences', 'notifications', 'security', 'maintenance'].includes(tabId)) {
+      loadSettings();
+    }
+  };
   const [systemSettings, setSystemSettings] = useState([]);
   const [userPreferences, setUserPreferences] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -24,6 +32,18 @@ export default function Settings() {
 
   useEffect(() => {
     loadSettings();
+  }, []);
+
+  // Reload settings when user navigates back to settings
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadSettings();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   // Load local settings after initial settings are loaded
@@ -89,35 +109,78 @@ export default function Settings() {
       const system = await API("/api/settings/system").catch(() => []);
       setSystemSettings(system || []);
 
+      // Always provide default settings for user preferences
+      const defaultPreferences = [
+        { key: "theme", label: "Theme", type: "select", value: "dark", options: ["dark", "light"] },
+        { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
+        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] },
+        { key: "dashboard_layout", label: "Dashboard Layout", type: "select", value: "grid", options: ["grid", "list"] }
+      ];
+
+      const defaultNotifications = [
+        { key: "email_notifications", label: "Email Notifications", type: "boolean", value: "true" },
+        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" },
+        { key: "sms_notifications", label: "SMS Notifications", type: "boolean", value: "false" }
+      ];
+
+      const defaultSecurity = [
+        { key: "two_factor_auth", label: "Two-Factor Authentication", type: "boolean", value: "false" },
+        { key: "session_timeout", label: "Session Timeout (minutes)", type: "number", value: "120" },
+        { key: "password_requirements", label: "Password Requirements", type: "select", value: "strong", options: ["weak", "medium", "strong"] }
+      ];
+
+      const defaultMaintenance = [
+        { key: "auto_backup", label: "Automatic Backup", type: "boolean", value: "true" },
+        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] },
+        { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
+      ];
+
       // Try to load user-specific settings with authentication
       const sessionData = await sessionManager.checkSession(API);
       if (sessionData && sessionData.user) {
         const [preferences, notifs, sec, maint] = await Promise.all([
-          API("/api/settings/preferences").catch(() => []),
-          API("/api/settings/notifications").catch(() => []),
-          API("/api/settings/security").catch(() => []),
-          API("/api/settings/maintenance").catch(() => [])
+          API("/api/settings/preferences").catch(() => defaultPreferences),
+          API("/api/settings/notifications").catch(() => defaultNotifications),
+          API("/api/settings/security").catch(() => defaultSecurity),
+          API("/api/settings/maintenance").catch(() => defaultMaintenance)
         ]);
         
-        setUserPreferences(preferences || []);
-        setNotifications(notifs || []);
-        setSecurity(sec || []);
-        setMaintenance(maint || []);
+        setUserPreferences(preferences || defaultPreferences);
+        setNotifications(notifs || defaultNotifications);
+        setSecurity(sec || defaultSecurity);
+        setMaintenance(maint || defaultMaintenance);
       } else {
-        // Load default settings even without authentication
-        setUserPreferences([]);
-        setNotifications([]);
-        setSecurity([]);
-        setMaintenance([]);
+        // Use default settings when not authenticated
+        setUserPreferences(defaultPreferences);
+        setNotifications(defaultNotifications);
+        setSecurity(defaultSecurity);
+        setMaintenance(defaultMaintenance);
       }
     } catch (error) {
       console.error("Error loading settings:", error);
-      // Set empty arrays to prevent forEach errors
+      // Set default settings to prevent empty arrays
       setSystemSettings([]);
-      setUserPreferences([]);
-      setNotifications([]);
-      setSecurity([]);
-      setMaintenance([]);
+      setUserPreferences([
+        { key: "theme", label: "Theme", type: "select", value: "dark", options: ["dark", "light"] },
+        { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
+        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] },
+        { key: "dashboard_layout", label: "Dashboard Layout", type: "select", value: "grid", options: ["grid", "list"] }
+      ]);
+      setNotifications([
+        { key: "email_notifications", label: "Email Notifications", type: "boolean", value: "true" },
+        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" },
+        { key: "sms_notifications", label: "SMS Notifications", type: "boolean", value: "false" }
+      ]);
+      setSecurity([
+        { key: "two_factor_auth", label: "Two-Factor Authentication", type: "boolean", value: "false" },
+        { key: "session_timeout", label: "Session Timeout (minutes)", type: "number", value: "120" },
+        { key: "password_requirements", label: "Password Requirements", type: "select", value: "strong", options: ["weak", "medium", "strong"] }
+      ]);
+      setMaintenance([
+        { key: "auto_backup", label: "Automatic Backup", type: "boolean", value: "true" },
+        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] },
+        { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -383,7 +446,7 @@ export default function Settings() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? "bg-primary text-white"

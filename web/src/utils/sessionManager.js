@@ -33,6 +33,22 @@ class SessionManager {
     localStorage.removeItem('user');
   }
 
+  // Get user data from localStorage
+  getUser() {
+    try {
+      const userData = localStorage.getItem('user');
+      return userData ? JSON.parse(userData) : null;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
+  }
+
+  // Check if we have valid user data
+  hasUser() {
+    return !!this.getUser();
+  }
+
   // Check session validity (with caching to prevent multiple calls)
   async checkSession(API) {
     if (!this.hasSession()) {
@@ -60,6 +76,8 @@ class SessionManager {
     try {
       const response = await API("/api/auth/session");
       if (response.user) {
+        // Store user data in localStorage for persistence
+        localStorage.setItem('user', JSON.stringify(response.user));
         return response;
       } else {
         this.clearSession();
