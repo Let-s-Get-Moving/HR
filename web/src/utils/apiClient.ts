@@ -1,4 +1,4 @@
-import { ApiResponse, ApiError, User } from '@/types';
+import { ApiError } from '@/types';
 import { errorHandler } from './errorHandler';
 import { withRetry, RetryStrategy } from './retry';
 import { SecurityHeaders, RateLimiter, CSRFProtection } from './security';
@@ -128,14 +128,14 @@ class ApiClient {
     // Add session ID if available
     const sessionId = this.getSessionId();
     if (sessionId) {
-      headers['x-session-id'] = sessionId;
+      (headers as any)['x-session-id'] = sessionId;
     }
 
     // Add CSRF token for state-changing requests
     if (method !== 'GET') {
       const csrfToken = CSRFProtection.getToken();
       if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken;
+        (headers as any)['X-CSRF-Token'] = csrfToken;
       }
     }
 

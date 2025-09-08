@@ -169,8 +169,8 @@ export const contrast = {
 
   // Calculate contrast ratio
   getContrastRatio: (color1: [number, number, number], color2: [number, number, number]): number => {
-    const lum1 = this.getLuminance(...color1);
-    const lum2 = this.getLuminance(...color2);
+    const lum1 = contrast.getLuminance(...color1);
+    const lum2 = contrast.getLuminance(...color2);
     const brightest = Math.max(lum1, lum2);
     const darkest = Math.min(lum1, lum2);
     return (brightest + 0.05) / (darkest + 0.05);
@@ -178,7 +178,7 @@ export const contrast = {
 
   // Check if contrast meets WCAG standards
   meetsWCAG: (color1: [number, number, number], color2: [number, number, number], level: 'AA' | 'AAA' = 'AA'): boolean => {
-    const ratio = this.getContrastRatio(color1, color2);
+    const ratio = contrast.getContrastRatio(color1, color2);
     return level === 'AA' ? ratio >= 4.5 : ratio >= 7;
   },
 };
@@ -251,15 +251,7 @@ export const formAccessibility = {
   }),
 };
 
-// Skip links for keyboard navigation
-export const SkipLink: React.FC<{ href: string; children: React.ReactNode }> = ({ href, children }) => (
-  <a
-    href={href}
-    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-indigo-600 focus:text-white focus:rounded-md"
-  >
-    {children}
-  </a>
-);
+// Skip links for keyboard navigation - moved to separate component file
 
 // High contrast mode detection
 export const isHighContrastMode = (): boolean => {
@@ -298,7 +290,6 @@ export default {
   contrast,
   ScreenReaderAnnouncer,
   formAccessibility,
-  SkipLink,
   isHighContrastMode,
   prefersReducedMotion,
   prefersDarkMode,

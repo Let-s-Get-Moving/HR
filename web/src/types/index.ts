@@ -149,6 +149,8 @@ export interface ButtonProps extends BaseComponentProps {
   loading?: boolean;
   onClick?: () => void;
   type?: 'button' | 'submit' | 'reset';
+  id?: string;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 export interface CardProps extends BaseComponentProps {

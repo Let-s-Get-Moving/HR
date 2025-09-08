@@ -30,7 +30,7 @@ export interface UseFormOptions<T> {
 
 export function useForm<T extends Record<string, any>>({
   initialValues,
-  validationRules = {},
+  validationRules = {} as Record<keyof T, (validator: Validator) => Validator>,
   onSubmit,
   validateOnChange = true,
   validateOnBlur = true,
@@ -128,7 +128,7 @@ export function useForm<T extends Record<string, any>>({
   }, []);
 
   // Set multiple errors
-  const setErrors = useCallback((newErrors: Record<keyof T, ValidationError | null>) => {
+  const setMultipleErrors = useCallback((newErrors: Record<keyof T, ValidationError | null>) => {
     setErrors(prev => ({ ...prev, ...newErrors }));
   }, []);
 
@@ -212,7 +212,7 @@ export function useForm<T extends Record<string, any>>({
     setTouchedField,
     setFormValues,
     setFieldError,
-    setErrors,
+    setMultipleErrors,
     clearFieldError,
     clearErrors,
     reset,

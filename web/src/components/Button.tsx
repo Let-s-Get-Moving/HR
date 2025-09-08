@@ -1,9 +1,9 @@
-import React from 'react';
+import { forwardRef } from 'react';
 import { ButtonProps } from '@/types';
 import LoadingSpinner from './LoadingSpinner';
 import { aria, generateId } from '@/utils/accessibility';
 
-const Button: React.FC<ButtonProps> = ({
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   children,
   variant = 'primary',
   size = 'md',
@@ -14,7 +14,7 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
   id,
   ...props
-}) => {
+}, ref) => {
   const buttonId = id || generateId('button');
   const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
@@ -36,6 +36,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      ref={ref}
       id={buttonId}
       type={type}
       className={classes}
@@ -51,6 +52,8 @@ const Button: React.FC<ButtonProps> = ({
       {children}
     </button>
   );
-};
+});
+
+Button.displayName = 'Button';
 
 export default Button;

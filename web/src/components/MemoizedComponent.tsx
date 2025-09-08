@@ -94,7 +94,7 @@ const MemoizedComponent: React.FC<MemoizedComponentProps> = ({
       return withIgnoredMemo(() => <>{children}</>, ignoreProps as any);
     }
     
-    return memo(() => <>{children}</>);
+    return React.memo(() => <>{children}</>);
   }, [children, compareFn, selectors, ignoreProps]);
 
   return <MemoizedChild {...props} />;

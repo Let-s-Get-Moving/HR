@@ -34,7 +34,7 @@ export function withLazyLoading<T extends object>(
 
     return (
       <Suspense fallback={defaultFallback}>
-        <LazyComponent {...(componentProps as T)} />
+        <LazyComponent {...(componentProps as any)} />
       </Suspense>
     );
   };

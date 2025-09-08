@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Button from '../Button';
-import { mockFunctions } from '@/utils/testUtils';
+// import { mockFunctions } from '@/utils/testUtils';
 
 describe('Button Component', () => {
   beforeEach(() => {

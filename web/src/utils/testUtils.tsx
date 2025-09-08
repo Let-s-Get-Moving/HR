@@ -1,8 +1,7 @@
 // Test utilities and helpers
 import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Mock API client
 export const mockApiClient = {
@@ -99,7 +98,7 @@ export function renderWithProviders(
 ) {
   const {
     initialRoute = '/',
-    withRouter = true,
+    withRouter = false,
     withErrorBoundary = true,
     ...renderOptions
   } = options;
@@ -114,10 +113,6 @@ export function renderWithProviders(
 
     if (withErrorBoundary) {
       content = <ErrorBoundary>{content}</ErrorBoundary>;
-    }
-
-    if (withRouter) {
-      content = <BrowserRouter>{content}</BrowserRouter>;
     }
 
     return <>{content}</>;
