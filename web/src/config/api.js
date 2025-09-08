@@ -1,5 +1,5 @@
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hr-api.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com';
 
 export const API = (path, options = {}) => {
   const url = `${API_BASE_URL}${path}`;

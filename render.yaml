@@ -26,7 +26,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        value: https://hr-api.onrender.com
+        value: https://hr-api-wbzs.onrender.com
 
 databases:
   - name: hr-database
