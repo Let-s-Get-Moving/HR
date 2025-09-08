@@ -111,12 +111,22 @@ export default function App() {
   useEffect(() => {
     // Check for existing session on app load
     const checkSession = async () => {
+      // Only check session if we have a session ID in localStorage
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        console.log('No session ID found, showing login');
+        return;
+      }
+      
       try {
         const sessionData = await API("/api/auth/session");
         setUser(sessionData.user);
+        console.log('Session valid, user logged in');
       } catch (error) {
         console.error("Session check error:", error);
-        // Don't show error to user, just continue to login
+        // Clear invalid session ID
+        localStorage.removeItem('sessionId');
+        console.log('Cleared invalid session ID');
       }
     };
     

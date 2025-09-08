@@ -63,6 +63,13 @@ export default function Settings() {
   };
 
   const handleSettingUpdate = async (category, key, value) => {
+    // Check if we have a session ID before making the request
+    const sessionId = localStorage.getItem('sessionId');
+    if (!sessionId) {
+      alert("Please log in to update settings.");
+      return;
+    }
+    
     setSaving(prev => ({ ...prev, [key]: true }));
     
     try {
@@ -98,6 +105,15 @@ export default function Settings() {
       }
     } catch (error) {
       console.error("Error updating setting:", error);
+      
+      // If it's an authentication error, redirect to login
+      if (error.message.includes('401') || error.message.includes('Authentication required')) {
+        alert("Session expired. Please log in again.");
+        localStorage.removeItem('sessionId');
+        window.location.reload();
+      } else {
+        alert("Failed to update setting. Please try again.");
+      }
     } finally {
       setSaving(prev => ({ ...prev, [key]: false }));
     }
