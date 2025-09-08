@@ -1,6 +1,7 @@
 import { ApiResponse, ApiError, User } from '@/types';
 import { errorHandler } from './errorHandler';
 import { withRetry, RetryStrategy } from './retry';
+import { SecurityHeaders, RateLimiter, CSRFProtection } from './security';
 
 // Cache interface
 interface CacheEntry<T> {
@@ -120,6 +121,7 @@ class ApiClient {
     // Prepare headers
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
+      ...SecurityHeaders.getSecurityHeaders(),
       ...options.headers,
     };
 
@@ -129,7 +131,20 @@ class ApiClient {
       headers['x-session-id'] = sessionId;
     }
 
+    // Add CSRF token for state-changing requests
+    if (method !== 'GET') {
+      const csrfToken = CSRFProtection.getToken();
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken;
+      }
+    }
+
     try {
+      // Check rate limit
+      if (!RateLimiter.isAllowed('api')) {
+        throw new ApiError(429, 'Rate limit exceeded. Please try again later.');
+      }
+
       const response = await fetch(url, {
         ...options,
         headers,
