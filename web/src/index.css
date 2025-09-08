@@ -2,9 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light theme styles */
+.light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-color: #e2e8f0;
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark theme styles (default) */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --border-color: #475569;
+  --card-bg: rgba(255, 255, 255, 0.1);
+  --card-border: rgba(255, 255, 255, 0.2);
+}
+
+/* Apply theme variables */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
 /* Subtle glass card */
 .card {
-  @apply rounded-2xl bg-white/10 backdrop-blur-md shadow-lg border border-white/20;
+  @apply rounded-2xl backdrop-blur-md shadow-lg;
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
 }
 
 /* Custom scrollbar */

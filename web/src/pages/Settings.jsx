@@ -23,7 +23,40 @@ export default function Settings() {
 
   useEffect(() => {
     loadSettings();
+    loadLocalSettings();
   }, []);
+
+  const loadLocalSettings = () => {
+    // Load settings from localStorage and update state
+    const updateSettingFromStorage = (settings, setSettings, category) => {
+      setSettings(prev => prev.map(setting => {
+        const storedValue = localStorage.getItem(`${category}_${setting.key}`);
+        return storedValue !== null ? { ...setting, value: storedValue } : setting;
+      }));
+    };
+
+    updateSettingFromStorage(systemSettings, setSystemSettings, 'system');
+    updateSettingFromStorage(userPreferences, setUserPreferences, 'preferences');
+    updateSettingFromStorage(notifications, setNotifications, 'notifications');
+    updateSettingFromStorage(security, setSecurity, 'security');
+    updateSettingFromStorage(maintenance, setMaintenance, 'maintenance');
+
+    // Apply theme immediately
+    applyTheme();
+  };
+
+  const applyTheme = () => {
+    const theme = localStorage.getItem('preferences_theme') || 'dark';
+    const root = document.documentElement;
+    
+    if (theme === 'light') {
+      root.classList.remove('dark');
+      root.classList.add('light');
+    } else {
+      root.classList.remove('light');
+      root.classList.add('dark');
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -63,57 +96,56 @@ export default function Settings() {
   };
 
   const handleSettingUpdate = async (category, key, value) => {
-    // Check if we have a session ID before making the request
-    const sessionId = localStorage.getItem('sessionId');
-    if (!sessionId) {
-      alert("Please log in to update settings.");
-      return;
-    }
-    
     setSaving(prev => ({ ...prev, [key]: true }));
     
+    // Update local state immediately for better UX
+    const updateState = (settings, setSettings) => {
+      setSettings(prev => prev.map(setting => 
+        setting.key === key ? { ...setting, value } : setting
+      ));
+    };
+    
+    // Store in localStorage for persistence
+    const settingKey = `${category}_${key}`;
+    localStorage.setItem(settingKey, value);
+    
+    // Update local state
+    switch (category) {
+      case "system":
+        updateState(systemSettings, setSystemSettings);
+        break;
+      case "preferences":
+        updateState(userPreferences, setUserPreferences);
+        // Apply theme change immediately
+        if (key === 'theme') {
+          applyTheme();
+        }
+        break;
+      case "notifications":
+        updateState(notifications, setNotifications);
+        break;
+      case "security":
+        updateState(security, setSecurity);
+        break;
+      case "maintenance":
+        updateState(maintenance, setMaintenance);
+        break;
+    }
+    
+    // Try to sync with server (but don't fail if it doesn't work)
     try {
-      await API(`/api/settings/${category}/${key}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ value })
-      });
-      
-      // Update local state
-      const updateState = (settings, setSettings) => {
-        setSettings(prev => prev.map(setting => 
-          setting.key === key ? { ...setting, value } : setting
-        ));
-      };
-      
-      switch (category) {
-        case "system":
-          updateState(systemSettings, setSystemSettings);
-          break;
-        case "preferences":
-          updateState(userPreferences, setUserPreferences);
-          break;
-        case "notifications":
-          updateState(notifications, setNotifications);
-          break;
-        case "security":
-          updateState(security, setSecurity);
-          break;
-        case "maintenance":
-          updateState(maintenance, setMaintenance);
-          break;
+      const sessionId = localStorage.getItem('sessionId');
+      if (sessionId) {
+        await API(`/api/settings/${category}/${key}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value })
+        });
+        console.log(`Setting ${key} updated successfully on server`);
       }
     } catch (error) {
-      console.error("Error updating setting:", error);
-      
-      // If it's an authentication error, redirect to login
-      if (error.message.includes('401') || error.message.includes('Authentication required')) {
-        alert("Session expired. Please log in again.");
-        localStorage.removeItem('sessionId');
-        window.location.reload();
-      } else {
-        alert("Failed to update setting. Please try again.");
-      }
+      console.warn("Failed to sync setting with server:", error);
+      // Don't show error to user - setting is already saved locally
     } finally {
       setSaving(prev => ({ ...prev, [key]: false }));
     }

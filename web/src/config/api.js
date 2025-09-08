@@ -32,12 +32,6 @@ export const API = (path, options = {}) => {
       if (response.status === 401 && (error.includes('Invalid or expired session') || error.includes('No session'))) {
         localStorage.removeItem('sessionId');
         console.log('Cleared expired session ID');
-        
-        // If this is not a session check request, redirect to login
-        if (!path.includes('/auth/session')) {
-          // Clear user state and redirect to login
-          window.location.reload();
-        }
       }
       
       throw new Error(`HTTP ${response.status}: ${error}`);

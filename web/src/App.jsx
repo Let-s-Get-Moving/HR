@@ -109,6 +109,22 @@ export default function App() {
   const CurrentComponent = pages[currentPage].component;
 
   useEffect(() => {
+    // Apply theme on app load
+    const applyTheme = () => {
+      const theme = localStorage.getItem('preferences_theme') || 'dark';
+      const root = document.documentElement;
+      
+      if (theme === 'light') {
+        root.classList.remove('dark');
+        root.classList.add('light');
+      } else {
+        root.classList.remove('light');
+        root.classList.add('dark');
+      }
+    };
+    
+    applyTheme();
+    
     // Check for existing session on app load
     const checkSession = async () => {
       // Only check session if we have a session ID in localStorage
