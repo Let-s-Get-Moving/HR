@@ -112,13 +112,8 @@ export default function App() {
     // Check for existing session on app load
     const checkSession = async () => {
       try {
-        const response = await API("/api/auth/session");
-        if (response.ok) {
-          const sessionData = await response.json();
-          setUser(sessionData.user);
-        }
-        // If response is not ok (401), just continue without setting user
-        // This will show the login page
+        const sessionData = await API("/api/auth/session");
+        setUser(sessionData.user);
       } catch (error) {
         console.error("Session check error:", error);
         // Don't show error to user, just continue to login
