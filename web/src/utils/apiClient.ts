@@ -1,4 +1,6 @@
 import { ApiResponse, ApiError, User } from '@/types';
+import { errorHandler } from './errorHandler';
+import { withRetry, RetryStrategy } from './retry';
 
 // Cache interface
 interface CacheEntry<T> {
@@ -70,7 +72,7 @@ class ApiClient {
   }
 
   // Handle API errors
-  private handleError(response: Response, errorText: string): ApiError {
+  private handleError(response: Response, errorText: string, endpoint: string): ApiError {
     let errorMessage = 'An error occurred';
     let errorDetails: any = null;
 
@@ -87,6 +89,12 @@ class ApiClient {
       localStorage.removeItem('sessionId');
       localStorage.removeItem('user');
     }
+
+    // Log error using error handler
+    const appError = errorHandler.handleApiError(
+      { status: response.status, message: errorMessage, details: errorDetails },
+      { endpoint }
+    );
 
     return new ApiError(response.status, errorMessage, errorDetails);
   }
@@ -138,7 +146,7 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        throw this.handleError(response, responseText);
+        throw this.handleError(response, responseText, endpoint);
       }
 
       // Cache successful GET requests
@@ -166,27 +174,31 @@ class ApiClient {
     }
   }
 
-  // Convenience methods
-  public async get<T = any>(endpoint: string, useCache: boolean = true): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' }, useCache);
+  // Convenience methods with retry
+  public async get<T = any>(endpoint: string, useCache: boolean = true, retry: boolean = true): Promise<T> {
+    const operation = () => this.request<T>(endpoint, { method: 'GET' }, useCache);
+    return retry ? withRetry(operation, RetryStrategy.exponentialBackoff()) : operation();
   }
 
-  public async post<T = any>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
+  public async post<T = any>(endpoint: string, data?: any, retry: boolean = false): Promise<T> {
+    const operation = () => this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     }, false);
+    return retry ? withRetry(operation, RetryStrategy.conservative()) : operation();
   }
 
-  public async put<T = any>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
+  public async put<T = any>(endpoint: string, data?: any, retry: boolean = false): Promise<T> {
+    const operation = () => this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     }, false);
+    return retry ? withRetry(operation, RetryStrategy.conservative()) : operation();
   }
 
-  public async delete<T = any>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' }, false);
+  public async delete<T = any>(endpoint: string, retry: boolean = false): Promise<T> {
+    const operation = () => this.request<T>(endpoint, { method: 'DELETE' }, false);
+    return retry ? withRetry(operation, RetryStrategy.conservative()) : operation();
   }
 
   // Paginated requests
