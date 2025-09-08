@@ -56,10 +56,14 @@ export default function Settings() {
   const loadLocalSettings = () => {
     // Load settings from localStorage and update state
     const updateSettingFromStorage = (settings, setSettings, category) => {
-      setSettings(prev => prev.map(setting => {
-        const storedValue = localStorage.getItem(`${category}_${setting.key}`);
-        return storedValue !== null ? { ...setting, value: storedValue } : setting;
-      }));
+      setSettings(prev => {
+        if (!Array.isArray(prev)) return prev;
+        return prev.map(setting => {
+          if (!setting || !setting.key) return setting;
+          const storedValue = localStorage.getItem(`${category}_${setting.key}`);
+          return storedValue !== null ? { ...setting, value: storedValue } : setting;
+        });
+      });
     };
 
     updateSettingFromStorage(systemSettings, setSystemSettings, 'system');
@@ -247,7 +251,17 @@ export default function Settings() {
   };
 
   const renderSettingField = (setting, category) => {
+    // Safety check to ensure setting is valid
+    if (!setting || typeof setting !== 'object') {
+      return null;
+    }
+    
     const { key, value, type, options, description } = setting;
+    
+    // Safety check for required properties
+    if (!key || !type) {
+      return null;
+    }
     
     // Helper function to safely parse boolean values
     const parseBoolean = (val) => {
@@ -284,7 +298,7 @@ export default function Settings() {
         );
         
       case "select":
-        const optionList = options.split(',');
+        const optionList = Array.isArray(options) ? options : (typeof options === 'string' ? options.split(',') : []);
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -365,15 +379,15 @@ export default function Settings() {
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {settings.map((setting) => (
+          {settings.map((setting, index) => (
             <motion.div
-              key={setting.key}
+              key={setting?.key || `setting-${index}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="card p-4"
             >
               {renderSettingField(setting, category)}
-              {saving[setting.key] && (
+              {setting?.key && saving[setting.key] && (
                 <div className="mt-2 text-xs text-indigo-400">Saving...</div>
               )}
             </motion.div>
