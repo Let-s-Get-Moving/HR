@@ -15,6 +15,8 @@ import performance from "./routes/performance.js";
 import analytics from "./routes/analytics.js";
 import metrics from "./routes/metrics.js";
 import settings from "./routes/settings.js";
+import health from "./routes/health.js";
+import logger from "./utils/logger.js";
 
 const app = express();
 
@@ -122,6 +124,31 @@ app.use("/api/performance", performance);
 app.use("/api/analytics", analytics);
 app.use("/api/metrics", metrics);
 app.use("/api/settings", settings);
+app.use("/api/health", health);
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`API listening on ${port}`));
+app.listen(port, () => {
+  logger.info(`API server started on port ${port}`);
+  console.log(`API listening on ${port}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  process.exit(0);
+});
+
+process.on('uncaughtException', (error) => {
+  logger.logError(error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', { promise, reason });
+  process.exit(1);
+});
