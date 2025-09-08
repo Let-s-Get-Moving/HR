@@ -1,14 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 
-const API = (path, options = {}) => fetch(`http://localhost:8080${path}`, {
-  ...options,
-  credentials: 'include', // Include cookies
-  headers: {
-    'Content-Type': 'application/json',
-    ...options.headers
-  }
-});
+import { API } from '../config/api.js';
 
 export default function Login({ onLogin }) {
   const [credentials, setCredentials] = useState({

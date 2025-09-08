@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
-const API = (path, options = {}) => fetch(`http://localhost:8080${path}`, options).then(r => r.json());
+import { API } from '../config/api.js';
 
 export default function Payroll() {
   const [activeTab, setActiveTab] = useState("overview");

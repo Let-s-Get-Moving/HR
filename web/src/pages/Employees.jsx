@@ -4,7 +4,7 @@ import EmployeeOnboarding from "../components/EmployeeOnboarding.jsx";
 import EmployeeOffboarding from "../components/EmployeeOffboarding.jsx";
 import EmployeeProfile from "./EmployeeProfile.jsx";
 
-const API = (path, options = {}) => fetch(`http://localhost:8080${path}`, options).then(r => r.json());
+import { API } from '../config/api.js';
 
 export default function Employees() {
   const [employees, setEmployees] = useState([]);

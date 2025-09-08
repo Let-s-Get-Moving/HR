@@ -4,9 +4,7 @@ import Greeting from "../components/Greeting.jsx";
 import MetricCard from "../components/MetricCard.jsx";
 import Donut from "../components/Donut.jsx";
 
-const API = (path) => fetch(`http://localhost:8080${path}`, {
-  credentials: 'include' // Include cookies for authentication
-}).then(r => r.json());
+import { API } from '../config/api.js';
 
 export default function Dashboard() {
   const [analytics, setAnalytics] = useState(null);

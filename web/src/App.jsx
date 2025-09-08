@@ -14,15 +14,7 @@ import Performance from "./pages/Performance.jsx";
 import Benefits from "./pages/Benefits.jsx";
 import BonusesCommissions from "./pages/BonusesCommissions.jsx";
 
-// API helper with credentials
-const API = (path, options = {}) => fetch(`http://localhost:8080${path}`, {
-  ...options,
-  credentials: 'include', // Include cookies
-  headers: {
-    'Content-Type': 'application/json',
-    ...options.headers
-  }
-});
+import { API } from './config/api.js';
 
 // Professional SVG Icons
 const Icons = {
