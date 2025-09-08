@@ -12,11 +12,11 @@
   --bg-hover: #f1f5f9;
   --bg-active: #e2e8f0;
   
-  /* Text Colors */
+  /* Text Colors - High Contrast */
   --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-tertiary: #64748b;
-  --text-muted: #94a3b8;
+  --text-secondary: #334155;
+  --text-tertiary: #475569;
+  --text-muted: #64748b;
   --text-inverse: #ffffff;
   
   /* Border Colors */
@@ -30,9 +30,9 @@
   --card-border: #e2e8f0;
   --card-shadow: rgba(0, 0, 0, 0.1);
   
-  /* Status Colors */
+  /* Status Colors - High Contrast */
   --success-bg: #dcfce7;
-  --success-text: #166534;
+  --success-text: #14532d;
   --success-border: #bbf7d0;
   
   --warning-bg: #fef3c7;
@@ -40,20 +40,20 @@
   --warning-border: #fde68a;
   
   --error-bg: #fee2e2;
-  --error-text: #dc2626;
+  --error-text: #b91c1c;
   --error-border: #fecaca;
   
   --info-bg: #dbeafe;
   --info-text: #1e40af;
   --info-border: #bfdbfe;
   
-  /* Interactive Colors */
-  --primary-bg: #3b82f6;
-  --primary-hover: #2563eb;
+  /* Interactive Colors - High Contrast */
+  --primary-bg: #2563eb;
+  --primary-hover: #1d4ed8;
   --primary-text: #ffffff;
   
-  --secondary-bg: #6b7280;
-  --secondary-hover: #4b5563;
+  --secondary-bg: #4b5563;
+  --secondary-hover: #374151;
   --secondary-text: #ffffff;
   
   /* Form Elements */
@@ -492,6 +492,81 @@ input[type="radio"]:checked::after {
   cursor: pointer;
   border: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Date Input Styling - Make Entire Field Clickable */
+input[type="date"] {
+  cursor: pointer;
+  position: relative;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit-text {
+  color: var(--text-primary);
+  padding: 0 0.25rem;
+}
+
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: var(--text-primary);
+  padding: 0 0.25rem;
+}
+
+/* Number Input Styling - Remove Spinner */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ID Field Specific Styling */
+input[id*="id"], input[name*="id"], input[placeholder*="ID"] {
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+/* Time Input Styling */
+input[type="time"] {
+  cursor: pointer;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
 }
 
 /* Beautiful Button System */

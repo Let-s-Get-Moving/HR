@@ -87,7 +87,8 @@ export class SessionManager {
 export const requireAuth = (req, res, next) => {
   const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
                    req.cookies?.sessionId ||
-                   req.headers['x-session-id'];
+                   req.headers['x-session-id'] ||
+                   req.headers['X-Session-ID'];
   
   if (!sessionId) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -108,7 +109,8 @@ export const requireAuth = (req, res, next) => {
 export const optionalAuth = (req, res, next) => {
   const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
                    req.cookies?.sessionId ||
-                   req.headers['x-session-id'];
+                   req.headers['x-session-id'] ||
+                   req.headers['X-Session-ID'];
   
   if (sessionId) {
     const session = SessionManager.getSession(sessionId);

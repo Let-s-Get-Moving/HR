@@ -183,6 +183,22 @@ LEFT JOIN payroll_calculations pc ON pp.id = pc.period_id
 GROUP BY pp.id, pp.period_name, pp.start_date, pp.end_date, pp.pay_date, pp.status
 ORDER BY pp.start_date DESC;
 
+-- Insert sample payroll periods
+INSERT INTO payroll_periods (period_name, start_date, end_date, pay_date, status) VALUES
+('January 2024', '2024-01-01', '2024-01-31', '2024-02-05', 'Closed'),
+('February 2024', '2024-02-01', '2024-02-29', '2024-03-05', 'Closed'),
+('March 2024', '2024-03-01', '2024-03-31', '2024-04-05', 'Closed'),
+('April 2024', '2024-04-01', '2024-04-30', '2024-05-05', 'Closed'),
+('May 2024', '2024-05-01', '2024-05-31', '2024-06-05', 'Closed'),
+('June 2024', '2024-06-01', '2024-06-30', '2024-07-05', 'Closed'),
+('July 2024', '2024-07-01', '2024-07-31', '2024-08-05', 'Closed'),
+('August 2024', '2024-08-01', '2024-08-31', '2024-09-05', 'Closed'),
+('September 2024', '2024-09-01', '2024-09-30', '2024-10-05', 'Closed'),
+('October 2024', '2024-10-01', '2024-10-31', '2024-11-05', 'Closed'),
+('November 2024', '2024-11-01', '2024-11-30', '2024-12-05', 'Closed'),
+('December 2024', '2024-12-01', '2024-12-31', '2025-01-05', 'Open'),
+('January 2025', '2025-01-01', '2025-01-31', '2025-02-05', 'Open');
+
 -- Create view for commission calculations
 CREATE OR REPLACE VIEW v_commission_calculations AS
 SELECT 

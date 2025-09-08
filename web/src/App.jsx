@@ -55,19 +55,19 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   ),
-  leaveManagement: () => (
+  leave: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
   ),
   testing: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
   ),
   performance: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
     </svg>
   ),
   benefits: () => (
@@ -75,7 +75,7 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
     </svg>
   ),
-  bonusesCommissions: () => (
+  bonuses: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
     </svg>
@@ -87,34 +87,32 @@ const Icons = {
   )
 };
 
+const pages = {
+  dashboard: { name: "Dashboard", component: Dashboard, icon: Icons.dashboard },
+  employees: { name: "Employees", component: Employees, icon: Icons.employees },
+  timeTracking: { name: "Time Tracking", component: TimeTracking, icon: Icons.timeTracking },
+  leave: { name: "Leave Management", component: LeaveManagement, icon: Icons.leave },
+  payroll: { name: "Payroll", component: Payroll, icon: Icons.payroll },
+  performance: { name: "Performance", component: Performance, icon: Icons.performance },
+  recruiting: { name: "Recruiting", component: Recruiting, icon: Icons.recruiting },
+  compliance: { name: "Compliance", component: Compliance, icon: Icons.compliance },
+  benefits: { name: "Benefits", component: Benefits, icon: Icons.benefits },
+  bonuses: { name: "Bonuses & Commissions", component: BonusesCommissions, icon: Icons.bonuses },
+  testing: { name: "Testing", component: Testing, icon: Icons.testing },
+  settings: { name: "Settings", component: Settings, icon: Icons.settings }
+};
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState("dashboard");
   const [user, setUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const pages = {
-    dashboard: { name: "Dashboard", icon: Icons.dashboard, component: Dashboard },
-    employees: { name: "Employees", icon: Icons.employees, component: Employees },
-    timeTracking: { name: "Time & Attendance", icon: Icons.timeTracking, component: TimeTracking },
-    leaveManagement: { name: "Leave Management", icon: Icons.leaveManagement, component: LeaveManagement },
-    compliance: { name: "Compliance", icon: Icons.compliance, component: Compliance },
-    recruiting: { name: "Recruiting", icon: Icons.recruiting, component: Recruiting },
-    payroll: { name: "Payroll", icon: Icons.payroll, component: Payroll },
-    performance: { name: "Performance", icon: Icons.performance, component: Performance },
-    benefits: { name: "Benefits", icon: Icons.benefits, component: Benefits },
-    bonusesCommissions: { name: "Bonuses & Commissions", icon: Icons.bonusesCommissions, component: BonusesCommissions },
-    settings: { name: "Settings", icon: Icons.settings, component: Settings },
-    testing: { name: "Testing", icon: Icons.testing, component: Testing }
-  };
-
-  const CurrentComponent = pages[currentPage].component;
 
   useEffect(() => {
     // Apply theme on app load
     const applyTheme = () => {
       const theme = localStorage.getItem('preferences_theme') || 'dark';
       const root = document.documentElement;
-      
+
       if (theme === 'light') {
         root.classList.remove('dark');
         root.classList.add('light');
@@ -123,10 +121,10 @@ export default function App() {
         root.classList.add('dark');
       }
     };
-    
-    applyTheme();
-    
-    // Check for existing session on app load
+
+    applyTheme(); // Call applyTheme on app load
+
+    // Check for existing session on app load using sessionManager
     const checkSession = async () => {
       const sessionData = await sessionManager.checkSession(API);
       if (sessionData && sessionData.user) {
@@ -136,12 +134,13 @@ export default function App() {
         console.log('No valid session found');
       }
     };
-    
+
     checkSession();
   }, []);
 
   const handleLogin = (userData) => {
     setUser(userData);
+    setCurrentPage("dashboard");
   };
 
   const handleLogout = async () => {
@@ -160,70 +159,63 @@ export default function App() {
     return <Login onLogin={handleLogin} />;
   }
 
+  const CurrentComponent = pages[currentPage].component;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-900 via-neutral-800 to-neutral-900 text-neutral-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900">
       {/* Header */}
-      <header className="border-b border-white/10 bg-white/5 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex items-center space-x-3"
-            >
-              {/* Mobile menu button */}
+      <header className="bg-white/80 dark:bg-white/5 backdrop-blur-md border-b border-slate-200 dark:border-white/10 shadow-sm sticky top-0 z-40">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-lg hover:bg-neutral-800 transition-colors"
+                className="p-2 rounded-lg text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors lg:hidden"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-white font-bold text-lg">HR</span>
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-slate-900 dark:text-white">HR Management System</h1>
+                  <p className="text-xs text-slate-600 dark:text-neutral-400">Professional HR Solutions</p>
+                </div>
               </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl font-bold">Command & Control Logistics</h1>
-                <p className="text-sm text-neutral-400">Human Resources Management</p>
-                <p className="text-xs text-neutral-500">Developed by Udi Shkolnik</p>
-              </div>
-              <div className="sm:hidden">
-                <h1 className="text-lg font-bold">C&C HR</h1>
-              </div>
-            </motion.div>
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <div className="hidden sm:block text-sm text-neutral-400">
-                Welcome, {user.username} 👋
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="hidden sm:block text-sm">
+                <div className="text-slate-900 dark:text-neutral-300 font-medium">Welcome, {user.username}</div>
+                <div className="text-xs text-slate-600 dark:text-neutral-400">Last login: {new Date().toLocaleDateString()}</div>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-3 py-2 text-neutral-400 hover:text-white transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
               >
                 <Icons.logout />
-                <span className="hidden sm:inline">Logout</span>
+                <span className="hidden sm:inline font-medium">Logout</span>
               </motion.button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="flex">
+      <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar Navigation */}
-        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white/10 backdrop-blur-md border-r border-white/10 transform transition-transform duration-300 ease-in-out ${
+        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-white/10 backdrop-blur-md border-r border-slate-200 dark:border-white/10 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-4 lg:hidden">
-              <h2 className="text-lg font-semibold">Navigation</h2>
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6 lg:hidden">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Navigation</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-neutral-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -240,10 +232,10 @@ export default function App() {
                     setCurrentPage(key);
                     setSidebarOpen(false); // Close sidebar on mobile
                   }}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     currentPage === key
-                      ? "bg-indigo-600 text-white shadow-lg"
-                      : "text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
+                      : "text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
                   <page.icon />
@@ -263,12 +255,13 @@ export default function App() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6">
+        <main className="flex-1 p-6 lg:p-8">
           <motion.div
             key={currentPage}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
+            className="h-full"
           >
             <CurrentComponent />
           </motion.div>

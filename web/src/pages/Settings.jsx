@@ -198,13 +198,13 @@ export default function Settings() {
           <div className="flex items-center justify-between">
             <div>
               <label className="text-sm font-medium">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</label>
-              {description && <p className="text-xs text-neutral-400 mt-1">{description}</p>}
+              {description && <p className="text-xs text-secondary mt-1">{description}</p>}
             </div>
             <button
               onClick={() => handleSettingUpdate(category, key, !boolValue)}
               disabled={saving[key]}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                boolValue ? 'bg-indigo-600' : 'bg-neutral-600'
+                boolValue ? 'bg-primary' : 'bg-secondary'
               }`}
             >
               <span
@@ -223,12 +223,12 @@ export default function Settings() {
             <label className="block text-sm font-medium mb-2">
               {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </label>
-            {description && <p className="text-xs text-neutral-400 mb-2">{description}</p>}
+            {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <select
               value={value}
               onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
               disabled={saving[key]}
-              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
             >
               {optionList.map(option => (
                 <option key={option} value={option}>{option}</option>
@@ -243,13 +243,13 @@ export default function Settings() {
             <label className="block text-sm font-medium mb-2">
               {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </label>
-            {description && <p className="text-xs text-neutral-400 mb-2">{description}</p>}
+            {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <input
               type="number"
               value={value}
               onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
               disabled={saving[key]}
-              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
             />
           </div>
         );
@@ -260,13 +260,13 @@ export default function Settings() {
             <label className="block text-sm font-medium mb-2">
               {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </label>
-            {description && <p className="text-xs text-neutral-400 mb-2">{description}</p>}
+            {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <input
               type={type === "email" ? "email" : "text"}
               value={value}
               onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
               disabled={saving[key]}
-              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
             />
           </div>
         );
@@ -279,7 +279,7 @@ export default function Settings() {
         <h3 className="text-lg font-semibold">{title}</h3>
         <button
           onClick={() => window.open(`/api/settings/export`, '_blank')}
-          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="bg-primary hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
           Export Settings
         </button>
@@ -307,7 +307,7 @@ export default function Settings() {
     if (!Array.isArray(systemSettings) || systemSettings.length === 0) {
       return (
         <div className="text-center py-8">
-          <p className="text-neutral-400">No system settings available</p>
+          <p className="text-secondary">No system settings available</p>
         </div>
       );
     }
@@ -358,19 +358,19 @@ export default function Settings() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-        <p className="text-neutral-400 mt-1">Manage system configuration and user preferences</p>
+        <p className="text-secondary mt-1">Manage system configuration and user preferences</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex flex-wrap gap-1 mb-6 bg-neutral-800 p-1 rounded-lg">
+      <div className="flex flex-wrap gap-1 mb-6 card p-1 rounded-lg">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? "bg-indigo-600 text-white"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-700"
+                ? "bg-primary text-white"
+                : "text-secondary hover:text-white hover:bg-neutral-700"
             }`}
           >
             <span>{tab.icon}</span>
