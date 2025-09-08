@@ -33,10 +33,11 @@ r.post("/login", async (req, res) => {
     
     // Set cookie
     res.cookie('sessionId', sessionId, {
-      httpOnly: false, // Allow JavaScript access in development
+      httpOnly: false, // Allow JavaScript access
       secure: false, // Allow HTTP in development
       sameSite: 'lax', // More permissive for development
-      maxAge: 30 * 60 * 1000 // 30 minutes
+      maxAge: 30 * 60 * 1000, // 30 minutes
+      path: '/' // Ensure cookie is available for all paths
     });
     
     res.json({
@@ -64,7 +65,13 @@ r.post("/logout", (req, res) => {
 
 // Check session endpoint
 r.get("/session", (req, res) => {
-  const sessionId = req.cookies?.sessionId || req.headers.authorization?.replace('Bearer ', '');
+  const sessionId = req.cookies?.sessionId || 
+                   req.headers.authorization?.replace('Bearer ', '') ||
+                   req.headers['x-session-id'];
+  
+  console.log('Session check - cookies:', req.cookies);
+  console.log('Session check - headers:', req.headers);
+  console.log('Session check - sessionId:', sessionId);
   
   if (!sessionId) {
     return res.status(401).json({ error: "No session" });

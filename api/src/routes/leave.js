@@ -29,7 +29,19 @@ r.get("/employee/:id", async (req, res) => {
   res.json(rows);
 });
 
-// Get leave balances
+// Get leave balances for all employees
+r.get("/balances", async (_req, res) => {
+  const { rows } = await q(`
+    SELECT lb.*, lt.name as leave_type_name, e.first_name, e.last_name
+    FROM leave_balances lb
+    JOIN leave_types lt ON lb.leave_type_id = lt.id
+    JOIN employees e ON lb.employee_id = e.id
+    ORDER BY e.first_name, lt.name
+  `);
+  res.json(rows);
+});
+
+// Get leave balances for specific employee
 r.get("/balances/:id", async (req, res) => {
   const { id } = req.params;
   const { rows } = await q(`
@@ -138,6 +150,36 @@ r.get("/analytics", async (_req, res) => {
       requests: requests.rows[0],
       balances: balances.rows,
       upcoming: calendar.rows[0]
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get leave analytics
+r.get("/analytics", async (_req, res) => {
+  try {
+    const [requests, balances, upcoming] = await Promise.all([
+      q(`SELECT 
+          COUNT(*) as total_requests,
+          COUNT(CASE WHEN status = 'Approved' THEN 1 END) as approved,
+          COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending,
+          COUNT(CASE WHEN status = 'Rejected' THEN 1 END) as rejected
+         FROM leave_requests`),
+      q(`SELECT lt.name, SUM(lb.available_days) as total_available
+         FROM leave_balances lb
+         JOIN leave_types lt ON lb.leave_type_id = lt.id
+         GROUP BY lt.id, lt.name`),
+      q(`SELECT COUNT(*) as upcoming_leaves
+         FROM leave_requests 
+         WHERE status = 'Approved' 
+         AND start_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'`)
+    ]);
+    
+    res.json({
+      requests: requests.rows[0],
+      balances: balances.rows,
+      upcoming: upcoming.rows[0]
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

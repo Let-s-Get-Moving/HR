@@ -16,6 +16,18 @@ r.get("/reviews", async (_req, res) => {
   res.json(rows);
 });
 
+// Get all performance goals
+r.get("/goals", async (_req, res) => {
+  const { rows } = await q(`
+    SELECT pg.*, e.first_name, e.last_name, e.email, d.name as department
+    FROM performance_goals pg
+    JOIN employees e ON pg.employee_id = e.id
+    LEFT JOIN departments d ON e.department_id = d.id
+    ORDER BY pg.target_date DESC
+  `);
+  res.json(rows);
+});
+
 // Get employee performance reviews
 r.get("/employee/:id", async (req, res) => {
   const { id } = req.params;
