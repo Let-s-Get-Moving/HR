@@ -141,7 +141,7 @@ export default function Payroll() {
               setSelectedPeriod(period);
               if (period) loadPayrollCalculations(period.id);
             }}
-            className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+            className="w-full px-3 py-2 input-md"
           >
             {payrollPeriods.map(period => (
               <option key={period.id} value={period.id}>
@@ -195,7 +195,7 @@ export default function Payroll() {
           <h3 className="text-lg font-semibold mb-4">Payroll Summary</h3>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-neutral-800">
+              <thead className="bg-secondary/10">
                 <tr>
                   <th className="px-4 py-2 text-left text-sm font-medium">Employee</th>
                   <th className="px-4 py-2 text-left text-sm font-medium">Department</th>
@@ -214,7 +214,7 @@ export default function Payroll() {
                 {payrollCalculations.map((calc) => {
                   const employee = employees.find(e => e.id === calc.employee_id);
                   return (
-                    <tr key={calc.id} className="hover:bg-neutral-800/50">
+                    <tr key={calc.id} className="hover:bg-secondary/5">
                       <td className="px-4 py-2 text-sm">
                         {employee ? `${employee.first_name} ${employee.last_name}` : 'Unknown'}
                       </td>
@@ -253,7 +253,7 @@ export default function Payroll() {
                 const period = payrollPeriods.find(p => p.id === parseInt(e.target.value));
                 setSelectedPeriod(period);
               }}
-              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+              className="w-full px-3 py-2 input-md"
             >
               <option value="">Select a period</option>
               {payrollPeriods.map(period => (
@@ -306,9 +306,9 @@ export default function Payroll() {
 
       <div className="card">
         <h3 className="text-lg font-semibold mb-4">CSV Format Guide</h3>
-        <div className="bg-neutral-800 p-4 rounded-lg">
-          <p className="text-sm text-neutral-300 mb-2">Your CSV file should have the following columns:</p>
-          <div className="text-xs text-neutral-400 space-y-1">
+        <div className="card-sm">
+          <p className="text-sm text-secondary mb-2">Your CSV file should have the following columns:</p>
+          <div className="text-xs text-tertiary space-y-1">
             <div><strong>employee_id</strong> - Employee ID number</div>
             <div><strong>work_date</strong> - Date (YYYY-MM-DD format)</div>
             <div><strong>hours_worked</strong> - Regular hours worked</div>
@@ -330,36 +330,36 @@ export default function Payroll() {
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-neutral-800 p-4 rounded-lg">
+          <div className="card-sm">
             <h4 className="font-medium mb-3">Regular Pay Calculation</h4>
-            <div className="text-sm text-neutral-300 space-y-1">
+            <div className="text-sm text-secondary space-y-1">
               <div>• Base Hours × Hourly Rate</div>
               <div>• Overtime Hours × (Hourly Rate × 1.5)</div>
               <div>• Automatic ESA compliance</div>
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-4 rounded-lg">
+          <div className="card-sm">
             <h4 className="font-medium mb-3">Commission Calculation</h4>
-            <div className="text-sm text-neutral-300 space-y-1">
+            <div className="text-sm text-secondary space-y-1">
               <div>• Department-specific structures</div>
               <div>• Performance-based calculations</div>
               <div>• Tiered commission rates</div>
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-4 rounded-lg">
+          <div className="card-sm">
             <h4 className="font-medium mb-3">Bonus Calculation</h4>
-            <div className="text-sm text-neutral-300 space-y-1">
+            <div className="text-sm text-secondary space-y-1">
               <div>• Performance bonuses</div>
               <div>• Attendance bonuses</div>
               <div>• Quality excellence bonuses</div>
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-4 rounded-lg">
+          <div className="card-sm">
             <h4 className="font-medium mb-3">Deductions</h4>
-            <div className="text-sm text-neutral-300 space-y-1">
+            <div className="text-sm text-secondary space-y-1">
               <div>• Tax deductions</div>
               <div>• Benefits contributions</div>
               <div>• Other deductions</div>

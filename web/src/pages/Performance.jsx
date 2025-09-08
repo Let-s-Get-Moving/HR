@@ -290,7 +290,7 @@ export default function Performance() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors"
+                  className="w-full btn-primary py-2 px-4 rounded-md transition-colors"
                 >
                   Submit Review
                 </button>
@@ -408,7 +408,7 @@ export default function Performance() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gray-900 text-white py-2 px-4 rounded-md hover:bg-gray-800 transition-colors"
+                  className="w-full btn-primary py-2 px-4 rounded-md transition-colors"
                 >
                   Create Goal
                 </button>

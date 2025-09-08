@@ -277,35 +277,48 @@ export default function Settings() {
     }
   };
 
-  const renderSettingsSection = (settings, category, title) => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        <button
-          onClick={() => window.open(`/api/settings/export`, '_blank')}
-          className="bg-primary hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          Export Settings
-        </button>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {settings.map((setting) => (
-          <motion.div
-            key={setting.key}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card p-4"
+  const renderSettingsSection = (settings, category, title) => {
+    if (!Array.isArray(settings) || settings.length === 0) {
+      return (
+        <div className="text-center py-8">
+          <p className="text-secondary">No {title.toLowerCase()} available</p>
+          <p className="text-tertiary text-sm mt-2">
+            {category === "preferences" ? "User preferences will appear here when available" : "Settings will appear here when available"}
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">{title}</h3>
+          <button
+            onClick={() => window.open(`/api/settings/export`, '_blank')}
+            className="bg-primary hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
           >
-            {renderSettingField(setting, category)}
-            {saving[setting.key] && (
-              <div className="mt-2 text-xs text-indigo-400">Saving...</div>
-            )}
-          </motion.div>
-        ))}
+            Export Settings
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {settings.map((setting) => (
+            <motion.div
+              key={setting.key}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="card p-4"
+            >
+              {renderSettingField(setting, category)}
+              {saving[setting.key] && (
+                <div className="mt-2 text-xs text-indigo-400">Saving...</div>
+              )}
+            </motion.div>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderSystemSettings = () => {
     if (!Array.isArray(systemSettings) || systemSettings.length === 0) {

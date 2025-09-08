@@ -170,7 +170,7 @@ export default function App() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors lg:hidden"
+                className="p-2 rounded-lg text-secondary hover:text-primary hover:bg-hover transition-colors lg:hidden"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -195,7 +195,7 @@ export default function App() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-slate-600 dark:text-neutral-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 text-secondary hover:text-primary hover:bg-hover rounded-lg transition-colors"
               >
                 <Icons.logout />
                 <span className="hidden sm:inline font-medium">Logout</span>
@@ -215,7 +215,7 @@ export default function App() {
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Navigation</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+                className="p-2 rounded-lg hover:bg-hover transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -235,7 +235,7 @@ export default function App() {
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     currentPage === key
                       ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
-                      : "text-slate-700 dark:text-neutral-300 hover:bg-slate-100 dark:hover:bg-neutral-800 hover:text-slate-900 dark:hover:text-white"
+                      : "text-secondary hover:bg-hover hover:text-primary"
                   }`}
                 >
                   <page.icon />

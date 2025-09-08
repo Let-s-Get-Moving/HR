@@ -477,7 +477,7 @@ export default function Testing() {
 
             <div className="space-y-3">
               {testGroup.tests.map((test, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-neutral-800 rounded-lg">
+                <div key={index} className="flex items-center justify-between p-3 card-sm">
                   <span className="text-sm">{test}</span>
                   {testResults[testGroup.id]?.tests[index] && (
                     <div className="flex items-center space-x-3">
@@ -500,20 +500,20 @@ export default function Testing() {
       <div className="card p-6 mt-6">
         <h3 className="text-lg font-semibold mb-4">Responsive Design Test</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="text-center p-4 bg-neutral-800 rounded-lg">
+          <div className="text-center p-4 card-sm">
             <div className="text-2xl mb-2">📱</div>
-            <div className="font-medium">Mobile</div>
-            <div className="text-sm text-neutral-400">320px - 768px</div>
+            <div className="font-medium text-primary">Mobile</div>
+            <div className="text-sm text-secondary">320px - 768px</div>
           </div>
-          <div className="text-center p-4 bg-neutral-800 rounded-lg">
+          <div className="text-center p-4 card-sm">
             <div className="text-2xl mb-2">📱</div>
-            <div className="font-medium">Tablet</div>
-            <div className="text-sm text-neutral-400">768px - 1024px</div>
+            <div className="font-medium text-primary">Tablet</div>
+            <div className="text-sm text-secondary">768px - 1024px</div>
           </div>
-          <div className="text-center p-4 bg-neutral-800 rounded-lg">
+          <div className="text-center p-4 card-sm">
             <div className="text-2xl mb-2">💻</div>
-            <div className="font-medium">Desktop</div>
-            <div className="text-sm text-neutral-400">1024px+</div>
+            <div className="font-medium text-primary">Desktop</div>
+            <div className="text-sm text-secondary">1024px+</div>
           </div>
         </div>
         <div className="mt-4 text-sm text-neutral-400">
@@ -526,21 +526,21 @@ export default function Testing() {
                   <div className="card p-6 mt-6">
                     <h3 className="text-lg font-semibold mb-4">Performance Metrics</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="text-center p-4 bg-neutral-800 rounded-lg">
-                        <div className="text-2xl font-bold text-green-400">100%</div>
-                        <div className="text-sm text-neutral-400">System Complete</div>
+                      <div className="text-center p-4 card-sm">
+                        <div className="text-2xl font-bold text-success">100%</div>
+                        <div className="text-sm text-secondary">System Complete</div>
                       </div>
-                      <div className="text-center p-4 bg-neutral-800 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-400">100%</div>
-                        <div className="text-sm text-neutral-400">Responsive</div>
+                      <div className="text-center p-4 card-sm">
+                        <div className="text-2xl font-bold text-info">100%</div>
+                        <div className="text-sm text-secondary">Responsive</div>
                       </div>
-                      <div className="text-center p-4 bg-neutral-800 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-400">30min</div>
-                        <div className="text-sm text-neutral-400">Session Timeout</div>
+                      <div className="text-center p-4 card-sm">
+                        <div className="text-2xl font-bold text-warning">30min</div>
+                        <div className="text-sm text-secondary">Session Timeout</div>
                       </div>
-                      <div className="text-center p-4 bg-neutral-800 rounded-lg">
-                        <div className="text-2xl font-bold text-indigo-400">100%</div>
-                        <div className="text-sm text-neutral-400">Features Working</div>
+                      <div className="text-center p-4 card-sm">
+                        <div className="text-2xl font-bold text-primary">100%</div>
+                        <div className="text-sm text-secondary">Features Working</div>
                       </div>
                     </div>
                   </div>
@@ -549,68 +549,68 @@ export default function Testing() {
                   <div className="card p-6 mt-6">
                     <h3 className="text-lg font-semibold mb-4">System Modules Overview</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Employee Management</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Employee Management</div>
                         </div>
-                        <div className="text-sm text-neutral-400">Complete lifecycle management</div>
+                        <div className="text-sm text-secondary">Complete lifecycle management</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Payroll & Compensation</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Payroll & Compensation</div>
                         </div>
-                        <div className="text-sm text-neutral-400">Automatic calculations & processing</div>
+                        <div className="text-sm text-secondary">Automatic calculations & processing</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Performance Management</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Performance Management</div>
                         </div>
-                        <div className="text-sm text-neutral-400">Reviews, goals & 360° feedback</div>
+                        <div className="text-sm text-secondary">Reviews, goals & 360° feedback</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Benefits Administration</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Benefits Administration</div>
                         </div>
-                        <div className="text-sm text-neutral-400">Insurance & retirement plans</div>
+                        <div className="text-sm text-secondary">Insurance & retirement plans</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Bonuses & Commissions</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Bonuses & Commissions</div>
                         </div>
-                        <div className="text-sm text-neutral-400">Performance-based compensation</div>
+                        <div className="text-sm text-secondary">Performance-based compensation</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Recruiting & Hiring</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Recruiting & Hiring</div>
                         </div>
-                        <div className="text-sm text-neutral-400">Job postings & candidate pipeline</div>
+                        <div className="text-sm text-secondary">Job postings & candidate pipeline</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Time & Attendance</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Time & Attendance</div>
                         </div>
-                        <div className="text-sm text-neutral-400">Tracking & overtime management</div>
+                        <div className="text-sm text-secondary">Tracking & overtime management</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Leave Management</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Leave Management</div>
                         </div>
-                        <div className="text-sm text-neutral-400">7 leave types with ESA compliance</div>
+                        <div className="text-sm text-secondary">7 leave types with ESA compliance</div>
                       </div>
-                      <div className="p-4 bg-neutral-800 rounded-lg">
+                      <div className="p-4 card-sm">
                         <div className="flex items-center space-x-3 mb-2">
-                          <div className="text-green-400">✅</div>
-                          <div className="font-medium">Compliance & Documents</div>
+                          <div className="text-success">✅</div>
+                          <div className="font-medium text-primary">Compliance & Documents</div>
                         </div>
-                        <div className="text-sm text-neutral-400">WHMIS, contracts & policies</div>
+                        <div className="text-sm text-secondary">WHMIS, contracts & policies</div>
                       </div>
                     </div>
                   </div>
