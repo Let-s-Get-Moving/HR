@@ -36,7 +36,7 @@ r.post("/login", async (req, res) => {
       httpOnly: false, // Allow JavaScript access
       secure: false, // Allow HTTP in development
       sameSite: 'lax', // More permissive for development
-      maxAge: 30 * 60 * 1000, // 30 minutes
+      maxAge: 2 * 60 * 60 * 1000, // 2 hours
       path: '/' // Ensure cookie is available for all paths
     });
     
@@ -115,7 +115,7 @@ r.post("/extend", (req, res) => {
     httpOnly: false, // Allow JavaScript access in development
     secure: false, // Allow HTTP in development
     sameSite: 'lax', // More permissive for development
-    maxAge: 30 * 60 * 1000 // 30 minutes
+    maxAge: 2 * 60 * 60 * 1000 // 2 hours
   });
   
   res.json({ message: "Session extended" });

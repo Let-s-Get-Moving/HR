@@ -11,6 +11,7 @@ export const API = (path, options = {}) => {
   
   // Get session ID from localStorage
   const sessionId = localStorage.getItem('sessionId');
+  console.log('Session ID from localStorage:', sessionId);
   
   return fetch(url, {
     credentials: 'include',
@@ -26,6 +27,13 @@ export const API = (path, options = {}) => {
     if (!response.ok) {
       const error = await response.text();
       console.error('API error:', error);
+      
+      // If session expired, clear it from localStorage
+      if (response.status === 401 && (error.includes('Invalid or expired session') || error.includes('No session'))) {
+        localStorage.removeItem('sessionId');
+        console.log('Cleared expired session ID');
+      }
+      
       throw new Error(`HTTP ${response.status}: ${error}`);
     }
     
@@ -38,7 +46,7 @@ export const API = (path, options = {}) => {
     }
     
     // If this is a logout response, clear the session ID
-    if (path.includes('/auth/logout')) {
+    if (path.includes('/auth/logout') && response.ok) {
       localStorage.removeItem('sessionId');
       console.log('Cleared session ID');
     }
@@ -54,4 +62,14 @@ export const API = (path, options = {}) => {
 export const clearSession = () => {
   localStorage.removeItem('sessionId');
   console.log('Session cleared');
+};
+
+// Helper function to check if we have a session
+export const hasSession = () => {
+  return !!localStorage.getItem('sessionId');
+};
+
+// Helper function to get session ID
+export const getSessionId = () => {
+  return localStorage.getItem('sessionId');
 };
