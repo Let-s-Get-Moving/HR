@@ -38,7 +38,7 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -48,33 +48,33 @@ export default function Login({ onLogin }) {
           {/* Logo and Branding */}
           <div className="text-center mb-8">
             <div className="text-4xl mb-4">🚛</div>
-            <h1 className="text-2xl font-bold mb-2">Command & Control Logistics</h1>
-            <p className="text-neutral-400">Human Resources Management</p>
+            <h1 className="text-2xl font-bold mb-2 text-primary">Command & Control Logistics</h1>
+            <p className="text-secondary">Human Resources Management</p>
           </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Username</label>
+            <div className="form-group">
+              <label className="block text-sm font-medium mb-2 text-primary">Username</label>
               <input
                 type="text"
                 required
                 value={credentials.username}
                 onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 input-md"
                 placeholder="Enter username"
                 disabled={loading}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
+            <div className="form-group">
+              <label className="block text-sm font-medium mb-2 text-primary">Password</label>
               <input
                 type="password"
                 required
                 value={credentials.password}
                 onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                className="w-full px-4 py-3 input-md"
                 placeholder="Enter password"
                 disabled={loading}
               />
@@ -84,7 +84,7 @@ export default function Login({ onLogin }) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-red-400 text-sm text-center"
+                className="text-error text-sm text-center"
               >
                 {error}
               </motion.div>
@@ -95,18 +95,18 @@ export default function Login({ onLogin }) {
               whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="w-full btn-primary py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
             >
               {loading ? "Signing In..." : "Sign In"}
             </motion.button>
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-neutral-800 rounded-lg">
-            <p className="text-xs text-neutral-400 text-center">
+          <div className="mt-6 p-4 card-sm">
+            <p className="text-xs text-secondary text-center">
               <strong>Demo Credentials:</strong><br />
-              Username: <code>Avneet</code><br />
-              Password: <code>password123</code>
+              Username: <code className="text-primary font-medium">Avneet</code><br />
+              Password: <code className="text-primary font-medium">password123</code>
             </p>
           </div>
         </div>

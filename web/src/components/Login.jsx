@@ -96,39 +96,39 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-900 to-neutral-800 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-8 shadow-2xl">
+        <div className="card-lg backdrop-blur-md border border-primary/20 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2">C&C HR</h1>
-            <p className="text-neutral-400">Command & Control Logistics</p>
-            <p className="text-sm text-neutral-500 mt-2">Developed by Udi Shkolnik</p>
+            <h1 className="text-3xl font-bold mb-2 text-primary">C&C HR</h1>
+            <p className="text-secondary">Command & Control Logistics</p>
+            <p className="text-sm text-tertiary mt-2">Developed by Udi Shkolnik</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Username</label>
+            <div className="form-group">
+              <label className="block text-sm font-medium mb-2 text-primary">Username</label>
               <input
                 type="text"
                 value={credentials.username}
                 onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:border-indigo-400 text-white placeholder-neutral-300"
+                className="w-full px-3 py-2 input-md"
                 placeholder="Enter username"
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
+            <div className="form-group">
+              <label className="block text-sm font-medium mb-2 text-primary">Password</label>
               <input
                 type="password"
                 value={credentials.password}
                 onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg focus:outline-none focus:border-indigo-400 text-white placeholder-neutral-300"
+                className="w-full px-3 py-2 input-md"
                 placeholder="Enter password"
                 required
               />
@@ -138,7 +138,7 @@ export default function Login({ onLogin }) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-red-400 text-sm text-center"
+                className="text-error text-sm text-center"
               >
                 {error}
               </motion.div>
@@ -147,19 +147,19 @@ export default function Login({ onLogin }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-indigo-800 disabled:to-purple-800 py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-neutral-400">
+          <div className="mt-6 text-center text-sm text-secondary">
             <p>Demo Credentials:</p>
-            <p>Username: <span className="text-indigo-400">Avneet</span></p>
-            <p>Password: <span className="text-indigo-400">password123</span></p>
+            <p>Username: <span className="text-primary font-medium">Avneet</span></p>
+            <p>Password: <span className="text-primary font-medium">password123</span></p>
           </div>
 
-          <div className="mt-4 text-center text-xs text-neutral-500">
+          <div className="mt-4 text-center text-xs text-tertiary">
             <p>Session timeout: 30 minutes</p>
             <p>Auto-logout on inactivity</p>
           </div>
