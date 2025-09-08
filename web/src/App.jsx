@@ -15,6 +15,7 @@ import Benefits from "./pages/Benefits.jsx";
 import BonusesCommissions from "./pages/BonusesCommissions.jsx";
 
 import { API } from './config/api.js';
+import { sessionManager } from './utils/sessionManager.js';
 
 // Professional SVG Icons
 const Icons = {
@@ -127,22 +128,12 @@ export default function App() {
     
     // Check for existing session on app load
     const checkSession = async () => {
-      // Only check session if we have a session ID in localStorage
-      const sessionId = localStorage.getItem('sessionId');
-      if (!sessionId) {
-        console.log('No session ID found, showing login');
-        return;
-      }
-      
-      try {
-        const sessionData = await API("/api/auth/session");
+      const sessionData = await sessionManager.checkSession(API);
+      if (sessionData && sessionData.user) {
         setUser(sessionData.user);
         console.log('Session valid, user logged in');
-      } catch (error) {
-        console.error("Session check error:", error);
-        // Clear invalid session ID
-        localStorage.removeItem('sessionId');
-        console.log('Cleared invalid session ID');
+      } else {
+        console.log('No valid session found');
       }
     };
     

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { API } from '../config/api.js';
+import { sessionManager } from '../utils/sessionManager.js';
 
 export default function Settings() {
   const [activeTab, setActiveTab] = useState("system");
@@ -84,11 +85,10 @@ export default function Settings() {
 
   const loadSettings = async () => {
     try {
-      // Check if user is authenticated first
-      const sessionResponse = await API("/api/auth/session");
-      if (!sessionResponse.user) {
-        // Redirect to login or show login required message
-        console.log("User not authenticated");
+      // Check if user is authenticated using session manager
+      const sessionData = await sessionManager.checkSession(API);
+      if (!sessionData || !sessionData.user) {
+        console.log("User not authenticated, skipping settings load");
         setLoading(false);
         return;
       }

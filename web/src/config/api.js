@@ -1,17 +1,25 @@
 // API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com';
 
-// Debug logging
-console.log('Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
-console.log('Final API_BASE_URL:', API_BASE_URL);
+// Debug logging (only in development)
+if (import.meta.env.DEV) {
+  console.log('Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
+  console.log('Final API_BASE_URL:', API_BASE_URL);
+}
 
 export const API = (path, options = {}) => {
   const url = `${API_BASE_URL}${path}`;
-  console.log('Making API request to:', url);
+  
+  // Debug logging (only in development)
+  if (import.meta.env.DEV) {
+    console.log('Making API request to:', url);
+  }
   
   // Get session ID from localStorage
   const sessionId = localStorage.getItem('sessionId');
-  console.log('Session ID from localStorage:', sessionId);
+  if (import.meta.env.DEV) {
+    console.log('Session ID from localStorage:', sessionId);
+  }
   
   return fetch(url, {
     credentials: 'include',
@@ -22,16 +30,22 @@ export const API = (path, options = {}) => {
     },
     ...options,
   }).then(async (response) => {
-    console.log('API response status:', response.status);
+    if (import.meta.env.DEV) {
+      console.log('API response status:', response.status);
+    }
     
     if (!response.ok) {
       const error = await response.text();
-      console.error('API error:', error);
+      if (import.meta.env.DEV) {
+        console.error('API error:', error);
+      }
       
       // If session expired, clear it from localStorage
-      if (response.status === 401 && (error.includes('Invalid or expired session') || error.includes('No session'))) {
+      if (response.status === 401 && (error.includes('Invalid or expired session') || error.includes('No session') || error.includes('Authentication required'))) {
         localStorage.removeItem('sessionId');
-        console.log('Cleared expired session ID');
+        if (import.meta.env.DEV) {
+          console.log('Cleared expired session ID');
+        }
       }
       
       throw new Error(`HTTP ${response.status}: ${error}`);
@@ -42,18 +56,24 @@ export const API = (path, options = {}) => {
     // If this is a login response, store the session ID
     if (path.includes('/auth/login') && data.sessionId) {
       localStorage.setItem('sessionId', data.sessionId);
-      console.log('Stored session ID:', data.sessionId);
+      if (import.meta.env.DEV) {
+        console.log('Stored session ID:', data.sessionId);
+      }
     }
     
     // If this is a logout response, clear the session ID
     if (path.includes('/auth/logout') && response.ok) {
       localStorage.removeItem('sessionId');
-      console.log('Cleared session ID');
+      if (import.meta.env.DEV) {
+        console.log('Cleared session ID');
+      }
     }
     
     return data;
   }).catch(error => {
-    console.error('API request failed:', error);
+    if (import.meta.env.DEV) {
+      console.error('API request failed:', error);
+    }
     throw error;
   });
 };
@@ -61,7 +81,9 @@ export const API = (path, options = {}) => {
 // Helper function to clear session
 export const clearSession = () => {
   localStorage.removeItem('sessionId');
-  console.log('Session cleared');
+  if (import.meta.env.DEV) {
+    console.log('Session cleared');
+  }
 };
 
 // Helper function to check if we have a session

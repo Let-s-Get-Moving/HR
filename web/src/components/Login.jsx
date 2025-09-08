@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { API } from '../config/api.js';
+import { sessionManager } from '../utils/sessionManager.js';
 
 export default function Login({ onLogin }) {
   const [credentials, setCredentials] = useState({ username: "", password: "" });
@@ -13,17 +14,9 @@ export default function Login({ onLogin }) {
   }, []);
 
   const checkSession = async () => {
-    try {
-      const response = await API("/api/auth/session");
-      if (response.user) {
-        onLogin(response.user);
-      }
-    } catch (error) {
-      // No valid session, user needs to login
-      console.log("No valid session found");
-      // Clear any stale session data
-      localStorage.removeItem("sessionId");
-      localStorage.removeItem("user");
+    const sessionData = await sessionManager.checkSession(API);
+    if (sessionData && sessionData.user) {
+      onLogin(sessionData.user);
     }
   };
 
