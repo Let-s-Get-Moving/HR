@@ -46,7 +46,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="dashboard-container p-6 max-w-7xl mx-auto">
       <Greeting name="Avneet" />
       
       {/* Enhanced Key Metrics */}
@@ -71,8 +71,8 @@ export default function Dashboard() {
 
       {/* Employment Mix */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <div className="card p-5">
-          <div className="text-sm text-neutral-400 mb-2">Employment Mix</div>
+        <div className="dashboard-card p-5">
+          <div className="text-sm text-tertiary mb-2">Employment Mix</div>
           {wf && (
             <Donut
               segments={[
@@ -84,8 +84,8 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="card p-5">
-          <div className="text-sm text-neutral-400 mb-2">Attendance (This Period)</div>
+        <div className="dashboard-card p-5">
+          <div className="text-sm text-tertiary mb-2">Attendance (This Period)</div>
           <div className="grid grid-cols-2 gap-3">
             <MetricCard label="Absenteeism (%)" value={att?.absenteeism_rate ?? "..."} />
             <MetricCard label="Avg Hours / wk" value={att?.avg_hours_week ?? "..."} />
@@ -94,8 +94,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card p-5">
-          <div className="text-sm text-neutral-400 mb-2">Compliance</div>
+        <div className="dashboard-card p-5">
+          <div className="text-sm text-tertiary mb-2">Compliance</div>
           <div className="grid grid-cols-2 gap-3">
             <MetricCard label="Contracts Signed" value={`${cmp?.contracts_signed_pct ?? "..."}%`} />
             <MetricCard label="WHMIS Valid" value={`${cmp?.whmis_valid_pct ?? "..."}%`} />
@@ -111,15 +111,15 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="card p-6 mb-6"
+              className="dashboard-card p-6 mb-6"
             >
               <h3 className="text-lg font-semibold mb-4">Department Distribution</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {analytics.departmentDistribution.map((dept) => (
-                  <div key={dept.department} className="flex justify-between items-center p-3 bg-neutral-800 rounded-lg">
+                  <div key={dept.department} className="flex justify-between items-center p-3 bg-tertiary/10 rounded-lg">
                     <span className="text-sm font-medium">{dept.department}</span>
                     <div className="flex items-center space-x-2">
-                      <div className="w-16 bg-neutral-700 rounded-full h-2">
+                      <div className="w-16 bg-secondary/20 rounded-full h-2">
                         <div 
                           className="bg-indigo-500 h-2 rounded-full" 
                           style={{ width: `${dept.percentage}%` }}
@@ -138,7 +138,7 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="card p-6"
+              className="dashboard-card p-6"
             >
               <h3 className="text-lg font-semibold mb-4">Upcoming Anniversaries</h3>
               <div className="space-y-3">
@@ -166,7 +166,7 @@ export default function Dashboard() {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="card p-6"
+              className="dashboard-card p-6"
             >
               <h3 className="text-lg font-semibold mb-4">Probation Completions</h3>
               <div className="space-y-3">

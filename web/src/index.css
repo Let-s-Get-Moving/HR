@@ -82,6 +82,10 @@
   --bg-hover: #1a1a1a;
   --bg-active: #2a2a2a;
   
+  /* Dashboard specific lighter backgrounds */
+  --dashboard-bg: #0f0f0f;
+  --dashboard-card-bg: #1a1a1a;
+  
   /* Text Colors - High Contrast */
   --text-primary: #ffffff;
   --text-secondary: #e2e8f0;
@@ -172,6 +176,21 @@ h1, h2, h3, h4, h5, h6, p, span, div, label, input, select, textarea, button, a,
 .card {
   @apply rounded-2xl shadow-lg;
   background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 6px -1px var(--card-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+/* Dashboard specific styling */
+.dashboard-container {
+  background-color: var(--dashboard-bg);
+  min-height: 100vh;
+}
+
+.dashboard-card {
+  @apply rounded-2xl shadow-lg;
+  background-color: var(--dashboard-card-bg);
   border: 1px solid var(--card-border);
   box-shadow: 0 4px 6px -1px var(--card-shadow);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
