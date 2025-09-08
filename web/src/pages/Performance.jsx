@@ -152,12 +152,12 @@ export default function Performance() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Performance Management</h1>
-        <p className="text-gray-600">Manage employee performance reviews and goals</p>
+        <h1 className="text-3xl font-bold  mb-2">Performance Management</h1>
+        <p className="text-secondary">Manage employee performance reviews and goals</p>
       </motion.div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-primary mb-6">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (
             <button
@@ -165,7 +165,7 @@ export default function Performance() {
               onClick={() => setActiveTab(tab.id)}
               className={`py-2 px-1 border-b-2 font-medium text-sm ${
                 activeTab === tab.id
-                  ? "border-gray-900 text-gray-900"
+                  ? "border-gray-900 "
                   : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
             >
@@ -181,7 +181,7 @@ export default function Performance() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* New Review Form */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">New Performance Review</h3>
               <form onSubmit={handleSubmitReview} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -298,18 +298,18 @@ export default function Performance() {
             </div>
 
             {/* Reviews List */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">Recent Reviews</h3>
               <div className="space-y-4">
                 {reviews.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">No performance reviews found</p>
                 ) : (
                   reviews.map((review) => (
-                    <div key={review.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={review.id} className="border border-primary rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-medium">{review.first_name} {review.last_name}</h4>
-                          <p className="text-sm text-gray-600">{review.department}</p>
+                          <p className="text-sm text-secondary">{review.department}</p>
                         </div>
                         <div className="text-right">
                           <p className={`text-lg font-bold ${getRatingColor(review.overall_rating)}`}>
@@ -318,10 +318,10 @@ export default function Performance() {
                           <p className="text-xs text-gray-500">{review.review_period}</p>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-secondary mb-2">
                         Review Date: {new Date(review.review_date).toLocaleDateString()}
                       </p>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-secondary">
                         <p><strong>Strengths:</strong> {review.strengths}</p>
                         <p><strong>Areas for Improvement:</strong> {review.areas_for_improvement}</p>
                       </div>
@@ -339,7 +339,7 @@ export default function Performance() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* New Goal Form */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">New Performance Goal</h3>
               <form onSubmit={handleSubmitGoal} className="space-y-4">
                 <div>
@@ -416,18 +416,18 @@ export default function Performance() {
             </div>
 
             {/* Goals List */}
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">Performance Goals</h3>
               <div className="space-y-4">
                 {goals.length === 0 ? (
                   <p className="text-gray-500 text-center py-8">No performance goals found</p>
                 ) : (
                   goals.map((goal) => (
-                    <div key={goal.id} className="border border-gray-200 rounded-lg p-4">
+                    <div key={goal.id} className="border border-primary rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-medium">{goal.goal_title}</h4>
-                          <p className="text-sm text-gray-600">{goal.goal_description}</p>
+                          <p className="text-sm text-secondary">{goal.goal_description}</p>
                         </div>
                         <div className="flex space-x-2">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(goal.priority)}`}>
@@ -438,7 +438,7 @@ export default function Performance() {
                           </span>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-secondary mb-3">
                         Target Date: {new Date(goal.target_date).toLocaleDateString()}
                       </p>
                       {goal.status !== 'Completed' && (
@@ -478,23 +478,23 @@ export default function Performance() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {analytics && (
               <>
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="card p-6">
                   <h3 className="text-lg font-semibold mb-2">Average Rating</h3>
                   <p className={`text-3xl font-bold ${getRatingColor(analytics.average_rating || 0)}`}>
                     {analytics.average_rating || 0}
                   </p>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="card p-6">
                   <h3 className="text-lg font-semibold mb-2">Total Reviews</h3>
-                  <p className="text-3xl font-bold text-gray-900">{reviews.length}</p>
+                  <p className="text-3xl font-bold ">{reviews.length}</p>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="card p-6">
                   <h3 className="text-lg font-semibold mb-2">Active Goals</h3>
                   <p className="text-3xl font-bold text-blue-600">
                     {goals.filter(g => g.status === 'In Progress').length}
                   </p>
                 </div>
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="card p-6">
                   <h3 className="text-lg font-semibold mb-2">Completed Goals</h3>
                   <p className="text-3xl font-bold text-green-600">
                     {goals.filter(g => g.status === 'Completed').length}
@@ -506,7 +506,7 @@ export default function Performance() {
 
           {/* Top Performers */}
           {analytics?.top_performers && (
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">Top Performers</h3>
               <div className="space-y-3">
                 {analytics.top_performers.map((performer, index) => (
