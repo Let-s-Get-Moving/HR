@@ -13,6 +13,7 @@ import leave from "./routes/leave.js";
 import performance from "./routes/performance.js";
 import analytics from "./routes/analytics.js";
 import metrics from "./routes/metrics.js";
+import settings from "./routes/settings.js";
 
 const app = express();
 
@@ -73,6 +74,7 @@ app.use("/api/leave", leave);
 app.use("/api/performance", performance);
 app.use("/api/analytics", analytics);
 app.use("/api/metrics", metrics);
+app.use("/api/settings", settings);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => console.log(`API listening on ${port}`));
