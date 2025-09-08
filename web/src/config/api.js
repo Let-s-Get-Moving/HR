@@ -9,15 +9,35 @@ export const API = (path, options = {}) => {
   const url = `${API_BASE_URL}${path}`;
   console.log('Making API request to:', url);
   
+  // Get session ID from localStorage
+  const sessionId = localStorage.getItem('sessionId');
+  
   return fetch(url, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...(sessionId && { 'X-Session-ID': sessionId }),
       ...options.headers,
     },
     ...options,
   }).then(async (response) => {
     console.log('API response status:', response.status);
+    
+    // If this is a login response, store the session ID
+    if (path.includes('/auth/login') && response.ok) {
+      const data = await response.json();
+      if (data.sessionId) {
+        localStorage.setItem('sessionId', data.sessionId);
+        console.log('Stored session ID:', data.sessionId);
+      }
+    }
+    
+    // If this is a logout response, clear the session ID
+    if (path.includes('/auth/logout') && response.ok) {
+      localStorage.removeItem('sessionId');
+      console.log('Cleared session ID');
+    }
+    
     if (!response.ok) {
       const error = await response.text();
       console.error('API error:', error);
@@ -28,4 +48,10 @@ export const API = (path, options = {}) => {
     console.error('API request failed:', error);
     throw error;
   });
+};
+
+// Helper function to clear session
+export const clearSession = () => {
+  localStorage.removeItem('sessionId');
+  console.log('Session cleared');
 };
