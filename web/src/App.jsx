@@ -169,13 +169,13 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-white/5 backdrop-blur-md border-b border-slate-200 dark:border-white/10 shadow-sm sticky top-0 z-40">
+      <header className="bg-white/90 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm sticky top-0 z-40">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg text-secondary hover:text-primary hover:bg-hover transition-colors lg:hidden"
+                className="p-2 rounded-lg text-secondary hover:text-primary hover:bg-hover dark:hover:bg-slate-700/50 transition-colors lg:hidden"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -200,7 +200,7 @@ export default function App() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-secondary hover:text-primary hover:bg-hover rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 text-secondary hover:text-primary hover:bg-hover dark:hover:bg-slate-700/50 rounded-lg transition-colors"
               >
                 <Icons.logout />
                 <span className="hidden sm:inline font-medium">Logout</span>
@@ -212,7 +212,7 @@ export default function App() {
 
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar Navigation */}
-        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white/90 dark:bg-white/10 backdrop-blur-md border-r border-slate-200 dark:border-white/10 transform transition-transform duration-300 ease-in-out ${
+        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-r border-slate-200 dark:border-slate-600 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
           <div className="p-6">
@@ -220,7 +220,7 @@ export default function App() {
               <h2 className="text-lg font-semibold text-primary">Navigation</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-hover transition-colors"
+                className="p-2 rounded-lg hover:bg-hover dark:hover:bg-slate-700/50 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -239,8 +239,8 @@ export default function App() {
                   }}
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                     currentPage === key
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25"
-                      : "text-secondary hover:bg-hover hover:text-primary"
+                      ? "bg-indigo-600 dark:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25 dark:shadow-indigo-500/50"
+                      : "text-secondary hover:bg-hover hover:text-primary dark:hover:bg-slate-700/50"
                   }`}
                 >
                   <page.icon />
@@ -260,7 +260,7 @@ export default function App() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="flex-1 bg-slate-50/50 dark:bg-slate-900/50 p-6 lg:p-8">
           <motion.div
             key={currentPage}
             initial={{ opacity: 0, y: 20 }}

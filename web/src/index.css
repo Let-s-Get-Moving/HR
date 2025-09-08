@@ -53,6 +53,20 @@
   --toggle-on-hover: #059669;
   --toggle-off-hover: #dc2626;
   
+  /* Header Colors */
+  --header-bg: #ffffff;
+  --header-bg-dark: #0f172a;
+  --header-border: #e2e8f0;
+  --header-border-dark: #334155;
+  
+  /* Sidebar Colors */
+  --sidebar-bg: #ffffff;
+  --sidebar-bg-dark: #1e293b;
+  --sidebar-border: #e2e8f0;
+  --sidebar-border-dark: #475569;
+  --sidebar-hover: #f1f5f9;
+  --sidebar-hover-dark: #334155;
+  
   /* Interactive Colors - High Contrast */
   --primary-bg: #2563eb;
   --primary-hover: #1d4ed8;
