@@ -136,7 +136,7 @@ r.get("/analytics", async (_req, res) => {
                 COUNT(*) FILTER (WHERE status = 'Approved') as approved,
                 COUNT(*) FILTER (WHERE status = 'Rejected') as rejected
          FROM leave_requests`),
-      q(`SELECT lt.name, SUM(lb.available_days) as total_available, SUM(lb.used_days) as total_used
+      q(`SELECT lt.name, SUM(lb.entitled_days - lb.used_days + lb.carried_over_days) as total_available, SUM(lb.used_days) as total_used
          FROM leave_balances lb
          JOIN leave_types lt ON lb.leave_type_id = lt.id
          GROUP BY lt.id, lt.name`),
@@ -166,7 +166,7 @@ r.get("/analytics", async (_req, res) => {
           COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending,
           COUNT(CASE WHEN status = 'Rejected' THEN 1 END) as rejected
          FROM leave_requests`),
-      q(`SELECT lt.name, SUM(lb.available_days) as total_available
+      q(`SELECT lt.name, SUM(lb.entitled_days - lb.used_days + lb.carried_over_days) as total_available
          FROM leave_balances lb
          JOIN leave_types lt ON lb.leave_type_id = lt.id
          GROUP BY lt.id, lt.name`),
