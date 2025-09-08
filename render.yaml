@@ -15,9 +15,8 @@ services:
           name: hr-database
           property: connectionString
 
-  - type: web
+  - type: static
     name: hr-web
-    runtime: static
     buildCommand: cd web && npm install && npm run build
     staticPublishPath: web/dist
     routes:
