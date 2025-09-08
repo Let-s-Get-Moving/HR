@@ -58,6 +58,20 @@ export default function Settings() {
     }
   };
 
+  const applyLanguage = (language) => {
+    // Set the document language
+    document.documentElement.lang = language;
+    console.log(`Language changed to: ${language}`);
+    // In a real app, you might trigger a re-render with new translations
+  };
+
+  const applyTimezone = (timezone) => {
+    // Store timezone for use in date formatting
+    localStorage.setItem('user_timezone', timezone);
+    console.log(`Timezone changed to: ${timezone}`);
+    // In a real app, you might update all date displays
+  };
+
   const loadSettings = async () => {
     try {
       // Check if user is authenticated first
@@ -116,9 +130,13 @@ export default function Settings() {
         break;
       case "preferences":
         updateState(userPreferences, setUserPreferences);
-        // Apply theme change immediately
+        // Apply specific preference changes immediately
         if (key === 'theme') {
           applyTheme();
+        } else if (key === 'language') {
+          applyLanguage(value);
+        } else if (key === 'timezone') {
+          applyTimezone(value);
         }
         break;
       case "notifications":
@@ -154,8 +172,18 @@ export default function Settings() {
   const renderSettingField = (setting, category) => {
     const { key, value, type, options, description } = setting;
     
+    // Helper function to safely parse boolean values
+    const parseBoolean = (val) => {
+      if (typeof val === 'boolean') return val;
+      if (typeof val === 'string') {
+        return val.toLowerCase() === 'true';
+      }
+      return false;
+    };
+    
     switch (type) {
       case "boolean":
+        const boolValue = parseBoolean(value);
         return (
           <div className="flex items-center justify-between">
             <div>
@@ -163,15 +191,15 @@ export default function Settings() {
               {description && <p className="text-xs text-neutral-400 mt-1">{description}</p>}
             </div>
             <button
-              onClick={() => handleSettingUpdate(category, key, !JSON.parse(value))}
+              onClick={() => handleSettingUpdate(category, key, !boolValue)}
               disabled={saving[key]}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                JSON.parse(value) ? 'bg-indigo-600' : 'bg-neutral-600'
+                boolValue ? 'bg-indigo-600' : 'bg-neutral-600'
               }`}
             >
               <span
                 className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  JSON.parse(value) ? 'translate-x-6' : 'translate-x-1'
+                  boolValue ? 'translate-x-6' : 'translate-x-1'
                 }`}
               />
             </button>

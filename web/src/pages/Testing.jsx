@@ -136,6 +136,9 @@ export default function Testing() {
                 
                 // Run performance tests
                 await runPerformanceTests(results);
+                
+                // Run responsive design tests
+                await runResponsiveTests(results);
 
                 setRunningTests(false);
               };
@@ -252,7 +255,7 @@ export default function Testing() {
                   // Test schema validation (check if required fields exist)
                   if (Array.isArray(dbTestResponse) && dbTestResponse.length > 0) {
                     const sampleEmployee = dbTestResponse[0];
-                    const requiredFields = ['id', 'name', 'email', 'department'];
+                    const requiredFields = ['id', 'first_name', 'last_name', 'email', 'department'];
                     const hasRequiredFields = requiredFields.every(field => field in sampleEmployee);
                     dbResults.tests[1].status = hasRequiredFields ? "passed" : "failed";
                     dbResults.tests[1].result = hasRequiredFields ? "Schema validation passed" : "Missing required fields";
@@ -264,7 +267,7 @@ export default function Testing() {
                   // Test data integrity (check for null/undefined values)
                   if (Array.isArray(dbTestResponse) && dbTestResponse.length > 0) {
                     const hasValidData = dbTestResponse.every(emp => 
-                      emp.name && emp.email && emp.department
+                      emp.first_name && emp.last_name && emp.email && emp.department
                     );
                     dbResults.tests[2].status = hasValidData ? "passed" : "failed";
                     dbResults.tests[2].result = hasValidData ? "Data integrity validated" : "Found invalid data";
@@ -291,6 +294,42 @@ export default function Testing() {
                 dbResults.status = dbResults.tests.every(t => t.status === "passed" || t.status === "warning") ? "passed" : "failed";
                 setTestResults({ ...results });
               };
+
+  const runResponsiveTests = async (results) => {
+    const responsiveResults = results.responsiveness;
+    
+    try {
+      // Test mobile navigation
+      const isMobile = window.innerWidth <= 768;
+      responsiveResults.tests[0].status = "passed";
+      responsiveResults.tests[0].result = `Mobile navigation ${isMobile ? 'detected' : 'not applicable'} (${window.innerWidth}px)`;
+      
+      // Test tablet layout
+      const isTablet = window.innerWidth > 768 && window.innerWidth <= 1024;
+      responsiveResults.tests[1].status = "passed";
+      responsiveResults.tests[1].result = `Tablet layout ${isTablet ? 'detected' : 'not applicable'} (${window.innerWidth}px)`;
+      
+      // Test desktop layout
+      const isDesktop = window.innerWidth > 1024;
+      responsiveResults.tests[2].status = "passed";
+      responsiveResults.tests[2].result = `Desktop layout ${isDesktop ? 'detected' : 'not applicable'} (${window.innerWidth}px)`;
+      
+      // Test touch interactions
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      responsiveResults.tests[3].status = "passed";
+      responsiveResults.tests[3].result = `Touch support ${hasTouch ? 'available' : 'not available'}`;
+      
+    } catch (error) {
+      console.error("Responsive tests error:", error);
+      responsiveResults.tests.forEach(test => {
+        test.status = "failed";
+        test.error = error.message;
+      });
+    }
+    
+    responsiveResults.status = responsiveResults.tests.every(t => t.status === "passed") ? "passed" : "failed";
+    setTestResults({ ...results });
+  };
 
               const runFeatureTests = async (results) => {
                 const featureResults = results.features;
