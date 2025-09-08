@@ -85,27 +85,31 @@ export default function Settings() {
 
   const loadSettings = async () => {
     try {
-      // Check if user is authenticated using session manager
-      const sessionData = await sessionManager.checkSession(API);
-      if (!sessionData || !sessionData.user) {
-        console.log("User not authenticated, skipping settings load");
-        setLoading(false);
-        return;
-      }
-
-      const [system, preferences, notifs, sec, maint] = await Promise.all([
-        API("/api/settings/system"),
-        API("/api/settings/preferences"),
-        API("/api/settings/notifications"),
-        API("/api/settings/security"),
-        API("/api/settings/maintenance")
-      ]);
-      
+      // Always try to load system settings (no auth required)
+      const system = await API("/api/settings/system").catch(() => []);
       setSystemSettings(system || []);
-      setUserPreferences(preferences || []);
-      setNotifications(notifs || []);
-      setSecurity(sec || []);
-      setMaintenance(maint || []);
+
+      // Try to load user-specific settings with authentication
+      const sessionData = await sessionManager.checkSession(API);
+      if (sessionData && sessionData.user) {
+        const [preferences, notifs, sec, maint] = await Promise.all([
+          API("/api/settings/preferences").catch(() => []),
+          API("/api/settings/notifications").catch(() => []),
+          API("/api/settings/security").catch(() => []),
+          API("/api/settings/maintenance").catch(() => [])
+        ]);
+        
+        setUserPreferences(preferences || []);
+        setNotifications(notifs || []);
+        setSecurity(sec || []);
+        setMaintenance(maint || []);
+      } else {
+        // Load default settings even without authentication
+        setUserPreferences([]);
+        setNotifications([]);
+        setSecurity([]);
+        setMaintenance([]);
+      }
     } catch (error) {
       console.error("Error loading settings:", error);
       // Set empty arrays to prevent forEach errors

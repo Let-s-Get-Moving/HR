@@ -62,11 +62,14 @@
   --input-focus: #3b82f6;
   --input-disabled: #f3f4f6;
   
-  /* Navigation */
-  --nav-bg: #ffffff;
+  /* Navigation - Light Theme */
+  --nav-bg: #f8fafc;
   --nav-border: #e2e8f0;
-  --nav-hover: #f8fafc;
+  --nav-hover: #f1f5f9;
   --nav-active: #e2e8f0;
+  --nav-text: #334155;
+  --nav-text-hover: #0f172a;
+  --nav-text-active: #ffffff;
 }
 
 /* Professional Dark Theme */
@@ -751,6 +754,38 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .nav-item.active {
   background-color: var(--nav-active);
   color: var(--text-primary);
+}
+
+/* Light Theme Navigation Overrides */
+.light .nav-item {
+  color: var(--nav-text);
+  background-color: transparent;
+}
+
+.light .nav-item:hover {
+  background-color: var(--nav-hover);
+  color: var(--nav-text-hover);
+}
+
+.light .nav-item.active {
+  background-color: var(--primary-bg);
+  color: var(--nav-text-active);
+}
+
+/* Dark Theme Navigation Overrides */
+.dark .nav-item {
+  color: var(--text-secondary);
+  background-color: transparent;
+}
+
+.dark .nav-item:hover {
+  background-color: var(--nav-hover);
+  color: var(--text-primary);
+}
+
+.dark .nav-item.active {
+  background-color: var(--primary-bg);
+  color: var(--primary-text);
 }
 
 /* Professional Tables */

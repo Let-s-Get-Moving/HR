@@ -76,6 +76,12 @@ r.get("/calculations/:periodId", async (req, res) => {
   const { periodId } = req.params;
   
   try {
+    // First check if the period exists
+    const periodCheck = await q(`SELECT id FROM payroll_periods WHERE id = $1`, [periodId]);
+    if (periodCheck.rows.length === 0) {
+      return res.status(404).json({ error: "Payroll period not found" });
+    }
+
     const query = `
       SELECT 
         pc.*,
@@ -95,6 +101,11 @@ r.get("/calculations/:periodId", async (req, res) => {
     `;
     
     const { rows } = await q(query, [periodId]);
+    
+    // If no calculations exist, return empty array instead of error
+    if (rows.length === 0) {
+      return res.json([]);
+    }
     
     // Ensure numeric fields are properly converted
     const processedRows = rows.map(row => ({

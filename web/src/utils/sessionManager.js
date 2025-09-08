@@ -67,7 +67,13 @@ class SessionManager {
       }
     } catch (error) {
       console.log("Session check failed:", error.message);
-      this.clearSession();
+      // Only clear session on specific auth errors, not network issues
+      if (error.message.includes("401") || 
+          error.message.includes("Unauthorized") || 
+          error.message.includes("Invalid or expired session") ||
+          error.message.includes("No session")) {
+        this.clearSession();
+      }
       return null;
     }
   }
