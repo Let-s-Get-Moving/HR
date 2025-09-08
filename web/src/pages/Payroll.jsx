@@ -133,7 +133,8 @@ export default function Payroll() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Payroll Period</h3>
+          <h3 className="text-lg font-semibold mb-4">Payroll Period (Bi-weekly)</h3>
+          <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year</p>
           <select
             value={selectedPeriod?.id || ""}
             onChange={(e) => {
@@ -148,9 +149,10 @@ export default function Payroll() {
               const endDate = new Date(period.end_date);
               const startMonth = startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
               const endMonth = endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+              const periodName = period.period_name || `Period ${period.id}`;
               return (
                 <option key={period.id} value={period.id}>
-                  {startMonth === endMonth ? startMonth : `${startMonth} - ${endMonth}`}
+                  {periodName} ({startMonth} - {endMonth})
                 </option>
               );
             })}
@@ -252,7 +254,8 @@ export default function Payroll() {
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Select Payroll Period</label>
+            <label className="block text-sm font-medium mb-2">Select Payroll Period (Bi-weekly)</label>
+            <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year</p>
             <select
               value={selectedPeriod?.id || ""}
               onChange={(e) => {
@@ -262,11 +265,18 @@ export default function Payroll() {
               className="w-full px-3 py-2 input-md"
             >
               <option value="">Select a period</option>
-              {payrollPeriods.map(period => (
-                <option key={period.id} value={period.id}>
-                  {period.period_name} ({period.start_date} - {period.end_date})
-                </option>
-              ))}
+              {payrollPeriods.map(period => {
+                const startDate = new Date(period.start_date);
+                const endDate = new Date(period.end_date);
+                const startMonth = startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                const endMonth = endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                const periodName = period.period_name || `Period ${period.id}`;
+                return (
+                  <option key={period.id} value={period.id}>
+                    {periodName} ({startMonth} - {endMonth})
+                  </option>
+                );
+              })}
             </select>
           </div>
 

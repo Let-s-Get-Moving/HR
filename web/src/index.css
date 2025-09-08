@@ -47,6 +47,12 @@
   --info-text: #1e40af;
   --info-border: #bfdbfe;
   
+  /* Toggle Colors */
+  --toggle-on: #10b981;
+  --toggle-off: #ef4444;
+  --toggle-on-hover: #059669;
+  --toggle-off-hover: #dc2626;
+  
   /* Interactive Colors - High Contrast */
   --primary-bg: #2563eb;
   --primary-hover: #1d4ed8;

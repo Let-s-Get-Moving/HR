@@ -277,23 +277,30 @@ export default function Settings() {
         const boolValue = parseBoolean(value);
         return (
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <label className="text-sm font-medium">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</label>
               {description && <p className="text-xs text-secondary mt-1">{description}</p>}
             </div>
-            <button
-              onClick={() => handleSettingUpdate(category, key, !boolValue)}
-              disabled={saving[key]}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                boolValue ? 'bg-primary' : 'bg-secondary'
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  boolValue ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
+            <div className="flex items-center space-x-3">
+              <span className={`text-xs font-medium ${boolValue ? 'text-green-600' : 'text-red-600'}`}>
+                {boolValue ? 'ON' : 'OFF'}
+              </span>
+              <button
+                onClick={() => handleSettingUpdate(category, key, !boolValue)}
+                disabled={saving[key]}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 ${
+                  boolValue 
+                    ? 'bg-green-500 hover:bg-green-600' 
+                    : 'bg-red-500 hover:bg-red-600'
+                } ${saving[key] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                    boolValue ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         );
         
