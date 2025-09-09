@@ -446,7 +446,7 @@ input[type="radio"]:checked::after {
   padding: 0.875rem 1.125rem;
   font-size: 0.875rem;
   border-radius: 0.875rem;
-  height: 2.75rem;
+  height: 3.5rem;
 }
 
 .input-lg {
