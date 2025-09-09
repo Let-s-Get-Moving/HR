@@ -110,10 +110,28 @@ export function formatPeriodName(period) {
 }
 
 /**
- * Get periods for the current year only
+ * Get periods for one year in the past, current year, and one year in the future
  * @param {string} referencePayDate - Reference pay date in format "MM-DD" (e.g., "09-12")
- * @returns {Array} Array of current year periods
+ * @returns {Array} Array of periods spanning 3 years
  */
 export function getCurrentYearPeriods(referencePayDate = "09-12") {
-  return generateBiweeklyPeriods(new Date().getFullYear(), referencePayDate);
+  const currentYear = new Date().getFullYear();
+  const allPeriods = [];
+  
+  // Generate periods for past year, current year, and future year
+  for (let yearOffset = -1; yearOffset <= 1; yearOffset++) {
+    const year = currentYear + yearOffset;
+    const yearPeriods = generateBiweeklyPeriods(year, referencePayDate);
+    
+    // Add year offset to IDs to make them unique across years
+    const adjustedPeriods = yearPeriods.map(period => ({
+      ...period,
+      id: period.id + (yearOffset + 1) * 26, // Past year: 1-26, Current: 27-52, Future: 53-78
+      year: year
+    }));
+    
+    allPeriods.push(...adjustedPeriods);
+  }
+  
+  return allPeriods;
 }
