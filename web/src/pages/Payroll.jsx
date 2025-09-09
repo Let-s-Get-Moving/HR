@@ -165,7 +165,7 @@ export default function Payroll() {
               const formattedName = formatPeriodName(period);
               return (
                 <option key={period.id} value={period.id}>
-                  {period.period_name} - {formattedName}
+                  {formattedName}
                 </option>
               );
             })}
@@ -283,7 +283,7 @@ export default function Payroll() {
                 const formattedName = formatPeriodName(period);
                 return (
                   <option key={period.id} value={period.id}>
-                    {period.period_name} - {formattedName}
+                    {formattedName}
                   </option>
                 );
               })}
