@@ -72,8 +72,14 @@ export default function Settings() {
     updateSettingFromStorage(security, setSecurity, 'security');
     updateSettingFromStorage(maintenance, setMaintenance, 'maintenance');
 
-    // Apply theme immediately
-    applyTheme();
+    // Apply theme immediately and update theme setting to reflect current state
+    const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+    localStorage.setItem('preferences_theme', currentTheme);
+    
+    // Update the theme setting in state to reflect the actual current theme
+    setUserPreferences(prev => prev.map(setting => 
+      setting.key === 'theme' ? { ...setting, value: currentTheme } : setting
+    ));
   };
 
   const applyTheme = (themeValue = null) => {
@@ -114,8 +120,10 @@ export default function Settings() {
       setSystemSettings(system || []);
 
       // Always provide default settings for user preferences
+      // Detect current theme from DOM
+      const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
       const defaultPreferences = [
-        { key: "theme", label: "Theme", type: "select", value: "dark", options: ["dark", "light"] },
+        { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
         { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
         { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] },
         { key: "dashboard_layout", label: "Dashboard Layout", type: "select", value: "grid", options: ["grid", "list"] }
@@ -164,8 +172,10 @@ export default function Settings() {
       console.error("Error loading settings:", error);
       // Set default settings to prevent empty arrays
       setSystemSettings([]);
+      // Detect current theme from DOM for error fallback
+      const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
       setUserPreferences([
-        { key: "theme", label: "Theme", type: "select", value: "dark", options: ["dark", "light"] },
+        { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
         { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
         { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] },
         { key: "dashboard_layout", label: "Dashboard Layout", type: "select", value: "grid", options: ["grid", "list"] }
