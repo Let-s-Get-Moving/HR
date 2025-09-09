@@ -20,28 +20,20 @@ export function generateBiweeklyPeriods(year = new Date().getFullYear(), referen
   const referenceDate = new Date(year, refMonth - 1, refDay);
   
   // Calculate the start of the biweekly cycle
-  // Go back to find the start of the current period that contains this pay date
-  const daysSincePeriodStart = 13; // Pay date is typically 13 days after period start
+  // The reference pay date (Sep 12) is the START of the first period
   const periodStart = new Date(referenceDate);
-  periodStart.setDate(referenceDate.getDate() - daysSincePeriodStart);
-  
-  // Find the first Monday of the biweekly cycle
-  const dayOfWeek = periodStart.getDay();
-  const daysToMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek; // Sunday = 0, Monday = 1
-  const firstMonday = new Date(periodStart);
-  firstMonday.setDate(periodStart.getDate() + daysToMonday);
+  periodStart.setDate(referenceDate.getDate() + 1); // Add 1 day to get Sep 12
   
   // Generate 26 biweekly periods (26 periods per year)
   for (let i = 0; i < 26; i++) {
-    const startDate = new Date(firstMonday);
-    startDate.setDate(firstMonday.getDate() + (i * 14));
+    const startDate = new Date(periodStart);
+    startDate.setDate(periodStart.getDate() + (i * 14));
     
     const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + 13); // 14 days total (0-13 inclusive)
+    endDate.setDate(startDate.getDate() + 14); // 14 days total (0-14 inclusive)
     
-    // Pay date is typically 5 days after period end
-    const payDate = new Date(endDate);
-    payDate.setDate(endDate.getDate() + 5);
+    // Pay date is the same as the start date of the period
+    const payDate = new Date(startDate);
     
     // Determine period status
     const today = new Date();
