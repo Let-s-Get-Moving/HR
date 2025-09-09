@@ -20,6 +20,9 @@ import logger from "./utils/logger.js";
 
 const app = express();
 
+// Trust proxy for rate limiting (required for Render)
+app.set('trust proxy', 1);
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
