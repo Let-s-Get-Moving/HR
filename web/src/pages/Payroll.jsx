@@ -32,12 +32,18 @@ export default function Payroll() {
 
   const loadData = async () => {
     try {
-      // Generate current year biweekly periods aligned with Sep 12, Sep 26 pay dates
+      // Generate periods for past, current, and future years
       const periods = getCurrentYearPeriods("09-12");
       setPayrollPeriods(periods);
       
-      // Get current active period or first period
-      const currentPeriod = getCurrentPeriod(new Date().getFullYear(), "09-12");
+      // Find current active period across all years
+      const currentPeriod = periods.find(period => {
+        const startDate = new Date(period.start_date);
+        const endDate = new Date(period.end_date);
+        const today = new Date();
+        return startDate <= today && endDate >= today;
+      }) || periods.find(period => period.year === new Date().getFullYear()) || periods[0];
+      
       setSelectedPeriod(currentPeriod);
       
       // Load other data from API
