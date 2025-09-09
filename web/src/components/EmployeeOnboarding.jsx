@@ -335,8 +335,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               <div>
                 <label className="block text-sm font-medium mb-2">Hourly Rate ($)</label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
                   value={formData.hourly_rate}
                   onChange={(e) => setFormData({...formData, hourly_rate: parseFloat(e.target.value) || 0})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"

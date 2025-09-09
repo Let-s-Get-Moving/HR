@@ -557,7 +557,7 @@ export default function Benefits() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Deductible</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="1000"
                     />
@@ -565,7 +565,7 @@ export default function Benefits() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Copay</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="25"
                     />
@@ -573,7 +573,7 @@ export default function Benefits() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Monthly Premium</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="600"
                     />

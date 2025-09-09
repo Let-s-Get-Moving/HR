@@ -242,13 +242,11 @@ export default function Performance() {
                     Overall Rating (1-5)
                   </label>
                   <input
-                    type="number"
-                    min="1"
-                    max="5"
-                    step="0.1"
+                    type="text"
                     value={newReview.overall_rating}
                     onChange={(e) => setNewReview({...newReview, overall_rating: parseFloat(e.target.value)})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    placeholder="1-5"
                     required
                   />
                 </div>

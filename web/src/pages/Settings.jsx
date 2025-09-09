@@ -343,7 +343,7 @@ export default function Settings() {
             </label>
             {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <input
-              type="number"
+              type="text"
               value={value}
               onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
               disabled={saving[key]}

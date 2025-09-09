@@ -740,7 +740,7 @@ export default function BonusesCommissions() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Amount</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="5000"
                     />
@@ -819,7 +819,7 @@ export default function BonusesCommissions() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Base Amount</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="150000"
                     />
@@ -838,7 +838,7 @@ export default function BonusesCommissions() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Sales Target</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="120000"
                     />
@@ -846,7 +846,7 @@ export default function BonusesCommissions() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Target Achievement</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="125"
                       step="0.1"
@@ -917,7 +917,7 @@ export default function BonusesCommissions() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Max Amount</label>
                     <input
-                      type="number"
+                      type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                       placeholder="15000"
                     />

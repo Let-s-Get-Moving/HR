@@ -267,7 +267,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
               <div>
                 <label className="block text-sm font-medium mb-2">Notice Period (Days)</label>
                 <input
-                  type="number"
+                  type="text"
                   value={formData.notice_period_days}
                   onChange={(e) => setFormData({...formData, notice_period_days: parseInt(e.target.value) || 0})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -333,8 +333,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 <div>
                   <label className="block text-sm font-medium mb-2">Severance Amount ($)</label>
                   <input
-                    type="number"
-                    step="0.01"
+                    type="text"
                     value={formData.severance_amount}
                     onChange={(e) => setFormData({...formData, severance_amount: parseFloat(e.target.value) || 0})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -346,8 +345,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             <div>
               <label className="block text-sm font-medium mb-2">Vacation Payout ($)</label>
               <input
-                type="number"
-                step="0.01"
+                type="text"
                 value={formData.vacation_payout}
                 onChange={(e) => setFormData({...formData, vacation_payout: parseFloat(e.target.value) || 0})}
                 className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
