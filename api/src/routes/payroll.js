@@ -27,7 +27,7 @@ r.get("/calculations", async (req, res) => {
         pc.*,
         e.first_name, 
         e.last_name, 
-        e.hourly_rate,
+        COALESCE(e.hourly_rate, 0) as hourly_rate,
         d.name as department,
         pp.period_name,
         pp.start_date as period_start,
@@ -87,7 +87,7 @@ r.get("/calculations/:periodId", async (req, res) => {
         pc.*,
         e.first_name, 
         e.last_name, 
-        e.hourly_rate,
+        COALESCE(e.hourly_rate, 0) as hourly_rate,
         d.name as department,
         pp.period_name,
         pp.start_date as period_start,
@@ -202,7 +202,7 @@ r.post("/calculate/:periodId", async (req, res) => {
       const timeData = timeEntriesResult.rows[0];
       const baseHours = Math.min(timeData.total_hours, 40); // Regular hours capped at 40
       const overtimeHours = Math.max(0, timeData.total_hours - 40) + timeData.total_overtime;
-      const hourlyRate = employee.hourly_rate || 0;
+      const hourlyRate = parseFloat(employee.hourly_rate) || 0;
       
       // Calculate commission (simplified)
       const commissionAmount = 0; // TODO: Implement commission calculation

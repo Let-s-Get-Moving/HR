@@ -73,7 +73,8 @@ export interface PayrollCalculation {
   overtime_pay: number;
   commission_amount: number;
   bonus_amount: number;
-  total_gross: number;
+  total_pay: number;
+  total_gross: number; // Keep for backward compatibility
   deductions: number;
   net_pay: number;
   calculated_at: string;

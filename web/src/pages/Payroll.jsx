@@ -253,7 +253,7 @@ export default function Payroll() {
                       <td className="px-4 py-2 text-sm">${calc.overtime_pay?.toFixed(2)}</td>
                       <td className="px-4 py-2 text-sm">${calc.commission_amount?.toFixed(2)}</td>
                       <td className="px-4 py-2 text-sm">${calc.bonus_amount?.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-sm font-medium">${calc.total_gross?.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-sm font-medium">${calc.total_pay?.toFixed(2)}</td>
                       <td className="px-4 py-2 text-sm">${calc.deductions?.toFixed(2)}</td>
                       <td className="px-4 py-2 text-sm font-bold">${calc.net_pay?.toFixed(2)}</td>
                     </tr>
