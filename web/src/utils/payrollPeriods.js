@@ -1,24 +1,35 @@
 /**
  * Payroll Period Utilities
- * Generates proper biweekly payroll periods for the current year
+ * Generates proper biweekly payroll periods aligned with specific pay dates
  */
 
 /**
  * Generate biweekly payroll periods for a given year
+ * Aligns with specific pay dates (e.g., Sep 12, Sep 26) and accounts for real calendar days
  * @param {number} year - The year to generate periods for (defaults to current year)
+ * @param {string} referencePayDate - Reference pay date in format "MM-DD" (e.g., "09-12")
  * @returns {Array} Array of period objects with proper biweekly dates
  */
-export function generateBiweeklyPeriods(year = new Date().getFullYear()) {
+export function generateBiweeklyPeriods(year = new Date().getFullYear(), referencePayDate = "09-12") {
   const periods = [];
   
-  // Start from the first Monday of the year
-  const jan1 = new Date(year, 0, 1);
-  const firstMonday = new Date(jan1);
+  // Parse the reference pay date (e.g., "09-12" for Sep 12)
+  const [refMonth, refDay] = referencePayDate.split('-').map(Number);
   
-  // Find the first Monday of the year
-  const dayOfWeek = jan1.getDay();
+  // Find the reference pay date in the given year
+  const referenceDate = new Date(year, refMonth - 1, refDay);
+  
+  // Calculate the start of the biweekly cycle
+  // Go back to find the start of the current period that contains this pay date
+  const daysSincePeriodStart = 13; // Pay date is typically 13 days after period start
+  const periodStart = new Date(referenceDate);
+  periodStart.setDate(referenceDate.getDate() - daysSincePeriodStart);
+  
+  // Find the first Monday of the biweekly cycle
+  const dayOfWeek = periodStart.getDay();
   const daysToMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek; // Sunday = 0, Monday = 1
-  firstMonday.setDate(jan1.getDate() + daysToMonday);
+  const firstMonday = new Date(periodStart);
+  firstMonday.setDate(periodStart.getDate() + daysToMonday);
   
   // Generate 26 biweekly periods (26 periods per year)
   for (let i = 0; i < 26; i++) {
@@ -44,7 +55,7 @@ export function generateBiweeklyPeriods(year = new Date().getFullYear()) {
     
     periods.push({
       id: i + 1,
-      period_name: `${year}-${String(i + 1).padStart(2, '0')}`,
+      period_name: `${year}`,
       start_date: startDate.toISOString().split('T')[0],
       end_date: endDate.toISOString().split('T')[0],
       pay_date: payDate.toISOString().split('T')[0],
@@ -60,10 +71,11 @@ export function generateBiweeklyPeriods(year = new Date().getFullYear()) {
 /**
  * Get the current active payroll period
  * @param {number} year - The year to check (defaults to current year)
+ * @param {string} referencePayDate - Reference pay date in format "MM-DD" (e.g., "09-12")
  * @returns {Object|null} The current active period or null if none
  */
-export function getCurrentPeriod(year = new Date().getFullYear()) {
-  const periods = generateBiweeklyPeriods(year);
+export function getCurrentPeriod(year = new Date().getFullYear(), referencePayDate = "09-12") {
+  const periods = generateBiweeklyPeriods(year, referencePayDate);
   const today = new Date();
   
   return periods.find(period => {
@@ -88,7 +100,7 @@ export function formatPeriodName(period) {
   const endDay = endDate.getDate();
   const year = startDate.getFullYear();
   
-  // If same month, show "Jan 1-14, 2025"
+  // If same month, show "Sep 12-26, 2025"
   if (startDate.getMonth() === endDate.getMonth()) {
     return `${startMonth} ${startDay}-${endDay}, ${year}`;
   }
@@ -99,8 +111,9 @@ export function formatPeriodName(period) {
 
 /**
  * Get periods for the current year only
+ * @param {string} referencePayDate - Reference pay date in format "MM-DD" (e.g., "09-12")
  * @returns {Array} Array of current year periods
  */
-export function getCurrentYearPeriods() {
-  return generateBiweeklyPeriods(new Date().getFullYear());
+export function getCurrentYearPeriods(referencePayDate = "09-12") {
+  return generateBiweeklyPeriods(new Date().getFullYear(), referencePayDate);
 }

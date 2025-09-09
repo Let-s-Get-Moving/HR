@@ -100,7 +100,8 @@ export default function Login({ onLogin }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md"
+
+        className="w-full max-w-md rounded-2xl"
       >
         <div className="card-lg backdrop-blur-md border border-primary/20 shadow-2xl">
           <div className="text-center mb-8">

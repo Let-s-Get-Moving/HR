@@ -32,12 +32,12 @@ export default function Payroll() {
 
   const loadData = async () => {
     try {
-      // Generate current year biweekly periods
-      const periods = getCurrentYearPeriods();
+      // Generate current year biweekly periods aligned with Sep 12, Sep 26 pay dates
+      const periods = getCurrentYearPeriods("09-12");
       setPayrollPeriods(periods);
       
       // Get current active period or first period
-      const currentPeriod = getCurrentPeriod();
+      const currentPeriod = getCurrentPeriod(new Date().getFullYear(), "09-12");
       setSelectedPeriod(currentPeriod);
       
       // Load other data from API
@@ -64,10 +64,19 @@ export default function Payroll() {
 
   const loadPayrollCalculations = async (periodId) => {
     try {
+      // For dynamically generated periods, return empty calculations
+      // since these periods don't exist in the database yet
+      if (periodId <= 26) {
+        setPayrollCalculations([]);
+        return;
+      }
+      
       const calculations = await API(`/api/payroll/calculations/${periodId}`);
       setPayrollCalculations(calculations);
     } catch (error) {
       console.error("Error loading payroll calculations:", error);
+      // Set empty calculations on error to prevent UI issues
+      setPayrollCalculations([]);
     }
   };
 
@@ -142,7 +151,7 @@ export default function Payroll() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card">
           <h3 className="text-lg font-semibold mb-4">Payroll Period (Bi-weekly)</h3>
-          <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year</p>
+          <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year • Aligned with Sep 12, Sep 26 pay dates</p>
           <select
             value={selectedPeriod?.id || ""}
             onChange={(e) => {
@@ -260,7 +269,7 @@ export default function Payroll() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">Select Payroll Period (Bi-weekly)</label>
-            <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year</p>
+            <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year • Aligned with Sep 12, Sep 26 pay dates</p>
             <select
               value={selectedPeriod?.id || ""}
               onChange={(e) => {
