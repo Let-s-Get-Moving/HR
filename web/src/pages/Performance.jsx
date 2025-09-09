@@ -190,7 +190,7 @@ export default function Performance() {
                       Employee ID
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       value={newReview.employee_id}
                       onChange={(e) => setNewReview({...newReview, employee_id: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
@@ -202,7 +202,7 @@ export default function Performance() {
                       Reviewer ID
                     </label>
                     <input
-                      type="number"
+                      type="text"
                       value={newReview.reviewer_id}
                       onChange={(e) => setNewReview({...newReview, reviewer_id: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
@@ -347,7 +347,7 @@ export default function Performance() {
                     Employee ID
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     value={newGoal.employee_id}
                     onChange={(e) => setNewGoal({...newGoal, employee_id: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"

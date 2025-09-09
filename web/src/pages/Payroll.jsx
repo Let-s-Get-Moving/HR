@@ -523,7 +523,7 @@ export default function Payroll() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto rounded-2xl">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">Payroll Management</h1>
         <p className="text-neutral-400 mt-1">Manage payroll, commissions, bonuses, and timesheet imports</p>

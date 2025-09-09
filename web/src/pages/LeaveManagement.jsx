@@ -135,7 +135,7 @@ export default function LeaveManagement() {
                     Employee ID
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     value={newRequest.employee_id}
                     onChange={(e) => setNewRequest({...newRequest, employee_id: e.target.value})}
                     required
