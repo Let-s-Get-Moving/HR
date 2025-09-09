@@ -186,7 +186,7 @@ export default function Performance() {
               <form onSubmit={handleSubmitReview} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                       Employee ID
                     </label>
                     <input
@@ -198,7 +198,7 @@ export default function Performance() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                       Reviewer ID
                     </label>
                     <input
@@ -212,7 +212,7 @@ export default function Performance() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                       Review Date
                     </label>
                     <input
@@ -224,7 +224,7 @@ export default function Performance() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                       Review Period
                     </label>
                     <input
@@ -238,7 +238,7 @@ export default function Performance() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Overall Rating (1-5)
                   </label>
                   <input
@@ -253,7 +253,7 @@ export default function Performance() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Strengths
                   </label>
                   <textarea
@@ -265,7 +265,7 @@ export default function Performance() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Areas for Improvement
                   </label>
                   <textarea
@@ -277,7 +277,7 @@ export default function Performance() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Goals for Next Period
                   </label>
                   <textarea
@@ -343,7 +343,7 @@ export default function Performance() {
               <h3 className="text-lg font-semibold mb-4">New Performance Goal</h3>
               <form onSubmit={handleSubmitGoal} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Employee ID
                   </label>
                   <input
@@ -355,7 +355,7 @@ export default function Performance() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Goal Title
                   </label>
                   <input
@@ -367,7 +367,7 @@ export default function Performance() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                     Goal Description
                   </label>
                   <textarea
@@ -380,7 +380,7 @@ export default function Performance() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                       Target Date
                     </label>
                     <input
@@ -392,7 +392,7 @@ export default function Performance() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
                       Priority
                     </label>
                     <select
