@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { API } from '../config/api.js';
+import { getCurrentYearPeriods, getCurrentPeriod, formatPeriodName } from '../utils/payrollPeriods.js';
 
 export default function Payroll() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -31,21 +32,28 @@ export default function Payroll() {
 
   const loadData = async () => {
     try {
-      const [periods, structures, deps, emps] = await Promise.all([
-        API("/api/payroll/periods"),
-        API("/api/payroll/commission-structures"),
-        API("/api/employees/departments"),
-        API("/api/employees")
+      // Generate current year biweekly periods
+      const periods = getCurrentYearPeriods();
+      setPayrollPeriods(periods);
+      
+      // Get current active period or first period
+      const currentPeriod = getCurrentPeriod();
+      setSelectedPeriod(currentPeriod);
+      
+      // Load other data from API
+      const [structures, deps, emps] = await Promise.all([
+        API("/api/payroll/commission-structures").catch(() => []),
+        API("/api/employees/departments").catch(() => []),
+        API("/api/employees").catch(() => [])
       ]);
       
-      setPayrollPeriods(periods);
       setCommissionStructures(structures);
       setDepartments(deps);
       setEmployees(emps);
       
-      if (periods.length > 0) {
-        setSelectedPeriod(periods[0]);
-        loadPayrollCalculations(periods[0].id);
+      // Load calculations for the selected period
+      if (currentPeriod) {
+        loadPayrollCalculations(currentPeriod.id);
       }
     } catch (error) {
       console.error("Error loading payroll data:", error);
@@ -145,14 +153,10 @@ export default function Payroll() {
             className="w-full px-3 py-2 input-md"
           >
             {payrollPeriods.map(period => {
-              const startDate = new Date(period.start_date);
-              const endDate = new Date(period.end_date);
-              const startMonth = startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-              const endMonth = endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-              const periodName = period.period_name || `Period ${period.id}`;
+              const formattedName = formatPeriodName(period);
               return (
                 <option key={period.id} value={period.id}>
-                  {periodName} ({startMonth} - {endMonth})
+                  {period.period_name} - {formattedName}
                 </option>
               );
             })}
@@ -185,7 +189,8 @@ export default function Payroll() {
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 selectedPeriod?.status === 'Open' ? 'bg-yellow-900 text-yellow-300' :
                 selectedPeriod?.status === 'Processing' ? 'bg-blue-900 text-blue-300' :
-                'bg-green-900 text-green-300'
+                selectedPeriod?.status === 'Closed' ? 'bg-green-900 text-green-300' :
+                'bg-gray-900 text-gray-300'
               }`}>
                 {selectedPeriod?.status || 'N/A'}
               </span>
@@ -266,14 +271,10 @@ export default function Payroll() {
             >
               <option value="">Select a period</option>
               {payrollPeriods.map(period => {
-                const startDate = new Date(period.start_date);
-                const endDate = new Date(period.end_date);
-                const startMonth = startDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                const endMonth = endDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                const periodName = period.period_name || `Period ${period.id}`;
+                const formattedName = formatPeriodName(period);
                 return (
                   <option key={period.id} value={period.id}>
-                    {periodName} ({startMonth} - {endMonth})
+                    {period.period_name} - {formattedName}
                   </option>
                 );
               })}
