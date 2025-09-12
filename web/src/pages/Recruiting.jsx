@@ -11,6 +11,8 @@ export default function Recruiting() {
   const [analytics, setAnalytics] = useState({});
   const [loading, setLoading] = useState(true);
   const [showAddJob, setShowAddJob] = useState(false);
+  const [showEditJob, setShowEditJob] = useState(false);
+  const [editingJob, setEditingJob] = useState(null);
   const [newJob, setNewJob] = useState({
     title: "",
     department: "",
@@ -153,6 +155,36 @@ export default function Recruiting() {
     }
   };
 
+  const handleEditJob = (job) => {
+    setEditingJob({...job});
+    setShowEditJob(true);
+  };
+
+  const handleUpdateJob = async (e) => {
+    e.preventDefault();
+    try {
+      // In production, this would be an API call
+      setJobPostings(jobPostings.map(job => 
+        job.id === editingJob.id ? editingJob : job
+      ));
+      setEditingJob(null);
+      setShowEditJob(false);
+    } catch (error) {
+      console.error("Error updating job posting:", error);
+    }
+  };
+
+  const handleCloseJob = async (jobId) => {
+    try {
+      // In production, this would be an API call
+      setJobPostings(jobPostings.map(job => 
+        job.id === jobId ? { ...job, status: "Closed" } : job
+      ));
+    } catch (error) {
+      console.error("Error closing job posting:", error);
+    }
+  };
+
   const renderJobPostings = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -203,11 +235,18 @@ export default function Recruiting() {
                 </div>
               </div>
               <div className="flex space-x-2">
-                <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                <button 
+                  onClick={() => handleEditJob(job)}
+                  className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
                   Edit
                 </button>
-                <button className="text-red-400 hover:text-red-300 transition-colors">
-                  Close
+                <button 
+                  onClick={() => handleCloseJob(job.id)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                  disabled={job.status === 'Closed'}
+                >
+                  {job.status === 'Closed' ? 'Closed' : 'Close'}
                 </button>
               </div>
             </div>
@@ -559,6 +598,128 @@ export default function Recruiting() {
                     className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Add Job Posting
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Job Modal */}
+      {showEditJob && editingJob && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Edit Job Posting</h3>
+              <form onSubmit={handleUpdateJob} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Job Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingJob.title}
+                      onChange={(e) => setEditingJob({ ...editingJob, title: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Department</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingJob.department}
+                      onChange={(e) => setEditingJob({ ...editingJob, department: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Location</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingJob.location}
+                      onChange={(e) => setEditingJob({ ...editingJob, location: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Employment Type</label>
+                    <select
+                      value={editingJob.type}
+                      onChange={(e) => setEditingJob({ ...editingJob, type: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                      <option value="Temporary">Temporary</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Salary Range</label>
+                    <input
+                      type="text"
+                      value={editingJob.salary_range}
+                      onChange={(e) => setEditingJob({ ...editingJob, salary_range: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="$50,000 - $70,000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Status</label>
+                    <select
+                      value={editingJob.status}
+                      onChange={(e) => setEditingJob({ ...editingJob, status: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Open">Open</option>
+                      <option value="Closed">Closed</option>
+                      <option value="Draft">Draft</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Job Description</label>
+                  <textarea
+                    rows={4}
+                    value={editingJob.description || ""}
+                    onChange={(e) => setEditingJob({ ...editingJob, description: e.target.value })}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Enter detailed job description..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Requirements</label>
+                  <textarea
+                    rows={3}
+                    value={editingJob.requirements || ""}
+                    onChange={(e) => setEditingJob({ ...editingJob, requirements: e.target.value })}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Enter job requirements..."
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditJob(false);
+                      setEditingJob(null);
+                    }}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Update Job Posting
                   </button>
                 </div>
               </form>

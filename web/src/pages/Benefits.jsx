@@ -13,6 +13,16 @@ export default function Benefits() {
   const [loading, setLoading] = useState(true);
   const [showAddBenefit, setShowAddBenefit] = useState(false);
   const [showEnrollEmployee, setShowEnrollEmployee] = useState(false);
+  
+  // Form data for new benefit
+  const [newBenefit, setNewBenefit] = useState({
+    plan_name: "",
+    provider: "",
+    type: "Health",
+    employee_cost: "",
+    employer_cost: "",
+    coverage_details: ""
+  });
 
   const tabs = [
     { id: "enrollment", name: "Benefits Enrollment", icon: "📋" },
