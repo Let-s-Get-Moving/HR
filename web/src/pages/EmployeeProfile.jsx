@@ -47,19 +47,24 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
 
   const calculateTotalHours = () => {
     if (!timeEntries || !Array.isArray(timeEntries) || timeEntries.length === 0) return 0;
-    return timeEntries.reduce((total, entry) => total + (entry.hours_worked || 0), 0);
+    const total = timeEntries.reduce((total, entry) => {
+      const hours = parseFloat(entry.hours_worked) || 0;
+      return total + hours;
+    }, 0);
+    return isNaN(total) ? 0 : total;
   };
 
   const calculateTotalEarnings = () => {
     if (!timeEntries || !Array.isArray(timeEntries) || timeEntries.length === 0) return 0;
-    return timeEntries.reduce((total, entry) => {
-      const hours = entry.hours_worked || 0;
-      const rate = employee?.hourly_rate || 25;
-      const overtimeHours = entry.overtime_hours || 0;
+    const total = timeEntries.reduce((total, entry) => {
+      const hours = parseFloat(entry.hours_worked) || 0;
+      const rate = parseFloat(employee?.hourly_rate) || 25;
+      const overtimeHours = parseFloat(entry.overtime_hours) || 0;
       const overtimeRate = rate * 1.5;
       
       return total + (hours * rate) + (overtimeHours * overtimeRate);
     }, 0);
+    return isNaN(total) ? 0 : total;
   };
 
   const handleEdit = () => {
@@ -174,7 +179,22 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Hourly Rate</div>
-            <div className="font-medium">${employee.hourly_rate || 25}/hr</div>
+            {isEditing ? (
+              <div className="flex items-center">
+                <span className="mr-1">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={editData.hourly_rate || ''}
+                  onChange={(e) => setEditData({...editData, hourly_rate: e.target.value})}
+                  className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-20 text-center"
+                />
+                <span className="ml-1">/hr</span>
+              </div>
+            ) : (
+              <div className="font-medium">${employee.hourly_rate || 25}/hr</div>
+            )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Location</div>
@@ -278,11 +298,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>Total Hours Worked</span>
-                  <span className="font-bold">{((calculateTotalHours() || 0) || 0).toFixed(1)} hrs</span>
+                  <span className="font-bold">{(calculateTotalHours() || 0).toFixed(1)} hrs</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Total Earnings</span>
-                  <span className="font-bold">${((calculateTotalEarnings() || 0) || 0).toFixed(2)}</span>
+                  <span className="font-bold">${(calculateTotalEarnings() || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Documents</span>
@@ -323,13 +343,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>Regular Hours:</span>
-                  <span>${(((calculateTotalHours() || 0) || 0) * (employee?.hourly_rate || 25)).toFixed(2)}</span>
+                  <span>${((calculateTotalHours() || 0) * (parseFloat(employee?.hourly_rate) || 25)).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Overtime:</span>
                   <span>${(timeEntries || []).reduce((total, entry) => {
                     const overtimeHours = entry.overtime_hours || 0;
-                    const overtimeRate = (employee.hourly_rate || 25) * 1.5;
+                    const overtimeRate = (parseFloat(employee.hourly_rate) || 25) * 1.5;
                     return total + (overtimeHours * overtimeRate);
                   }, 0).toFixed(2)}</span>
                 </div>
@@ -346,16 +366,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span>Taxes:</span>
-                  <span>${(((calculateTotalEarnings() || 0) || 0) * 0.25).toFixed(2)}</span>
+                  <span>${((calculateTotalEarnings() || 0) * 0.25).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Benefits:</span>
-                  <span>${(((calculateTotalEarnings() || 0) || 0) * 0.05).toFixed(2)}</span>
+                  <span>${((calculateTotalEarnings() || 0) * 0.05).toFixed(2)}</span>
                 </div>
                 <hr className="border-neutral-700" />
                 <div className="flex justify-between font-bold">
                   <span>Total Deductions:</span>
-                  <span>${(((calculateTotalEarnings() || 0) || 0) * 0.30).toFixed(2)}</span>
+                  <span>${((calculateTotalEarnings() || 0) * 0.30).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -364,7 +384,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <h3 className="text-lg font-semibold mb-4">Net Pay</h3>
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-400 mb-2">
-                  ${(((calculateTotalEarnings() || 0) || 0) * 0.70).toFixed(2)}
+                  ${((calculateTotalEarnings() || 0) * 0.70).toFixed(2)}
                 </div>
                 <div className="text-sm text-neutral-400">Net earnings after deductions</div>
               </div>

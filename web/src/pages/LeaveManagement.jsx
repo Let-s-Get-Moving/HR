@@ -333,45 +333,47 @@ export default function LeaveManagement() {
                         </div>
 
                         {/* Paginated requests */}
-                        {paginatedRequests.map((request) => (
-                    <div key={`history-${request.id}`} className="card p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h4 className="font-medium">{request.first_name} {request.last_name}</h4>
-                          <p className="text-sm text-secondary">{request.leave_type_name}</p>
+                        <div className="space-y-4">
+                          {paginatedRequests.map((request) => (
+                            <div key={`history-${request.id}`} className="card p-4">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <h4 className="font-medium">{request.first_name} {request.last_name}</h4>
+                                  <p className="text-sm text-secondary">{request.leave_type_name}</p>
+                                </div>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  request.status === 'Approved' ? 'badge-success' :
+                                  request.status === 'Rejected' ? 'badge-error' :
+                                  'badge-warning'
+                                }`}>
+                                  {request.status}
+                                </span>
+                              </div>
+                              <p className="text-sm text-secondary mb-2">
+                                {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
+                              </p>
+                              {request.reason && (
+                                <p className="text-sm text-secondary mb-3">{request.reason}</p>
+                              )}
+                              {request.status === 'Pending' && (
+                                <div className="flex gap-3">
+                                  <button
+                                    onClick={() => handleStatusUpdate(request.id, 'Approved')}
+                                    className="btn-primary btn-sm"
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    onClick={() => handleStatusUpdate(request.id, 'Rejected')}
+                                    className="btn-secondary btn-sm"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          request.status === 'Approved' ? 'badge-success' :
-                          request.status === 'Rejected' ? 'badge-error' :
-                          'badge-warning'
-                        }`}>
-                          {request.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-secondary mb-2">
-                        {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
-                      </p>
-                      {request.reason && (
-                        <p className="text-sm text-secondary mb-3">{request.reason}</p>
-                      )}
-                      {request.status === 'Pending' && (
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => handleStatusUpdate(request.id, 'Approved')}
-                            className="btn-primary btn-sm"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleStatusUpdate(request.id, 'Rejected')}
-                            className="btn-secondary btn-sm"
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                        ))
 
                         {/* Pagination Controls */}
                         {totalPages > 1 && (
