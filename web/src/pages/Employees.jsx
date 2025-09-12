@@ -15,6 +15,8 @@ export default function Employees() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employeeToTerminate, setEmployeeToTerminate] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -36,15 +38,58 @@ export default function Employees() {
     loadLocations();
   }, []);
 
+  // Update filtered employees when main employees list changes
+  useEffect(() => {
+    handleSearch(searchQuery);
+  }, [employees]);
+
   const loadEmployees = async () => {
     try {
       const data = await API("/api/employees");
       setEmployees(data);
+      setFilteredEmployees(data); // Initialize filtered list
     } catch (error) {
       console.error("Error loading employees:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Comprehensive search function that searches all employee fields
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setFilteredEmployees(employees);
+      return;
+    }
+
+    const searchTerm = query.toLowerCase();
+    const filtered = employees.filter(employee => {
+      // Search across all relevant fields
+      const searchableFields = [
+        employee.first_name,
+        employee.last_name,
+        `${employee.first_name} ${employee.last_name}`, // Full name
+        employee.email,
+        employee.phone,
+        employee.role_title,
+        employee.department,
+        employee.location,
+        employee.employment_type,
+        employee.status,
+        employee.gender,
+        employee.hire_date,
+        employee.termination_date,
+        employee.birth_date
+      ];
+
+      return searchableFields.some(field => 
+        field && field.toString().toLowerCase().includes(searchTerm)
+      );
+    });
+
+    setFilteredEmployees(filtered);
   };
 
   const loadDepartments = async () => {
@@ -124,6 +169,41 @@ export default function Employees() {
         </motion.button>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search employees by name, department, role, email..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="block w-full pl-10 pr-3 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+          />
+          {searchQuery && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <button
+                onClick={() => handleSearch("")}
+                className="text-neutral-400 hover:text-white transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+        {searchQuery && (
+          <div className="mt-2 text-sm text-neutral-400">
+            Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
+          </div>
+        )}
+      </div>
+
       {/* Employee Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
@@ -142,7 +222,20 @@ export default function Employees() {
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-800">
-              {employees.map((employee) => (
+              {filteredEmployees.length === 0 && searchQuery ? (
+                <tr>
+                  <td colSpan="9" className="px-6 py-8 text-center text-neutral-400">
+                    <div className="flex flex-col items-center">
+                      <svg className="h-12 w-12 text-neutral-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <p className="text-lg font-medium mb-1">No employees found</p>
+                      <p className="text-sm">Try adjusting your search terms or clear the search to see all employees.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredEmployees.map((employee) => (
                 <tr 
                   key={employee.id} 
                   className="hover:bg-neutral-800/50 cursor-pointer transition-colors"
@@ -195,7 +288,8 @@ export default function Employees() {
                     )}
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>
