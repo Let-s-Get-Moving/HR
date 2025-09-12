@@ -13,6 +13,18 @@ export default function Recruiting() {
   const [showAddJob, setShowAddJob] = useState(false);
   const [showEditJob, setShowEditJob] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
+  const [showAddCandidate, setShowAddCandidate] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [newCandidate, setNewCandidate] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    position: "",
+    experience: "",
+    source: "LinkedIn",
+    resume_url: "",
+    cover_letter: ""
+  });
   const [newJob, setNewJob] = useState({
     title: "",
     department: "",
@@ -185,6 +197,34 @@ export default function Recruiting() {
     }
   };
 
+  const handleAddCandidate = async (e) => {
+    e.preventDefault();
+    try {
+      // In production, this would be an API call
+      const newCandidateWithId = {
+        ...newCandidate,
+        id: candidates.length + 1,
+        status: "Resume Review",
+        applied_date: new Date().toISOString().split('T')[0]
+      };
+      
+      setCandidates([...candidates, newCandidateWithId]);
+      setNewCandidate({
+        name: "",
+        email: "",
+        phone: "",
+        position: "",
+        experience: "",
+        source: "LinkedIn",
+        resume_url: "",
+        cover_letter: ""
+      });
+      setShowAddCandidate(false);
+    } catch (error) {
+      console.error("Error adding candidate:", error);
+    }
+  };
+
   const renderJobPostings = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -260,7 +300,10 @@ export default function Recruiting() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Candidates</h3>
-        <button className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <button 
+          onClick={() => setShowAddCandidate(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
           + Add Candidate
         </button>
       </div>
@@ -302,10 +345,16 @@ export default function Recruiting() {
                 <td className="py-3 px-4">{candidate.applied_date}</td>
                 <td className="py-3 px-4">
                   <div className="flex space-x-2">
-                    <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                    <button 
+                      onClick={() => setSelectedCandidate(candidate)}
+                      className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                    >
                       View
                     </button>
-                    <button className="text-green-400 hover:text-green-300 transition-colors">
+                    <button 
+                      onClick={() => alert(`Scheduling interview for ${candidate.name}`)}
+                      className="text-green-400 hover:text-green-300 transition-colors"
+                    >
                       Schedule
                     </button>
                   </div>
@@ -723,6 +772,230 @@ export default function Recruiting() {
                   </button>
                 </div>
               </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Add Candidate Modal */}
+      {showAddCandidate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Add New Candidate</h3>
+              <form onSubmit={handleAddCandidate} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newCandidate.name}
+                      onChange={(e) => setNewCandidate({ ...newCandidate, name: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={newCandidate.email}
+                      onChange={(e) => setNewCandidate({ ...newCandidate, email: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Phone</label>
+                    <input
+                      type="tel"
+                      value={newCandidate.phone}
+                      onChange={(e) => setNewCandidate({ ...newCandidate, phone: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Position Applied For *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newCandidate.position}
+                      onChange={(e) => setNewCandidate({ ...newCandidate, position: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Years of Experience</label>
+                    <input
+                      type="text"
+                      value={newCandidate.experience}
+                      onChange={(e) => setNewCandidate({ ...newCandidate, experience: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="e.g., 5 years"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Source</label>
+                    <select
+                      value={newCandidate.source}
+                      onChange={(e) => setNewCandidate({ ...newCandidate, source: e.target.value })}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="Indeed">Indeed</option>
+                      <option value="Company Website">Company Website</option>
+                      <option value="Referral">Referral</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Resume URL</label>
+                  <input
+                    type="url"
+                    value={newCandidate.resume_url}
+                    onChange={(e) => setNewCandidate({ ...newCandidate, resume_url: e.target.value })}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Cover Letter / Notes</label>
+                  <textarea
+                    rows={3}
+                    value={newCandidate.cover_letter}
+                    onChange={(e) => setNewCandidate({ ...newCandidate, cover_letter: e.target.value })}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Additional notes about the candidate..."
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCandidate(false)}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Add Candidate
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View Candidate Modal */}
+      {selectedCandidate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Candidate Details</h3>
+                <button
+                  onClick={() => setSelectedCandidate(null)}
+                  className="text-neutral-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Name</label>
+                    <p className="font-medium">{selectedCandidate.name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Email</label>
+                    <p className="font-medium">{selectedCandidate.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Phone</label>
+                    <p className="font-medium">{selectedCandidate.phone || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Position</label>
+                    <p className="font-medium">{selectedCandidate.position}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Experience</label>
+                    <p className="font-medium">{selectedCandidate.experience}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Source</label>
+                    <p className="font-medium">{selectedCandidate.source}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Status</label>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      selectedCandidate.status === 'Interview Scheduled' ? 'bg-blue-100 text-blue-800' :
+                      selectedCandidate.status === 'Resume Review' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {selectedCandidate.status}
+                    </span>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Applied Date</label>
+                    <p className="font-medium">{selectedCandidate.applied_date}</p>
+                  </div>
+                </div>
+                
+                {selectedCandidate.resume_url && (
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Resume</label>
+                    <p>
+                      <a 
+                        href={selectedCandidate.resume_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-indigo-400 hover:text-indigo-300"
+                      >
+                        View Resume
+                      </a>
+                    </p>
+                  </div>
+                )}
+                
+                {selectedCandidate.cover_letter && (
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Cover Letter / Notes</label>
+                    <p className="text-sm bg-neutral-800 p-3 rounded">{selectedCandidate.cover_letter}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setSelectedCandidate(null)}
+                  className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    alert(`Scheduling interview for ${selectedCandidate.name}`);
+                    setSelectedCandidate(null);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  Schedule Interview
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
