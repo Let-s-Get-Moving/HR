@@ -142,31 +142,57 @@ export default function Payroll() {
   };
 
   const handleImport = async () => {
-    if (!importFile || !selectedPeriod) return;
+    if (!importFile) {
+      alert("Please select a CSV file to import");
+      return;
+    }
 
-    setImportStatus({ status: "processing", message: "Importing timesheet data..." });
+    setImportStatus({ status: "processing", message: "Reading and importing CSV file..." });
     
     try {
-      const formData = new FormData();
-      formData.append('file', importFile);
-      formData.append('period_id', selectedPeriod.id);
-
-      const response = await API("/api/payroll/import-timesheet", {
-        method: "POST",
-        body: formData
+      // Read the CSV file content
+      const csvContent = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsText(importFile);
       });
 
-      setImportStatus({ 
-        status: "success", 
-        message: `Successfully imported ${response.successful_imports} records` 
+      console.log('📥 Importing CSV file:', importFile.name);
+      console.log('📝 CSV content preview:', csvContent.substring(0, 200) + '...');
+
+      // Send CSV content to the import API
+      const response = await API("/api/imports/time-entries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ csv: csvContent })
       });
       
-      // Reload calculations after import
-      loadPayrollCalculations(selectedPeriod.id);
+      console.log('✅ Import response:', response);
+      
+      setImportStatus({
+        status: "success",
+        message: `Import completed! ${response.inserted} records imported, ${response.skipped || 0} skipped out of ${response.total} total.`
+      });
+      
+      setImportFile(null);
+      
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+      
+      // Refresh payroll data if we have a date range selected
+      if (startDate && endDate) {
+        await handleDateRangeChange();
+      }
+      
     } catch (error) {
-      setImportStatus({ 
-        status: "error", 
-        message: "Error importing timesheet data" 
+      console.error("Error importing timesheet:", error);
+      setImportStatus({
+        status: "error",
+        message: `Error importing timesheet: ${error.message}`
       });
     }
   };
@@ -430,36 +456,21 @@ export default function Payroll() {
         <h3 className="text-lg font-semibold mb-4">Import Timesheet Data</h3>
         
         <div className="space-y-4">
-          <div className="bg-neutral-800 p-4 rounded-lg">
-            <label className="block text-sm font-medium mb-2">📅 Import Date Range</label>
-            <p className="text-xs text-secondary mb-3">Specify the date range for this timesheet import</p>
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Start Date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
-                />
-              </div>
+          <div className="bg-blue-900/20 border border-blue-700/30 p-4 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-300 mb-2">📋 CSV File Requirements</h4>
+            <div className="text-xs text-blue-200/80 space-y-1">
+              <p><strong>Required columns:</strong> employee_id, work_date</p>
+              <p><strong>Optional columns:</strong> clock_in, clock_out, hours_worked, overtime_hours, was_late, left_early</p>
+              <p><strong>Date format:</strong> work_date should be YYYY-MM-DD (e.g., 2025-08-15)</p>
+              <p><strong>Time format:</strong> clock_in/clock_out should be HH:MM:SS (e.g., 09:00:00, 17:30:00)</p>
             </div>
-            
-            {startDate && endDate && (
-              <div className="mt-2 text-xs text-neutral-400">
-                📊 Importing for: {startDate} to {endDate}
-              </div>
-            )}
+          </div>
+          
+          <div className="bg-amber-900/20 border border-amber-700/30 p-3 rounded-lg">
+            <p className="text-xs text-amber-200">
+              💡 <strong>Smart Import:</strong> Dates will be automatically extracted from the CSV file. 
+              If hours_worked is not provided, it will be calculated from clock_in and clock_out times.
+            </p>
           </div>
 
           <div>
@@ -494,7 +505,7 @@ export default function Payroll() {
 
           <button
             onClick={handleImport}
-            disabled={!importFile || !selectedPeriod}
+            disabled={!importFile}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-600 px-6 py-3 rounded-lg font-medium transition-colors"
           >
             Import Timesheet Data
@@ -503,16 +514,39 @@ export default function Payroll() {
       </div>
 
       <div className="card">
-        <h3 className="text-lg font-semibold mb-4">CSV Format Guide</h3>
-        <div className="card-sm">
-          <p className="text-sm text-secondary mb-2">Your CSV file should have the following columns:</p>
-          <div className="text-xs text-tertiary space-y-1">
-            <div><strong>employee_id</strong> - Employee ID number</div>
-            <div><strong>work_date</strong> - Date (YYYY-MM-DD format)</div>
-            <div><strong>hours_worked</strong> - Regular hours worked</div>
-            <div><strong>overtime_hours</strong> - Overtime hours worked</div>
-            <div><strong>was_late</strong> - 1 for late, 0 for on time</div>
-            <div><strong>left_early</strong> - 1 for early departure, 0 for normal</div>
+        <h3 className="text-lg font-semibold mb-4">📋 CSV Format Guide & Sample</h3>
+        
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-sm font-medium mb-2 text-neutral-300">Sample CSV Content:</h4>
+            <div className="bg-neutral-900 p-3 rounded-lg text-xs font-mono text-green-400 overflow-x-auto">
+              <pre>{`employee_id,work_date,clock_in,clock_out,hours_worked,overtime_hours,was_late,left_early
+1,2025-08-15,09:00:00,17:30:00,8.5,0.5,false,false
+2,2025-08-15,08:45:00,17:00:00,8.25,0.25,false,false
+1,2025-08-16,09:15:00,17:30:00,8.25,0.25,true,false
+3,2025-08-16,09:00:00,18:00:00,9.0,1.0,false,false`}</pre>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-medium mb-2 text-neutral-300">Column Descriptions:</h4>
+            <div className="text-xs text-neutral-400 space-y-1">
+              <div><strong className="text-neutral-300">employee_id</strong> - Employee ID number (required)</div>
+              <div><strong className="text-neutral-300">work_date</strong> - Date in YYYY-MM-DD format (required)</div>
+              <div><strong className="text-neutral-300">clock_in</strong> - Clock in time in HH:MM:SS format (optional)</div>
+              <div><strong className="text-neutral-300">clock_out</strong> - Clock out time in HH:MM:SS format (optional)</div>
+              <div><strong className="text-neutral-300">hours_worked</strong> - Total hours worked (calculated if not provided)</div>
+              <div><strong className="text-neutral-300">overtime_hours</strong> - Overtime hours (optional, defaults to 0)</div>
+              <div><strong className="text-neutral-300">was_late</strong> - true/false (optional, defaults to false)</div>
+              <div><strong className="text-neutral-300">left_early</strong> - true/false (optional, defaults to false)</div>
+            </div>
+          </div>
+          
+          <div className="bg-green-900/20 border border-green-700/30 p-3 rounded-lg">
+            <p className="text-xs text-green-200">
+              ✅ <strong>Flexible Import:</strong> The system will automatically calculate hours_worked from clock_in/clock_out if not provided. 
+              Dates are extracted from each row, so no date range selection is needed.
+            </p>
           </div>
         </div>
       </div>
