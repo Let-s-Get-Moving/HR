@@ -32,27 +32,23 @@ export default function Payroll() {
 
   const loadData = async () => {
     try {
-      // Load actual periods from database instead of generating conflicting IDs
+      // Load ONLY database periods - no frontend generation at all
       const apiPeriods = await API("/api/payroll/periods").catch(() => []);
       
-      // Filter for 2025-2026 periods only and sort by date
+      // Filter for 2025-2026 periods ONLY and sort by date
       const periods2025_2026 = apiPeriods
-        .filter(p => p.start_date.includes('2025') || p.start_date.includes('2026'))
+        .filter(p => {
+          const startYear = new Date(p.start_date).getFullYear();
+          return startYear >= 2025 && startYear <= 2026;
+        })
         .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
       
-      // If no database periods found, fall back to generated periods
-      const periods = periods2025_2026.length > 0 ? periods2025_2026 : getCurrentYearPeriods("09-12");
-      setPayrollPeriods(periods);
+      console.log('Loaded periods:', periods2025_2026.length, 'periods for 2025-2026');
+      setPayrollPeriods(periods2025_2026);
       
-      // Find current active period across all years
-      const currentPeriod = periods.find(period => {
-        const startDate = new Date(period.start_date);
-        const endDate = new Date(period.end_date);
-        const today = new Date();
-        return startDate <= today && endDate >= today;
-      }) || periods.find(period => period.year === new Date().getFullYear()) || periods[0];
-      
-      setSelectedPeriod(currentPeriod);
+      // Select the first 2025 period as default
+      const defaultPeriod = periods2025_2026.find(p => new Date(p.start_date).getFullYear() === 2025) || periods2025_2026[0];
+      setSelectedPeriod(defaultPeriod);
       
       // Load other data from API
       const [structures, deps, emps] = await Promise.all([
@@ -66,8 +62,8 @@ export default function Payroll() {
       setEmployees(emps);
       
       // Load calculations for the selected period
-      if (currentPeriod) {
-        loadPayrollCalculations(currentPeriod.id);
+      if (defaultPeriod) {
+        loadPayrollCalculations(defaultPeriod.id);
       }
     } catch (error) {
       console.error("Error loading payroll data:", error);
@@ -128,34 +124,23 @@ export default function Payroll() {
     if (!selectedPeriod) return;
 
     try {
-      // For 2025 periods, first check if the period exists in database
-      // If not, create it before calculating payroll
-      if (selectedPeriod.year === 2025) {
-        try {
-          // Try to create the period in database if it doesn't exist
-          await API("/api/payroll/periods", {
-            method: "POST",
-            body: JSON.stringify({
-              period_name: formatPeriodName(selectedPeriod),
-              start_date: selectedPeriod.start_date,
-              end_date: selectedPeriod.end_date,
-              pay_date: selectedPeriod.pay_date
-            })
-          });
-        } catch (createError) {
-          // Period might already exist, continue with calculation
-          console.log("Period may already exist:", createError.message);
-        }
-      }
+      console.log('Calculating payroll for period:', {
+        id: selectedPeriod.id,
+        name: selectedPeriod.period_name,
+        start: selectedPeriod.start_date,
+        end: selectedPeriod.end_date
+      });
 
-      // Calculate payroll using the selected period ID
+      // Calculate payroll using the database period ID directly
       await API(`/api/payroll/calculate/${selectedPeriod.id}`, { method: "POST" });
       loadPayrollCalculations(selectedPeriod.id);
+      
+      console.log('Payroll calculation completed for period ID:', selectedPeriod.id);
     } catch (error) {
       console.error("Error calculating payroll:", error);
       
-      // If calculation fails, show user-friendly message
-      alert(`Unable to calculate payroll for ${formatPeriodName(selectedPeriod)}. Please ensure time entries exist for this period.`);
+      // Show specific error message
+      alert(`Unable to calculate payroll for ${selectedPeriod.period_name}. Please ensure time entries exist for dates ${selectedPeriod.start_date} to ${selectedPeriod.end_date}.`);
     }
   };
 
@@ -194,14 +179,11 @@ export default function Payroll() {
             }}
             className="w-full px-3 py-2 input-md"
           >
-            {payrollPeriods.map(period => {
-              const formattedName = formatPeriodName(period);
-              return (
-                <option key={period.id} value={period.id}>
-                  {formattedName}
-                </option>
-              );
-            })}
+            {payrollPeriods.map(period => (
+              <option key={period.id} value={period.id}>
+                {period.period_name} ({period.start_date.substring(0, 10)} to {period.end_date.substring(0, 10)})
+              </option>
+            ))}
           </select>
         </div>
 
