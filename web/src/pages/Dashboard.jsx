@@ -65,7 +65,7 @@ export default function Dashboard() {
         />
         <MetricCard 
           label="Turnover Rate (YTD)" 
-          value={`${analytics?.turnoverRate?.turnover_rate_percentage ?? 0}%`} 
+          value={`${analytics?.turnoverRate ?? 0}%`} 
         />
       </div>
 
