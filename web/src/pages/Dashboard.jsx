@@ -74,13 +74,29 @@ export default function Dashboard() {
         <div className="dashboard-card p-5">
           <div className="text-sm text-tertiary mb-2">Employment Mix</div>
           {wf && (
-            <Donut
-              segments={[
-                { value: (wf.breakdown.full_time || 0) / Math.max(wf.total,1), color: "#818cf8" },
-                { value: (wf.breakdown.part_time || 0) / Math.max(wf.total,1), color: "#34d399" },
-                { value: (wf.breakdown.contract || 0) / Math.max(wf.total,1), color: "#f472b6" }
-              ]}
-            />
+            <div className="flex items-center gap-4">
+              <Donut
+                segments={[
+                  { value: (wf.breakdown.full_time || 0) / Math.max(wf.total,1), color: "#818cf8" },
+                  { value: (wf.breakdown.part_time || 0) / Math.max(wf.total,1), color: "#34d399" },
+                  { value: (wf.breakdown.contract || 0) / Math.max(wf.total,1), color: "#f472b6" }
+                ]}
+              />
+              <div className="flex flex-col gap-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: "#818cf8"}}></div>
+                  <span>Full-time ({wf.breakdown.full_time || 0})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: "#34d399"}}></div>
+                  <span>Part-time ({wf.breakdown.part_time || 0})</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: "#f472b6"}}></div>
+                  <span>Contract ({wf.breakdown.contract || 0})</span>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 

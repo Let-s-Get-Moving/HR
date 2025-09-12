@@ -17,6 +17,7 @@ import analytics from "./routes/analytics.js";
 import metrics from "./routes/metrics.js";
 import settings from "./routes/settings.js";
 import health from "./routes/health.js";
+import termination from "./routes/termination.js";
 import logger from "./utils/logger.js";
 
 const app = express();
@@ -161,6 +162,7 @@ app.use("/api/analytics", analytics);
 app.use("/api/metrics", metrics);
 app.use("/api/settings", settings);
 app.use("/api/health", health);
+app.use("/api/termination", termination);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {

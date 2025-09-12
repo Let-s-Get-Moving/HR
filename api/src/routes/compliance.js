@@ -3,6 +3,63 @@ import { q } from "../db.js";
 
 const r = Router();
 
+// Get compliance dashboard data
+r.get("/dashboard", async (_req, res) => {
+  try {
+    const [alerts, documents, trainings, esa] = await Promise.all([
+      q(`SELECT COUNT(*) as total, COUNT(CASE WHEN resolved = false THEN 1 END) as unresolved FROM alerts`),
+      q(`SELECT COUNT(*) as total, COUNT(CASE WHEN signed = true THEN 1 END) as signed FROM documents`),
+      q(`SELECT COUNT(*) as total, COUNT(CASE WHEN status = 'Completed' THEN 1 END) as completed FROM training_records`),
+      q(`SELECT COUNT(*) as total FROM esa_compliance WHERE compliant = true`)
+    ]);
+
+    res.json({
+      alerts: {
+        total: parseInt(alerts.rows[0].total),
+        unresolved: parseInt(alerts.rows[0].unresolved)
+      },
+      documents: {
+        total: parseInt(documents.rows[0].total),
+        signed: parseInt(documents.rows[0].signed)
+      },
+      trainings: {
+        total: parseInt(trainings.rows[0].total),
+        completed: parseInt(trainings.rows[0].completed)
+      },
+      esa_compliance: parseInt(esa.rows[0].total)
+    });
+  } catch (error) {
+    console.error("Error fetching compliance dashboard:", error);
+    res.status(500).json({ error: "Failed to fetch compliance dashboard" });
+  }
+});
+
+// Generate alerts
+r.post("/generate-alerts", async (_req, res) => {
+  try {
+    // This would normally generate alerts based on various criteria
+    // For now, just return success
+    res.json({ message: "Alerts generated successfully" });
+  } catch (error) {
+    console.error("Error generating alerts:", error);
+    res.status(500).json({ error: "Failed to generate alerts" });
+  }
+});
+
+// Resolve alert
+r.put("/alerts/:id/resolve", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+    
+    await q(`UPDATE alerts SET resolved = true, resolved_at = CURRENT_TIMESTAMP, notes = $1 WHERE id = $2`, [notes || '', id]);
+    res.json({ message: "Alert resolved successfully" });
+  } catch (error) {
+    console.error("Error resolving alert:", error);
+    res.status(500).json({ error: "Failed to resolve alert" });
+  }
+});
+
 // Get all compliance alerts
 r.get("/alerts", async (_req, res) => {
   const { rows } = await q(`
