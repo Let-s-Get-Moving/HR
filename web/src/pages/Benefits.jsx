@@ -15,6 +15,10 @@ export default function Benefits() {
   const [showEnrollEmployee, setShowEnrollEmployee] = useState(false);
   const [editingEnrollment, setEditingEnrollment] = useState(null);
   const [showEditEnrollment, setShowEditEnrollment] = useState(false);
+  const [showEditPlan, setShowEditPlan] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
+  const [showPlanDetails, setShowPlanDetails] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
   
   // Form data for new benefit
   const [newBenefit, setNewBenefit] = useState({
@@ -93,6 +97,40 @@ export default function Benefits() {
         console.error("Error terminating enrollment:", error);
       }
     }
+  };
+
+  const handleEditPlan = (plan) => {
+    setEditingPlan({...plan});
+    setShowEditPlan(true);
+  };
+
+  const handleUpdatePlan = async (e) => {
+    e.preventDefault();
+    try {
+      // In production, this would be an API call
+      setInsurancePlans(insurancePlans.map(plan => 
+        plan.id === editingPlan.id ? editingPlan : plan
+      ));
+      setEditingPlan(null);
+      setShowEditPlan(false);
+    } catch (error) {
+      console.error("Error updating plan:", error);
+    }
+  };
+
+  const handleViewPlanDetails = (plan) => {
+    setSelectedPlan(plan);
+    setShowPlanDetails(true);
+  };
+
+  const handleManageRetirementPlan = (plan) => {
+    // For now, show an alert - in production this would open a management interface
+    alert(`Managing retirement plan: ${plan.plan_name}\n\nThis would open the plan management interface with options for:\n- Investment allocations\n- Contribution settings\n- Employee participation\n- Performance reports`);
+  };
+
+  const handleViewInvestments = (plan) => {
+    // For now, show an alert - in production this would show investment details
+    alert(`Investment details for: ${plan.plan_name}\n\nThis would show:\n- Current fund performance\n- Asset allocation\n- Historical returns\n- Available investment options`);
   };
 
   useEffect(() => {
@@ -380,10 +418,16 @@ export default function Benefits() {
             </div>
 
             <div className="flex justify-end space-x-2">
-              <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+              <button 
+                onClick={() => handleEditPlan(plan)}
+                className="text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
                 Edit Plan
               </button>
-              <button className="text-green-400 hover:text-green-300 transition-colors">
+              <button 
+                onClick={() => handleViewPlanDetails(plan)}
+                className="text-green-400 hover:text-green-300 transition-colors"
+              >
                 View Details
               </button>
             </div>
@@ -437,10 +481,16 @@ export default function Benefits() {
             </div>
 
             <div className="flex justify-end space-x-2">
-              <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+              <button 
+                onClick={() => handleManageRetirementPlan(plan)}
+                className="text-indigo-400 hover:text-indigo-300 transition-colors"
+              >
                 Manage Plan
               </button>
-              <button className="text-green-400 hover:text-green-300 transition-colors">
+              <button 
+                onClick={() => handleViewInvestments(plan)}
+                className="text-green-400 hover:text-green-300 transition-colors"
+              >
                 View Investments
               </button>
             </div>
@@ -871,6 +921,198 @@ export default function Benefits() {
                   </button>
                 </div>
               </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Plan Modal */}
+      {showEditPlan && editingPlan && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Edit Insurance Plan</h3>
+              <form onSubmit={handleUpdatePlan} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Plan Name *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingPlan.plan_name || ""}
+                      onChange={(e) => setEditingPlan({...editingPlan, plan_name: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Provider *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingPlan.provider || ""}
+                      onChange={(e) => setEditingPlan({...editingPlan, provider: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Plan Type</label>
+                    <select
+                      value={editingPlan.type || "Health"}
+                      onChange={(e) => setEditingPlan({...editingPlan, type: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Health">Health</option>
+                      <option value="Dental">Dental</option>
+                      <option value="Vision">Vision</option>
+                      <option value="Life">Life Insurance</option>
+                      <option value="Disability">Disability</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Employee Cost (CAD)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editingPlan.employee_cost || ""}
+                      onChange={(e) => setEditingPlan({...editingPlan, employee_cost: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Employer Cost (CAD)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editingPlan.employer_cost || ""}
+                      onChange={(e) => setEditingPlan({...editingPlan, employer_cost: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Coverage Details</label>
+                  <textarea
+                    rows={4}
+                    value={editingPlan.coverage_details || ""}
+                    onChange={(e) => setEditingPlan({...editingPlan, coverage_details: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Describe what this plan covers..."
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditPlan(false);
+                      setEditingPlan(null);
+                    }}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Update Plan
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View Plan Details Modal */}
+      {showPlanDetails && selectedPlan && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">Plan Details</h3>
+                <button
+                  onClick={() => {
+                    setShowPlanDetails(false);
+                    setSelectedPlan(null);
+                  }}
+                  className="text-neutral-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Plan Name</label>
+                    <p className="font-medium">{selectedPlan.plan_name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Provider</label>
+                    <p className="font-medium">{selectedPlan.provider}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Plan Type</label>
+                    <p className="font-medium">{selectedPlan.type}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Employee Cost</label>
+                    <p className="font-medium">${selectedPlan.employee_cost}/month</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Employer Cost</label>
+                    <p className="font-medium">${selectedPlan.employer_cost}/month</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-neutral-400">Total Cost</label>
+                    <p className="font-medium">${(parseFloat(selectedPlan.employee_cost || 0) + parseFloat(selectedPlan.employer_cost || 0)).toFixed(2)}/month</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-sm font-medium text-neutral-400">Coverage Details</label>
+                  <p className="text-sm bg-neutral-800 p-3 rounded mt-1">{selectedPlan.coverage_details || 'No details available'}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-neutral-400">Plan Status</label>
+                  <span className="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                    Active
+                  </span>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowPlanDetails(false);
+                    setSelectedPlan(null);
+                  }}
+                  className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPlanDetails(false);
+                    setSelectedPlan(null);
+                    handleEditPlan(selectedPlan);
+                  }}
+                  className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  Edit Plan
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
