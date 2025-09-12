@@ -178,30 +178,56 @@ export default function Payroll() {
     }
 
     try {
+      console.log('Starting payroll calculation for date range:', startDate, 'to', endDate);
+      
       // First ensure we have a period for this date range
       await loadPayrollByDateRange(startDate, endDate);
       
-      // Wait a moment for the period to be set
-      setTimeout(async () => {
-        if (selectedPeriod) {
-          console.log('Calculating payroll for date range:', {
-            id: selectedPeriod.id,
-            name: selectedPeriod.period_name,
-            start: startDate,
-            end: endDate
-          });
-
-          // Calculate payroll using the period ID
-          await API(`/api/payroll/calculate/${selectedPeriod.id}`, { method: "POST" });
-          loadPayrollCalculations(selectedPeriod.id);
+      // Get the current selected period (should be set by loadPayrollByDateRange)
+      const currentPeriod = selectedPeriod;
+      
+      if (!currentPeriod) {
+        // Try to find existing period that matches the date range
+        const matchingPeriod = payrollPeriods.find(p => 
+          p.start_date.substring(0, 10) === startDate && p.end_date.substring(0, 10) === endDate
+        );
+        
+        if (matchingPeriod) {
+          console.log('Using existing period:', matchingPeriod.period_name, 'ID:', matchingPeriod.id);
           
-          console.log('Payroll calculation completed for date range:', startDate, 'to', endDate);
+          try {
+            // Calculate payroll using existing period
+            const response = await API(`/api/payroll/calculate/${matchingPeriod.id}`, { method: "POST" });
+            console.log('Payroll calculation API response:', response);
+            
+            // Load the results
+            await loadPayrollCalculations(matchingPeriod.id);
+            
+            console.log('Payroll calculation completed successfully');
+            alert('Payroll calculated successfully! Check the calculations below.');
+            
+          } catch (calcError) {
+            console.error('Payroll calculation API error:', calcError);
+            throw new Error(`Payroll calculation failed: ${calcError.message}`);
+          }
+          
+        } else {
+          throw new Error('No period found for the selected date range. Please select dates that match an existing payroll period.');
         }
-      }, 500);
+      } else {
+        console.log('Calculating payroll for period:', currentPeriod.period_name);
+        
+        // Calculate payroll using the current period
+        await API(`/api/payroll/calculate/${currentPeriod.id}`, { method: "POST" });
+        await loadPayrollCalculations(currentPeriod.id);
+        
+        console.log('Payroll calculation completed successfully');
+        alert('Payroll calculated successfully!');
+      }
       
     } catch (error) {
       console.error("Error calculating payroll:", error);
-      alert(`Unable to calculate payroll for ${startDate} to ${endDate}. Please ensure time entries exist for these dates.`);
+      alert(`Unable to calculate payroll for ${startDate} to ${endDate}. Error: ${error.message}`);
     }
   };
 

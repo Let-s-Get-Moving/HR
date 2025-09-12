@@ -187,52 +187,74 @@ r.post("/calculate/:periodId", async (req, res) => {
        WHERE e.status = 'Active'`
     );
     
+    console.log(`Starting payroll calculation for period ${periodId} (${period.period_name})`);
+    console.log(`Period dates: ${period.start_date} to ${period.end_date}`);
+    console.log(`Found ${employeesResult.rows.length} active employees`);
+    
     // Calculate payroll for each employee
     for (const employee of employeesResult.rows) {
-      // Get time entries for the period
-      const timeEntriesResult = await q(
-        `SELECT 
-           COALESCE(SUM(hours_worked), 0) as total_hours,
-           COALESCE(SUM(overtime_hours), 0) as total_overtime
-         FROM time_entries 
-         WHERE employee_id = $1 
-         AND work_date BETWEEN $2 AND $3`,
-        [employee.id, period.start_date, period.end_date]
-      );
-      
-      const timeData = timeEntriesResult.rows[0];
-      const baseHours = Math.min(timeData.total_hours, 40); // Regular hours capped at 40
-      const overtimeHours = Math.max(0, timeData.total_hours - 40) + timeData.total_overtime;
-      const hourlyRate = parseFloat(employee.hourly_rate) || 0;
-      
-      // Calculate commission (simplified)
-      const commissionAmount = 0; // TODO: Implement commission calculation
-      
-      // Calculate bonus (simplified)
-      const bonusAmount = 0; // TODO: Implement bonus calculation
-      
-      // Calculate deductions (simplified)
-      const deductions = 0; // TODO: Implement deductions
-      
-      // Insert or update payroll calculation
-      await q(
-        `INSERT INTO payroll_calculations 
-         (employee_id, period_id, base_hours, overtime_hours, regular_rate, 
-          commission_amount, bonus_amount, deductions)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (employee_id, period_id) 
-         DO UPDATE SET 
-           base_hours = EXCLUDED.base_hours,
-           overtime_hours = EXCLUDED.overtime_hours,
-           regular_rate = EXCLUDED.regular_rate,
-           commission_amount = EXCLUDED.commission_amount,
-           bonus_amount = EXCLUDED.bonus_amount,
-           deductions = EXCLUDED.deductions,
-           calculated_at = CURRENT_TIMESTAMP`,
-        [employee.id, periodId, baseHours, overtimeHours, hourlyRate, 
-         commissionAmount, bonusAmount, deductions]
-      );
+      try {
+        console.log(`Processing employee ${employee.id}: ${employee.first_name} ${employee.last_name}`);
+        
+        // Get time entries for the period
+        const timeEntriesResult = await q(
+          `SELECT 
+             COALESCE(SUM(CAST(hours_worked AS NUMERIC)), 0) as total_hours,
+             COALESCE(SUM(CAST(overtime_hours AS NUMERIC)), 0) as total_overtime
+           FROM time_entries 
+           WHERE employee_id = $1 
+           AND work_date BETWEEN $2 AND $3`,
+          [employee.id, period.start_date, period.end_date]
+        );
+        
+        const timeData = timeEntriesResult.rows[0];
+        const totalHours = parseFloat(timeData.total_hours) || 0;
+        const totalOvertime = parseFloat(timeData.total_overtime) || 0;
+        
+        const baseHours = Math.min(totalHours, 40); // Regular hours capped at 40
+        const overtimeHours = Math.max(0, totalHours - 40) + totalOvertime;
+        const hourlyRate = parseFloat(employee.hourly_rate) || 0;
+        
+        console.log(`  Time data: ${totalHours} total hours, ${totalOvertime} overtime hours`);
+        console.log(`  Calculated: ${baseHours} base hours, ${overtimeHours} overtime hours, $${hourlyRate}/hr`);
+        
+        // Calculate commission (simplified)
+        const commissionAmount = 0; // TODO: Implement commission calculation
+        
+        // Calculate bonus (simplified)
+        const bonusAmount = 0; // TODO: Implement bonus calculation
+        
+        // Calculate deductions (simplified)
+        const deductions = 0; // TODO: Implement deductions
+        
+        // Insert or update payroll calculation
+        await q(
+          `INSERT INTO payroll_calculations 
+           (employee_id, period_id, base_hours, overtime_hours, regular_rate, 
+            commission_amount, bonus_amount, deductions)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           ON CONFLICT (employee_id, period_id) 
+           DO UPDATE SET 
+             base_hours = EXCLUDED.base_hours,
+             overtime_hours = EXCLUDED.overtime_hours,
+             regular_rate = EXCLUDED.regular_rate,
+             commission_amount = EXCLUDED.commission_amount,
+             bonus_amount = EXCLUDED.bonus_amount,
+             deductions = EXCLUDED.deductions,
+             calculated_at = CURRENT_TIMESTAMP`,
+          [employee.id, periodId, baseHours, overtimeHours, hourlyRate, 
+           commissionAmount, bonusAmount, deductions]
+        );
+        
+        console.log(`  ✅ Payroll calculation saved for employee ${employee.id}`);
+        
+      } catch (employeeError) {
+        console.error(`❌ Error processing employee ${employee.id}:`, employeeError);
+        throw employeeError; // Re-throw to stop the whole process
+      }
     }
+    
+    console.log(`✅ Payroll calculation completed for ${employeesResult.rows.length} employees`);
     
     res.json({ message: "Payroll calculated successfully" });
   } catch (error) {
