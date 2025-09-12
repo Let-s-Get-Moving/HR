@@ -244,37 +244,80 @@ r.post("/generate-alerts", async (_req, res) => {
 // Get compliance dashboard
 r.get("/dashboard", async (_req, res) => {
   try {
-    // Get basic alert statistics
-    const totalAlerts = await q(`SELECT COUNT(*) as total FROM alerts WHERE resolved = false`).catch(() => ({ rows: [{ total: 0 }] }));
-    const alertsByType = await q(`SELECT type, COUNT(*) as count FROM alerts WHERE resolved = false GROUP BY type ORDER BY count DESC`).catch(() => ({ rows: [] }));
-    const expiringSoon = await q(`SELECT COUNT(*) as count FROM alerts WHERE resolved = false AND due_date <= CURRENT_DATE + INTERVAL '7 days'`).catch(() => ({ rows: [{ count: 0 }] }));
-    
-    // Get compliance rates with safer queries
-    const activeEmployees = await q(`SELECT COUNT(*) as total FROM employees WHERE status = 'Active'`).catch(() => ({ rows: [{ total: 0 }] }));
-    const documentsCount = await q(`SELECT COUNT(*) as total, COUNT(*) FILTER (WHERE signed = true) as signed FROM documents`).catch(() => ({ rows: [{ total: 0, signed: 0 }] }));
-    const trainingCount = await q(`SELECT COUNT(*) as total FROM training_records`).catch(() => ({ rows: [{ total: 0 }] }));
-    
-    const totalEmployees = parseInt(activeEmployees.rows[0]?.total || 0);
-    const totalDocs = parseInt(documentsCount.rows[0]?.total || 0);
-    const signedDocs = parseInt(documentsCount.rows[0]?.signed || 0);
-    const totalTraining = parseInt(trainingCount.rows[0]?.total || 0);
+    // Initialize default values
+    let totalAlerts = 0;
+    let alertsByType = [];
+    let expiringSoon = 0;
+    let activeEmployees = 0;
+    let totalDocs = 0;
+    let signedDocs = 0;
+    let totalTraining = 0;
+
+    try {
+      const alertsResult = await q(`SELECT COUNT(*) as total FROM alerts WHERE resolved = false`);
+      totalAlerts = parseInt(alertsResult.rows[0]?.total || 0);
+    } catch (e) {
+      console.log("Alerts count failed:", e.message);
+    }
+
+    try {
+      const alertsTypeResult = await q(`SELECT type, COUNT(*) as count FROM alerts WHERE resolved = false GROUP BY type ORDER BY count DESC`);
+      alertsByType = alertsTypeResult.rows || [];
+    } catch (e) {
+      console.log("Alerts by type failed:", e.message);
+    }
+
+    try {
+      const expiringSoonResult = await q(`SELECT COUNT(*) as count FROM alerts WHERE resolved = false AND due_date <= CURRENT_DATE + INTERVAL '7 days'`);
+      expiringSoon = parseInt(expiringSoonResult.rows[0]?.count || 0);
+    } catch (e) {
+      console.log("Expiring soon failed:", e.message);
+    }
+
+    try {
+      const employeesResult = await q(`SELECT COUNT(*) as total FROM employees WHERE status = 'Active'`);
+      activeEmployees = parseInt(employeesResult.rows[0]?.total || 0);
+    } catch (e) {
+      console.log("Active employees failed:", e.message);
+    }
+
+    try {
+      const docsResult = await q(`SELECT COUNT(*) as total FROM documents`);
+      totalDocs = parseInt(docsResult.rows[0]?.total || 0);
+    } catch (e) {
+      console.log("Documents count failed:", e.message);
+    }
+
+    try {
+      const signedDocsResult = await q(`SELECT COUNT(*) as signed FROM documents WHERE signed = true`);
+      signedDocs = parseInt(signedDocsResult.rows[0]?.signed || 0);
+    } catch (e) {
+      console.log("Signed documents failed:", e.message);
+    }
+
+    try {
+      const trainingResult = await q(`SELECT COUNT(*) as total FROM training_records`);
+      totalTraining = parseInt(trainingResult.rows[0]?.total || 0);
+    } catch (e) {
+      console.log("Training count failed:", e.message);
+    }
     
     res.json({
-      total_alerts: parseInt(totalAlerts.rows[0]?.total || 0),
-      alerts_by_type: alertsByType.rows || [],
-      expiring_soon: parseInt(expiringSoon.rows[0]?.count || 0),
+      total_alerts: totalAlerts,
+      alerts_by_type: alertsByType,
+      expiring_soon: expiringSoon,
       compliance_rate: {
         contract_compliance: totalDocs > 0 ? Math.round((signedDocs / totalDocs) * 100) : 100,
-        training_compliance: totalEmployees > 0 && totalTraining > 0 ? Math.round((totalTraining / totalEmployees) * 100) : 0
+        training_compliance: activeEmployees > 0 && totalTraining > 0 ? Math.round((totalTraining / activeEmployees) * 100) : 0
       },
-      active_employees: totalEmployees,
+      active_employees: activeEmployees,
       total_documents: totalDocs,
       signed_documents: signedDocs,
       total_training_records: totalTraining
     });
   } catch (error) {
     console.error("Dashboard error:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: `Dashboard error: ${error.message}` });
   }
 });
 
