@@ -47,8 +47,8 @@ r.get("/system", async (req, res) => {
   }
 });
 
-// Update system setting
-r.put("/system/:key", requireAuth, async (req, res) => {
+// Update system setting (public for preferences)
+r.put("/system/:key", async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
@@ -100,8 +100,8 @@ r.get("/preferences", optionalAuth, async (req, res) => {
   }
 });
 
-// Update user preference
-r.put("/preferences/:key", requireAuth, async (req, res) => {
+// Update user preference (public for preferences)
+r.put("/preferences/:key", async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
@@ -148,8 +148,8 @@ r.get("/notifications", optionalAuth, async (req, res) => {
   }
 });
 
-// Update notification setting
-r.put("/notifications/:key", requireAuth, async (req, res) => {
+// Update notification setting (public for preferences)
+r.put("/notifications/:key", async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   

@@ -203,7 +203,7 @@ r.post("/calculate/:periodId", async (req, res) => {
       const timeData = timeEntriesResult.rows[0];
       const baseHours = Math.min(timeData.total_hours, 40); // Regular hours capped at 40
       const overtimeHours = Math.max(0, timeData.total_hours - 40) + timeData.total_overtime;
-      const hourlyRate = formatCurrency(employee.hourly_rate);
+      const hourlyRate = parseFloat(employee.hourly_rate) || 0;
       
       // Calculate commission (simplified)
       const commissionAmount = 0; // TODO: Implement commission calculation
