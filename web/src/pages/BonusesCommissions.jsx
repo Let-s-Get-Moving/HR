@@ -14,6 +14,34 @@ export default function BonusesCommissions() {
   const [showAddBonus, setShowAddBonus] = useState(false);
   const [showAddCommission, setShowAddCommission] = useState(false);
   const [showAddStructure, setShowAddStructure] = useState(false);
+  
+  // Form data states
+  const [newBonus, setNewBonus] = useState({
+    employee_id: "",
+    bonus_type: "Performance",
+    amount: "",
+    period: "",
+    criteria: "",
+    status: "Pending"
+  });
+  
+  const [newCommission, setNewCommission] = useState({
+    employee_id: "",
+    commission_rate: "",
+    threshold_amount: "",
+    deal_amount: "",
+    commission_amount: "",
+    period: ""
+  });
+  
+  const [newStructure, setNewStructure] = useState({
+    name: "",
+    type: "Bonus",
+    base_amount: "",
+    criteria: "",
+    effective_date: "",
+    is_active: true
+  });
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const tabs = [
@@ -201,6 +229,80 @@ export default function BonusesCommissions() {
       console.error("Error loading bonuses and commissions data:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Handler functions for adding bonuses, commissions, and structures
+  const handleAddBonus = async (e) => {
+    e.preventDefault();
+    try {
+      await API("/api/bonuses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newBonus)
+      });
+      
+      setNewBonus({
+        employee_id: "",
+        bonus_type: "Performance",
+        amount: "",
+        period: "",
+        criteria: "",
+        status: "Pending"
+      });
+      setShowAddBonus(false);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error adding bonus:", error);
+    }
+  };
+
+  const handleAddCommission = async (e) => {
+    e.preventDefault();
+    try {
+      await API("/api/commissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCommission)
+      });
+      
+      setNewCommission({
+        employee_id: "",
+        commission_rate: "",
+        threshold_amount: "",
+        deal_amount: "",
+        commission_amount: "",
+        period: ""
+      });
+      setShowAddCommission(false);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error adding commission:", error);
+    }
+  };
+
+  const handleAddStructure = async (e) => {
+    e.preventDefault();
+    try {
+      const endpoint = newStructure.type === "Bonus" ? "/api/bonus-structures" : "/api/commission-structures";
+      await API(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newStructure)
+      });
+      
+      setNewStructure({
+        name: "",
+        type: "Bonus",
+        base_amount: "",
+        criteria: "",
+        effective_date: "",
+        is_active: true
+      });
+      setShowAddStructure(false);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error adding structure:", error);
     }
   };
 
@@ -714,7 +816,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Add Employee Bonus</h3>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleAddBonus}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Employee</label>
@@ -795,7 +897,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Add Sales Commission</h3>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleAddCommission}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Employee</label>
@@ -884,7 +986,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Add Compensation Structure</h3>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleAddStructure}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Structure Name</label>

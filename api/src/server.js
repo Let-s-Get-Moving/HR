@@ -18,6 +18,8 @@ import metrics from "./routes/metrics.js";
 import settings from "./routes/settings.js";
 import health from "./routes/health.js";
 import termination from "./routes/termination.js";
+import bonuses from "./routes/bonuses.js";
+import commissions from "./routes/commissions.js";
 import logger from "./utils/logger.js";
 
 const app = express();
@@ -163,6 +165,8 @@ app.use("/api/metrics", metrics);
 app.use("/api/settings", settings);
 app.use("/api/health", health);
 app.use("/api/termination", termination);
+app.use("/api/bonuses", bonuses);
+app.use("/api/commissions", commissions);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
