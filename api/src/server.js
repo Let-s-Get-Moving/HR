@@ -136,6 +136,16 @@ app.get("/api/test-db", async (req, res) => {
   }
 });
 
+// Test users table
+app.get("/api/test-users", async (req, res) => {
+  try {
+    const result = await q("SELECT username, email, role, is_active FROM users WHERE username = 'Avneet'");
+    res.json({ users: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Test analytics route
 app.get("/api/analytics/test", (req, res) => {
   res.json({ message: "Analytics test route is working" });
