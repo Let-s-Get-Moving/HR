@@ -16,6 +16,8 @@ export default function Payroll() {
   const [loading, setLoading] = useState(true);
   const [importFile, setImportFile] = useState(null);
   const [importStatus, setImportStatus] = useState(null);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const tabs = [
     { id: "overview", name: "Payroll Overview", icon: "📊" },
@@ -46,9 +48,16 @@ export default function Payroll() {
       console.log('Loaded periods:', periods2025_2026.length, 'periods for 2025-2026');
       setPayrollPeriods(periods2025_2026);
       
-      // Select the first 2025 period as default
+      // Select the first 2025 period as default and set date range
       const defaultPeriod = periods2025_2026.find(p => new Date(p.start_date).getFullYear() === 2025) || periods2025_2026[0];
       setSelectedPeriod(defaultPeriod);
+      
+      // Set default date range (August 2025 since it has the most data)
+      const augustPeriod = periods2025_2026.find(p => p.period_name.includes('August')) || defaultPeriod;
+      if (augustPeriod) {
+        setStartDate(augustPeriod.start_date.substring(0, 10));
+        setEndDate(augustPeriod.end_date.substring(0, 10));
+      }
       
       // Load other data from API
       const [structures, deps, emps] = await Promise.all([
@@ -81,6 +90,48 @@ export default function Payroll() {
     } catch (error) {
       console.error("Error loading payroll calculations:", error);
       // Set empty calculations on error to prevent UI issues
+      setPayrollCalculations([]);
+    }
+  };
+
+  const loadPayrollByDateRange = async (start, end) => {
+    try {
+      // Find or create a temporary period for this date range
+      const tempPeriodName = `${start} to ${end}`;
+      
+      // First, try to find an existing period that matches these dates
+      const matchingPeriod = payrollPeriods.find(p => 
+        p.start_date.substring(0, 10) === start && p.end_date.substring(0, 10) === end
+      );
+      
+      if (matchingPeriod) {
+        // Use existing period
+        const calculations = await API(`/api/payroll/calculations?periodId=${matchingPeriod.id}`);
+        setPayrollCalculations(calculations);
+        setSelectedPeriod(matchingPeriod);
+      } else {
+        // Create a temporary period for this date range
+        try {
+          const newPeriod = await API("/api/payroll/periods", {
+            method: "POST",
+            body: JSON.stringify({
+              period_name: tempPeriodName,
+              start_date: start,
+              end_date: end,
+              pay_date: end // Use end date as pay date
+            })
+          });
+          
+          setSelectedPeriod(newPeriod);
+          setPayrollCalculations([]); // No calculations yet for new period
+          
+        } catch (createError) {
+          console.error("Could not create period for date range:", createError);
+          setPayrollCalculations([]);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading payroll by date range:", error);
       setPayrollCalculations([]);
     }
   };
@@ -121,28 +172,51 @@ export default function Payroll() {
   };
 
   const handleCalculatePayroll = async () => {
-    if (!selectedPeriod) return;
+    if (!startDate || !endDate) {
+      alert('Please select both start and end dates');
+      return;
+    }
 
     try {
-      console.log('Calculating payroll for period:', {
-        id: selectedPeriod.id,
-        name: selectedPeriod.period_name,
-        start: selectedPeriod.start_date,
-        end: selectedPeriod.end_date
-      });
-
-      // Calculate payroll using the database period ID directly
-      await API(`/api/payroll/calculate/${selectedPeriod.id}`, { method: "POST" });
-      loadPayrollCalculations(selectedPeriod.id);
+      // First ensure we have a period for this date range
+      await loadPayrollByDateRange(startDate, endDate);
       
-      console.log('Payroll calculation completed for period ID:', selectedPeriod.id);
+      // Wait a moment for the period to be set
+      setTimeout(async () => {
+        if (selectedPeriod) {
+          console.log('Calculating payroll for date range:', {
+            id: selectedPeriod.id,
+            name: selectedPeriod.period_name,
+            start: startDate,
+            end: endDate
+          });
+
+          // Calculate payroll using the period ID
+          await API(`/api/payroll/calculate/${selectedPeriod.id}`, { method: "POST" });
+          loadPayrollCalculations(selectedPeriod.id);
+          
+          console.log('Payroll calculation completed for date range:', startDate, 'to', endDate);
+        }
+      }, 500);
+      
     } catch (error) {
       console.error("Error calculating payroll:", error);
-      
-      // Show specific error message
-      alert(`Unable to calculate payroll for ${selectedPeriod.period_name}. Please ensure time entries exist for dates ${selectedPeriod.start_date} to ${selectedPeriod.end_date}.`);
+      alert(`Unable to calculate payroll for ${startDate} to ${endDate}. Please ensure time entries exist for these dates.`);
     }
   };
+
+  const handleDateRangeChange = async () => {
+    if (startDate && endDate) {
+      await loadPayrollByDateRange(startDate, endDate);
+    }
+  };
+
+  // Auto-load data when dates change
+  useEffect(() => {
+    if (startDate && endDate && payrollPeriods.length > 0) {
+      handleDateRangeChange();
+    }
+  }, [startDate, endDate, payrollPeriods]);
 
   const handleExport = async (type) => {
     if (!selectedPeriod) return;
@@ -168,23 +242,71 @@ export default function Payroll() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Payroll Period (Bi-weekly)</h3>
-          <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year • Aligned with Sep 12, Sep 26 pay dates</p>
-          <select
-            value={selectedPeriod?.id || ""}
-            onChange={(e) => {
-              const period = payrollPeriods.find(p => p.id === parseInt(e.target.value));
-              setSelectedPeriod(period);
-              if (period) loadPayrollCalculations(period.id);
-            }}
-            className="w-full px-3 py-2 input-md"
-          >
-            {payrollPeriods.map(period => (
-              <option key={period.id} value={period.id}>
-                {period.period_name}
-              </option>
-            ))}
-          </select>
+          <h3 className="text-lg font-semibold mb-4">📅 Payroll Date Range</h3>
+          <p className="text-xs text-secondary mb-4">Select custom date range for payroll calculation</p>
+          
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
+              />
+            </div>
+            
+            <div className="flex flex-wrap gap-1">
+              <button
+                onClick={() => {
+                  setStartDate('2025-08-01');
+                  setEndDate('2025-08-31');
+                }}
+                className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-xs transition-colors"
+              >
+                Aug 2025
+              </button>
+              <button
+                onClick={() => {
+                  setStartDate('2025-09-01');
+                  setEndDate('2025-09-30');
+                }}
+                className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-xs transition-colors"
+              >
+                Sep 2025
+              </button>
+              <button
+                onClick={() => {
+                  const today = new Date();
+                  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                  setStartDate(firstDay.toISOString().substring(0, 10));
+                  setEndDate(lastDay.toISOString().substring(0, 10));
+                }}
+                className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-xs transition-colors"
+              >
+                This Month
+              </button>
+            </div>
+            
+            {startDate && endDate && (
+              <div className="bg-neutral-800 p-2 rounded text-xs text-neutral-400">
+                📊 Range: {startDate} to {endDate}
+                <br />
+                🗓️ Days: {Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="card">
@@ -282,27 +404,36 @@ export default function Payroll() {
         <h3 className="text-lg font-semibold mb-4">Import Timesheet Data</h3>
         
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Select Payroll Period (Bi-weekly)</label>
-            <p className="text-xs text-secondary mb-2">Each period covers 2 weeks (14 days) • 26 periods per year • Aligned with Sep 12, Sep 26 pay dates</p>
-            <select
-              value={selectedPeriod?.id || ""}
-              onChange={(e) => {
-                const period = payrollPeriods.find(p => p.id === parseInt(e.target.value));
-                setSelectedPeriod(period);
-              }}
-              className="w-full px-3 py-2 input-md"
-            >
-              <option value="">Select a period</option>
-              {payrollPeriods.map(period => {
-                const formattedName = formatPeriodName(period);
-                return (
-                  <option key={period.id} value={period.id}>
-                    {formattedName}
-                  </option>
-                );
-              })}
-            </select>
+          <div className="bg-neutral-800 p-4 rounded-lg">
+            <label className="block text-sm font-medium mb-2">📅 Import Date Range</label>
+            <p className="text-xs text-secondary mb-3">Specify the date range for this timesheet import</p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-neutral-400 mb-1">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-neutral-400 mb-1">End Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
+                />
+              </div>
+            </div>
+            
+            {startDate && endDate && (
+              <div className="mt-2 text-xs text-neutral-400">
+                📊 Importing for: {startDate} to {endDate}
+              </div>
+            )}
           </div>
 
           <div>
