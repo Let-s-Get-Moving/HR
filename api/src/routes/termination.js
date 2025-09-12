@@ -171,9 +171,10 @@ r.get("/list", async (req, res) => {
   }
 });
 
-// Get checklist template
+// Get checklist template  
 r.get("/checklist-template", async (req, res) => {
   try {
+    console.log("Checklist template requested");
     // Return a standard checklist template
     const template = [
       { id: 1, task: "Collect company equipment (laptop, phone, keys)", category: "Equipment", completed: false, required: true },
