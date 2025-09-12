@@ -32,8 +32,16 @@ export default function Payroll() {
 
   const loadData = async () => {
     try {
-      // Generate periods for past, current, and future years
-      const periods = getCurrentYearPeriods("09-12");
+      // Load actual periods from database instead of generating conflicting IDs
+      const apiPeriods = await API("/api/payroll/periods").catch(() => []);
+      
+      // Filter for 2025-2026 periods only and sort by date
+      const periods2025_2026 = apiPeriods
+        .filter(p => p.start_date.includes('2025') || p.start_date.includes('2026'))
+        .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
+      
+      // If no database periods found, fall back to generated periods
+      const periods = periods2025_2026.length > 0 ? periods2025_2026 : getCurrentYearPeriods("09-12");
       setPayrollPeriods(periods);
       
       // Find current active period across all years
