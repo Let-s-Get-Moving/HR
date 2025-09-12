@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { q } from "../db.js";
+import { formatNumber, formatPercentage } from "../utils/formatting.js";
 
 const r = Router();
 
@@ -42,8 +43,8 @@ r.get("/attendance", async (_req, res) => {
     const absenteeismRate = 0; // Since we don't have comprehensive attendance data
 
     res.json({
-      absenteeism_rate: absenteeismRate,
-      avg_hours_week: parseFloat(avgHours.rows[0].avg).toFixed(1),
+      absenteeism_rate: formatNumber(absenteeismRate, 1),
+      avg_hours_week: formatNumber(avgHours.rows[0].avg, 1),
       late_arrivals: parseInt(lateEntries.rows[0].count),
       early_leaves: parseInt(earlyDepartures.rows[0].count)
     });
@@ -64,8 +65,8 @@ r.get("/compliance", async (_req, res) => {
     ]);
 
     res.json({
-      contracts_signed_pct: parseFloat(contractsSigned.rows[0].pct || 0),
-      whmis_valid_pct: parseFloat(whmisValid.rows[0].pct || 0)
+      contracts_signed_pct: formatPercentage(contractsSigned.rows[0].pct || 0),
+      whmis_valid_pct: formatPercentage(whmisValid.rows[0].pct || 0)
     });
   } catch (error) {
     console.error("Error fetching compliance metrics:", error);

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { q } from "../db.js";
+import { formatNumber, formatRating, formatHours } from "../utils/formatting.js";
 
 const r = Router();
 
@@ -110,7 +111,7 @@ r.get("/dashboard", async (_req, res) => {
       totalEmployees: totalEmployees,
       activeEmployees: parseInt(employeeStats.rows[0].active_employees),
       newHiresThisMonth: parseInt(employeeStats.rows[0].new_hires_this_month),
-      turnoverRate: Math.round(turnoverRate * 100) / 100,
+      turnoverRate: formatNumber(turnoverRate, 1),
       departmentBreakdown,
       recentActivities,
       leaveStats: {
@@ -120,13 +121,13 @@ r.get("/dashboard", async (_req, res) => {
       },
       performanceStats: {
         totalReviews: parseInt(performanceStats.rows[0].total_reviews),
-        averageRating: parseFloat(performanceStats.rows[0].average_rating) || 0,
+        averageRating: formatRating(performanceStats.rows[0].average_rating),
         highPerformers: parseInt(performanceStats.rows[0].high_performers)
       },
       timeStats: {
         totalEntries: parseInt(timeStats.rows[0].total_entries),
-        avgHoursPerDay: parseFloat(timeStats.rows[0].avg_hours_per_day) || 0,
-        totalOvertime: parseFloat(timeStats.rows[0].total_overtime) || 0
+        avgHoursPerDay: formatHours(timeStats.rows[0].avg_hours_per_day),
+        totalOvertime: formatHours(timeStats.rows[0].total_overtime)
       }
     };
     

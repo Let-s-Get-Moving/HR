@@ -1,6 +1,7 @@
 import express from "express";
 import { z } from "zod";
 import { q } from "../db.js";
+import { formatCurrency, formatHours } from "../utils/formatting.js";
 
 const r = express.Router();
 
@@ -52,16 +53,16 @@ r.get("/calculations", async (req, res) => {
     // Ensure numeric fields are properly converted
     const processedRows = rows.map(row => ({
       ...row,
-      base_hours: parseFloat(row.base_hours) || 0,
-      overtime_hours: parseFloat(row.overtime_hours) || 0,
-      regular_rate: parseFloat(row.regular_rate) || 0,
-      commission_amount: parseFloat(row.commission_amount) || 0,
-      bonus_amount: parseFloat(row.bonus_amount) || 0,
-      deductions: parseFloat(row.deductions) || 0,
-      regular_pay: parseFloat(row.regular_pay) || 0,
-      overtime_pay: parseFloat(row.overtime_pay) || 0,
-      total_pay: parseFloat(row.total_pay) || 0,
-      net_pay: parseFloat(row.net_pay) || 0
+      base_hours: formatHours(row.base_hours),
+      overtime_hours: formatHours(row.overtime_hours),
+      regular_rate: formatCurrency(row.regular_rate),
+      commission_amount: formatCurrency(row.commission_amount),
+      bonus_amount: formatCurrency(row.bonus_amount),
+      deductions: formatCurrency(row.deductions),
+      regular_pay: formatCurrency(row.regular_pay),
+      overtime_pay: formatCurrency(row.overtime_pay),
+      total_pay: formatCurrency(row.total_pay),
+      net_pay: formatCurrency(row.net_pay)
     }));
     
     res.json(processedRows);
@@ -110,16 +111,16 @@ r.get("/calculations/:periodId", async (req, res) => {
     // Ensure numeric fields are properly converted
     const processedRows = rows.map(row => ({
       ...row,
-      base_hours: parseFloat(row.base_hours) || 0,
-      overtime_hours: parseFloat(row.overtime_hours) || 0,
-      regular_rate: parseFloat(row.regular_rate) || 0,
-      commission_amount: parseFloat(row.commission_amount) || 0,
-      bonus_amount: parseFloat(row.bonus_amount) || 0,
-      deductions: parseFloat(row.deductions) || 0,
-      regular_pay: parseFloat(row.regular_pay) || 0,
-      overtime_pay: parseFloat(row.overtime_pay) || 0,
-      total_pay: parseFloat(row.total_pay) || 0,
-      net_pay: parseFloat(row.net_pay) || 0
+      base_hours: formatHours(row.base_hours),
+      overtime_hours: formatHours(row.overtime_hours),
+      regular_rate: formatCurrency(row.regular_rate),
+      commission_amount: formatCurrency(row.commission_amount),
+      bonus_amount: formatCurrency(row.bonus_amount),
+      deductions: formatCurrency(row.deductions),
+      regular_pay: formatCurrency(row.regular_pay),
+      overtime_pay: formatCurrency(row.overtime_pay),
+      total_pay: formatCurrency(row.total_pay),
+      net_pay: formatCurrency(row.net_pay)
     }));
     
     res.json(processedRows);
@@ -202,7 +203,7 @@ r.post("/calculate/:periodId", async (req, res) => {
       const timeData = timeEntriesResult.rows[0];
       const baseHours = Math.min(timeData.total_hours, 40); // Regular hours capped at 40
       const overtimeHours = Math.max(0, timeData.total_hours - 40) + timeData.total_overtime;
-      const hourlyRate = parseFloat(employee.hourly_rate) || 0;
+      const hourlyRate = formatCurrency(employee.hourly_rate);
       
       // Calculate commission (simplified)
       const commissionAmount = 0; // TODO: Implement commission calculation

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
+import { formatRating, formatNumber } from "../utils/formatting.js";
 
 const r = Router();
 
@@ -170,11 +171,17 @@ r.get("/analytics", async (_req, res) => {
          LIMIT 10`)
     ]);
     
+    // Format top performers ratings
+    const formattedTopPerformers = topPerformers.rows.map(performer => ({
+      ...performer,
+      avg_rating: formatRating(performer.avg_rating)
+    }));
+
     res.json({
-      average_rating: avgRating.rows[0].avg_rating,
+      average_rating: formatRating(avgRating.rows[0].avg_rating),
       reviews_by_month: reviewsByMonth.rows,
       goals_by_status: goalsByStatus.rows,
-      top_performers: topPerformers.rows
+      top_performers: formattedTopPerformers
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
