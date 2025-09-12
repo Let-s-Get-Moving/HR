@@ -203,11 +203,63 @@ export default function LeaveManagement() {
             <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
               <div className="space-y-4">
+                {requests.filter(request => request.status === 'Pending').length === 0 ? (
+                  <p className="text-muted text-center py-8">No pending leave requests found</p>
+                ) : (
+                  requests.filter(request => request.status === 'Pending').map((request) => (
+                    <div key={request.id} className="card p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium">{request.first_name} {request.last_name}</h4>
+                          <p className="text-sm text-secondary">{request.leave_type_name}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          request.status === 'Approved' ? 'badge-success' :
+                          request.status === 'Rejected' ? 'badge-error' :
+                          'badge-warning'
+                        }`}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-secondary mb-2">
+                        {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
+                      </p>
+                      {request.reason && (
+                        <p className="text-sm text-secondary mb-3">{request.reason}</p>
+                      )}
+                      {request.status === 'Pending' && (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleStatusUpdate(request.id, 'Approved')}
+                            className="btn-primary btn-sm"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => handleStatusUpdate(request.id, 'Rejected')}
+                            className="btn-secondary btn-sm"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* All Requests History */}
+          <div className="mt-8">
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold mb-4">All Requests History</h3>
+              <div className="space-y-4">
                 {requests.length === 0 ? (
                   <p className="text-muted text-center py-8">No leave requests found</p>
                 ) : (
                   requests.map((request) => (
-                    <div key={request.id} className="card p-4">
+                    <div key={`history-${request.id}`} className="card p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-medium">{request.first_name} {request.last_name}</h4>
