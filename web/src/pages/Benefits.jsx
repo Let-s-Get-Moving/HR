@@ -13,6 +13,8 @@ export default function Benefits() {
   const [loading, setLoading] = useState(true);
   const [showAddBenefit, setShowAddBenefit] = useState(false);
   const [showEnrollEmployee, setShowEnrollEmployee] = useState(false);
+  const [editingEnrollment, setEditingEnrollment] = useState(null);
+  const [showEditEnrollment, setShowEditEnrollment] = useState(false);
   
   // Form data for new benefit
   const [newBenefit, setNewBenefit] = useState({
@@ -30,6 +32,68 @@ export default function Benefits() {
     { id: "retirement", name: "Retirement Plans", icon: "💰" },
     { id: "analytics", name: "Benefits Analytics", icon: "📊" }
   ];
+
+  const handleAddBenefit = async (e) => {
+    e.preventDefault();
+    try {
+      // In production, this would be an API call
+      console.log("Adding benefit:", newBenefit);
+      // Add to local state for now
+      const newPlan = {
+        id: insurancePlans.length + 1,
+        ...newBenefit,
+        created_date: new Date().toISOString().split('T')[0]
+      };
+      setInsurancePlans([...insurancePlans, newPlan]);
+      
+      // Reset form
+      setNewBenefit({
+        plan_name: "",
+        provider: "",
+        type: "Health",
+        employee_cost: "",
+        employer_cost: "",
+        coverage_details: ""
+      });
+      setShowAddBenefit(false);
+    } catch (error) {
+      console.error("Error adding benefit:", error);
+    }
+  };
+
+  const handleEditEnrollment = (enrollment) => {
+    setEditingEnrollment({...enrollment});
+    setShowEditEnrollment(true);
+  };
+
+  const handleUpdateEnrollment = async (e) => {
+    e.preventDefault();
+    try {
+      // In production, this would be an API call
+      setEnrollments(enrollments.map(enrollment => 
+        enrollment.id === editingEnrollment.id ? editingEnrollment : enrollment
+      ));
+      setEditingEnrollment(null);
+      setShowEditEnrollment(false);
+    } catch (error) {
+      console.error("Error updating enrollment:", error);
+    }
+  };
+
+  const handleTerminateEnrollment = async (enrollmentId) => {
+    if (confirm("Are you sure you want to terminate this benefits enrollment?")) {
+      try {
+        // In production, this would be an API call
+        setEnrollments(enrollments.map(enrollment => 
+          enrollment.id === enrollmentId 
+            ? { ...enrollment, status: "Terminated", end_date: new Date().toISOString().split('T')[0] }
+            : enrollment
+        ));
+      } catch (error) {
+        console.error("Error terminating enrollment:", error);
+      }
+    }
+  };
 
   useEffect(() => {
     loadBenefitsData();
@@ -240,10 +304,16 @@ export default function Benefits() {
 
             <div className="mt-4 pt-4 border-t border-neutral-700">
               <div className="flex justify-end space-x-2">
-                <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                <button 
+                  onClick={() => handleEditEnrollment(enrollment)}
+                  className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
                   Edit Enrollment
                 </button>
-                <button className="text-red-400 hover:text-red-300 transition-colors">
+                <button 
+                  onClick={() => handleTerminateEnrollment(enrollment.id)}
+                  className="text-red-400 hover:text-red-300 transition-colors"
+                >
                   Terminate
                 </button>
               </div>
@@ -687,6 +757,117 @@ export default function Benefits() {
                     className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Enroll Employee
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Enrollment Modal */}
+      {showEditEnrollment && editingEnrollment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Edit Benefits Enrollment</h3>
+              <form onSubmit={handleUpdateEnrollment} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Employee</label>
+                    <input
+                      type="text"
+                      value={editingEnrollment.employee_name || ""}
+                      disabled
+                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-neutral-400 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Plan</label>
+                    <input
+                      type="text"
+                      value={editingEnrollment.plan_name || ""}
+                      disabled
+                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-neutral-400 cursor-not-allowed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Status</label>
+                    <select
+                      value={editingEnrollment.status || "Active"}
+                      onChange={(e) => setEditingEnrollment({...editingEnrollment, status: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Suspended">Suspended</option>
+                      <option value="Terminated">Terminated</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Coverage Level</label>
+                    <select
+                      value={editingEnrollment.coverage_level || "Individual"}
+                      onChange={(e) => setEditingEnrollment({...editingEnrollment, coverage_level: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Individual">Individual</option>
+                      <option value="Family">Family</option>
+                      <option value="Employee + Spouse">Employee + Spouse</option>
+                      <option value="Employee + Children">Employee + Children</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Employee Contribution (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editingEnrollment.contribution_percentage || ""}
+                      onChange={(e) => setEditingEnrollment({...editingEnrollment, contribution_percentage: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Effective Date</label>
+                    <input
+                      type="date"
+                      value={editingEnrollment.start_date || ""}
+                      onChange={(e) => setEditingEnrollment({...editingEnrollment, start_date: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Notes</label>
+                  <textarea
+                    rows={3}
+                    value={editingEnrollment.notes || ""}
+                    onChange={(e) => setEditingEnrollment({...editingEnrollment, notes: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Additional notes about this enrollment..."
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditEnrollment(false);
+                      setEditingEnrollment(null);
+                    }}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Update Enrollment
                   </button>
                 </div>
               </form>
