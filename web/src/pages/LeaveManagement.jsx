@@ -10,6 +10,8 @@ export default function LeaveManagement() {
   const [analytics, setAnalytics] = useState(null);
   const [activeTab, setActiveTab] = useState("requests");
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [newRequest, setNewRequest] = useState({
     employee_id: "",
     leave_type_id: "",
@@ -74,6 +76,59 @@ export default function LeaveManagement() {
     } catch (error) {
       console.error("Error updating status:", error);
     }
+  };
+
+  // Calendar helper functions
+  const generateCalendarDays = () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const days = [];
+    const today = new Date();
+    
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+      
+      days.push({
+        date,
+        isCurrentMonth: date.getMonth() === month,
+        isToday: date.toDateString() === today.toDateString()
+      });
+    }
+    
+    return days;
+  };
+
+  const getLeaveForDate = (date) => {
+    if (!calendar || !date) return [];
+    
+    return calendar.filter(leave => {
+      const startDate = new Date(leave.start_date);
+      const endDate = new Date(leave.end_date);
+      const checkDate = new Date(date);
+      
+      return checkDate >= startDate && checkDate <= endDate;
+    });
+  };
+
+  const getLeaveTypeColor = (leaveType) => {
+    const colors = {
+      'Vacation': 'bg-blue-500 text-white',
+      'Sick': 'bg-red-500 text-white',
+      'Sick Leave': 'bg-red-500 text-white',
+      'Personal': 'bg-green-500 text-white',
+      'Personal Leave': 'bg-green-500 text-white',
+      'Parental': 'bg-purple-500 text-white',
+      'Bereavement': 'bg-gray-500 text-white',
+      'Other': 'bg-gray-500 text-white'
+    };
+    
+    return colors[leaveType] || 'bg-gray-500 text-white';
   };
 
   const tabs = [
@@ -341,28 +396,148 @@ export default function LeaveManagement() {
       {/* Leave Calendar Tab */}
       {activeTab === "calendar" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold mb-4">Leave Calendar</h3>
-            <div className="space-y-4">
-              {calendar.length === 0 ? (
-                <p className="text-muted text-center py-8">No approved leaves found</p>
-              ) : (
-                calendar.map((leave) => (
-                  <div key={leave.id} className="card p-4">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium">{leave.first_name} {leave.last_name}</h4>
-                        <p className="text-sm text-secondary">{leave.leave_type_name}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-secondary">
-                          {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendar View */}
+            <div className="lg:col-span-2">
+              <div className="card p-6">
+                {/* Calendar Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold">Leave Calendar</h3>
+                  <div className="flex items-center space-x-4">
+                    <button
+                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                      className="p-2 hover:bg-neutral-700 rounded-lg transition-colors"
+                    >
+                      ←
+                    </button>
+                    <span className="font-medium text-lg">
+                      {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </span>
+                    <button
+                      onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                      className="p-2 hover:bg-neutral-700 rounded-lg transition-colors"
+                    >
+                      →
+                    </button>
                   </div>
-                ))
-              )}
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Day Headers */}
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} className="p-3 text-center text-sm font-medium text-neutral-400">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {/* Calendar Days */}
+                  {generateCalendarDays().map((day, index) => {
+                    const dayLeaves = getLeaveForDate(day.date);
+                    const isSelected = selectedDate && day.date.toDateString() === selectedDate.toDateString();
+                    
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => day.isCurrentMonth && setSelectedDate(day.date)}
+                        className={`
+                          relative p-2 min-h-[60px] cursor-pointer transition-colors border border-transparent
+                          ${day.isCurrentMonth ? 'hover:bg-neutral-700' : 'text-neutral-600'}
+                          ${isSelected ? 'bg-indigo-600 text-white' : ''}
+                          ${day.isToday ? 'ring-2 ring-indigo-400' : ''}
+                        `}
+                      >
+                        <div className="text-sm font-medium">{day.date.getDate()}</div>
+                        
+                        {/* Leave indicators */}
+                        <div className="mt-1 space-y-1">
+                          {dayLeaves.slice(0, 3).map((leave, idx) => (
+                            <div
+                              key={idx}
+                              className={`text-xs px-1 py-0.5 rounded truncate ${getLeaveTypeColor(leave.leave_type_name)}`}
+                              title={`${leave.first_name} ${leave.last_name} - ${leave.leave_type_name}`}
+                            >
+                              {leave.first_name}
+                            </div>
+                          ))}
+                          {dayLeaves.length > 3 && (
+                            <div className="text-xs text-neutral-400">
+                              +{dayLeaves.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Legend */}
+                <div className="mt-6 flex flex-wrap gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                    <span>Vacation</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-500 rounded"></div>
+                    <span>Sick Leave</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded"></div>
+                    <span>Personal</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                    <span>Parental</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-gray-500 rounded"></div>
+                    <span>Other</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Selected Day Details */}
+            <div className="lg:col-span-1">
+              <div className="card p-6">
+                <h4 className="text-lg font-semibold mb-4">
+                  {selectedDate ? selectedDate.toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) : 'Select a date'}
+                </h4>
+                
+                {selectedDate ? (
+                  <div className="space-y-4">
+                    {getLeaveForDate(selectedDate).length === 0 ? (
+                      <p className="text-neutral-400 text-sm">No one is on leave this day</p>
+                    ) : (
+                      getLeaveForDate(selectedDate).map((leave, index) => (
+                        <div key={index} className="border-l-4 border-indigo-400 pl-4 py-2">
+                          <div className="font-medium">
+                            {leave.first_name} {leave.last_name}
+                          </div>
+                          <div className="text-sm text-neutral-400">
+                            {leave.leave_type_name}
+                          </div>
+                          <div className="text-xs text-neutral-500 mt-1">
+                            {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                          </div>
+                          {leave.reason && (
+                            <div className="text-xs text-neutral-500 mt-1">
+                              {leave.reason}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-neutral-400 text-sm">Click on a calendar day to see who's on leave</p>
+                )}
+              </div>
             </div>
           </div>
         </motion.div>
