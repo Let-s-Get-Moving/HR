@@ -181,7 +181,7 @@ export default function Payroll() {
           >
             {payrollPeriods.map(period => (
               <option key={period.id} value={period.id}>
-                {period.period_name} ({period.start_date.substring(0, 10)} to {period.end_date.substring(0, 10)})
+                {period.period_name}
               </option>
             ))}
           </select>

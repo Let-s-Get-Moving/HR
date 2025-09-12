@@ -20,6 +20,7 @@ import health from "./routes/health.js";
 import termination from "./routes/termination.js";
 import bonuses from "./routes/bonuses.js";
 import commissions from "./routes/commissions.js";
+import imports from "./routes/imports.js";
 import logger from "./utils/logger.js";
 
 const app = express();
@@ -167,6 +168,7 @@ app.use("/api/health", health);
 app.use("/api/termination", termination);
 app.use("/api/bonuses", bonuses);
 app.use("/api/commissions", commissions);
+app.use("/api/imports", imports);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
