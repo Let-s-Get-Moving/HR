@@ -70,14 +70,9 @@ export default function Payroll() {
 
   const loadPayrollCalculations = async (periodId) => {
     try {
-      // For dynamically generated periods, return empty calculations
-      // since these periods don't exist in the database yet
-      if (periodId <= 26) {
-        setPayrollCalculations([]);
-        return;
-      }
-      
-      const calculations = await API(`/api/payroll/calculations/${periodId}`);
+      // Try to load calculations for any period ID
+      // If the period doesn't exist in database, API will return empty array
+      const calculations = await API(`/api/payroll/calculations?periodId=${periodId}`);
       setPayrollCalculations(calculations);
     } catch (error) {
       console.error("Error loading payroll calculations:", error);
@@ -125,10 +120,34 @@ export default function Payroll() {
     if (!selectedPeriod) return;
 
     try {
+      // For 2025 periods, first check if the period exists in database
+      // If not, create it before calculating payroll
+      if (selectedPeriod.year === 2025) {
+        try {
+          // Try to create the period in database if it doesn't exist
+          await API("/api/payroll/periods", {
+            method: "POST",
+            body: JSON.stringify({
+              period_name: formatPeriodName(selectedPeriod),
+              start_date: selectedPeriod.start_date,
+              end_date: selectedPeriod.end_date,
+              pay_date: selectedPeriod.pay_date
+            })
+          });
+        } catch (createError) {
+          // Period might already exist, continue with calculation
+          console.log("Period may already exist:", createError.message);
+        }
+      }
+
+      // Calculate payroll using the selected period ID
       await API(`/api/payroll/calculate/${selectedPeriod.id}`, { method: "POST" });
       loadPayrollCalculations(selectedPeriod.id);
     } catch (error) {
       console.error("Error calculating payroll:", error);
+      
+      // If calculation fails, show user-friendly message
+      alert(`Unable to calculate payroll for ${formatPeriodName(selectedPeriod)}. Please ensure time entries exist for this period.`);
     }
   };
 
