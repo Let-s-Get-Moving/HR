@@ -12,6 +12,8 @@ export default function LeaveManagement() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
+  const [historyRecordsPerPage] = useState(20);
   const [newRequest, setNewRequest] = useState({
     employee_id: "",
     leave_type_id: "",
@@ -313,7 +315,25 @@ export default function LeaveManagement() {
                 {requests.length === 0 ? (
                   <p className="text-muted text-center py-8">No leave requests found</p>
                 ) : (
-                  requests.map((request) => (
+                  (() => {
+                    // Pagination logic for history
+                    const startIndex = (historyCurrentPage - 1) * historyRecordsPerPage;
+                    const endIndex = startIndex + historyRecordsPerPage;
+                    const paginatedRequests = requests.slice(startIndex, endIndex);
+                    const totalPages = Math.ceil(requests.length / historyRecordsPerPage);
+
+                    return (
+                      <>
+                        {/* Results info */}
+                        <div className="flex justify-between items-center mb-4 text-sm text-neutral-400">
+                          <span>
+                            Showing {startIndex + 1}-{Math.min(endIndex, requests.length)} of {requests.length} requests
+                          </span>
+                          <span>Page {historyCurrentPage} of {totalPages}</span>
+                        </div>
+
+                        {/* Paginated requests */}
+                        {paginatedRequests.map((request) => (
                     <div key={`history-${request.id}`} className="card p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -351,7 +371,63 @@ export default function LeaveManagement() {
                         </div>
                       )}
                     </div>
-                  ))
+                        ))
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                          <div className="flex justify-center items-center space-x-2 mt-6 pt-4 border-t border-neutral-700">
+                            <button
+                              onClick={() => setHistoryCurrentPage(Math.max(1, historyCurrentPage - 1))}
+                              disabled={historyCurrentPage === 1}
+                              className="px-3 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-800 disabled:text-neutral-500 rounded-lg transition-colors text-sm"
+                            >
+                              Previous
+                            </button>
+                            
+                            {/* Page numbers */}
+                            <div className="flex space-x-1">
+                              {[...Array(totalPages)].map((_, index) => {
+                                const pageNum = index + 1;
+                                const isCurrentPage = pageNum === historyCurrentPage;
+                                const showPage = pageNum === 1 || pageNum === totalPages || 
+                                                (pageNum >= historyCurrentPage - 2 && pageNum <= historyCurrentPage + 2);
+                                
+                                if (!showPage && pageNum !== historyCurrentPage - 3 && pageNum !== historyCurrentPage + 3) {
+                                  return null;
+                                }
+                                
+                                if (pageNum === historyCurrentPage - 3 || pageNum === historyCurrentPage + 3) {
+                                  return <span key={pageNum} className="px-2 text-neutral-500">...</span>;
+                                }
+                                
+                                return (
+                                  <button
+                                    key={pageNum}
+                                    onClick={() => setHistoryCurrentPage(pageNum)}
+                                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                                      isCurrentPage 
+                                        ? 'bg-indigo-600 text-white' 
+                                        : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-300'
+                                    }`}
+                                  >
+                                    {pageNum}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            
+                            <button
+                              onClick={() => setHistoryCurrentPage(Math.min(totalPages, historyCurrentPage + 1))}
+                              disabled={historyCurrentPage === totalPages}
+                              className="px-3 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-800 disabled:text-neutral-500 rounded-lg transition-colors text-sm"
+                            >
+                              Next
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()
                 )}
               </div>
             </div>
