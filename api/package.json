@@ -5,7 +5,10 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
-    "db:init": "node src/initDb.js"
+    "db:init": "node src/initDb.js",
+    "db:init-remote": "node init-remote-db.js",
+    "test": "vitest",
+    "test:security": "vitest src/tests/security.test.js"
   },
   "dependencies": {
     "bcryptjs": "2.4.3",
@@ -18,5 +21,9 @@
     "morgan": "1.10.0",
     "pg": "8.11.5",
     "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.4",
+    "supertest": "^6.3.3"
   }
 }

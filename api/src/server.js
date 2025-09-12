@@ -5,6 +5,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import { q } from "./db.js";
+import { sanitizeString, logSecurityEvent } from "./utils/security.js";
 
 import employees from "./routes/employees.js";
 import auth from "./routes/auth.js";
@@ -87,6 +88,28 @@ app.use('/api/auth', authLimiter);
 app.use(cookieParser());
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true, limit: "5mb" }));
+
+// Input sanitization middleware
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    for (const key in req.body) {
+      if (typeof req.body[key] === 'string') {
+        req.body[key] = sanitizeString(req.body[key]);
+      }
+    }
+  }
+  
+  if (req.query && typeof req.query === 'object') {
+    for (const key in req.query) {
+      if (typeof req.query[key] === 'string') {
+        req.query[key] = sanitizeString(req.query[key]);
+      }
+    }
+  }
+  
+  next();
+});
+
 app.use(morgan("combined"));
 
 // Simple test route
