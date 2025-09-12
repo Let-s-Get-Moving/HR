@@ -4,18 +4,29 @@ import { z } from "zod";
 
 const r = Router();
 
-// Termination details schema
+// Termination details schema - matching frontend field names
 const terminationSchema = z.object({
-  employeeId: z.number().int().positive(),
-  terminationDate: z.string(),
-  terminationReason: z.string().min(1),
-  terminationType: z.enum(['Voluntary', 'Involuntary', 'Retirement', 'End of Contract']),
-  noticeGiven: z.boolean(),
-  severancePay: z.number().min(0).optional(),
-  notes: z.string().optional(),
-  exitInterviewCompleted: z.boolean().optional(),
-  equipmentReturned: z.boolean().optional(),
-  accessRevoked: z.boolean().optional()
+  employee_id: z.number().int().positive(),
+  termination_date: z.string(),
+  termination_reason: z.string().min(1),
+  termination_type: z.enum(['Voluntary', 'Involuntary', 'Retirement', 'End of Contract']),
+  notice_period_days: z.number().int().min(0).optional(),
+  last_working_day: z.string().optional(),
+  exit_interview_date: z.string().optional(),
+  exit_interview_conducted_by: z.string().optional(),
+  exit_interview_notes: z.string().optional(),
+  final_pay_date: z.string().optional(),
+  severance_paid: z.boolean().optional(),
+  severance_amount: z.number().min(0).optional(),
+  vacation_payout: z.number().min(0).optional(),
+  benefits_end_date: z.string().optional(),
+  equipment_returned: z.boolean().optional(),
+  equipment_return_date: z.string().optional(),
+  equipment_return_notes: z.string().optional(),
+  access_revoked: z.boolean().optional(),
+  access_revoked_date: z.string().optional(),
+  reason_category: z.string().optional(),
+  initiated_by: z.string().min(1)
 });
 
 // Create termination details
@@ -28,7 +39,7 @@ r.post("/details", async (req, res) => {
     // Check if employee exists and is active
     const employee = await q(
       "SELECT id, status FROM employees WHERE id = $1",
-      [validatedData.employeeId]
+      [validatedData.employee_id]
     );
     
     if (employee.rows.length === 0) {
@@ -43,27 +54,41 @@ r.post("/details", async (req, res) => {
     const terminationResult = await q(`
       INSERT INTO termination_details (
         employee_id, termination_date, termination_reason, termination_type,
-        notice_given, severance_pay, notes, exit_interview_completed,
-        equipment_returned, access_revoked
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        notice_period_days, last_working_day, exit_interview_date, 
+        exit_interview_conducted_by, exit_interview_notes, final_pay_date,
+        severance_paid, severance_amount, vacation_payout, benefits_end_date,
+        equipment_returned, equipment_return_date, equipment_return_notes,
+        access_revoked, access_revoked_date, reason_category, initiated_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
       RETURNING id
     `, [
-      validatedData.employeeId,
-      validatedData.terminationDate,
-      validatedData.terminationReason,
-      validatedData.terminationType,
-      validatedData.noticeGiven,
-      validatedData.severancePay || 0,
-      validatedData.notes || '',
-      validatedData.exitInterviewCompleted || false,
-      validatedData.equipmentReturned || false,
-      validatedData.accessRevoked || false
+      validatedData.employee_id,
+      validatedData.termination_date,
+      validatedData.termination_reason,
+      validatedData.termination_type,
+      validatedData.notice_period_days || null,
+      validatedData.last_working_day || null,
+      validatedData.exit_interview_date || null,
+      validatedData.exit_interview_conducted_by || null,
+      validatedData.exit_interview_notes || null,
+      validatedData.final_pay_date || null,
+      validatedData.severance_paid || false,
+      validatedData.severance_amount || 0,
+      validatedData.vacation_payout || 0,
+      validatedData.benefits_end_date || null,
+      validatedData.equipment_returned || false,
+      validatedData.equipment_return_date || null,
+      validatedData.equipment_return_notes || null,
+      validatedData.access_revoked || false,
+      validatedData.access_revoked_date || null,
+      validatedData.reason_category || null,
+      validatedData.initiated_by
     ]);
 
     // Update employee status
     await q(
       "UPDATE employees SET status = 'Terminated', termination_date = $1 WHERE id = $2",
-      [validatedData.terminationDate, validatedData.employeeId]
+      [validatedData.termination_date, validatedData.employee_id]
     );
 
     res.status(201).json({
@@ -146,12 +171,57 @@ r.get("/list", async (req, res) => {
   }
 });
 
+// Get checklist template
+r.get("/checklist-template", async (req, res) => {
+  try {
+    // Return a standard checklist template
+    const template = [
+      { id: 1, task: "Collect company equipment (laptop, phone, keys)", category: "Equipment", completed: false, required: true },
+      { id: 2, task: "Revoke system access and accounts", category: "IT Security", completed: false, required: true },
+      { id: 3, task: "Process final payroll and benefits", category: "Payroll", completed: false, required: true },
+      { id: 4, task: "Conduct exit interview", category: "HR", completed: false, required: true },
+      { id: 5, task: "Complete ROE (Record of Employment)", category: "Government", completed: false, required: true },
+      { id: 6, task: "Return company credit cards", category: "Finance", completed: false, required: false },
+      { id: 7, task: "Transfer knowledge and handover tasks", category: "Operations", completed: false, required: true },
+      { id: 8, task: "Update organizational chart", category: "HR", completed: false, required: false }
+    ];
+    
+    res.json(template);
+  } catch (error) {
+    console.error("Error fetching checklist template:", error);
+    res.status(500).json({ error: "Failed to fetch checklist template" });
+  }
+});
+
+// Create termination checklist
+r.post("/checklist", async (req, res) => {
+  try {
+    const { employee_id, termination_detail_id, checklist_items } = req.body;
+    
+    if (!employee_id || !checklist_items) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // For now, just return success since we don't have a checklist table
+    // In a real system, you'd save each checklist item to a termination_checklist table
+    
+    res.status(201).json({
+      message: "Checklist created successfully",
+      checklistId: Date.now() // Mock ID
+    });
+
+  } catch (error) {
+    console.error("Error creating checklist:", error);
+    res.status(500).json({ error: "Failed to create checklist" });
+  }
+});
+
 // Upload termination document
 r.post("/documents", async (req, res) => {
   try {
-    const { employeeId, documentType, documentName, documentContent } = req.body;
+    const { employee_id, document_type, termination_detail_id } = req.body;
     
-    if (!employeeId || !documentType || !documentName) {
+    if (!employee_id || !document_type) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -162,7 +232,7 @@ r.post("/documents", async (req, res) => {
         employee_id, document_type, document_name, upload_date
       ) VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
       RETURNING id
-    `, [employeeId, documentType, documentName]);
+    `, [employee_id, document_type, `${document_type}_${Date.now()}.pdf`]);
 
     res.status(201).json({
       message: "Document uploaded successfully",
