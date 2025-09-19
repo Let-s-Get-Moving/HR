@@ -297,6 +297,8 @@ export default function BonusesCommissions() {
           status: editingBonus.status
         })
       });
+      
+      // If we get here, the API call was successful
       setSuccessMessage(`Bonus updated successfully!`);
       setShowSuccessMessage(true);
       setShowEditBonus(false);
@@ -304,7 +306,7 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error updating bonus:", error);
-      setErrorMessage("Failed to update bonus. Please try again.");
+      setErrorMessage(`Failed to update bonus: ${error.message}`);
       setShowErrorMessage(true);
     }
   };
@@ -338,7 +340,7 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error approving bonus:", error);
-      setErrorMessage("Failed to approve bonus. Please try again.");
+      setErrorMessage(`Failed to approve bonus: ${error.message}`);
       setShowErrorMessage(true);
     }
   };
@@ -372,7 +374,7 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error rejecting bonus:", error);
-      setErrorMessage("Failed to reject bonus. Please try again.");
+      setErrorMessage(`Failed to reject bonus: ${error.message}`);
       setShowErrorMessage(true);
     }
   };
@@ -418,7 +420,7 @@ export default function BonusesCommissions() {
       setShowExportBonuses(false);
     } catch (error) {
       console.error("Error exporting bonuses:", error);
-      setErrorMessage("Failed to export bonuses. Please try again.");
+      setErrorMessage(`Failed to export bonuses: ${error.message}`);
       setShowErrorMessage(true);
     }
   };
@@ -448,7 +450,7 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error updating structure:", error);
-      setErrorMessage("Failed to update structure. Please try again.");
+      setErrorMessage(`Failed to update structure: ${error.message}`);
       setShowErrorMessage(true);
     }
   };
@@ -484,7 +486,7 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error applying structure:", error);
-      setErrorMessage("Failed to apply structure. Please try again.");
+      setErrorMessage(`Failed to apply structure: ${error.message}`);
       setShowErrorMessage(true);
     }
   };
@@ -511,6 +513,8 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error adding bonus:", error);
+      setErrorMessage(`Failed to add bonus: ${error.message}`);
+      setShowErrorMessage(true);
     }
   };
 
@@ -535,6 +539,8 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error adding commission:", error);
+      setErrorMessage(`Failed to add commission: ${error.message}`);
+      setShowErrorMessage(true);
     }
   };
 
@@ -560,6 +566,8 @@ export default function BonusesCommissions() {
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error adding structure:", error);
+      setErrorMessage(`Failed to add structure: ${error.message}`);
+      setShowErrorMessage(true);
     }
   };
 
