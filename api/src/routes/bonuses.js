@@ -5,7 +5,7 @@ import { formatCurrency } from "../utils/formatting.js";
 
 const r = Router();
 
-// Bonus schema
+// Bonus schema for creation
 const bonusSchema = z.object({
   employee_id: z.number().int().positive(),
   bonus_type: z.string().min(1),
@@ -19,6 +19,27 @@ const bonusSchema = z.object({
   rejected_by: z.string().optional(),
   rejection_reason: z.string().optional(),
   rejection_notes: z.string().optional()
+});
+
+// Stricter bonus schema for updates
+const bonusUpdateSchema = z.object({
+  employee_id: z.number().int().positive().optional(),
+  bonus_type: z.string().min(1).optional(),
+  amount: z.number().positive().optional(),
+  period: z.string().min(1).optional(),
+  criteria: z.string().optional(),
+  status: z.enum(['Pending', 'Approved', 'Rejected', 'Paid']).optional(),
+  approved_by: z.string().optional(),
+  approval_notes: z.string().optional(),
+  payment_date: z.string().optional(),
+  rejected_by: z.string().optional(),
+  rejection_reason: z.string().optional(),
+  rejection_notes: z.string().optional()
+}).refine((data) => {
+  // Require at least one field to be provided
+  return Object.keys(data).length > 0;
+}, {
+  message: "At least one field must be provided for update"
 });
 
 // Get all bonuses
@@ -89,18 +110,34 @@ r.post("/", async (req, res) => {
 r.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const validatedData = bonusUpdateSchema.parse(req.body);
     
-    if (!['Pending', 'Approved', 'Paid'].includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+    // Build dynamic update query
+    const updateFields = [];
+    const values = [];
+    let paramCount = 1;
+    
+    Object.entries(validatedData).forEach(([key, value]) => {
+      if (value !== undefined) {
+        updateFields.push(`${key} = $${paramCount}`);
+        values.push(value);
+        paramCount++;
+      }
+    });
+    
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: "No valid fields provided for update" });
     }
+    
+    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+    values.push(id);
     
     const { rows } = await q(`
       UPDATE bonuses 
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramCount}
       RETURNING *
-    `, [status, id]);
+    `, values);
     
     if (rows.length === 0) {
       return res.status(404).json({ error: "Bonus not found" });
@@ -111,6 +148,9 @@ r.put("/:id", async (req, res) => {
       bonus: rows[0]
     });
   } catch (error) {
+    if (error.name === 'ZodError') {
+      return res.status(400).json({ error: "Validation error", details: error.errors });
+    }
     console.error("Error updating bonus:", error);
     res.status(500).json({ error: "Failed to update bonus" });
   }

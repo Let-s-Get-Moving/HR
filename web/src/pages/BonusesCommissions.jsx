@@ -15,6 +15,53 @@ export default function BonusesCommissions() {
   const [showAddCommission, setShowAddCommission] = useState(false);
   const [showAddStructure, setShowAddStructure] = useState(false);
   
+  // Edit modal states
+  const [showEditBonus, setShowEditBonus] = useState(false);
+  const [showEditCommission, setShowEditCommission] = useState(false);
+  const [showEditStructure, setShowEditStructure] = useState(false);
+  const [editingBonus, setEditingBonus] = useState(null);
+  const [editingCommission, setEditingCommission] = useState(null);
+  const [editingStructure, setEditingStructure] = useState(null);
+  
+  // Action modal states
+  const [showApproveBonus, setShowApproveBonus] = useState(false);
+  const [showRejectBonus, setShowRejectBonus] = useState(false);
+  const [showViewDetails, setShowViewDetails] = useState(false);
+  const [showExportBonuses, setShowExportBonuses] = useState(false);
+  const [showApplyStructure, setShowApplyStructure] = useState(false);
+  const [actionBonus, setActionBonus] = useState(null);
+  const [actionStructure, setActionStructure] = useState(null);
+  
+  // Action form data
+  const [approveData, setApproveData] = useState({
+    approved_by: "",
+    approval_notes: "",
+    payment_date: ""
+  });
+  const [rejectData, setRejectData] = useState({
+    rejected_by: "",
+    rejection_reason: "",
+    rejection_notes: ""
+  });
+  const [exportData, setExportData] = useState({
+    format: "CSV",
+    date_range: "All",
+    status_filter: "All",
+    include_details: true
+  });
+  const [applyData, setApplyData] = useState({
+    apply_to: "All Employees",
+    department_id: "",
+    employee_ids: [],
+    effective_date: ""
+  });
+  
+  // Success and error message states
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  
   // Form data states
   const [newBonus, setNewBonus] = useState({
     employee_id: "",
@@ -233,69 +280,127 @@ export default function BonusesCommissions() {
   };
 
   // Handler functions for bonus actions
-  const handleEditBonus = async (bonus) => {
+  const handleEditBonus = (bonus) => {
+    setEditingBonus(bonus);
+    setShowEditBonus(true);
+  };
+
+  const handleUpdateBonus = async (e) => {
+    e.preventDefault();
     try {
-      const response = await API(`/api/bonuses/${bonus.id}`, {
+      const response = await API(`/api/bonuses/${editingBonus.id}`, {
         method: "PUT",
         body: JSON.stringify({
-          amount: bonus.amount,
-          criteria: bonus.criteria,
-          period: bonus.period,
-          status: bonus.status
+          amount: editingBonus.amount,
+          criteria: editingBonus.criteria,
+          period: editingBonus.period,
+          status: editingBonus.status
         })
       });
-      alert(`Bonus updated successfully!`);
+      setSuccessMessage(`Bonus updated successfully!`);
+      setShowSuccessMessage(true);
+      setShowEditBonus(false);
+      setEditingBonus(null);
       loadBonusesCommissionsData();
     } catch (error) {
-      console.error("Error editing bonus:", error);
-      alert("Failed to update bonus. Please try again.");
+      console.error("Error updating bonus:", error);
+      setErrorMessage("Failed to update bonus. Please try again.");
+      setShowErrorMessage(true);
     }
   };
 
-  const handleApproveBonus = async (bonus) => {
+  const handleApproveBonus = (bonus) => {
+    setActionBonus(bonus);
+    setApproveData({
+      approved_by: "",
+      approval_notes: "",
+      payment_date: ""
+    });
+    setShowApproveBonus(true);
+  };
+
+  const handleSubmitApprove = async (e) => {
+    e.preventDefault();
     try {
-      const response = await API(`/api/bonuses/${bonus.id}`, {
+      const response = await API(`/api/bonuses/${actionBonus.id}`, {
         method: "PUT",
         body: JSON.stringify({
           status: "Approved",
-          approved_by: 1 // Current user ID
+          approved_by: approveData.approved_by,
+          approval_notes: approveData.approval_notes,
+          payment_date: approveData.payment_date
         })
       });
-      alert(`Bonus approved successfully!`);
+      setSuccessMessage(`Bonus approved successfully!`);
+      setShowSuccessMessage(true);
+      setShowApproveBonus(false);
+      setActionBonus(null);
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error approving bonus:", error);
-      alert("Failed to approve bonus. Please try again.");
+      setErrorMessage("Failed to approve bonus. Please try again.");
+      setShowErrorMessage(true);
     }
   };
 
-  const handleRejectBonus = async (bonus) => {
+  const handleRejectBonus = (bonus) => {
+    setActionBonus(bonus);
+    setRejectData({
+      rejected_by: "",
+      rejection_reason: "",
+      rejection_notes: ""
+    });
+    setShowRejectBonus(true);
+  };
+
+  const handleSubmitReject = async (e) => {
+    e.preventDefault();
     try {
-      const response = await API(`/api/bonuses/${bonus.id}`, {
+      const response = await API(`/api/bonuses/${actionBonus.id}`, {
         method: "PUT",
         body: JSON.stringify({
           status: "Rejected",
-          approved_by: 1 // Current user ID
+          rejected_by: rejectData.rejected_by,
+          rejection_reason: rejectData.rejection_reason,
+          rejection_notes: rejectData.rejection_notes
         })
       });
-      alert(`Bonus rejected.`);
+      setSuccessMessage(`Bonus rejected.`);
+      setShowSuccessMessage(true);
+      setShowRejectBonus(false);
+      setActionBonus(null);
       loadBonusesCommissionsData();
     } catch (error) {
       console.error("Error rejecting bonus:", error);
-      alert("Failed to reject bonus. Please try again.");
+      setErrorMessage("Failed to reject bonus. Please try again.");
+      setShowErrorMessage(true);
     }
   };
 
   const handleViewBonusDetails = (bonus) => {
-    alert(`Bonus Details:\n\nEmployee: ${bonus.employee_name}\nAmount: $${bonus.amount}\nType: ${bonus.bonus_type}\nPeriod: ${bonus.period}\nStatus: ${bonus.status}\nCriteria: ${bonus.criteria}\nApproved by: ${bonus.approved_by || 'Pending'}`);
+    setActionBonus(bonus);
+    setShowViewDetails(true);
   };
 
-  const handleExportBonuses = async () => {
+  const handleExportBonuses = () => {
+    setExportData({
+      format: "CSV",
+      date_range: "All",
+      status_filter: "All",
+      include_details: true
+    });
+    setShowExportBonuses(true);
+  };
+
+  const handleSubmitExport = async (e) => {
+    e.preventDefault();
     try {
       const response = await API("/api/bonuses/export", {
-        method: "GET"
+        method: "POST",
+        body: JSON.stringify(exportData)
       });
-      // Create and download CSV
+      
+      // Create and download CSV based on export options
       const csvContent = "data:text/csv;charset=utf-8," + 
         "Employee,Amount,Type,Period,Status,Criteria\n" +
         bonuses.map(b => `${b.employee_name},${b.amount},${b.bonus_type},${b.period},${b.status},${b.criteria}`).join("\n");
@@ -303,24 +408,85 @@ export default function BonusesCommissions() {
       const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
       link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "bonuses_export.csv");
+      link.setAttribute("download", `bonuses_export_${exportData.format.toLowerCase()}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
-      alert("Bonuses exported successfully!");
+      setSuccessMessage("Bonuses exported successfully!");
+      setShowSuccessMessage(true);
+      setShowExportBonuses(false);
     } catch (error) {
       console.error("Error exporting bonuses:", error);
-      alert("Failed to export bonuses. Please try again.");
+      setErrorMessage("Failed to export bonuses. Please try again.");
+      setShowErrorMessage(true);
     }
   };
 
   const handleEditBonusStructure = (structure) => {
-    alert(`Edit Bonus Structure: ${structure.name}\n\nThis would open the structure editor with options for:\n- Base amount: $${structure.base_amount}\n- Criteria: ${structure.criteria}\n- Calculation method: ${structure.calculation_method}\n- Effective date: ${structure.effective_date}`);
+    setEditingStructure(structure);
+    setShowEditStructure(true);
+  };
+
+  const handleUpdateStructure = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await API(`/api/bonuses/structures/${editingStructure.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: editingStructure.name,
+          base_amount: editingStructure.base_amount,
+          criteria: editingStructure.criteria,
+          calculation_method: editingStructure.calculation_method,
+          effective_date: editingStructure.effective_date
+        })
+      });
+      setSuccessMessage(`Structure updated successfully!`);
+      setShowSuccessMessage(true);
+      setShowEditStructure(false);
+      setEditingStructure(null);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error updating structure:", error);
+      setErrorMessage("Failed to update structure. Please try again.");
+      setShowErrorMessage(true);
+    }
   };
 
   const handleApplyBonusStructureToEmployees = (structure) => {
-    alert(`Apply Bonus Structure: ${structure.name}\n\nThis would open employee selection to apply this structure to:\n- All employees\n- Specific departments\n- Individual employees\n- Based on criteria`);
+    setActionStructure(structure);
+    setApplyData({
+      apply_to: "All Employees",
+      department_id: "",
+      employee_ids: [],
+      effective_date: ""
+    });
+    setShowApplyStructure(true);
+  };
+
+  const handleSubmitApply = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await API("/api/bonuses/structures/apply", {
+        method: "POST",
+        body: JSON.stringify({
+          structure_id: actionStructure.id,
+          apply_to: applyData.apply_to,
+          department_id: applyData.department_id,
+          employee_ids: applyData.employee_ids,
+          effective_date: applyData.effective_date
+        })
+      });
+      setSuccessMessage(`Bonus structure "${actionStructure.name}" applied successfully!`);
+      setShowSuccessMessage(true);
+      setShowApplyStructure(false);
+      setActionStructure(null);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error applying structure:", error);
+      setErrorMessage("Failed to apply structure. Please try again.");
+      setShowErrorMessage(true);
+    }
   };
 
   // Handler functions for adding bonuses, commissions, and structures
@@ -1175,6 +1341,642 @@ export default function BonusesCommissions() {
                   </button>
                 </div>
               </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Bonus Modal */}
+      {showEditBonus && editingBonus && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Edit Employee Bonus</h3>
+              <form className="space-y-4" onSubmit={handleUpdateBonus}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Employee</label>
+                    <select
+                      value={editingBonus.employee_id}
+                      onChange={(e) => setEditingBonus({...editingBonus, employee_id: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      {employees.map(emp => (
+                        <option key={emp.id} value={emp.id}>{emp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Bonus Type</label>
+                    <select
+                      value={editingBonus.bonus_type}
+                      onChange={(e) => setEditingBonus({...editingBonus, bonus_type: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Performance">Performance</option>
+                      <option value="Project">Project</option>
+                      <option value="Annual">Annual</option>
+                      <option value="Quarterly">Quarterly</option>
+                      <option value="Special">Special</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Amount</label>
+                    <input
+                      type="number"
+                      value={editingBonus.amount}
+                      onChange={(e) => setEditingBonus({...editingBonus, amount: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="5000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Period</label>
+                    <input
+                      type="text"
+                      value={editingBonus.period}
+                      onChange={(e) => setEditingBonus({...editingBonus, period: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="Q4 2024"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Criteria</label>
+                  <textarea
+                    rows={3}
+                    value={editingBonus.criteria}
+                    onChange={(e) => setEditingBonus({...editingBonus, criteria: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Describe the criteria for this bonus..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Status</label>
+                  <select
+                    value={editingBonus.status}
+                    onChange={(e) => setEditingBonus({...editingBonus, status: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Paid">Paid</option>
+                  </select>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditBonus(false);
+                      setEditingBonus(null);
+                    }}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Update Bonus
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Structure Modal */}
+      {showEditStructure && editingStructure && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Edit Compensation Structure</h3>
+              <form className="space-y-4" onSubmit={handleUpdateStructure}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Structure Name</label>
+                    <input
+                      type="text"
+                      value={editingStructure.name}
+                      onChange={(e) => setEditingStructure({...editingStructure, name: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="e.g., Sales Performance Bonus"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Base Amount</label>
+                    <input
+                      type="number"
+                      value={editingStructure.base_amount}
+                      onChange={(e) => setEditingStructure({...editingStructure, base_amount: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="5000"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Criteria</label>
+                  <textarea
+                    rows={3}
+                    value={editingStructure.criteria}
+                    onChange={(e) => setEditingStructure({...editingStructure, criteria: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Describe the criteria for this structure..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Calculation Method</label>
+                  <textarea
+                    rows={3}
+                    value={editingStructure.calculation_method}
+                    onChange={(e) => setEditingStructure({...editingStructure, calculation_method: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Describe how this structure is calculated..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Effective Date</label>
+                  <input
+                    type="date"
+                    value={editingStructure.effective_date}
+                    onChange={(e) => setEditingStructure({...editingStructure, effective_date: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditStructure(false);
+                      setEditingStructure(null);
+                    }}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Update Structure
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Approve Bonus Modal */}
+      {showApproveBonus && actionBonus && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Approve Bonus</h3>
+              <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
+                <h4 className="font-medium mb-2">Bonus Details</h4>
+                <p><strong>Employee:</strong> {actionBonus.employee_name}</p>
+                <p><strong>Amount:</strong> ${actionBonus.amount}</p>
+                <p><strong>Type:</strong> {actionBonus.bonus_type}</p>
+                <p><strong>Period:</strong> {actionBonus.period}</p>
+              </div>
+              <form className="space-y-4" onSubmit={handleSubmitApprove}>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Approved By *</label>
+                  <input
+                    type="text"
+                    value={approveData.approved_by}
+                    onChange={(e) => setApproveData({...approveData, approved_by: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Enter approver name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Payment Date *</label>
+                  <input
+                    type="date"
+                    value={approveData.payment_date}
+                    onChange={(e) => setApproveData({...approveData, payment_date: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Approval Notes</label>
+                  <textarea
+                    rows={3}
+                    value={approveData.approval_notes}
+                    onChange={(e) => setApproveData({...approveData, approval_notes: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Add any notes about this approval..."
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowApproveBonus(false);
+                      setActionBonus(null);
+                    }}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Approve Bonus
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Reject Bonus Modal */}
+      {showRejectBonus && actionBonus && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Reject Bonus</h3>
+              <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
+                <h4 className="font-medium mb-2">Bonus Details</h4>
+                <p><strong>Employee:</strong> {actionBonus.employee_name}</p>
+                <p><strong>Amount:</strong> ${actionBonus.amount}</p>
+                <p><strong>Type:</strong> {actionBonus.bonus_type}</p>
+                <p><strong>Period:</strong> {actionBonus.period}</p>
+              </div>
+              <form className="space-y-4" onSubmit={handleSubmitReject}>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Rejected By *</label>
+                  <input
+                    type="text"
+                    value={rejectData.rejected_by}
+                    onChange={(e) => setRejectData({...rejectData, rejected_by: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Enter rejector name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Rejection Reason *</label>
+                  <select
+                    value={rejectData.rejection_reason}
+                    onChange={(e) => setRejectData({...rejectData, rejection_reason: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    required
+                  >
+                    <option value="">Select reason</option>
+                    <option value="Criteria not met">Criteria not met</option>
+                    <option value="Insufficient performance">Insufficient performance</option>
+                    <option value="Budget constraints">Budget constraints</option>
+                    <option value="Policy violation">Policy violation</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Rejection Notes *</label>
+                  <textarea
+                    rows={3}
+                    value={rejectData.rejection_notes}
+                    onChange={(e) => setRejectData({...rejectData, rejection_notes: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Explain why this bonus is being rejected..."
+                    required
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowRejectBonus(false);
+                      setActionBonus(null);
+                    }}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Reject Bonus
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View Details Modal */}
+      {showViewDetails && actionBonus && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Bonus Details</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-neutral-800 rounded-lg">
+                    <h4 className="font-medium mb-2 text-indigo-400">Employee Information</h4>
+                    <p><strong>Name:</strong> {actionBonus.employee_name}</p>
+                    <p><strong>Department:</strong> {actionBonus.department || 'N/A'}</p>
+                    <p><strong>Role:</strong> {actionBonus.role_title || 'N/A'}</p>
+                  </div>
+                  <div className="p-4 bg-neutral-800 rounded-lg">
+                    <h4 className="font-medium mb-2 text-indigo-400">Bonus Information</h4>
+                    <p><strong>Amount:</strong> ${actionBonus.amount}</p>
+                    <p><strong>Type:</strong> {actionBonus.bonus_type}</p>
+                    <p><strong>Period:</strong> {actionBonus.period}</p>
+                  </div>
+                </div>
+                <div className="p-4 bg-neutral-800 rounded-lg">
+                  <h4 className="font-medium mb-2 text-indigo-400">Status & Approval</h4>
+                  <p><strong>Status:</strong> <span className={`px-2 py-1 rounded text-sm ${
+                    actionBonus.status === 'Approved' ? 'bg-green-900 text-green-300' :
+                    actionBonus.status === 'Rejected' ? 'bg-red-900 text-red-300' :
+                    'bg-yellow-900 text-yellow-300'
+                  }`}>{actionBonus.status}</span></p>
+                  <p><strong>Approved by:</strong> {actionBonus.approved_by || 'Pending'}</p>
+                  <p><strong>Created:</strong> {new Date(actionBonus.created_at).toLocaleDateString()}</p>
+                </div>
+                <div className="p-4 bg-neutral-800 rounded-lg">
+                  <h4 className="font-medium mb-2 text-indigo-400">Criteria & Notes</h4>
+                  <p><strong>Criteria:</strong> {actionBonus.criteria || 'No criteria specified'}</p>
+                  {actionBonus.approval_notes && (
+                    <p><strong>Approval Notes:</strong> {actionBonus.approval_notes}</p>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => {
+                    setShowViewDetails(false);
+                    setActionBonus(null);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Export Bonuses Modal */}
+      {showExportBonuses && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Export Bonuses</h3>
+              <form className="space-y-4" onSubmit={handleSubmitExport}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Export Format *</label>
+                    <select
+                      value={exportData.format}
+                      onChange={(e) => setExportData({...exportData, format: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="CSV">CSV</option>
+                      <option value="Excel">Excel</option>
+                      <option value="PDF">PDF</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Date Range *</label>
+                    <select
+                      value={exportData.date_range}
+                      onChange={(e) => setExportData({...exportData, date_range: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="All">All Time</option>
+                      <option value="This Year">This Year</option>
+                      <option value="Last 6 Months">Last 6 Months</option>
+                      <option value="Last 3 Months">Last 3 Months</option>
+                      <option value="Custom">Custom Range</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Status Filter</label>
+                    <select
+                      value={exportData.status_filter}
+                      onChange={(e) => setExportData({...exportData, status_filter: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Pending">Pending Only</option>
+                      <option value="Approved">Approved Only</option>
+                      <option value="Rejected">Rejected Only</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={exportData.include_details}
+                        onChange={(e) => setExportData({...exportData, include_details: e.target.checked})}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">Include detailed information</span>
+                    </label>
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowExportBonuses(false)}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Export Bonuses
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Apply Structure Modal */}
+      {showApplyStructure && actionStructure && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Apply Bonus Structure</h3>
+              <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
+                <h4 className="font-medium mb-2">Structure Details</h4>
+                <p><strong>Name:</strong> {actionStructure.name}</p>
+                <p><strong>Base Amount:</strong> ${actionStructure.base_amount}</p>
+                <p><strong>Criteria:</strong> {actionStructure.criteria}</p>
+              </div>
+              <form className="space-y-4" onSubmit={handleSubmitApply}>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Apply To *</label>
+                  <select
+                    value={applyData.apply_to}
+                    onChange={(e) => setApplyData({...applyData, apply_to: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="All Employees">All Employees</option>
+                    <option value="Department">Specific Department</option>
+                    <option value="Individual">Individual Employees</option>
+                  </select>
+                </div>
+                {applyData.apply_to === "Department" && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Department *</label>
+                    <select
+                      value={applyData.department_id}
+                      onChange={(e) => setApplyData({...applyData, department_id: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="">Select Department</option>
+                      {employees.map(emp => emp.department).filter((dept, index, self) => self.indexOf(dept) === index).map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Effective Date *</label>
+                  <input
+                    type="date"
+                    value={applyData.effective_date}
+                    onChange={(e) => setApplyData({...applyData, effective_date: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    required
+                  />
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowApplyStructure(false);
+                      setActionStructure(null);
+                    }}
+                    className="px-4 py-2 text-tertiary hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Apply Structure
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Success Message Modal */}
+      {showSuccessMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-lg mx-4"
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold">Success</h3>
+              </div>
+              <div className="mb-6">
+                <p className="text-neutral-300">{successMessage}</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowSuccessMessage(false)}
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Error Message Modal */}
+      {showErrorMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-lg mx-4"
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold">Error</h3>
+              </div>
+              <div className="mb-6">
+                <p className="text-neutral-300">{errorMessage}</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowErrorMessage(false)}
+                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>

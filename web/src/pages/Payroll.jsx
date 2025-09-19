@@ -18,6 +18,10 @@ export default function Payroll() {
   const [importStatus, setImportStatus] = useState(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const tabs = [
     { id: "overview", name: "Payroll Overview", icon: "📊" },
@@ -143,7 +147,8 @@ export default function Payroll() {
 
   const handleImport = async () => {
     if (!importFile) {
-      alert("Please select a CSV file to import");
+      setErrorMessage("Please select a CSV file to import");
+      setShowErrorMessage(true);
       return;
     }
 
@@ -199,7 +204,8 @@ export default function Payroll() {
 
   const handleCalculatePayroll = async () => {
     if (!startDate || !endDate) {
-      alert('Please select both start and end dates');
+      setErrorMessage('Please select both start and end dates');
+      setShowErrorMessage(true);
       return;
     }
 
@@ -230,7 +236,8 @@ export default function Payroll() {
             await loadPayrollCalculations(matchingPeriod.id);
             
             console.log('Payroll calculation completed successfully');
-            alert('Payroll calculated successfully! Check the calculations below.');
+            setSuccessMessage('Payroll calculated successfully! Check the calculations below.');
+            setShowSuccessMessage(true);
             
           } catch (calcError) {
             console.error('Payroll calculation API error:', calcError);
@@ -248,12 +255,14 @@ export default function Payroll() {
         await loadPayrollCalculations(currentPeriod.id);
         
         console.log('Payroll calculation completed successfully');
-        alert('Payroll calculated successfully!');
+        setSuccessMessage('Payroll calculated successfully!');
+        setShowSuccessMessage(true);
       }
       
     } catch (error) {
       console.error("Error calculating payroll:", error);
-      alert(`Unable to calculate payroll for ${startDate} to ${endDate}. Error: ${error.message}`);
+      setErrorMessage(`Unable to calculate payroll for ${startDate} to ${endDate}. Error: ${error.message}`);
+      setShowErrorMessage(true);
     }
   };
 
@@ -772,6 +781,72 @@ export default function Payroll() {
         {activeTab === "bonuses" && renderBonuses()}
         {activeTab === "export" && renderExport()}
       </div>
+
+      {/* Success Message Modal */}
+      {showSuccessMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-lg mx-4"
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold">Success</h3>
+              </div>
+              <div className="mb-6">
+                <p className="text-neutral-300">{successMessage}</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowSuccessMessage(false)}
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Error Message Modal */}
+      {showErrorMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-lg mx-4"
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold">Error</h3>
+              </div>
+              <div className="mb-6">
+                <p className="text-neutral-300">{errorMessage}</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowErrorMessage(false)}
+                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

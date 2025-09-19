@@ -25,6 +25,8 @@ export default function Recruiting() {
     location: "",
     notes: ""
   });
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
@@ -219,7 +221,8 @@ export default function Recruiting() {
       setSchedulingCandidate(null);
       setSelectedCandidate(null);
       
-      alert(`Interview scheduled for ${schedulingCandidate.name} on ${interviewData.interview_date} at ${interviewData.interview_time}`);
+      setSuccessMessage(`Interview scheduled for ${schedulingCandidate.name} on ${interviewData.interview_date} at ${interviewData.interview_time}`);
+      setShowSuccessMessage(true);
     } catch (error) {
       console.error("Error scheduling interview:", error);
       // Fallback to local update if API fails
@@ -233,7 +236,8 @@ export default function Recruiting() {
       setSchedulingCandidate(null);
       setSelectedCandidate(null);
       
-      alert(`Interview scheduled for ${schedulingCandidate.name} on ${interviewData.interview_date} at ${interviewData.interview_time}`);
+      setSuccessMessage(`Interview scheduled for ${schedulingCandidate.name} on ${interviewData.interview_date} at ${interviewData.interview_time}`);
+      setShowSuccessMessage(true);
     }
   };
 
@@ -1061,6 +1065,39 @@ export default function Recruiting() {
                   className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Schedule Interview
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Success Message Modal */}
+      {showSuccessMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-lg mx-4"
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold">Success</h3>
+              </div>
+              <div className="mb-6">
+                <p className="text-neutral-300">{successMessage}</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowSuccessMessage(false)}
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  OK
                 </button>
               </div>
             </div>

@@ -6,7 +6,10 @@ const r = Router();
 
 r.get("/", async (_req, res) => {
   const { rows } = await q(
-    `SELECT e.*, d.name AS department, l.name AS location
+    `SELECT e.*, 
+     e.first_name || ' ' || e.last_name AS name,
+     d.name AS department, 
+     l.name AS location
      FROM employees e
      LEFT JOIN departments d ON d.id = e.department_id
      LEFT JOIN locations l ON l.id = e.location_id

@@ -253,4 +253,81 @@ r.get("/analytics", async (_req, res) => {
   }
 });
 
+// Get insurance plans
+r.get("/insurance-plans", async (_req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT 
+        ip.*,
+        d.name as department_name
+      FROM insurance_plans ip
+      LEFT JOIN departments d ON ip.department_id = d.id
+      ORDER BY ip.created_at DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+// Get retirement plans
+r.get("/retirement-plans", async (_req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT 
+        rp.*,
+        d.name as department_name
+      FROM retirement_plans rp
+      LEFT JOIN departments d ON rp.department_id = d.id
+      ORDER BY rp.created_at DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
+  }
+});
+
+// Manage retirement plan
+r.put("/retirement-plans/:id/manage", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { employer_match_percentage, vesting_schedule, contribution_limit, investment_options, management_fees } = req.body;
+    
+    const { rows } = await q(`
+      UPDATE retirement_plans 
+      SET 
+        employer_match_percentage = $1,
+        vesting_schedule = $2,
+        contribution_limit = $3,
+        investment_options = $4,
+        management_fees = $5,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $6
+      RETURNING *
+    `, [employer_match_percentage, vesting_schedule, contribution_limit, investment_options, management_fees, id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Retirement plan not found" });
+    }
+    
+    res.json({
+      message: "Retirement plan updated successfully",
+      plan: rows[0]
+    });
+  } catch (error) {
+    console.error("Error managing retirement plan:", error);
+    res.status(500).json({ error: "Failed to manage retirement plan" });
+  }
+});
+
 export default r;

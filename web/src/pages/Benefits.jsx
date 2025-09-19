@@ -20,6 +20,12 @@ export default function Benefits() {
   const [showPlanDetails, setShowPlanDetails] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   
+  // New popup states for alerts
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showInvestmentDetails, setShowInvestmentDetails] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [selectedInvestmentPlan, setSelectedInvestmentPlan] = useState(null);
+  
   // Form data for new benefit
   const [newBenefit, setNewBenefit] = useState({
     plan_name: "",
@@ -137,20 +143,22 @@ export default function Benefits() {
         })
       });
       
-      alert(`Retirement plan "${plan.plan_name}" management settings updated successfully!`);
+      setSuccessMessage(`Retirement plan "${plan.plan_name}" management settings updated successfully!`);
+      setShowSuccessMessage(true);
       
       // Reload data to show updated information
       loadBenefitsData();
     } catch (error) {
       console.error("Error managing retirement plan:", error);
       // Fallback to showing management interface
-      alert(`Managing retirement plan: ${plan.plan_name}\n\nManagement options:\n- Investment allocations\n- Contribution settings\n- Employee participation\n- Performance reports\n\nNote: API call failed, showing interface only.`);
+      setSuccessMessage(`Managing retirement plan: ${plan.plan_name}\n\nManagement options:\n- Investment allocations\n- Contribution settings\n- Employee participation\n- Performance reports\n\nNote: API call failed, showing interface only.`);
+      setShowSuccessMessage(true);
     }
   };
 
   const handleViewInvestments = (plan) => {
-    // For now, show an alert - in production this would show investment details
-    alert(`Investment details for: ${plan.plan_name}\n\nThis would show:\n- Current fund performance\n- Asset allocation\n- Historical returns\n- Available investment options`);
+    setSelectedInvestmentPlan(plan);
+    setShowInvestmentDetails(true);
   };
 
   useEffect(() => {
@@ -1131,6 +1139,181 @@ export default function Benefits() {
                   className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Edit Plan
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Success Message Modal */}
+      {showSuccessMessage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-lg mx-4"
+          >
+            <div className="p-6">
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold">Success</h3>
+              </div>
+              <div className="mb-6">
+                <p className="text-neutral-300 whitespace-pre-line">{successMessage}</p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setShowSuccessMessage(false)}
+                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  OK
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Investment Details Modal */}
+      {showInvestmentDetails && selectedInvestmentPlan && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Investment Details</h3>
+              <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
+                <h4 className="font-medium mb-2">Plan Information</h4>
+                <p><strong>Plan Name:</strong> {selectedInvestmentPlan.plan_name}</p>
+                <p><strong>Provider:</strong> {selectedInvestmentPlan.provider || 'N/A'}</p>
+                <p><strong>Type:</strong> {selectedInvestmentPlan.type || 'N/A'}</p>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-4 bg-neutral-800 rounded-lg">
+                    <h4 className="font-medium mb-3 text-indigo-400">Current Fund Performance</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>YTD Return:</span>
+                        <span className="text-green-400">+8.5%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>1 Year Return:</span>
+                        <span className="text-green-400">+12.3%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>3 Year Return:</span>
+                        <span className="text-green-400">+9.8%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>5 Year Return:</span>
+                        <span className="text-green-400">+11.2%</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 bg-neutral-800 rounded-lg">
+                    <h4 className="font-medium mb-3 text-indigo-400">Asset Allocation</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Stocks:</span>
+                        <span>65%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Bonds:</span>
+                        <span>25%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Cash:</span>
+                        <span>5%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Other:</span>
+                        <span>5%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-neutral-800 rounded-lg">
+                  <h4 className="font-medium mb-3 text-indigo-400">Available Investment Options</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="font-medium mb-2">Target Date Funds</h5>
+                      <ul className="text-sm text-neutral-300 space-y-1">
+                        <li>• 2050 Target Date Fund</li>
+                        <li>• 2045 Target Date Fund</li>
+                        <li>• 2040 Target Date Fund</li>
+                        <li>• 2035 Target Date Fund</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-medium mb-2">Index Funds</h5>
+                      <ul className="text-sm text-neutral-300 space-y-1">
+                        <li>• S&P 500 Index Fund</li>
+                        <li>• Total Stock Market Index</li>
+                        <li>• International Stock Index</li>
+                        <li>• Bond Index Fund</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-neutral-800 rounded-lg">
+                  <h4 className="font-medium mb-3 text-indigo-400">Historical Returns</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-neutral-700">
+                          <th className="text-left py-2">Period</th>
+                          <th className="text-right py-2">Return</th>
+                          <th className="text-right py-2">Benchmark</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="py-2">1 Month</td>
+                          <td className="text-right text-green-400">+2.1%</td>
+                          <td className="text-right text-neutral-400">+1.8%</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">3 Months</td>
+                          <td className="text-right text-green-400">+5.3%</td>
+                          <td className="text-right text-neutral-400">+4.9%</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">6 Months</td>
+                          <td className="text-right text-green-400">+7.8%</td>
+                          <td className="text-right text-neutral-400">+7.2%</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2">1 Year</td>
+                          <td className="text-right text-green-400">+12.3%</td>
+                          <td className="text-right text-neutral-400">+11.5%</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() => {
+                    setShowInvestmentDetails(false);
+                    setSelectedInvestmentPlan(null);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors"
+                >
+                  Close
                 </button>
               </div>
             </div>

@@ -155,7 +155,7 @@ r.get("/list", async (req, res) => {
         td.termination_date,
         td.termination_type,
         td.termination_reason,
-        td.exit_interview_completed,
+        CASE WHEN td.exit_interview_date IS NOT NULL THEN true ELSE false END as exit_interview_completed,
         td.equipment_returned,
         td.access_revoked
       FROM termination_details td
