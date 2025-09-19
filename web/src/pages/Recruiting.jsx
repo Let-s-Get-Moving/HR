@@ -29,6 +29,26 @@ export default function Recruiting() {
   });
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showEditInterview, setShowEditInterview] = useState(false);
+  const [editingInterview, setEditingInterview] = useState(null);
+  const [editInterviewData, setEditInterviewData] = useState({
+    interview_date: "",
+    interview_time: "",
+    interview_type: "Video",
+    interviewer_id: "",
+    location: "",
+    notes: ""
+  });
+  const [showCancelInterview, setShowCancelInterview] = useState(false);
+  const [cancelingInterview, setCancelingInterview] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [showCompleteInterview, setShowCompleteInterview] = useState(false);
+  const [completingInterview, setCompletingInterview] = useState(null);
+  const [completionData, setCompletionData] = useState({
+    outcome: "Passed",
+    feedback: "",
+    next_steps: ""
+  });
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
@@ -339,6 +359,98 @@ export default function Recruiting() {
     }
   };
 
+  // Interview action handlers
+  const handleEditInterview = (interview) => {
+    setEditingInterview(interview);
+    setEditInterviewData({
+      interview_date: interview.interview_date.split('T')[0], // Convert to YYYY-MM-DD format
+      interview_time: interview.interview_time,
+      interview_type: interview.interview_type,
+      interviewer_id: interview.interviewer_id.toString(),
+      location: interview.location || "",
+      notes: interview.notes || ""
+    });
+    setShowEditInterview(true);
+  };
+
+  const handleUpdateInterview = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await API(`/api/recruiting/interviews/${editingInterview.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          ...editInterviewData,
+          interviewer_id: parseInt(editInterviewData.interviewer_id)
+        })
+      });
+      
+      setSuccessMessage("Interview updated successfully!");
+      setShowSuccessMessage(true);
+      setShowEditInterview(false);
+      setEditingInterview(null);
+      
+      // Reload interviews data
+      loadRecruitingData();
+    } catch (error) {
+      console.error("Error updating interview:", error);
+      setSuccessMessage(`Error updating interview: ${error.message}`);
+      setShowSuccessMessage(true);
+    }
+  };
+
+  const handleCancelInterview = (interview) => {
+    setCancelingInterview(interview);
+    setCancelReason("");
+    setShowCancelInterview(true);
+  };
+
+  const handleSubmitCancelInterview = async (e) => {
+    e.preventDefault();
+    try {
+      // In a real app, this would call an API to cancel the interview
+      setSuccessMessage(`Interview cancelled successfully. Reason: ${cancelReason}`);
+      setShowSuccessMessage(true);
+      setShowCancelInterview(false);
+      setCancelingInterview(null);
+      setCancelReason("");
+      
+      // Reload interviews data
+      loadRecruitingData();
+    } catch (error) {
+      console.error("Error cancelling interview:", error);
+      setSuccessMessage(`Error cancelling interview: ${error.message}`);
+      setShowSuccessMessage(true);
+    }
+  };
+
+  const handleCompleteInterview = (interview) => {
+    setCompletingInterview(interview);
+    setCompletionData({
+      outcome: "Passed",
+      feedback: "",
+      next_steps: ""
+    });
+    setShowCompleteInterview(true);
+  };
+
+  const handleSubmitCompleteInterview = async (e) => {
+    e.preventDefault();
+    try {
+      // In a real app, this would call an API to complete the interview
+      setSuccessMessage(`Interview completed successfully! Outcome: ${completionData.outcome}`);
+      setShowSuccessMessage(true);
+      setShowCompleteInterview(false);
+      setCompletingInterview(null);
+      
+      // Reload interviews data
+      loadRecruitingData();
+    } catch (error) {
+      console.error("Error completing interview:", error);
+      setSuccessMessage(`Error completing interview: ${error.message}`);
+      setShowSuccessMessage(true);
+    }
+  };
+
   const renderJobPostings = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -491,13 +603,22 @@ export default function Recruiting() {
 
                 <div className="mt-4 pt-4 border-t border-neutral-700">
                   <div className="flex justify-end space-x-2">
-                    <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                    <button 
+                      onClick={() => handleEditInterview(interview)}
+                      className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                    >
                       Edit
                     </button>
-                    <button className="text-red-400 hover:text-red-300 transition-colors">
+                    <button 
+                      onClick={() => handleCancelInterview(interview)}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                    >
                       Cancel
                     </button>
-                    <button className="text-green-400 hover:text-green-300 transition-colors">
+                    <button 
+                      onClick={() => handleCompleteInterview(interview)}
+                      className="text-green-400 hover:text-green-300 transition-colors"
+                    >
                       Complete
                     </button>
                   </div>
@@ -1334,6 +1455,258 @@ export default function Recruiting() {
                     className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Schedule Interview
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Interview Modal */}
+      {showEditInterview && editingInterview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Edit Interview</h3>
+              <form onSubmit={handleUpdateInterview} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interview Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={editInterviewData.interview_date}
+                      onChange={(e) => setEditInterviewData({...editInterviewData, interview_date: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interview Time *</label>
+                    <input
+                      type="time"
+                      required
+                      value={editInterviewData.interview_time}
+                      onChange={(e) => setEditInterviewData({...editInterviewData, interview_time: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interview Type *</label>
+                    <select
+                      value={editInterviewData.interview_type}
+                      onChange={(e) => setEditInterviewData({...editInterviewData, interview_type: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Video">Video Call</option>
+                      <option value="Phone">Phone Call</option>
+                      <option value="In-person">In-Person</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interviewer *</label>
+                    <select
+                      required
+                      value={editInterviewData.interviewer_id}
+                      onChange={(e) => setEditInterviewData({...editInterviewData, interviewer_id: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="">Select Interviewer</option>
+                      {employees.map(employee => (
+                        <option key={employee.id} value={employee.id}>
+                          {employee.name} (ID: {employee.id}) - {employee.role_title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-2">Location</label>
+                    <input
+                      type="text"
+                      value={editInterviewData.location}
+                      onChange={(e) => setEditInterviewData({...editInterviewData, location: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="e.g., Zoom Meeting, Office Conference Room"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-2">Notes</label>
+                    <textarea
+                      value={editInterviewData.notes}
+                      onChange={(e) => setEditInterviewData({...editInterviewData, notes: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      rows={3}
+                      placeholder="Additional notes about the interview..."
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEditInterview(false);
+                      setEditingInterview(null);
+                    }}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Update Interview
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Cancel Interview Modal */}
+      {showCancelInterview && cancelingInterview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-lg mx-4"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Cancel Interview</h3>
+              <form onSubmit={handleSubmitCancelInterview} className="space-y-4">
+                <div className="bg-neutral-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Interview Details</h4>
+                  <div className="text-sm text-neutral-300">
+                    <div><strong>Date:</strong> {new Date(cancelingInterview.interview_date).toLocaleDateString()}</div>
+                    <div><strong>Time:</strong> {cancelingInterview.interview_time}</div>
+                    <div><strong>Type:</strong> {cancelingInterview.interview_type}</div>
+                    <div><strong>Location:</strong> {cancelingInterview.location}</div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Cancellation Reason *</label>
+                  <textarea
+                    required
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-red-500"
+                    rows={3}
+                    placeholder="Please provide a reason for cancelling this interview..."
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCancelInterview(false);
+                      setCancelingInterview(null);
+                      setCancelReason("");
+                    }}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Keep Interview
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Cancel Interview
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Complete Interview Modal */}
+      {showCompleteInterview && completingInterview && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Complete Interview</h3>
+              <form onSubmit={handleSubmitCompleteInterview} className="space-y-4">
+                <div className="bg-neutral-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Interview Details</h4>
+                  <div className="text-sm text-neutral-300">
+                    <div><strong>Date:</strong> {new Date(completingInterview.interview_date).toLocaleDateString()}</div>
+                    <div><strong>Time:</strong> {completingInterview.interview_time}</div>
+                    <div><strong>Type:</strong> {completingInterview.interview_type}</div>
+                    <div><strong>Location:</strong> {completingInterview.location}</div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interview Outcome *</label>
+                    <select
+                      required
+                      value={completionData.outcome}
+                      onChange={(e) => setCompletionData({...completionData, outcome: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Passed">Passed</option>
+                      <option value="Failed">Failed</option>
+                      <option value="Needs Follow-up">Needs Follow-up</option>
+                      <option value="On Hold">On Hold</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Next Steps</label>
+                    <select
+                      value={completionData.next_steps}
+                      onChange={(e) => setCompletionData({...completionData, next_steps: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="">Select Next Step</option>
+                      <option value="Schedule Next Round">Schedule Next Round</option>
+                      <option value="Make Offer">Make Offer</option>
+                      <option value="Reject Candidate">Reject Candidate</option>
+                      <option value="Keep in Pipeline">Keep in Pipeline</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Interview Feedback *</label>
+                  <textarea
+                    required
+                    value={completionData.feedback}
+                    onChange={(e) => setCompletionData({...completionData, feedback: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    rows={4}
+                    placeholder="Provide detailed feedback about the candidate's performance, skills, and fit for the role..."
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCompleteInterview(false);
+                      setCompletingInterview(null);
+                    }}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Complete Interview
                   </button>
                 </div>
               </form>

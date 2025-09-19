@@ -10,6 +10,8 @@ export default function LeaveManagement() {
   const [analytics, setAnalytics] = useState(null);
   const [activeTab, setActiveTab] = useState("requests");
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
@@ -37,6 +39,7 @@ export default function LeaveManagement() {
       ]);
       
       setRequests(requestsData);
+      setFilteredRequests(requestsData);
       setBalances(balancesData);
       setCalendar(calendarData);
       setAnalytics(analyticsData);
@@ -51,6 +54,41 @@ export default function LeaveManagement() {
       setLoading(false);
     }
   };
+
+  // Handle search functionality
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setFilteredRequests(requests);
+      return;
+    }
+
+    const searchTerm = query.toLowerCase();
+    const filtered = requests.filter(request => {
+      const searchableFields = [
+        request.employee_name || '',
+        request.leave_type || '',
+        request.status || '',
+        request.reason || '',
+        request.start_date || '',
+        request.end_date || '',
+        request.created_at || '',
+        request.updated_at || ''
+      ];
+      
+      return searchableFields.some(field => 
+        field && field.toString().toLowerCase().includes(searchTerm)
+      );
+    });
+
+    setFilteredRequests(filtered);
+  };
+
+  // Update filtered requests when main requests list changes
+  useEffect(() => {
+    handleSearch(searchQuery);
+  }, [requests]);
 
   const handleSubmitRequest = async (e) => {
     e.preventDefault();
@@ -183,6 +221,43 @@ export default function LeaveManagement() {
         </nav>
       </div>
 
+      {/* Search Bar - Only show on requests tab */}
+      {activeTab === "requests" && (
+        <div className="card p-6 mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search leave requests by employee name, leave type, status, reason, dates..."
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="block w-full pl-10 pr-3 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+            />
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  onClick={() => handleSearch("")}
+                  className="text-neutral-400 hover:text-white transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+          {searchQuery && (
+            <div className="mt-2 text-sm text-neutral-400">
+              Found {filteredRequests.length} request{filteredRequests.length !== 1 ? 's' : ''} matching "{searchQuery}"
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Leave Requests Tab */}
       {activeTab === "requests" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -264,10 +339,10 @@ export default function LeaveManagement() {
             <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
               <div className="space-y-4">
-                {requests.filter(request => request.status === 'Pending').length === 0 ? (
+                {filteredRequests.filter(request => request.status === 'Pending').length === 0 ? (
                   <p className="text-muted text-center py-8">No pending leave requests found</p>
                 ) : (
-                  requests.filter(request => request.status === 'Pending').map((request) => (
+                  filteredRequests.filter(request => request.status === 'Pending').map((request) => (
                     <div key={request.id} className="card p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -323,15 +398,15 @@ export default function LeaveManagement() {
                     // Pagination logic for history
                     const startIndex = (historyCurrentPage - 1) * historyRecordsPerPage;
                     const endIndex = startIndex + historyRecordsPerPage;
-                    const paginatedRequests = requests.slice(startIndex, endIndex);
-                    const totalPages = Math.ceil(requests.length / historyRecordsPerPage);
+                    const paginatedRequests = filteredRequests.slice(startIndex, endIndex);
+                    const totalPages = Math.ceil(filteredRequests.length / historyRecordsPerPage);
 
                     return (
                       <>
                         {/* Results info */}
                         <div className="flex justify-between items-center mb-4 text-sm text-neutral-400">
                           <span>
-                            Showing {startIndex + 1}-{Math.min(endIndex, requests.length)} of {requests.length} requests
+                            Showing {startIndex + 1}-{Math.min(endIndex, filteredRequests.length)} of {filteredRequests.length} requests
                           </span>
                           <span>Page {historyCurrentPage} of {totalPages}</span>
                         </div>

@@ -10,6 +10,7 @@ export default function TimeTracking() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [csvData, setCsvData] = useState("");
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Date filtering and pagination
   const [startDate, setStartDate] = useState("");
@@ -35,10 +36,17 @@ export default function TimeTracking() {
     }
   };
 
-  // Filter entries by date range
+  // Handle search functionality
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    filterEntries();
+  };
+
+  // Filter entries by date range and search query
   const filterEntries = () => {
     let filtered = [...timeEntries];
 
+    // Apply date filtering
     if (startDate || endDate) {
       filtered = filtered.filter(entry => {
         const entryDate = new Date(entry.work_date);
@@ -49,14 +57,38 @@ export default function TimeTracking() {
       });
     }
 
+    // Apply search filtering
+    if (searchQuery.trim()) {
+      const searchTerm = searchQuery.toLowerCase();
+      filtered = filtered.filter(entry => {
+        const employee = employees.find(emp => emp.id === entry.employee_id);
+        const searchableFields = [
+          employee?.name || '',
+          employee?.first_name || '',
+          employee?.last_name || '',
+          employee?.email || '',
+          employee?.role_title || '',
+          employee?.department || '',
+          entry.work_date,
+          entry.hours_worked?.toString() || '',
+          entry.overtime_hours?.toString() || '',
+          entry.notes || ''
+        ];
+        
+        return searchableFields.some(field => 
+          field && field.toString().toLowerCase().includes(searchTerm)
+        );
+      });
+    }
+
     setFilteredEntries(filtered);
     setCurrentPage(1); // Reset to first page when filtering
   };
 
-  // Apply filters when dates change
+  // Apply filters when dates or search query change
   useEffect(() => {
     filterEntries();
-  }, [startDate, endDate, timeEntries]);
+  }, [startDate, endDate, timeEntries, searchQuery]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredEntries.length / recordsPerPage);
@@ -166,6 +198,41 @@ export default function TimeTracking() {
             {filteredEntries.length !== timeEntries.length && ` (filtered from ${timeEntries.length} total)`}
           </div>
         </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="card p-6 mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search time entries by employee name, email, role, department, date, hours..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="block w-full pl-10 pr-3 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+          />
+          {searchQuery && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <button
+                onClick={() => handleSearch("")}
+                className="text-neutral-400 hover:text-white transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+        {searchQuery && (
+          <div className="mt-2 text-sm text-neutral-400">
+            Found {filteredEntries.length} time entr{filteredEntries.length !== 1 ? 'ies' : 'y'} matching "{searchQuery}"
+          </div>
+        )}
       </div>
 
       {/* Time Entries Table */}

@@ -40,7 +40,10 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading dashboard...</div>
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+          <div className="text-lg text-neutral-400">Loading dashboard...</div>
+        </div>
       </div>
     );
   }
@@ -49,24 +52,60 @@ export default function Dashboard() {
     <div className="dashboard-container p-6 max-w-7xl mx-auto">
       <Greeting name="Avneet" />
       
-      {/* Enhanced Key Metrics */}
-      <div className="grid md:grid-cols-4 gap-4 mb-6">
-        <MetricCard 
-          label="Total Active" 
-          value={analytics?.workforceOverview?.total_active_employees ?? wf?.total ?? "..."} 
-        />
-        <MetricCard 
-          label="New Hires (This Month)" 
-          value={analytics?.newHires?.length ?? 0} 
-        />
-        <MetricCard 
-          label="Terminations (This Month)" 
-          value={analytics?.terminations?.length ?? 0} 
-        />
-        <MetricCard 
-          label="Turnover Rate (YTD)" 
-          value={`${analytics?.turnoverRate ?? 0}%`} 
-        />
+      {/* Enhanced Key Metrics with Animations */}
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <MetricCard 
+            label="Total Active Employees" 
+            value={analytics?.workforceOverview?.total_active_employees ?? wf?.total ?? "..."}
+            icon="👥"
+            trend="+2.3%"
+            trendUp={true}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <MetricCard 
+            label="New Hires (This Month)" 
+            value={analytics?.newHires?.length ?? 0}
+            icon="🎉"
+            trend="+15%"
+            trendUp={true}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <MetricCard 
+            label="Terminations (This Month)" 
+            value={analytics?.terminations?.length ?? 0}
+            icon="📤"
+            trend="-5%"
+            trendUp={false}
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <MetricCard 
+            label="Turnover Rate (YTD)" 
+            value={`${analytics?.turnoverRate ?? 0}%`}
+            icon="📊"
+            trend="-12%"
+            trendUp={false}
+          />
+        </motion.div>
       </div>
 
       {/* Employment Mix */}

@@ -242,6 +242,34 @@ r.get("/interviews", async (_req, res) => {
   }
 });
 
+// Update interview
+r.put("/interviews/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { interview_date, interview_time, interview_type, interviewer_id, location, notes } = req.body;
+    
+    console.log(`🔄 Updating interview ${id}...`);
+    
+    const { rows } = await q(`
+      UPDATE interviews 
+      SET interview_date = $1, interview_time = $2, interview_type = $3, 
+          interviewer_id = $4, location = $5, notes = $6, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $7
+      RETURNING *
+    `, [interview_date, interview_time, interview_type, interviewer_id, location, notes, id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+    
+    console.log(`✅ Interview ${id} updated successfully`);
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Error updating interview:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update candidate status
 r.put("/candidates/:id/status", async (req, res) => {
   const { id } = req.params;

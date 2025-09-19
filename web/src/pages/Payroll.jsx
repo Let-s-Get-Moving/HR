@@ -22,6 +22,8 @@ export default function Payroll() {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPayrollCalculations, setFilteredPayrollCalculations] = useState([]);
 
   const tabs = [
     { id: "overview", name: "Payroll Overview", icon: "📊" },
@@ -35,6 +37,46 @@ export default function Payroll() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Handle search functionality
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setFilteredPayrollCalculations(payrollCalculations);
+      return;
+    }
+
+    const searchTerm = query.toLowerCase();
+    const filtered = payrollCalculations.filter(calculation => {
+      const employee = employees.find(emp => emp.id === calculation.employee_id);
+      const searchableFields = [
+        employee?.name || '',
+        employee?.first_name || '',
+        employee?.last_name || '',
+        employee?.email || '',
+        employee?.role_title || '',
+        employee?.department || '',
+        calculation.gross_pay?.toString() || '',
+        calculation.net_pay?.toString() || '',
+        calculation.hours_worked?.toString() || '',
+        calculation.overtime_hours?.toString() || '',
+        calculation.bonus_amount?.toString() || '',
+        calculation.commission_amount?.toString() || ''
+      ];
+      
+      return searchableFields.some(field => 
+        field && field.toString().toLowerCase().includes(searchTerm)
+      );
+    });
+
+    setFilteredPayrollCalculations(filtered);
+  };
+
+  // Update filtered calculations when main calculations list changes
+  useEffect(() => {
+    handleSearch(searchQuery);
+  }, [payrollCalculations]);
 
   const loadData = async () => {
     try {
@@ -91,10 +133,12 @@ export default function Payroll() {
       // If the period doesn't exist in database, API will return empty array
       const calculations = await API(`/api/payroll/calculations?periodId=${periodId}`);
       setPayrollCalculations(calculations);
+      setFilteredPayrollCalculations(calculations);
     } catch (error) {
       console.error("Error loading payroll calculations:", error);
       // Set empty calculations on error to prevent UI issues
       setPayrollCalculations([]);
+      setFilteredPayrollCalculations([]);
     }
   };
 
@@ -112,6 +156,7 @@ export default function Payroll() {
         // Use existing period
         const calculations = await API(`/api/payroll/calculations?periodId=${matchingPeriod.id}`);
         setPayrollCalculations(calculations);
+      setFilteredPayrollCalculations(calculations);
         setSelectedPeriod(matchingPeriod);
       } else {
         // Create a temporary period for this date range
@@ -127,16 +172,19 @@ export default function Payroll() {
           });
           
           setSelectedPeriod(newPeriod);
-          setPayrollCalculations([]); // No calculations yet for new period
+          setPayrollCalculations([]);
+      setFilteredPayrollCalculations([]); // No calculations yet for new period
           
         } catch (createError) {
           console.error("Could not create period for date range:", createError);
           setPayrollCalculations([]);
+      setFilteredPayrollCalculations([]);
         }
       }
     } catch (error) {
       console.error("Error loading payroll by date range:", error);
       setPayrollCalculations([]);
+      setFilteredPayrollCalculations([]);
     }
   };
 
