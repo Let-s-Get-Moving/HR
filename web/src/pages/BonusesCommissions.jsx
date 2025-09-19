@@ -735,7 +735,7 @@ export default function BonusesCommissions() {
                 <span>Payment Date: {commission.payment_date}</span>
                 <div className="flex space-x-2">
                   <button 
-                    onClick={() => handleViewBonusDetails(bonus)}
+                    onClick={() => handleViewBonusDetails(commission)}
                     className="text-indigo-400 hover:text-indigo-300 transition-colors"
                   >
                     View Details

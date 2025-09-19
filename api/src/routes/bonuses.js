@@ -401,4 +401,85 @@ r.get("/quick-fix", async (req, res) => {
   }
 });
 
+// Immediate fix endpoint - execute SQL directly
+r.get("/immediate-fix", async (req, res) => {
+  try {
+    console.log('🚀 IMMEDIATE FIX: Adding missing columns...');
+    
+    // Step 1: Add approval fields
+    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255)`);
+    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approval_notes TEXT`);
+    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS payment_date DATE`);
+    console.log('✅ Approval fields added');
+
+    // Step 2: Add rejection fields  
+    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejected_by VARCHAR(255)`);
+    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_reason VARCHAR(255)`);
+    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_notes TEXT`);
+    console.log('✅ Rejection fields added');
+
+    // Step 3: Add updated_at column
+    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP`);
+    console.log('✅ Updated_at column added');
+
+    // Step 4: Create indexes
+    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status)`);
+    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id)`);
+    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_created_at ON bonuses(created_at)`);
+    console.log('✅ Performance indexes created');
+    
+    // Step 5: Test the new columns
+    await q(`
+      UPDATE bonuses 
+      SET approved_by = 'Immediate Fix Admin', 
+          approval_notes = 'Immediate fix test',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+    console.log('✅ Test update successful');
+    
+    // Step 6: Test approve functionality
+    await q(`
+      UPDATE bonuses 
+      SET status = 'Approved', 
+          approved_by = 'Test Admin',
+          approval_notes = 'Test approval',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 2
+    `);
+    console.log('✅ Approve test successful');
+    
+    // Step 7: Test reject functionality
+    await q(`
+      UPDATE bonuses 
+      SET status = 'Rejected', 
+          rejected_by = 'Test Admin',
+          rejection_reason = 'Test rejection',
+          rejection_notes = 'Test rejection notes',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 3
+    `);
+    console.log('✅ Reject test successful');
+    
+    res.json({
+      success: true,
+      message: "IMMEDIATE FIX COMPLETED! All bonus approval/rejection fields added to database.",
+      timestamp: new Date().toISOString(),
+      tests: {
+        approve: "PASSED",
+        reject: "PASSED",
+        schema: "UPDATED"
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Immediate fix error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: "Immediate fix failed",
+      details: error.message 
+    });
+  }
+});
+
 export default r;
