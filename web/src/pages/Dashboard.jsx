@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Greeting from "../components/Greeting.jsx";
 import MetricCard from "../components/MetricCard.jsx";
 import Donut from "../components/Donut.jsx";
@@ -7,6 +8,7 @@ import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import { API } from '../config/api.js';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
   const [wf, setWf] = useState(null);
   const [att, setAtt] = useState(null);
@@ -49,6 +51,25 @@ export default function Dashboard() {
 
   const handleRefresh = () => {
     loadData();
+  };
+
+  const handleQuickAction = (action) => {
+    switch (action) {
+      case 'add-employee':
+        navigate('/employees');
+        break;
+      case 'leave-request':
+        navigate('/leave-management');
+        break;
+      case 'process-payroll':
+        navigate('/payroll');
+        break;
+      case 'view-reports':
+        navigate('/analytics');
+        break;
+      default:
+        break;
+    }
   };
 
   const getTimeRangeLabel = (range) => {
@@ -404,19 +425,31 @@ export default function Dashboard() {
         >
           <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
-            <button className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-center transition-colors">
+            <button 
+              onClick={() => handleQuickAction('add-employee')}
+              className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-center transition-colors hover:scale-105"
+            >
               <div className="text-2xl mb-2">👤</div>
               <div className="text-sm font-medium">Add Employee</div>
             </button>
-            <button className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-colors">
+            <button 
+              onClick={() => handleQuickAction('leave-request')}
+              className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-colors hover:scale-105"
+            >
               <div className="text-2xl mb-2">📝</div>
               <div className="text-sm font-medium">New Leave Request</div>
             </button>
-            <button className="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-center transition-colors">
+            <button 
+              onClick={() => handleQuickAction('process-payroll')}
+              className="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-center transition-colors hover:scale-105"
+            >
               <div className="text-2xl mb-2">💰</div>
               <div className="text-sm font-medium">Process Payroll</div>
             </button>
-            <button className="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-center transition-colors">
+            <button 
+              onClick={() => handleQuickAction('view-reports')}
+              className="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-center transition-colors hover:scale-105"
+            >
               <div className="text-2xl mb-2">📊</div>
               <div className="text-sm font-medium">View Reports</div>
             </button>

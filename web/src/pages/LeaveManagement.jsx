@@ -457,7 +457,6 @@ export default function LeaveManagement() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-6 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -475,7 +474,6 @@ export default function LeaveManagement() {
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -493,7 +491,6 @@ export default function LeaveManagement() {
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700 p-6 text-white shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 hover:scale-105">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
@@ -511,7 +508,6 @@ export default function LeaveManagement() {
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-6 text-white shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16"></div>
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">

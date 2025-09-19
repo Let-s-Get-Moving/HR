@@ -439,12 +439,25 @@ export default function Recruiting() {
   const handleSubmitCompleteInterview = async (e) => {
     e.preventDefault();
     try {
+      // Determine if this should be marked as "Second Round" or "Completed"
+      const nextSteps = completionData.next_steps?.toLowerCase() || '';
+      const isSecondRound = nextSteps.includes('second round') || nextSteps.includes('next round') || nextSteps.includes('round 2');
+      
+      const statusToSet = isSecondRound ? 'Second Round' : 'Completed';
+      
       await API(`/api/recruiting/interviews/${completingInterview.id}/complete`, {
         method: "PUT",
-        body: JSON.stringify(completionData)
+        body: JSON.stringify({
+          ...completionData,
+          status: statusToSet
+        })
       });
       
-      setSuccessMessage(`Interview completed successfully! Outcome: ${completionData.outcome}`);
+      const message = isSecondRound 
+        ? `Interview completed! Status: Second Round - ${completionData.outcome}`
+        : `Interview completed successfully! Outcome: ${completionData.outcome}`;
+        
+      setSuccessMessage(message);
       setShowSuccessMessage(true);
       setShowCompleteInterview(false);
       setCompletingInterview(null);
@@ -551,7 +564,7 @@ export default function Recruiting() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {interviews.filter(interview => interview.status !== 'Completed').map((interview) => {
+          {interviews.filter(interview => interview.status !== 'Completed' && interview.status !== 'Second Round').map((interview) => {
             const candidate = candidates.find(c => c.id === interview.candidate_id);
             const interviewer = employees.find(e => e.id === interview.interviewer_id);
             const jobPosting = jobPostings.find(j => j.id === interview.job_posting_id);
