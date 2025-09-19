@@ -12,7 +12,13 @@ const bonusSchema = z.object({
   amount: z.number().positive(),
   period: z.string().min(1),
   criteria: z.string().optional(),
-  status: z.enum(['Pending', 'Approved', 'Paid']).default('Pending')
+  status: z.enum(['Pending', 'Approved', 'Rejected', 'Paid']).default('Pending'),
+  approved_by: z.string().optional(),
+  approval_notes: z.string().optional(),
+  payment_date: z.string().optional(),
+  rejected_by: z.string().optional(),
+  rejection_reason: z.string().optional(),
+  rejection_notes: z.string().optional()
 });
 
 // Get all bonuses
@@ -107,6 +113,123 @@ r.put("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error updating bonus:", error);
     res.status(500).json({ error: "Failed to update bonus" });
+  }
+});
+
+// Get bonus structures
+r.get("/structures", async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT 
+        bs.*,
+        d.name as department_name
+      FROM bonus_structures bs
+      LEFT JOIN departments d ON bs.department_id = d.id
+      ORDER BY bs.effective_date DESC
+    `);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching bonus structures:", error);
+    // Return empty array if table doesn't exist yet
+    res.json([]);
+  }
+});
+
+// Create bonus structure
+r.post("/structures", async (req, res) => {
+  try {
+    const { name, base_amount, criteria, calculation_method, effective_date, department } = req.body;
+    
+    if (!name || !base_amount || !criteria) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    
+    const { rows } = await q(`
+      INSERT INTO bonus_structures (name, base_amount, criteria, calculation_method, effective_date, department_id)
+      VALUES ($1, $2, $3, $4, $5, (SELECT id FROM departments WHERE name = $6 LIMIT 1))
+      RETURNING *
+    `, [name, base_amount, criteria, calculation_method, effective_date, department]);
+    
+    res.status(201).json({
+      message: "Bonus structure created successfully",
+      structure: rows[0]
+    });
+  } catch (error) {
+    console.error("Error creating bonus structure:", error);
+    res.status(500).json({ error: "Failed to create bonus structure" });
+  }
+});
+
+// Update bonus structure
+r.put("/structures/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, base_amount, criteria, calculation_method, effective_date } = req.body;
+    
+    const { rows } = await q(`
+      UPDATE bonus_structures 
+      SET name = $1, base_amount = $2, criteria = $3, calculation_method = $4, effective_date = $5
+      WHERE id = $6
+      RETURNING *
+    `, [name, base_amount, criteria, calculation_method, effective_date, id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Bonus structure not found" });
+    }
+    
+    res.json({
+      message: "Bonus structure updated successfully",
+      structure: rows[0]
+    });
+  } catch (error) {
+    console.error("Error updating bonus structure:", error);
+    res.status(500).json({ error: "Failed to update bonus structure" });
+  }
+});
+
+// Get commission structures
+r.get("/commission-structures", async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT 
+        cs.*,
+        d.name as department_name
+      FROM commission_structures cs
+      LEFT JOIN departments d ON cs.department_id = d.id
+      ORDER BY cs.effective_date DESC
+    `);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching commission structures:", error);
+    // Return empty array if table doesn't exist yet
+    res.json([]);
+  }
+});
+
+// Create commission structure
+r.post("/commission-structures", async (req, res) => {
+  try {
+    const { name, commission_rate, base_amount, criteria, calculation_method, effective_date, department } = req.body;
+    
+    if (!name || !commission_rate || !criteria) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+    
+    const { rows } = await q(`
+      INSERT INTO commission_structures (name, commission_rate, base_amount, criteria, calculation_method, effective_date, department_id)
+      VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM departments WHERE name = $7 LIMIT 1))
+      RETURNING *
+    `, [name, commission_rate, base_amount, criteria, calculation_method, effective_date, department]);
+    
+    res.status(201).json({
+      message: "Commission structure created successfully",
+      structure: rows[0]
+    });
+  } catch (error) {
+    console.error("Error creating commission structure:", error);
+    res.status(500).json({ error: "Failed to create commission structure" });
   }
 });
 
