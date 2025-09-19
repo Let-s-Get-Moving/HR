@@ -232,6 +232,97 @@ export default function BonusesCommissions() {
     }
   };
 
+  // Handler functions for bonus actions
+  const handleEditBonus = async (bonus) => {
+    try {
+      const response = await API(`/api/bonuses/${bonus.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          amount: bonus.amount,
+          criteria: bonus.criteria,
+          period: bonus.period,
+          status: bonus.status
+        })
+      });
+      alert(`Bonus updated successfully!`);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error editing bonus:", error);
+      alert("Failed to update bonus. Please try again.");
+    }
+  };
+
+  const handleApproveBonus = async (bonus) => {
+    try {
+      const response = await API(`/api/bonuses/${bonus.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          status: "Approved",
+          approved_by: 1 // Current user ID
+        })
+      });
+      alert(`Bonus approved successfully!`);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error approving bonus:", error);
+      alert("Failed to approve bonus. Please try again.");
+    }
+  };
+
+  const handleRejectBonus = async (bonus) => {
+    try {
+      const response = await API(`/api/bonuses/${bonus.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          status: "Rejected",
+          approved_by: 1 // Current user ID
+        })
+      });
+      alert(`Bonus rejected.`);
+      loadBonusesCommissionsData();
+    } catch (error) {
+      console.error("Error rejecting bonus:", error);
+      alert("Failed to reject bonus. Please try again.");
+    }
+  };
+
+  const handleViewBonusDetails = (bonus) => {
+    alert(`Bonus Details:\n\nEmployee: ${bonus.employee_name}\nAmount: $${bonus.amount}\nType: ${bonus.bonus_type}\nPeriod: ${bonus.period}\nStatus: ${bonus.status}\nCriteria: ${bonus.criteria}\nApproved by: ${bonus.approved_by || 'Pending'}`);
+  };
+
+  const handleExportBonuses = async () => {
+    try {
+      const response = await API("/api/bonuses/export", {
+        method: "GET"
+      });
+      // Create and download CSV
+      const csvContent = "data:text/csv;charset=utf-8," + 
+        "Employee,Amount,Type,Period,Status,Criteria\n" +
+        bonuses.map(b => `${b.employee_name},${b.amount},${b.bonus_type},${b.period},${b.status},${b.criteria}`).join("\n");
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "bonuses_export.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      alert("Bonuses exported successfully!");
+    } catch (error) {
+      console.error("Error exporting bonuses:", error);
+      alert("Failed to export bonuses. Please try again.");
+    }
+  };
+
+  const handleEditBonusStructure = (structure) => {
+    alert(`Edit Bonus Structure: ${structure.name}\n\nThis would open the structure editor with options for:\n- Base amount: $${structure.base_amount}\n- Criteria: ${structure.criteria}\n- Calculation method: ${structure.calculation_method}\n- Effective date: ${structure.effective_date}`);
+  };
+
+  const handleApplyBonusStructureToEmployees = (structure) => {
+    alert(`Apply Bonus Structure: ${structure.name}\n\nThis would open employee selection to apply this structure to:\n- All employees\n- Specific departments\n- Individual employees\n- Based on criteria`);
+  };
+
   // Handler functions for adding bonuses, commissions, and structures
   const handleAddBonus = async (e) => {
     e.preventDefault();
@@ -363,15 +454,24 @@ export default function BonusesCommissions() {
               <div className="flex justify-between items-center text-sm text-tertiary">
                 <span>Approved by: {bonus.approved_by || 'Pending'}</span>
                 <div className="flex space-x-2">
-                  <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <button 
+                    onClick={() => handleEditBonus(bonus)}
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
                     Edit
                   </button>
                   {bonus.status === 'Pending' && (
-                    <button className="text-green-400 hover:text-green-300 transition-colors">
+                    <button 
+                      onClick={() => handleApproveBonus(bonus)}
+                      className="text-green-400 hover:text-green-300 transition-colors"
+                    >
                       Approve
                     </button>
                   )}
-                  <button className="text-red-400 hover:text-red-300 transition-colors">
+                  <button 
+                    onClick={() => handleRejectBonus(bonus)}
+                    className="text-red-400 hover:text-red-300 transition-colors"
+                  >
                     Reject
                   </button>
                 </div>
@@ -460,10 +560,16 @@ export default function BonusesCommissions() {
               <div className="flex justify-between items-center text-sm text-tertiary">
                 <span>Payment Date: {commission.payment_date}</span>
                 <div className="flex space-x-2">
-                  <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <button 
+                    onClick={() => handleViewBonusDetails(bonus)}
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
                     View Details
                   </button>
-                  <button className="text-green-400 hover:text-green-300 transition-colors">
+                  <button 
+                    onClick={handleExportBonuses}
+                    className="text-green-400 hover:text-green-300 transition-colors"
+                  >
                     Export
                   </button>
                 </div>
@@ -539,10 +645,16 @@ export default function BonusesCommissions() {
                 </div>
 
                 <div className="flex justify-end space-x-2">
-                  <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <button 
+                    onClick={() => handleEditBonusStructure(structure)}
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
                     Edit Structure
                   </button>
-                  <button className="text-green-400 hover:text-green-300 transition-colors">
+                  <button 
+                    onClick={() => handleApplyBonusStructureToEmployees(structure)}
+                    className="text-green-400 hover:text-green-300 transition-colors"
+                  >
                     Apply to Employees
                   </button>
                 </div>
@@ -611,10 +723,16 @@ export default function BonusesCommissions() {
                 </div>
 
                 <div className="flex justify-end space-x-2">
-                  <button className="text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <button 
+                    onClick={() => handleEditBonusStructure(structure)}
+                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
                     Edit Structure
                   </button>
-                  <button className="text-green-400 hover:text-green-300 transition-colors">
+                  <button 
+                    onClick={() => handleApplyBonusStructureToEmployees(structure)}
+                    className="text-green-400 hover:text-green-300 transition-colors"
+                  >
                     Apply to Employees
                   </button>
                 </div>

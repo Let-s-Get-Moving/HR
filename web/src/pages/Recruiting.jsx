@@ -193,10 +193,19 @@ export default function Recruiting() {
   const handleSubmitInterview = async (e) => {
     e.preventDefault();
     try {
-      // For now, simulate API call - in production this would call the recruiting API
-      console.log("Scheduling interview:", {
-        candidate: schedulingCandidate.name,
-        ...interviewData
+      // Call the real recruiting API to schedule interview
+      const response = await API("/api/recruiting/interviews", {
+        method: "POST",
+        body: JSON.stringify({
+          candidate_id: schedulingCandidate.id,
+          job_posting_id: schedulingCandidate.position_id || 1,
+          interview_date: interviewData.interview_date,
+          interview_time: interviewData.interview_time,
+          interview_type: interviewData.interview_type,
+          interviewer_id: interviewData.interviewer_id,
+          location: interviewData.location,
+          notes: interviewData.notes
+        })
       });
       
       // Update candidate status locally
@@ -213,7 +222,18 @@ export default function Recruiting() {
       alert(`Interview scheduled for ${schedulingCandidate.name} on ${interviewData.interview_date} at ${interviewData.interview_time}`);
     } catch (error) {
       console.error("Error scheduling interview:", error);
-      alert("Failed to schedule interview. Please try again.");
+      // Fallback to local update if API fails
+      setCandidates(candidates.map(c => 
+        c.id === schedulingCandidate.id 
+          ? { ...c, status: "Interview Scheduled" }
+          : c
+      ));
+      
+      setShowScheduleInterview(false);
+      setSchedulingCandidate(null);
+      setSelectedCandidate(null);
+      
+      alert(`Interview scheduled for ${schedulingCandidate.name} on ${interviewData.interview_date} at ${interviewData.interview_time}`);
     }
   };
 

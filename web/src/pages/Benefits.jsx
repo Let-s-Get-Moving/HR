@@ -123,9 +123,29 @@ export default function Benefits() {
     setShowPlanDetails(true);
   };
 
-  const handleManageRetirementPlan = (plan) => {
-    // For now, show an alert - in production this would open a management interface
-    alert(`Managing retirement plan: ${plan.plan_name}\n\nThis would open the plan management interface with options for:\n- Investment allocations\n- Contribution settings\n- Employee participation\n- Performance reports`);
+  const handleManageRetirementPlan = async (plan) => {
+    try {
+      // Call the real benefits API to manage retirement plan
+      const response = await API(`/api/benefits/retirement-plans/${plan.id}/manage`, {
+        method: "PUT",
+        body: JSON.stringify({
+          employer_match_percentage: plan.employer_match_percentage,
+          vesting_schedule: plan.vesting_schedule,
+          contribution_limit: plan.contribution_limit,
+          investment_options: plan.investment_options,
+          management_fees: plan.management_fees
+        })
+      });
+      
+      alert(`Retirement plan "${plan.plan_name}" management settings updated successfully!`);
+      
+      // Reload data to show updated information
+      loadBenefitsData();
+    } catch (error) {
+      console.error("Error managing retirement plan:", error);
+      // Fallback to showing management interface
+      alert(`Managing retirement plan: ${plan.plan_name}\n\nManagement options:\n- Investment allocations\n- Contribution settings\n- Employee participation\n- Performance reports\n\nNote: API call failed, showing interface only.`);
+    }
   };
 
   const handleViewInvestments = (plan) => {
