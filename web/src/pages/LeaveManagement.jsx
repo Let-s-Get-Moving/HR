@@ -504,10 +504,10 @@ export default function LeaveManagement() {
             <div className="card p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold">Leave Type Breakdown</h3>
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <div className="flex items-center space-x-2 text-sm text-neutral-400">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   <span>Available</span>
-                  <div className="w-3 h-3 bg-gray-400 rounded-full ml-4"></div>
+                  <div className="w-3 h-3 bg-neutral-400 rounded-full ml-4"></div>
                   <span>Used</span>
                 </div>
               </div>
@@ -515,23 +515,23 @@ export default function LeaveManagement() {
               {balances.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📊</div>
-                  <h4 className="text-xl font-semibold mb-2">No Leave Data Available</h4>
-                  <p className="text-gray-500 mb-6">Leave balances will appear here once employees start using the system.</p>
+                  <h4 className="text-xl font-semibold mb-2 text-white">No Leave Data Available</h4>
+                  <p className="text-neutral-400 mb-6">Leave balances will appear here once employees start using the system.</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                    <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🏖️</div>
-                      <h5 className="font-medium">Vacation</h5>
-                      <p className="text-sm text-gray-500">20 days/year</p>
+                      <h5 className="font-medium text-white">Vacation</h5>
+                      <p className="text-sm text-neutral-400">20 days/year</p>
                     </div>
-                    <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🤒</div>
-                      <h5 className="font-medium">Sick Leave</h5>
-                      <p className="text-sm text-gray-500">10 days/year</p>
+                      <h5 className="font-medium text-white">Sick Leave</h5>
+                      <p className="text-sm text-neutral-400">10 days/year</p>
                     </div>
-                    <div className="p-4 border border-gray-200 rounded-lg">
+                    <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🎯</div>
-                      <h5 className="font-medium">Personal</h5>
-                      <p className="text-sm text-gray-500">5 days/year</p>
+                      <h5 className="font-medium text-white">Personal</h5>
+                      <p className="text-sm text-neutral-400">5 days/year</p>
                     </div>
                   </div>
                 </div>
@@ -543,7 +543,7 @@ export default function LeaveManagement() {
                     const availablePercentage = 100 - usedPercentage;
                     
                     return (
-                      <div key={balance.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                      <div key={balance.id} className="p-4 border border-neutral-700 rounded-lg hover:shadow-md transition-shadow bg-neutral-800">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <div className="text-2xl">
@@ -552,28 +552,28 @@ export default function LeaveManagement() {
                                balance.leave_type_name === 'Personal Leave' ? '🎯' : '📋'}
                             </div>
                             <div>
-                              <h4 className="font-semibold text-lg">{balance.leave_type_name}</h4>
-                              <p className="text-sm text-gray-500">
+                              <h4 className="font-semibold text-lg text-white">{balance.leave_type_name}</h4>
+                              <p className="text-sm text-neutral-400">
                                 {balance.accrual_rate || 2.5} days/month • Expires {balance.expiry_date || 'Never'}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-blue-600">{balance.available_days || 0}</div>
-                            <div className="text-sm text-gray-500">available</div>
+                            <div className="text-2xl font-bold text-blue-400">{balance.available_days || 0}</div>
+                            <div className="text-sm text-neutral-400">available</div>
                           </div>
                         </div>
                         
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Used: {balance.used_days || 0} days</span>
-                            <span className="text-gray-600">Available: {balance.available_days || 0} days</span>
+                            <span className="text-neutral-300">Used: {balance.used_days || 0} days</span>
+                            <span className="text-neutral-300">Available: {balance.available_days || 0} days</span>
                           </div>
                           
-                          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                          <div className="w-full bg-neutral-600 rounded-full h-3 overflow-hidden">
                             <div className="flex h-full">
                               <div 
-                                className="bg-gray-400 transition-all duration-500"
+                                className="bg-neutral-400 transition-all duration-500"
                                 style={{ width: `${usedPercentage}%` }}
                               ></div>
                               <div 
@@ -583,7 +583,7 @@ export default function LeaveManagement() {
                             </div>
                           </div>
                           
-                          <div className="flex justify-between text-xs text-gray-500">
+                          <div className="flex justify-between text-xs text-neutral-400">
                             <span>{usedPercentage.toFixed(1)}% used</span>
                             <span>{availablePercentage.toFixed(1)}% available</span>
                           </div>
@@ -595,24 +595,30 @@ export default function LeaveManagement() {
               )}
             </div>
 
-            {/* Quick Actions */}
+            {/* HR Management Actions */}
             <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold mb-4 text-white">HR Management Actions</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                  <div className="text-2xl mb-2">📝</div>
-                  <h4 className="font-medium">Request Leave</h4>
-                  <p className="text-sm text-gray-500">Submit a new leave request</p>
+                <button 
+                  onClick={() => setActiveTab("requests")}
+                  className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800"
+                >
+                  <div className="text-2xl mb-2">📋</div>
+                  <h4 className="font-medium text-white">Review Requests</h4>
+                  <p className="text-sm text-neutral-400">Approve or reject leave requests</p>
                 </button>
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button 
+                  onClick={() => setActiveTab("analytics")}
+                  className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800"
+                >
                   <div className="text-2xl mb-2">📊</div>
-                  <h4 className="font-medium">View History</h4>
-                  <p className="text-sm text-gray-500">Check past leave requests</p>
+                  <h4 className="font-medium text-white">View Analytics</h4>
+                  <p className="text-sm text-neutral-400">Check leave trends and reports</p>
                 </button>
-                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                <button className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800">
                   <div className="text-2xl mb-2">⚙️</div>
-                  <h4 className="font-medium">Settings</h4>
-                  <p className="text-sm text-gray-500">Manage leave policies</p>
+                  <h4 className="font-medium text-white">Manage Policies</h4>
+                  <p className="text-sm text-neutral-400">Configure leave policies and rules</p>
                 </button>
               </div>
             </div>
