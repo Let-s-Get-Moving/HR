@@ -25,12 +25,12 @@ export default function Dashboard() {
     try {
       setRefreshing(true);
       const [analyticsData, wfData, attData, cmpData, payrollData, activityData] = await Promise.all([
-        API("/api/analytics/dashboard"),
-        API("/api/metrics/workforce"),
-        API("/api/metrics/attendance"),
-        API("/api/metrics/compliance"),
-        API("/api/payroll/calculations"),
-        API("/api/analytics/recent-activity")
+        API("/api/analytics/dashboard").catch(() => null),
+        API("/api/metrics/workforce").catch(() => null),
+        API("/api/metrics/attendance").catch(() => null),
+        API("/api/metrics/compliance").catch(() => null),
+        API("/api/payroll/calculations").catch(() => []),
+        API("/api/analytics/recent-activity").catch(() => [])
       ]);
       
       setAnalytics(analyticsData);

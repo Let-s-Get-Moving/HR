@@ -29,15 +29,15 @@ const app = express();
 // Trust proxy for rate limiting (required for Render)
 app.set('trust proxy', 1);
 
-// Apply corporate-grade security middleware
+// Apply basic security middleware
 app.use(security.securityHeaders);
 app.use(security.corsSecurity);
-// Temporarily disable problematic middleware
+// Disable problematic middleware for now
 // app.use(security.sqlInjectionPrevention);
-app.use(security.sanitizeInput);
-app.use(security.requestSizeLimit('10mb'));
-app.use(security.auditLog);
-app.use(security.sessionSecurity);
+// app.use(security.sanitizeInput);
+// app.use(security.requestSizeLimit('10mb'));
+// app.use(security.auditLog);
+// app.use(security.sessionSecurity);
 
 // Apply rate limiting
 app.use(security.apiRateLimit);

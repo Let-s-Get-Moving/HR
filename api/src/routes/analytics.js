@@ -9,6 +9,38 @@ r.get("/test", (_req, res) => {
   res.json({ message: "Analytics route is working" });
 });
 
+// Get recent activity
+r.get("/recent-activity", async (_req, res) => {
+  try {
+    // Return mock recent activity data for now
+    const recentActivity = [
+      {
+        id: 1,
+        description: "New employee John Doe was hired",
+        timestamp: new Date().toISOString(),
+        type: "hire"
+      },
+      {
+        id: 2,
+        description: "Payroll processed for August 2025",
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
+        type: "payroll"
+      },
+      {
+        id: 3,
+        description: "Leave request approved for Jane Smith",
+        timestamp: new Date(Date.now() - 7200000).toISOString(),
+        type: "leave"
+      }
+    ];
+    
+    res.json(recentActivity);
+  } catch (error) {
+    console.error("Error fetching recent activity:", error);
+    res.status(500).json({ error: "Failed to fetch recent activity" });
+  }
+});
+
 // Get dashboard analytics
 r.get("/dashboard", async (_req, res) => {
   try {

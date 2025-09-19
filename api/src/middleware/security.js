@@ -213,7 +213,7 @@ export const auditLog = async (req, res, next) => {
       ipAddress, 
       userAgent, 
       timestamp,
-      JSON.stringify(req.body).substring(0, 1000) // Limit body size
+      JSON.stringify(req.body || {}).substring(0, 1000) // Limit body size
     ]).catch(err => {
       console.error("Failed to write audit log to DB:", err.message);
     });
