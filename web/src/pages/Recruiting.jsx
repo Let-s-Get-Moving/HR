@@ -204,7 +204,7 @@ export default function Recruiting() {
           interview_date: interviewData.interview_date,
           interview_time: interviewData.interview_time,
           interview_type: interviewData.interview_type,
-          interviewer_id: interviewData.interviewer_id,
+          interviewer_id: parseInt(interviewData.interviewer_id),
           location: interviewData.location,
           notes: interviewData.notes
         })
@@ -1116,8 +1116,7 @@ export default function Recruiting() {
                     >
                       <option value="Video">Video Call</option>
                       <option value="Phone">Phone Call</option>
-                      <option value="In-Person">In-Person</option>
-                      <option value="Panel">Panel Interview</option>
+                      <option value="In-person">In-Person</option>
                     </select>
                   </div>
                   <div>
