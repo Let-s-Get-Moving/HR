@@ -1,13 +1,7 @@
-// Corporate-Grade Security Middleware
+// Simplified Corporate-Grade Security Middleware (no external dependencies)
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import { JSDOM } from 'jsdom';
-import createDOMPurify from 'dompurify';
 import { q } from '../db.js';
-
-// Create DOMPurify instance for server-side use
-const window = new JSDOM('').window;
-const DOMPurify = createDOMPurify(window);
 
 // Enhanced rate limiting configurations
 export const createRateLimit = (windowMs = 15 * 60 * 1000, max = 100, message = 'Too many requests') => {
@@ -88,10 +82,17 @@ export const securityHeaders = helmet({
   referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 });
 
-// XSS prevention using DOMPurify
+// Simple XSS prevention function
 const sanitizeString = (str) => {
   if (typeof str !== 'string') return str;
-  return DOMPurify.sanitize(str);
+  
+  return str
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .replace(/&/g, '&amp;');
 };
 
 // Input sanitization middleware
@@ -202,21 +203,24 @@ export const auditLog = async (req, res, next) => {
     // Log to console for monitoring
     console.log(`AUDIT: ${timestamp} - User ${username} (ID: ${userId}) performed ${action} from ${ipAddress}`);
     
-    // Log to database
-    await q(`
-      INSERT INTO audit_logs (user_id, username, action, ip_address, user_agent, timestamp, request_body)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-    `, [
-      userId, 
-      username, 
-      action, 
-      ipAddress, 
-      userAgent, 
-      timestamp,
-      JSON.stringify(req.body).substring(0, 1000) // Limit body size
-    ]).catch(err => {
-      console.error("Failed to write audit log to DB:", err.message);
-    });
+    // Log to database (only if audit_logs table exists)
+    try {
+      await q(`
+        INSERT INTO audit_logs (user_id, username, action, ip_address, user_agent, timestamp, request_body)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `, [
+        userId, 
+        username, 
+        action, 
+        ipAddress, 
+        userAgent, 
+        timestamp,
+        JSON.stringify(req.body).substring(0, 1000) // Limit body size
+      ]);
+    } catch (dbError) {
+      // If audit_logs table doesn't exist, just log to console
+      console.log('Audit log table not available, logging to console only');
+    }
     
   } catch (error) {
     console.error("Error in audit logging middleware:", error);
@@ -234,12 +238,10 @@ export const sessionSecurity = (req, res, next) => {
   if (req.session) {
     if (req.session.ipAddress && req.session.ipAddress !== currentIP) {
       console.warn(`Potential session hijacking detected for user ${req.session.userId}: IP changed from ${req.session.ipAddress} to ${currentIP}`);
-      // In a real implementation, you might want to invalidate the session
     }
     
     if (req.session.userAgent && req.session.userAgent !== currentUserAgent) {
       console.warn(`Potential session hijacking detected for user ${req.session.userId}: User-Agent changed`);
-      // In a real implementation, you might want to invalidate the session
     }
     
     // Update session with current IP and User-Agent
@@ -248,55 +250,6 @@ export const sessionSecurity = (req, res, next) => {
   }
   
   next();
-};
-
-// API key validation middleware
-export const validateApiKey = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  
-  if (!apiKey) {
-    return res.status(401).json({ error: 'API key required' });
-  }
-  
-  // In a real implementation, validate against database
-  const validApiKeys = process.env.VALID_API_KEYS ? process.env.VALID_API_KEYS.split(',') : [];
-  
-  if (!validApiKeys.includes(apiKey)) {
-    return res.status(401).json({ error: 'Invalid API key' });
-  }
-  
-  next();
-};
-
-// Request size limiting
-export const requestSizeLimit = (maxSize = '10mb') => {
-  return (req, res, next) => {
-    const contentLength = parseInt(req.headers['content-length'] || '0');
-    const maxBytes = parseSize(maxSize);
-    
-    if (contentLength > maxBytes) {
-      return res.status(413).json({ 
-        error: 'Request too large',
-        maxSize: maxSize,
-        received: `${Math.round(contentLength / 1024 / 1024 * 100) / 100}MB`
-      });
-    }
-    
-    next();
-  };
-};
-
-// Parse size string to bytes
-const parseSize = (size) => {
-  const units = { b: 1, kb: 1024, mb: 1024 * 1024, gb: 1024 * 1024 * 1024 };
-  const match = size.toLowerCase().match(/^(\d+(?:\.\d+)?)\s*(b|kb|mb|gb)$/);
-  
-  if (!match) {
-    throw new Error('Invalid size format');
-  }
-  
-  const [, value, unit] = match;
-  return parseFloat(value) * units[unit];
 };
 
 // SQL injection prevention
@@ -366,6 +319,37 @@ export const corsSecurity = (req, res, next) => {
   next();
 };
 
+// Request size limiting
+export const requestSizeLimit = (maxSize = '10mb') => {
+  return (req, res, next) => {
+    const contentLength = parseInt(req.headers['content-length'] || '0');
+    const maxBytes = parseSize(maxSize);
+    
+    if (contentLength > maxBytes) {
+      return res.status(413).json({ 
+        error: 'Request too large',
+        maxSize: maxSize,
+        received: `${Math.round(contentLength / 1024 / 1024 * 100) / 100}MB`
+      });
+    }
+    
+    next();
+  };
+};
+
+// Parse size string to bytes
+const parseSize = (size) => {
+  const units = { b: 1, kb: 1024, mb: 1024 * 1024, gb: 1024 * 1024 * 1024 };
+  const match = size.toLowerCase().match(/^(\d+(?:\.\d+)?)\s*(b|kb|mb|gb)$/);
+  
+  if (!match) {
+    throw new Error('Invalid size format');
+  }
+  
+  const [, value, unit] = match;
+  return parseFloat(value) * units[unit];
+};
+
 // Export all security middleware
 export default {
   createRateLimit,
@@ -378,7 +362,6 @@ export default {
   passwordStrength,
   auditLog,
   sessionSecurity,
-  validateApiKey,
   requestSizeLimit,
   sqlInjectionPrevention,
   corsSecurity

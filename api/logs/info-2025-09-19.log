@@ -1,3 +1,5 @@
 {"timestamp":"2025-09-19T13:36:28.760Z","level":"info","message":"API server started on port 8080"}
 {"timestamp":"2025-09-19T13:36:46.612Z","level":"info","message":"API server started on port 8080"}
 {"timestamp":"2025-09-19T13:47:39.022Z","level":"info","message":"API server started on port 3001"}
+{"timestamp":"2025-09-19T18:33:37.790Z","level":"info","message":"API server started on port 8080"}
+{"timestamp":"2025-09-19T18:34:52.695Z","level":"info","message":"SIGINT received, shutting down gracefully"}

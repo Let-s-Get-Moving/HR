@@ -20,7 +20,9 @@
     "helmet": "7.1.0",
     "morgan": "1.10.0",
     "pg": "8.11.5",
-    "zod": "3.23.8"
+    "zod": "3.23.8",
+    "dompurify": "^3.0.5",
+    "jsdom": "^23.0.1"
   },
   "devDependencies": {
     "vitest": "^1.0.4",
