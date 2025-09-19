@@ -204,12 +204,16 @@ r.post("/interviews", async (req, res) => {
 r.get("/interviews", async (_req, res) => {
   try {
     const { rows } = await q(`
-      SELECT i.*, c.name as candidate_name, c.email, c.phone,
-             jp.title as job_title, e.first_name, e.last_name as interviewer_name
+      SELECT i.*, 
+             COALESCE(c.name, 'Unknown Candidate') as candidate_name,
+             COALESCE(c.email, '') as email,
+             COALESCE(c.phone, '') as phone,
+             COALESCE(jp.title, 'Unknown Position') as job_title,
+             COALESCE(e.first_name || ' ' || e.last_name, 'Unknown Interviewer') as interviewer_name
       FROM interviews i
-      JOIN candidates c ON i.candidate_id = c.id
-      JOIN job_postings jp ON i.job_posting_id = jp.id
-      JOIN employees e ON i.interviewer_id = e.id
+      LEFT JOIN candidates c ON i.candidate_id = c.id
+      LEFT JOIN job_postings jp ON i.job_posting_id = jp.id
+      LEFT JOIN employees e ON i.interviewer_id = e.id
       ORDER BY i.interview_date DESC, i.interview_time DESC
     `);
     res.json(rows);
