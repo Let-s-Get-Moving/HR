@@ -263,9 +263,15 @@ export default function Recruiting() {
   const handleCloseJob = async (jobId) => {
     try {
       // In production, this would be an API call
-      setJobPostings(jobPostings.map(job => 
-        job.id === jobId ? { ...job, status: "Closed" } : job
-      ));
+      // Remove the job from the list instead of just marking it as closed
+      setJobPostings(jobPostings.filter(job => job.id !== jobId));
+      
+      // Update analytics to reflect the change
+      setAnalytics(prev => ({
+        ...prev,
+        total_postings: prev.total_postings - 1,
+        open_positions: prev.open_positions - 1
+      }));
     } catch (error) {
       console.error("Error closing job posting:", error);
     }
@@ -312,7 +318,7 @@ export default function Recruiting() {
       </div>
 
       <div className="grid gap-4">
-        {jobPostings.map((job) => (
+        {jobPostings.filter(job => job.status === 'Open').map((job) => (
           <motion.div
             key={job.id}
             initial={{ opacity: 0, y: 20 }}
@@ -323,9 +329,7 @@ export default function Recruiting() {
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
                   <h4 className="text-lg font-semibold">{job.title}</h4>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    job.status === 'Open' ? 'bg-green-100 text-green-800' : 'bg-secondary/10 text-secondary'
-                  }`}>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                     {job.status}
                   </span>
                 </div>
@@ -358,9 +362,8 @@ export default function Recruiting() {
                 <button 
                   onClick={() => handleCloseJob(job.id)}
                   className="text-red-400 hover:text-red-300 transition-colors"
-                  disabled={job.status === 'Closed'}
                 >
-                  {job.status === 'Closed' ? 'Closed' : 'Close'}
+                  Close
                 </button>
               </div>
             </div>
@@ -1067,6 +1070,131 @@ export default function Recruiting() {
                   Schedule Interview
                 </button>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Schedule Interview Modal */}
+      {showScheduleInterview && schedulingCandidate && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Schedule Interview - {schedulingCandidate.name}</h3>
+              <form onSubmit={handleSubmitInterview} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interview Date *</label>
+                    <input
+                      type="date"
+                      required
+                      value={interviewData.interview_date}
+                      onChange={(e) => setInterviewData({...interviewData, interview_date: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interview Time *</label>
+                    <input
+                      type="time"
+                      required
+                      value={interviewData.interview_time}
+                      onChange={(e) => setInterviewData({...interviewData, interview_time: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interview Type *</label>
+                    <select
+                      value={interviewData.interview_type}
+                      onChange={(e) => setInterviewData({...interviewData, interview_type: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Video">Video Call</option>
+                      <option value="Phone">Phone Call</option>
+                      <option value="In-Person">In-Person</option>
+                      <option value="Panel">Panel Interview</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Interviewer ID *</label>
+                    <input
+                      type="number"
+                      required
+                      value={interviewData.interviewer_id}
+                      onChange={(e) => setInterviewData({...interviewData, interviewer_id: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="Enter interviewer employee ID"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-2">Location</label>
+                    <input
+                      type="text"
+                      value={interviewData.location}
+                      onChange={(e) => setInterviewData({...interviewData, location: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="e.g., Conference Room A, Zoom Link, etc."
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-2">Notes</label>
+                  <textarea
+                    rows={3}
+                    value={interviewData.notes}
+                    onChange={(e) => setInterviewData({...interviewData, notes: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Additional notes about the interview..."
+                  />
+                </div>
+
+                <div className="bg-neutral-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 text-indigo-400">Candidate Information</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-neutral-400">Name:</span>
+                      <div className="font-medium">{schedulingCandidate.name}</div>
+                    </div>
+                    <div>
+                      <span className="text-neutral-400">Position:</span>
+                      <div className="font-medium">{schedulingCandidate.position}</div>
+                    </div>
+                    <div>
+                      <span className="text-neutral-400">Email:</span>
+                      <div className="font-medium">{schedulingCandidate.email}</div>
+                    </div>
+                    <div>
+                      <span className="text-neutral-400">Experience:</span>
+                      <div className="font-medium">{schedulingCandidate.experience}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowScheduleInterview(false);
+                      setSchedulingCandidate(null);
+                    }}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Schedule Interview
+                  </button>
+                </div>
+              </form>
             </div>
           </motion.div>
         </div>
