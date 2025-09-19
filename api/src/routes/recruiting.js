@@ -270,6 +270,62 @@ r.put("/interviews/:id", async (req, res) => {
   }
 });
 
+// Cancel interview
+r.put("/interviews/:id/cancel", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    console.log(`🔄 Cancelling interview ${id}...`);
+    
+    const { rows } = await q(`
+      UPDATE interviews 
+      SET status = 'Cancelled', notes = COALESCE(notes, '') || ' | Cancelled: ' || $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+    `, [reason || 'No reason provided', id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+    
+    console.log(`✅ Interview ${id} cancelled successfully`);
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Error cancelling interview:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Complete interview
+r.put("/interviews/:id/complete", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { outcome, feedback, next_steps } = req.body;
+    
+    console.log(`🔄 Completing interview ${id}...`);
+    
+    const { rows } = await q(`
+      UPDATE interviews 
+      SET status = 'Completed', 
+          notes = COALESCE(notes, '') || ' | Completed: ' || $1 || ' | Feedback: ' || $2 || ' | Next Steps: ' || $3, 
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      RETURNING *
+    `, [outcome || 'Completed', feedback || 'No feedback', next_steps || 'No next steps', id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+    
+    console.log(`✅ Interview ${id} completed successfully`);
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('❌ Error completing interview:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update candidate status
 r.put("/candidates/:id/status", async (req, res) => {
   const { id } = req.params;

@@ -17,6 +17,7 @@ export default function Payroll() {
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSubmissions, setFilteredSubmissions] = useState([]);
+  const [filteredPayrollCalculations, setFilteredPayrollCalculations] = useState([]);
 
   const tabs = [
     { id: "overview", name: "Payroll Submissions", icon: "📊" },
@@ -105,8 +106,8 @@ export default function Payroll() {
       const emps = await API("/api/employees").catch(() => []);
       setEmployees(emps);
       
-      // Load calculations for all submissions
-      loadPayrollCalculations();
+        // Load calculations for all submissions
+        await loadPayrollCalculations();
     } catch (error) {
       console.error("Error loading payroll data:", error);
     } finally {

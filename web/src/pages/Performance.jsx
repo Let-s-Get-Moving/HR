@@ -10,8 +10,8 @@ export default function Performance() {
   const [activeTab, setActiveTab] = useState("reviews");
   const [loading, setLoading] = useState(true);
   const [newReview, setNewReview] = useState({
-    employee_id: "",
-    reviewer_id: "",
+    employee_name: "",
+    reviewer_name: "",
     review_date: "",
     review_period: "",
     overall_rating: 3,
@@ -20,7 +20,7 @@ export default function Performance() {
     goals_for_next_period: ""
   });
   const [newGoal, setNewGoal] = useState({
-    employee_id: "",
+    employee_name: "",
     goal_title: "",
     goal_description: "",
     target_date: "",
@@ -62,8 +62,8 @@ export default function Performance() {
         body: JSON.stringify(newReview)
       });
       setNewReview({
-        employee_id: "",
-        reviewer_id: "",
+        employee_name: "",
+        reviewer_name: "",
         review_date: "",
         review_period: "",
         overall_rating: 3,
@@ -85,7 +85,7 @@ export default function Performance() {
         body: JSON.stringify(newGoal)
       });
       setNewGoal({
-        employee_id: "",
+        employee_name: "",
         goal_title: "",
         goal_description: "",
         target_date: "",
@@ -190,13 +190,14 @@ export default function Performance() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-                      Employee ID
+                      Employee Name
                     </label>
                     <input
                       type="text"
-                      value={newReview.employee_id}
-                      onChange={(e) => setNewReview({...newReview, employee_id: e.target.value})}
+                      value={newReview.employee_name}
+                      onChange={(e) => setNewReview({...newReview, employee_name: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                      placeholder="Enter employee name"
                       required
                     />
                   </div>
@@ -345,13 +346,14 @@ export default function Performance() {
               <form onSubmit={handleSubmitGoal} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-white mb-1">
-                    Employee ID
+                    Employee Name
                   </label>
                   <input
                     type="text"
-                    value={newGoal.employee_id}
-                    onChange={(e) => setNewGoal({...newGoal, employee_id: e.target.value})}
+                    value={newGoal.employee_name}
+                    onChange={(e) => setNewGoal({...newGoal, employee_name: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
+                    placeholder="Enter employee name"
                     required
                   />
                 </div>
