@@ -18,6 +18,70 @@ r.get("/periods", async (req, res) => {
   }
 });
 
+// Get all payroll submissions
+r.get("/submissions", async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT 
+        ps.*,
+        COUNT(pc.id) as employee_count,
+        SUM(pc.gross_pay) as total_amount
+      FROM payroll_submissions ps
+      LEFT JOIN payroll_calculations pc ON ps.id = pc.submission_id
+      GROUP BY ps.id
+      ORDER BY ps.submission_date DESC
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching payroll submissions:", error);
+    res.status(500).json({ error: "Failed to fetch payroll submissions" });
+  }
+});
+
+// Create a new payroll submission
+r.post("/submissions", async (req, res) => {
+  try {
+    const { period_name, notes, submission_date } = req.body;
+    
+    const { rows } = await q(`
+      INSERT INTO payroll_submissions (period_name, notes, submission_date, status)
+      VALUES ($1, $2, $3, 'Processed')
+      RETURNING *
+    `, [period_name, notes, submission_date || new Date().toISOString()]);
+    
+    res.json(rows[0]);
+  } catch (error) {
+    console.error("Error creating payroll submission:", error);
+    res.status(500).json({ error: "Failed to create payroll submission" });
+  }
+});
+
+// Get payroll calculations for a specific submission
+r.get("/submissions/:id/calculations", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { rows } = await q(`
+      SELECT 
+        pc.*,
+        e.first_name, 
+        e.last_name, 
+        COALESCE(e.hourly_rate, 0) as hourly_rate,
+        d.name as department
+      FROM payroll_calculations pc
+      JOIN employees e ON pc.employee_id = e.id
+      LEFT JOIN departments d ON e.department_id = d.id
+      WHERE pc.submission_id = $1
+      ORDER BY e.last_name, e.first_name
+    `, [id]);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching submission calculations:", error);
+    res.status(500).json({ error: "Failed to fetch submission calculations" });
+  }
+});
+
 // Get payroll calculations (handles both general and specific period)
 r.get("/calculations", async (req, res) => {
   const { periodId } = req.query;

@@ -26,6 +26,20 @@ r.post("/time-entries", async (req, res) => {
       let insertedCount = 0;
       let skippedCount = 0;
       
+      // Create a payroll submission for this import
+      const submissionResult = await client.query(`
+        INSERT INTO payroll_submissions (period_name, notes, submission_date, status)
+        VALUES ($1, $2, $3, 'Processed')
+        RETURNING id
+      `, [
+        `Import ${new Date().toLocaleDateString()}`,
+        `CSV import with ${rows.length} entries`,
+        new Date().toISOString()
+      ]);
+      
+      const submissionId = submissionResult.rows[0].id;
+      console.log(`📊 Created payroll submission ${submissionId} for this import`);
+      
       for (const row of rows) {
         try {
           // Calculate hours_worked from clock_in and clock_out if not provided
@@ -76,7 +90,7 @@ r.post("/time-entries", async (req, res) => {
         }
       }
       
-      return { inserted: insertedCount, skipped: skippedCount };
+      return { inserted: insertedCount, skipped: skippedCount, submission_id: submissionId };
     });
     
     console.log(`✅ Import completed: ${result.inserted} inserted, ${result.skipped} skipped`);
@@ -84,6 +98,7 @@ r.post("/time-entries", async (req, res) => {
       inserted: result.inserted, 
       skipped: result.skipped,
       total: rows.length,
+      submission_id: result.submission_id,
       message: `Successfully imported ${result.inserted} time entries` 
     });
     

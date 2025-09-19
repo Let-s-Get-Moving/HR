@@ -1,36 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-
 import { API } from '../config/api.js';
-import { getCurrentYearPeriods, getCurrentPeriod, formatPeriodName } from '../utils/payrollPeriods.js';
 
 export default function Payroll() {
   const [activeTab, setActiveTab] = useState("overview");
-  const [payrollPeriods, setPayrollPeriods] = useState([]);
-  const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [payrollSubmissions, setPayrollSubmissions] = useState([]);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [payrollCalculations, setPayrollCalculations] = useState([]);
-  const [commissionStructures, setCommissionStructures] = useState([]);
-  const [bonusStructures, setBonusStructures] = useState([]);
-  const [departments, setDepartments] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [importFile, setImportFile] = useState(null);
   const [importStatus, setImportStatus] = useState(null);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredPayrollCalculations, setFilteredPayrollCalculations] = useState([]);
+  const [filteredSubmissions, setFilteredSubmissions] = useState([]);
 
   const tabs = [
-    { id: "overview", name: "Payroll Overview", icon: "📊" },
-    { id: "import", name: "Import Timesheets", icon: "📥" },
+    { id: "overview", name: "Payroll Submissions", icon: "📊" },
+    { id: "import", name: "Import Payroll Data", icon: "📥" },
     { id: "calculations", name: "Calculations", icon: "🧮" },
-    { id: "commissions", name: "Commissions", icon: "💰" },
-    { id: "bonuses", name: "Bonuses", icon: "🎁" },
     { id: "export", name: "Export Reports", icon: "📤" }
   ];
 
@@ -38,31 +29,24 @@ export default function Payroll() {
     loadData();
   }, []);
 
-  // Handle search functionality
+  // Handle search functionality for submissions
   const handleSearch = (query) => {
     setSearchQuery(query);
     
     if (!query.trim()) {
-      setFilteredPayrollCalculations(payrollCalculations);
+      setFilteredSubmissions(payrollSubmissions);
       return;
     }
 
     const searchTerm = query.toLowerCase();
-    const filtered = payrollCalculations.filter(calculation => {
-      const employee = employees.find(emp => emp.id === calculation.employee_id);
+    const filtered = payrollSubmissions.filter(submission => {
       const searchableFields = [
-        employee?.name || '',
-        employee?.first_name || '',
-        employee?.last_name || '',
-        employee?.email || '',
-        employee?.role_title || '',
-        employee?.department || '',
-        calculation.gross_pay?.toString() || '',
-        calculation.net_pay?.toString() || '',
-        calculation.hours_worked?.toString() || '',
-        calculation.overtime_hours?.toString() || '',
-        calculation.bonus_amount?.toString() || '',
-        calculation.commission_amount?.toString() || ''
+        submission.submission_date || '',
+        submission.period_name || '',
+        submission.status || '',
+        submission.notes || '',
+        submission.total_amount?.toString() || '',
+        submission.employee_count?.toString() || ''
       ];
       
       return searchableFields.some(field => 
@@ -70,56 +54,27 @@ export default function Payroll() {
       );
     });
 
-    setFilteredPayrollCalculations(filtered);
+    setFilteredSubmissions(filtered);
   };
 
-  // Update filtered calculations when main calculations list changes
+  // Update filtered submissions when main submissions list changes
   useEffect(() => {
     handleSearch(searchQuery);
-  }, [payrollCalculations]);
+  }, [payrollSubmissions]);
 
   const loadData = async () => {
     try {
-      // Load ONLY database periods - no frontend generation at all
-      const apiPeriods = await API("/api/payroll/periods").catch(() => []);
+      // Load payroll submissions (each import creates a submission)
+      const submissions = await API("/api/payroll/submissions").catch(() => []);
+      setPayrollSubmissions(submissions);
+      setFilteredSubmissions(submissions);
       
-      // Filter for 2025-2026 periods ONLY and sort by date
-      const periods2025_2026 = apiPeriods
-        .filter(p => {
-          const startYear = new Date(p.start_date).getFullYear();
-          return startYear >= 2025 && startYear <= 2026;
-        })
-        .sort((a, b) => new Date(a.start_date) - new Date(b.start_date));
-      
-      console.log('Loaded periods:', periods2025_2026.length, 'periods for 2025-2026');
-      setPayrollPeriods(periods2025_2026);
-      
-      // Select the first 2025 period as default and set date range
-      const defaultPeriod = periods2025_2026.find(p => new Date(p.start_date).getFullYear() === 2025) || periods2025_2026[0];
-      setSelectedPeriod(defaultPeriod);
-      
-      // Set default date range (August 2025 since it has the most data)
-      const augustPeriod = periods2025_2026.find(p => p.period_name.includes('August')) || defaultPeriod;
-      if (augustPeriod) {
-        setStartDate(augustPeriod.start_date.substring(0, 10));
-        setEndDate(augustPeriod.end_date.substring(0, 10));
-      }
-      
-      // Load other data from API
-      const [structures, deps, emps] = await Promise.all([
-        API("/api/payroll/commission-structures").catch(() => []),
-        API("/api/employees/departments").catch(() => []),
-        API("/api/employees").catch(() => [])
-      ]);
-      
-      setCommissionStructures(structures);
-      setDepartments(deps);
+      // Load employees for calculations
+      const emps = await API("/api/employees").catch(() => []);
       setEmployees(emps);
       
-      // Load calculations for the selected period
-      if (defaultPeriod) {
-        loadPayrollCalculations(defaultPeriod.id);
-      }
+      // Load calculations for all submissions
+      loadPayrollCalculations();
     } catch (error) {
       console.error("Error loading payroll data:", error);
     } finally {
@@ -127,64 +82,16 @@ export default function Payroll() {
     }
   };
 
-  const loadPayrollCalculations = async (periodId) => {
+  const loadPayrollCalculations = async () => {
     try {
-      // Try to load calculations for any period ID
-      // If the period doesn't exist in database, API will return empty array
-      const calculations = await API(`/api/payroll/calculations?periodId=${periodId}`);
+      // Load all payroll calculations from all submissions
+      const calculations = await API("/api/payroll/calculations").catch(() => []);
+      
+      console.log(`Loaded ${calculations.length} calculations from all submissions`);
       setPayrollCalculations(calculations);
-      setFilteredPayrollCalculations(calculations);
     } catch (error) {
       console.error("Error loading payroll calculations:", error);
-      // Set empty calculations on error to prevent UI issues
       setPayrollCalculations([]);
-      setFilteredPayrollCalculations([]);
-    }
-  };
-
-  const loadPayrollByDateRange = async (start, end) => {
-    try {
-      // Find or create a temporary period for this date range
-      const tempPeriodName = `${start} to ${end}`;
-      
-      // First, try to find an existing period that matches these dates
-      const matchingPeriod = payrollPeriods.find(p => 
-        p.start_date.substring(0, 10) === start && p.end_date.substring(0, 10) === end
-      );
-      
-      if (matchingPeriod) {
-        // Use existing period
-        const calculations = await API(`/api/payroll/calculations?periodId=${matchingPeriod.id}`);
-        setPayrollCalculations(calculations);
-      setFilteredPayrollCalculations(calculations);
-        setSelectedPeriod(matchingPeriod);
-      } else {
-        // Create a temporary period for this date range
-        try {
-          const newPeriod = await API("/api/payroll/periods", {
-            method: "POST",
-            body: JSON.stringify({
-              period_name: tempPeriodName,
-              start_date: start,
-              end_date: end,
-              pay_date: end // Use end date as pay date
-            })
-          });
-          
-          setSelectedPeriod(newPeriod);
-          setPayrollCalculations([]);
-      setFilteredPayrollCalculations([]); // No calculations yet for new period
-          
-        } catch (createError) {
-          console.error("Could not create period for date range:", createError);
-          setPayrollCalculations([]);
-      setFilteredPayrollCalculations([]);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading payroll by date range:", error);
-      setPayrollCalculations([]);
-      setFilteredPayrollCalculations([]);
     }
   };
 
@@ -227,290 +134,211 @@ export default function Payroll() {
       
       setImportStatus({
         status: "success",
-        message: `Import completed! ${response.inserted} records imported, ${response.skipped || 0} skipped out of ${response.total} total.`
+        message: `Successfully imported ${response.imported_count || 0} time entries!`
       });
       
-      setImportFile(null);
+      setSuccessMessage(`Successfully imported ${response.imported_count || 0} time entries!`);
+      setShowSuccessMessage(true);
       
-      // Clear file input
-      const fileInput = document.querySelector('input[type="file"]');
-      if (fileInput) fileInput.value = '';
-      
-      // Refresh payroll data if we have a date range selected
-      if (startDate && endDate) {
-        await handleDateRangeChange();
-      }
+      // Reload data to show new submission
+      loadData();
       
     } catch (error) {
-      console.error("Error importing timesheet:", error);
+      console.error("Error importing CSV:", error);
       setImportStatus({
         status: "error",
-        message: `Error importing timesheet: ${error.message}`
+        message: `Import failed: ${error.message}`
       });
+      
+      setErrorMessage(`Import failed: ${error.message}`);
+      setShowErrorMessage(true);
     }
   };
 
   const handleCalculatePayroll = async () => {
-    if (!startDate || !endDate) {
-      setErrorMessage('Please select both start and end dates');
-      setShowErrorMessage(true);
-      return;
-    }
-
     try {
-      console.log('Starting payroll calculation for date range:', startDate, 'to', endDate);
+      setImportStatus({ status: "processing", message: "Calculating payroll..." });
       
-      // First ensure we have a period for this date range
-      await loadPayrollByDateRange(startDate, endDate);
+      const response = await API("/api/payroll/calculate", {
+        method: "POST"
+      });
       
-      // Get the current selected period (should be set by loadPayrollByDateRange)
-      const currentPeriod = selectedPeriod;
+      setImportStatus({
+        status: "success",
+        message: `Payroll calculated successfully! Processed ${response.calculated_count || 0} employees.`
+      });
       
-      if (!currentPeriod) {
-        // Try to find existing period that matches the date range
-        const matchingPeriod = payrollPeriods.find(p => 
-          p.start_date.substring(0, 10) === startDate && p.end_date.substring(0, 10) === endDate
-        );
-        
-        if (matchingPeriod) {
-          console.log('Using existing period:', matchingPeriod.period_name, 'ID:', matchingPeriod.id);
-          
-          try {
-            // Calculate payroll using existing period
-            const response = await API(`/api/payroll/calculate/${matchingPeriod.id}`, { method: "POST" });
-            console.log('Payroll calculation API response:', response);
-            
-            // Load the results
-            await loadPayrollCalculations(matchingPeriod.id);
-            
-            console.log('Payroll calculation completed successfully');
-            setSuccessMessage('Payroll calculated successfully! Check the calculations below.');
-            setShowSuccessMessage(true);
-            
-          } catch (calcError) {
-            console.error('Payroll calculation API error:', calcError);
-            throw new Error(`Payroll calculation failed: ${calcError.message}`);
-          }
-          
-        } else {
-          throw new Error('No period found for the selected date range. Please select dates that match an existing payroll period.');
-        }
-      } else {
-        console.log('Calculating payroll for period:', currentPeriod.period_name);
-        
-        // Calculate payroll using the current period
-        await API(`/api/payroll/calculate/${currentPeriod.id}`, { method: "POST" });
-        await loadPayrollCalculations(currentPeriod.id);
-        
-        console.log('Payroll calculation completed successfully');
-        setSuccessMessage('Payroll calculated successfully!');
-        setShowSuccessMessage(true);
-      }
+      setSuccessMessage(`Payroll calculated successfully! Processed ${response.calculated_count || 0} employees.`);
+      setShowSuccessMessage(true);
+      
+      // Reload calculations
+      loadPayrollCalculations();
       
     } catch (error) {
       console.error("Error calculating payroll:", error);
-      setErrorMessage(`Unable to calculate payroll for ${startDate} to ${endDate}. Error: ${error.message}`);
+      setImportStatus({
+        status: "error",
+        message: `Calculation failed: ${error.message}`
+      });
+      
+      setErrorMessage(`Calculation failed: ${error.message}`);
       setShowErrorMessage(true);
     }
   };
 
-  const handleDateRangeChange = async () => {
-    if (startDate && endDate) {
-      await loadPayrollByDateRange(startDate, endDate);
-    }
-  };
-
-  // Auto-load data when dates change
-  useEffect(() => {
-    if (startDate && endDate && payrollPeriods.length > 0) {
-      handleDateRangeChange();
-    }
-  }, [startDate, endDate, payrollPeriods]);
-
   const handleExport = async (type) => {
-    if (!selectedPeriod) return;
-
     try {
-      const response = await API(`/api/payroll/export/${selectedPeriod.id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ export_type: type })
+      const response = await API(`/api/payroll/export/${type}`, {
+        method: "GET"
       });
-
-      // Create download link
-      const link = document.createElement('a');
-      link.href = `data:text/csv;charset=utf-8,${encodeURIComponent(response.data)}`;
-      link.download = `${type}_${selectedPeriod.period_name}.csv`;
-      link.click();
+      
+      // Create and download file
+      const blob = new Blob([response], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `payroll-${type.toLowerCase()}-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      setSuccessMessage(`${type} report exported successfully!`);
+      setShowSuccessMessage(true);
+      
     } catch (error) {
       console.error("Error exporting payroll:", error);
+      setErrorMessage(`Export failed: ${error.message}`);
+      setShowErrorMessage(true);
     }
   };
 
   const renderOverview = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">📅 Payroll Date Range</h3>
-          <p className="text-xs text-secondary mb-4">Select custom date range for payroll calculation</p>
-          
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1">Start Date</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1">End Date</label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-sm"
-              />
-            </div>
-            
-            <div className="flex flex-wrap gap-1">
+      {/* Search Bar */}
+      <div className="card p-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search payroll submissions by date, employee, amount..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="block w-full pl-10 pr-3 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+          />
+          {searchQuery && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
               <button
-                onClick={() => {
-                  setStartDate('2025-08-01');
-                  setEndDate('2025-08-31');
-                }}
-                className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-xs transition-colors"
+                onClick={() => handleSearch("")}
+                className="text-neutral-400 hover:text-white transition-colors"
               >
-                Aug 2025
-              </button>
-              <button
-                onClick={() => {
-                  setStartDate('2025-09-01');
-                  setEndDate('2025-09-30');
-                }}
-                className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-xs transition-colors"
-              >
-                Sep 2025
-              </button>
-              <button
-                onClick={() => {
-                  const today = new Date();
-                  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                  const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                  setStartDate(firstDay.toISOString().substring(0, 10));
-                  setEndDate(lastDay.toISOString().substring(0, 10));
-                }}
-                className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-xs transition-colors"
-              >
-                This Month
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
-            
-            {startDate && endDate && (
-              <div className="bg-neutral-800 p-2 rounded text-xs text-neutral-400">
-                📊 Range: {startDate} to {endDate}
-                <br />
-                🗓️ Days: {Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1}
-              </div>
-            )}
-          </div>
+          )}
         </div>
-
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-          <div className="space-y-2">
-            <button
-              onClick={handleCalculatePayroll}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              Calculate Payroll
-            </button>
-            <button
-              onClick={() => handleExport("Summary")}
-              className="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              Export Summary
-            </button>
+        {searchQuery && (
+          <div className="mt-2 text-sm text-neutral-400">
+            Found {filteredSubmissions.length} submission{filteredSubmissions.length !== 1 ? 's' : ''} matching "{searchQuery}"
           </div>
-        </div>
-
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Period Status</h3>
-          <div className="text-sm">
-            <div className="flex justify-between">
-              <span>Status:</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                selectedPeriod?.status === 'Open' ? 'bg-yellow-900 text-yellow-300' :
-                selectedPeriod?.status === 'Processing' ? 'bg-blue-900 text-blue-300' :
-                selectedPeriod?.status === 'Closed' ? 'bg-green-900 text-green-300' :
-                'bg-gray-900 text-gray-300'
-              }`}>
-                {selectedPeriod?.status || 'N/A'}
-              </span>
-            </div>
-            <div className="flex justify-between mt-2">
-              <span>Pay Date:</span>
-              <span>{selectedPeriod?.pay_date ? new Date(selectedPeriod.pay_date).toLocaleDateString() : 'N/A'}</span>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
-      {selectedPeriod && (
-        <div className="card">
-          <h3 className="text-lg font-semibold mb-4">Payroll Summary</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-secondary/10">
-                <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Employee</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Department</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Regular Hours</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Overtime</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Regular Pay</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Overtime Pay</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Commission</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Bonus</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Gross Pay</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Deductions</th>
-                  <th className="px-4 py-2 text-left text-sm font-medium">Net Pay</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-800">
-                {payrollCalculations.map((calc) => {
-                  const employee = employees.find(e => e.id === calc.employee_id);
-                  return (
-                    <tr key={calc.id} className="hover:bg-secondary/5">
-                      <td className="px-4 py-2 text-sm">
-                        {employee ? `${employee.first_name} ${employee.last_name}` : 'Unknown'}
-                      </td>
-                      <td className="px-4 py-2 text-sm">{employee?.department || 'N/A'}</td>
-                      <td className="px-4 py-2 text-sm">{calc.base_hours}</td>
-                      <td className="px-4 py-2 text-sm">{calc.overtime_hours}</td>
-                      <td className="px-4 py-2 text-sm">${calc.regular_pay?.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-sm">${calc.overtime_pay?.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-sm">${calc.commission_amount?.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-sm">${calc.bonus_amount?.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-sm font-medium">${calc.total_pay?.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-sm">${calc.deductions?.toFixed(2)}</td>
-                      <td className="px-4 py-2 text-sm font-bold">${calc.net_pay?.toFixed(2)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+      {/* Payroll Submissions List */}
+      <div className="card">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Payroll Submissions</h3>
+          <button
+            onClick={() => setActiveTab("import")}
+            className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm transition-colors"
+          >
+            + Import New Payroll Data
+          </button>
         </div>
-      )}
+        
+        {filteredSubmissions.length === 0 ? (
+          <div className="text-center py-8 text-neutral-400">
+            <div className="text-4xl mb-4">📊</div>
+            <p>No payroll submissions found</p>
+            <p className="text-sm mt-2">Import your first payroll data to get started</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredSubmissions.map((submission, index) => (
+              <div
+                key={submission.id || index}
+                className="bg-neutral-800 p-4 rounded-lg hover:bg-neutral-700 transition-colors cursor-pointer"
+                onClick={() => setSelectedSubmission(submission)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <h4 className="font-medium text-white">
+                        Payroll Submission #{submission.id || index + 1}
+                      </h4>
+                      <span className="px-2 py-1 bg-green-900 text-green-300 text-xs rounded-full">
+                        {submission.status || 'Processed'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-neutral-400">
+                      <div>
+                        <span className="text-neutral-500">Date:</span>
+                        <div className="text-white">
+                          {submission.submission_date ? 
+                            new Date(submission.submission_date).toLocaleDateString() : 
+                            'N/A'
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-neutral-500">Period:</span>
+                        <div className="text-white">
+                          {submission.period_name || 'N/A'}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-neutral-500">Employees:</span>
+                        <div className="text-white">
+                          {submission.employee_count || 0}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-neutral-500">Total Amount:</span>
+                        <div className="text-white font-medium">
+                          ${submission.total_amount ? submission.total_amount.toLocaleString() : '0.00'}
+                        </div>
+                      </div>
+                    </div>
+                    {submission.notes && (
+                      <div className="mt-2 text-sm text-neutral-400">
+                        <span className="text-neutral-500">Notes:</span> {submission.notes}
+                      </div>
+                    )}
+                  </div>
+                  <div className="ml-4">
+                    <svg className="w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 
   const renderImport = () => (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Import Timesheet Data</h3>
+        <h3 className="text-lg font-semibold mb-4">Import Payroll Data</h3>
         
         <div className="space-y-4">
           <div className="bg-blue-900/20 border border-blue-700/30 p-4 rounded-lg">
@@ -538,12 +366,12 @@ export default function Payroll() {
                 accept=".csv"
                 onChange={handleFileUpload}
                 className="hidden"
-                id="timesheet-upload"
+                id="payroll-upload"
               />
-              <label htmlFor="timesheet-upload" className="cursor-pointer">
+              <label htmlFor="payroll-upload" className="cursor-pointer">
                 <div className="text-4xl mb-2">📄</div>
                 <p className="text-neutral-400">
-                  {importFile ? importFile.name : "Click to upload timesheet CSV"}
+                  {importFile ? importFile.name : "Click to upload payroll CSV"}
                 </p>
                 <p className="text-xs text-neutral-500 mt-1">CSV format: Employee ID, Date, Hours, Overtime Hours</p>
               </label>
@@ -560,13 +388,21 @@ export default function Payroll() {
             </div>
           )}
 
-          <button
-            onClick={handleImport}
-            disabled={!importFile}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-600 px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Import Timesheet Data
-          </button>
+          <div className="flex space-x-3">
+            <button
+              onClick={handleImport}
+              disabled={!importFile}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-600 px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              Import Payroll Data
+            </button>
+            <button
+              onClick={handleCalculatePayroll}
+              className="flex-1 bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              Calculate Payroll
+            </button>
+          </div>
         </div>
       </div>
 
@@ -613,130 +449,65 @@ export default function Payroll() {
   const renderCalculations = () => (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Automatic Payroll Calculations</h3>
+        <h3 className="text-lg font-semibold mb-4">Payroll Calculations</h3>
         <p className="text-neutral-400 mb-4">
-          The system automatically calculates regular pay, overtime, commissions, and bonuses based on:
+          View all payroll calculations from all submissions
         </p>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="card-sm">
-            <h4 className="font-medium mb-3">Regular Pay Calculation</h4>
-            <div className="text-sm text-secondary space-y-1">
-              <div>• Base Hours × Hourly Rate</div>
-              <div>• Overtime Hours × (Hourly Rate × 1.5)</div>
-              <div>• Automatic ESA compliance</div>
-            </div>
+        {payrollCalculations.length === 0 ? (
+          <div className="text-center py-8 text-neutral-400">
+            <div className="text-4xl mb-4">🧮</div>
+            <p>No payroll calculations found</p>
+            <p className="text-sm mt-2">Import payroll data and run calculations to see results</p>
           </div>
-
-          <div className="card-sm">
-            <h4 className="font-medium mb-3">Commission Calculation</h4>
-            <div className="text-sm text-secondary space-y-1">
-              <div>• Department-specific structures</div>
-              <div>• Performance-based calculations</div>
-              <div>• Tiered commission rates</div>
-            </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-700">
+                  <th className="text-left py-3 px-4">Employee</th>
+                  <th className="text-left py-3 px-4">Date</th>
+                  <th className="text-right py-3 px-4">Hours</th>
+                  <th className="text-right py-3 px-4">Overtime</th>
+                  <th className="text-right py-3 px-4">Gross Pay</th>
+                  <th className="text-right py-3 px-4">Net Pay</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payrollCalculations.map((calc, index) => {
+                  const employee = employees.find(emp => emp.id === calc.employee_id);
+                  return (
+                    <tr key={calc.id || index} className="border-b border-neutral-800 hover:bg-neutral-800/50">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-white">
+                          {employee?.name || `Employee ${calc.employee_id}`}
+                        </div>
+                        <div className="text-xs text-neutral-400">
+                          {employee?.role_title || 'Unknown Role'}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-neutral-300">
+                        {calc.work_date ? new Date(calc.work_date).toLocaleDateString() : 'N/A'}
+                      </td>
+                      <td className="py-3 px-4 text-right text-neutral-300">
+                        {calc.hours_worked || 0}h
+                      </td>
+                      <td className="py-3 px-4 text-right text-neutral-300">
+                        {calc.overtime_hours || 0}h
+                      </td>
+                      <td className="py-3 px-4 text-right text-white font-medium">
+                        ${(calc.gross_pay || 0).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right text-green-400 font-medium">
+                        ${(calc.net_pay || 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-
-          <div className="card-sm">
-            <h4 className="font-medium mb-3">Bonus Calculation</h4>
-            <div className="text-sm text-secondary space-y-1">
-              <div>• Performance bonuses</div>
-              <div>• Attendance bonuses</div>
-              <div>• Quality excellence bonuses</div>
-            </div>
-          </div>
-
-          <div className="card-sm">
-            <h4 className="font-medium mb-3">Deductions</h4>
-            <div className="text-sm text-secondary space-y-1">
-              <div>• Tax deductions</div>
-              <div>• Benefits contributions</div>
-              <div>• Other deductions</div>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={handleCalculatePayroll}
-          className="mt-6 bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors"
-        >
-          Recalculate Payroll
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderCommissions = () => (
-    <div className="space-y-6">
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Commission Structures by Department</h3>
-        
-        <div className="space-y-4">
-          {departments.map(dept => {
-            const structures = commissionStructures.filter(s => s.department_id === dept.id);
-            return (
-              <div key={dept.id} className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">{dept.name}</h4>
-                {structures.length > 0 ? (
-                  <div className="space-y-2">
-                    {structures.map(structure => (
-                      <div key={structure.id} className="text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-neutral-300">{structure.structure_name}</span>
-                          <span className="text-neutral-400">{structure.commission_type}</span>
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                          Base: {structure.base_percentage}% | Target: ${structure.target_amount} | Multiplier: {structure.bonus_multiplier}x
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-neutral-400">No commission structure defined</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderBonuses = () => (
-    <div className="space-y-6">
-      <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Bonus Structures by Department</h3>
-        
-        <div className="space-y-4">
-          {departments.map(dept => {
-            const structures = bonusStructures.filter(s => s.department_id === dept.id);
-            return (
-              <div key={dept.id} className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">{dept.name}</h4>
-                {structures.length > 0 ? (
-                  <div className="space-y-2">
-                    {structures.map(structure => (
-                      <div key={structure.id} className="text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-neutral-300">{structure.bonus_name}</span>
-                          <span className="text-neutral-400">{structure.bonus_type}</span>
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                          Method: {structure.calculation_method} | Base: ${structure.base_amount} | Rate: {structure.percentage_rate}%
-                        </div>
-                        <div className="text-xs text-neutral-500">
-                          Criteria: {structure.eligibility_criteria}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-neutral-400">No bonus structure defined</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        )}
       </div>
     </div>
   );
@@ -797,104 +568,106 @@ export default function Payroll() {
 
   return (
     <div className="max-w-7xl mx-auto rounded-2xl">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Payroll Management</h1>
-        <p className="text-neutral-400 mt-1">Manage payroll, commissions, bonuses, and timesheet imports</p>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex space-x-1 mb-6 bg-neutral-800 p-1 rounded-lg">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? "bg-indigo-600 text-white"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-700"
-            }`}
-          >
-            <span>{tab.icon}</span>
-            <span>{tab.name}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      <div className="space-y-6">
-        {activeTab === "overview" && renderOverview()}
-        {activeTab === "import" && renderImport()}
-        {activeTab === "calculations" && renderCalculations()}
-        {activeTab === "commissions" && renderCommissions()}
-        {activeTab === "bonuses" && renderBonuses()}
-        {activeTab === "export" && renderExport()}
-      </div>
-
-      {/* Success Message Modal */}
-      {showSuccessMessage && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="card w-full max-w-lg mx-4"
-          >
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold">Success</h3>
-              </div>
-              <div className="mb-6">
-                <p className="text-neutral-300">{successMessage}</p>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setShowSuccessMessage(false)}
-                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          </motion.div>
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Payroll Management</h1>
+            <p className="text-neutral-400">Manage payroll, timesheet imports, and calculations</p>
+          </div>
         </div>
-      )}
 
-      {/* Error Message Modal */}
-      {showErrorMessage && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="card w-full max-w-lg mx-4"
-          >
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-bold">Error</h3>
-              </div>
-              <div className="mb-6">
-                <p className="text-neutral-300">{errorMessage}</p>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setShowErrorMessage(false)}
-                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-          </motion.div>
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 mb-6 bg-neutral-800 p-1 rounded-lg">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-neutral-400 hover:text-white hover:bg-neutral-700'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.name}</span>
+            </button>
+          ))}
         </div>
-      )}
+
+        {/* Tab Content */}
+        <div className="space-y-6">
+          {activeTab === "overview" && renderOverview()}
+          {activeTab === "import" && renderImport()}
+          {activeTab === "calculations" && renderCalculations()}
+          {activeTab === "export" && renderExport()}
+        </div>
+
+        {/* Success Message Modal */}
+        {showSuccessMessage && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="card w-full max-w-lg mx-4"
+            >
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold">Success</h3>
+                </div>
+                <div className="mb-6">
+                  <p className="text-neutral-300">{successMessage}</p>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowSuccessMessage(false)}
+                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Error Message Modal */}
+        {showErrorMessage && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="card w-full max-w-lg mx-4"
+            >
+              <div className="p-6">
+                <div className="flex items-center mb-4">
+                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold">Error</h3>
+                </div>
+                <div className="mb-6">
+                  <p className="text-neutral-300">{errorMessage}</p>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowErrorMessage(false)}
+                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
