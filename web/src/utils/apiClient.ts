@@ -259,7 +259,7 @@ class ApiClient {
 }
 
 // Create singleton instance
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-hr.onrender.com';
 export const apiClient = new ApiClient(API_BASE_URL);
 
 // Export convenience functions

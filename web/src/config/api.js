@@ -1,5 +1,5 @@
 // API configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://api-hr.onrender.com';
 
 // Debug logging (only in development)
 if (import.meta.env.DEV) {

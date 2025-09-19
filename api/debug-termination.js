@@ -9,7 +9,7 @@ import pkg from 'pg';
 const { Pool } = pkg;
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://hr_user:hr_password@localhost:5432/hr_database',
+  connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('render.com') ? { rejectUnauthorized: false } : false,
 });
 

@@ -29,17 +29,43 @@ export default function Payroll() {
     loadData();
   }, []);
 
-  // Handle search functionality for submissions
+  // Handle search functionality - search in calculations and switch to calculations tab
   const handleSearch = (query) => {
     setSearchQuery(query);
     
     if (!query.trim()) {
       setFilteredSubmissions(payrollSubmissions);
+      setFilteredPayrollCalculations(payrollCalculations);
       return;
     }
 
     const searchTerm = query.toLowerCase();
-    const filtered = payrollSubmissions.filter(submission => {
+    
+    // Search in payroll calculations (employee data)
+    const filteredCalculations = payrollCalculations.filter(calculation => {
+      const employee = employees.find(emp => emp.id === calculation.employee_id);
+      const searchableFields = [
+        employee?.name || '',
+        employee?.first_name || '',
+        employee?.last_name || '',
+        employee?.email || '',
+        employee?.role_title || '',
+        employee?.department || '',
+        calculation.work_date || '',
+        calculation.hours_worked?.toString() || '',
+        calculation.overtime_hours?.toString() || '',
+        calculation.gross_pay?.toString() || '',
+        calculation.net_pay?.toString() || '',
+        calculation.notes || ''
+      ];
+      
+      return searchableFields.some(field => 
+        field && field.toString().toLowerCase().includes(searchTerm)
+      );
+    });
+
+    // Search in submissions
+    const filteredSubmissions = payrollSubmissions.filter(submission => {
       const searchableFields = [
         submission.submission_date || '',
         submission.period_name || '',
@@ -54,7 +80,13 @@ export default function Payroll() {
       );
     });
 
-    setFilteredSubmissions(filtered);
+    setFilteredSubmissions(filteredSubmissions);
+    setFilteredPayrollCalculations(filteredCalculations);
+    
+    // If there are search results, switch to calculations tab to show them
+    if (query.trim() && (filteredCalculations.length > 0 || filteredSubmissions.length > 0)) {
+      setActiveTab("calculations");
+    }
   };
 
   // Update filtered submissions when main submissions list changes
@@ -225,7 +257,7 @@ export default function Payroll() {
           </div>
           <input
             type="text"
-            placeholder="Search payroll submissions by date, employee, amount..."
+            placeholder="Search employees, payroll data, amounts... (switches to calculations tab)"
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             className="block w-full pl-10 pr-3 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
@@ -449,16 +481,33 @@ export default function Payroll() {
   const renderCalculations = () => (
     <div className="space-y-6">
       <div className="card">
-        <h3 className="text-lg font-semibold mb-4">Payroll Calculations</h3>
-        <p className="text-neutral-400 mb-4">
-          View all payroll calculations from all submissions
-        </p>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">Payroll Calculations</h3>
+            <p className="text-neutral-400 text-sm">
+              {searchQuery ? 
+                `Showing ${filteredPayrollCalculations.length} results for "${searchQuery}"` : 
+                `View all payroll calculations from all submissions (${payrollCalculations.length} total)`
+              }
+            </p>
+          </div>
+          {searchQuery && (
+            <button
+              onClick={() => handleSearch("")}
+              className="text-neutral-400 hover:text-white transition-colors text-sm"
+            >
+              Clear search
+            </button>
+          )}
+        </div>
         
-        {payrollCalculations.length === 0 ? (
+        {(searchQuery ? filteredPayrollCalculations : payrollCalculations).length === 0 ? (
           <div className="text-center py-8 text-neutral-400">
             <div className="text-4xl mb-4">🧮</div>
-            <p>No payroll calculations found</p>
-            <p className="text-sm mt-2">Import payroll data and run calculations to see results</p>
+            <p>{searchQuery ? 'No matching calculations found' : 'No payroll calculations found'}</p>
+            <p className="text-sm mt-2">
+              {searchQuery ? 'Try a different search term' : 'Import payroll data and run calculations to see results'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -474,7 +523,7 @@ export default function Payroll() {
                 </tr>
               </thead>
               <tbody>
-                {payrollCalculations.map((calc, index) => {
+                {(searchQuery ? filteredPayrollCalculations : payrollCalculations).map((calc, index) => {
                   const employee = employees.find(emp => emp.id === calc.employee_id);
                   return (
                     <tr key={calc.id || index} className="border-b border-neutral-800 hover:bg-neutral-800/50">
