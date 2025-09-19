@@ -130,35 +130,6 @@ r.put("/requests/:id/status", async (req, res) => {
 // Get leave analytics
 r.get("/analytics", async (_req, res) => {
   try {
-    const [requests, balances, calendar] = await Promise.all([
-      q(`SELECT COUNT(*) as total_requests, 
-                COUNT(*) FILTER (WHERE status = 'Pending') as pending,
-                COUNT(*) FILTER (WHERE status = 'Approved') as approved,
-                COUNT(*) FILTER (WHERE status = 'Rejected') as rejected
-         FROM leave_requests`),
-      q(`SELECT lt.name, SUM(lb.entitled_days - lb.used_days + lb.carried_over_days) as total_available, SUM(lb.used_days) as total_used
-         FROM leave_balances lb
-         JOIN leave_types lt ON lb.leave_type_id = lt.id
-         GROUP BY lt.id, lt.name`),
-      q(`SELECT COUNT(*) as upcoming_leaves
-         FROM leave_requests 
-         WHERE status = 'Approved' 
-         AND start_date BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'`)
-    ]);
-    
-    res.json({
-      requests: requests.rows[0],
-      balances: balances.rows,
-      upcoming: calendar.rows[0]
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get leave analytics
-r.get("/analytics", async (_req, res) => {
-  try {
     const [requests, balances, upcoming] = await Promise.all([
       q(`SELECT 
           COUNT(*) as total_requests,
@@ -166,7 +137,7 @@ r.get("/analytics", async (_req, res) => {
           COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending,
           COUNT(CASE WHEN status = 'Rejected' THEN 1 END) as rejected
          FROM leave_requests`),
-      q(`SELECT lt.name, SUM(lb.entitled_days - lb.used_days + lb.carried_over_days) as total_available
+      q(`SELECT lt.name, SUM(lb.entitled_days - lb.used_days + lb.carried_over_days) as total_available, SUM(lb.used_days) as total_used
          FROM leave_balances lb
          JOIN leave_types lt ON lb.leave_type_id = lt.id
          GROUP BY lt.id, lt.name`),

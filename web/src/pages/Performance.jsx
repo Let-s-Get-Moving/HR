@@ -34,11 +34,10 @@ export default function Performance() {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Note: These API calls will work once the backend is fixed
       const [reviewsData, goalsData, analyticsData] = await Promise.all([
-        API("/api/performance/reviews").catch(() => []),
-        API("/api/performance/goals").catch(() => []),
-        API("/api/performance/analytics").catch(() => ({}))
+        API("/api/performance/reviews"),
+        API("/api/performance/goals"),
+        API("/api/performance/analytics")
       ]);
       
       setReviews(reviewsData);
@@ -46,6 +45,10 @@ export default function Performance() {
       setAnalytics(analyticsData);
     } catch (error) {
       console.error("Error loading performance data:", error);
+      // Set empty arrays on error to prevent UI issues
+      setReviews([]);
+      setGoals([]);
+      setAnalytics({});
     } finally {
       setLoading(false);
     }

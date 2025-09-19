@@ -29,12 +29,11 @@ export default function LeaveManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Note: These API calls will work once the backend is fixed
       const [requestsData, balancesData, calendarData, analyticsData] = await Promise.all([
-        API("/api/leave/requests").catch(() => []),
-        API("/api/leave/balances").catch(() => []),
-        API("/api/leave/calendar").catch(() => []),
-        API("/api/leave/analytics").catch(() => ({}))
+        API("/api/leave/requests"),
+        API("/api/leave/balances"),
+        API("/api/leave/calendar"),
+        API("/api/leave/analytics")
       ]);
       
       setRequests(requestsData);
@@ -43,6 +42,11 @@ export default function LeaveManagement() {
       setAnalytics(analyticsData);
     } catch (error) {
       console.error("Error loading leave data:", error);
+      // Set empty arrays on error to prevent UI issues
+      setRequests([]);
+      setBalances([]);
+      setCalendar([]);
+      setAnalytics({});
     } finally {
       setLoading(false);
     }

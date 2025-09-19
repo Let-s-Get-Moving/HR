@@ -16,16 +16,18 @@ export default function Compliance() {
   const loadData = async () => {
     try {
       setLoading(true);
-      // Note: These API calls will work once the backend is fixed
       const [alertsData, dashboardData] = await Promise.all([
-        API("/api/compliance/alerts").catch(() => []),
-        API("/api/compliance/dashboard").catch(() => ({}))
+        API("/api/compliance/alerts"),
+        API("/api/compliance/dashboard")
       ]);
       
       setAlerts(alertsData);
       setDashboard(dashboardData);
     } catch (error) {
       console.error("Error loading compliance data:", error);
+      // Set empty arrays on error to prevent UI issues
+      setAlerts([]);
+      setDashboard({});
     } finally {
       setLoading(false);
     }
