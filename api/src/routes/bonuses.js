@@ -273,4 +273,78 @@ r.post("/commission-structures", async (req, res) => {
   }
 });
 
+// Fix bonus schema - add missing approval/rejection fields
+r.post("/fix-schema", async (req, res) => {
+  try {
+    console.log('🔧 Fixing bonus schema...');
+    
+    // Add approval fields
+    await q(`
+      ALTER TABLE bonuses 
+      ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS approval_notes TEXT,
+      ADD COLUMN IF NOT EXISTS payment_date DATE
+    `);
+    console.log('✅ Approval fields added');
+
+    // Add rejection fields  
+    await q(`
+      ALTER TABLE bonuses 
+      ADD COLUMN IF NOT EXISTS rejected_by VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS rejection_reason VARCHAR(255),
+      ADD COLUMN IF NOT EXISTS rejection_notes TEXT
+    `);
+    console.log('✅ Rejection fields added');
+
+    // Add updated_at column if it doesn't exist
+    await q(`
+      ALTER TABLE bonuses 
+      ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    `);
+    console.log('✅ Updated_at column added');
+
+    // Create indexes for better performance
+    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status)`);
+    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id)`);
+    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_created_at ON bonuses(created_at)`);
+    console.log('✅ Performance indexes created');
+    
+    // Test the new columns
+    await q(`
+      UPDATE bonuses 
+      SET approved_by = 'System Admin', 
+          approval_notes = 'Schema migration test',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+    console.log('✅ Test update successful');
+    
+    // Verify the schema
+    const { rows } = await q(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'bonuses' 
+      ORDER BY ordinal_position
+    `);
+    
+    res.json({
+      success: true,
+      message: "Bonus schema fixed successfully!",
+      schema: rows.map(row => ({
+        column: row.column_name,
+        type: row.data_type,
+        nullable: row.is_nullable === 'YES'
+      }))
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fixing bonus schema:', error);
+    res.status(500).json({ 
+      success: false,
+      error: "Failed to fix bonus schema",
+      details: error.message 
+    });
+  }
+});
+
 export default r;
