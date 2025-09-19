@@ -203,23 +203,38 @@ r.post("/interviews", async (req, res) => {
 // Get interviews
 r.get("/interviews", async (_req, res) => {
   try {
-    const { rows } = await q(`
-      SELECT i.*, 
-             COALESCE(c.name, 'Unknown Candidate') as candidate_name,
-             COALESCE(c.email, '') as email,
-             COALESCE(c.phone, '') as phone,
-             COALESCE(jp.title, 'Unknown Position') as job_title,
-             COALESCE(e.first_name || ' ' || e.last_name, 'Unknown Interviewer') as interviewer_name
-      FROM interviews i
-      LEFT JOIN candidates c ON i.candidate_id = c.id
-      LEFT JOIN job_postings jp ON i.job_posting_id = jp.id
-      LEFT JOIN employees e ON i.interviewer_id = e.id
-      ORDER BY i.interview_date DESC, i.interview_time DESC
+    console.log('🔍 Fetching interviews...');
+    
+    // First, let's check if the table exists and get basic info
+    const tableCheck = await q(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'interviews'
+      );
     `);
+    console.log(`📋 Interviews table exists: ${tableCheck.rows[0].exists}`);
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log('❌ Interviews table does not exist!');
+      return res.json([]);
+    }
+    
+    // Get count first
+    const countResult = await q('SELECT COUNT(*) FROM interviews');
+    console.log(`📊 Total interviews in database: ${countResult.rows[0].count}`);
+    
+    // Now get the actual interviews
+    const { rows } = await q(`
+      SELECT * FROM interviews
+      ORDER BY interview_date DESC, interview_time DESC
+    `);
+    console.log(`✅ Found ${rows.length} interviews:`, rows.map(r => ({ id: r.id, date: r.interview_date, type: r.interview_type })));
     res.json(rows);
   } catch (error) {
+    console.error('❌ Error fetching interviews:', error);
     // If tables don't exist yet, return empty array
     if (error.message.includes('does not exist')) {
+      console.log('📝 Table does not exist, returning empty array');
       res.json([]);
     } else {
       res.status(500).json({ error: error.message });
