@@ -192,7 +192,6 @@ html, body, #root {
 
 /* Ensure all containers inherit theme */
 div, section, article, aside, nav, main, header, footer {
-  background-color: inherit;
   color: inherit;
 }
 
