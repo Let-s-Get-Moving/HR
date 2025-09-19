@@ -23,8 +23,17 @@ export default function Benefits() {
   // New popup states for alerts
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [showInvestmentDetails, setShowInvestmentDetails] = useState(false);
+  const [showManagePlan, setShowManagePlan] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedInvestmentPlan, setSelectedInvestmentPlan] = useState(null);
+  const [selectedPlanToManage, setSelectedPlanToManage] = useState(null);
+  const [managePlanData, setManagePlanData] = useState({
+    employer_match_percentage: "",
+    vesting_schedule: "",
+    contribution_limit: "",
+    investment_options: "",
+    management_fees: ""
+  });
   
   // Form data for new benefit
   const [newBenefit, setNewBenefit] = useState({
@@ -129,29 +138,36 @@ export default function Benefits() {
     setShowPlanDetails(true);
   };
 
-  const handleManageRetirementPlan = async (plan) => {
+  const handleManageRetirementPlan = (plan) => {
+    setSelectedPlanToManage(plan);
+    setManagePlanData({
+      employer_match_percentage: plan.employer_match || "3% up to 6%",
+      vesting_schedule: plan.vesting_schedule || "3-year graded",
+      contribution_limit: plan.contribution_limit || "19500",
+      investment_options: plan.investment_options || "15",
+      management_fees: "0.5"
+    });
+    setShowManagePlan(true);
+  };
+
+  const handleUpdateRetirementPlan = async (e) => {
+    e.preventDefault();
     try {
       // Call the real benefits API to manage retirement plan
-      const response = await API(`/api/benefits/retirement-plans/${plan.id}/manage`, {
+      const response = await API(`/api/benefits/retirement-plans/${selectedPlanToManage.id}/manage`, {
         method: "PUT",
-        body: JSON.stringify({
-          employer_match_percentage: plan.employer_match_percentage,
-          vesting_schedule: plan.vesting_schedule,
-          contribution_limit: plan.contribution_limit,
-          investment_options: plan.investment_options,
-          management_fees: plan.management_fees
-        })
+        body: JSON.stringify(managePlanData)
       });
       
-      setSuccessMessage(`Retirement plan "${plan.plan_name}" management settings updated successfully!`);
+      setSuccessMessage(`Retirement plan "${selectedPlanToManage.name}" management settings updated successfully!`);
       setShowSuccessMessage(true);
+      setShowManagePlan(false);
       
       // Reload data to show updated information
       loadBenefitsData();
     } catch (error) {
       console.error("Error managing retirement plan:", error);
-      // Fallback to showing management interface
-      setSuccessMessage(`Managing retirement plan: ${plan.plan_name}\n\nManagement options:\n- Investment allocations\n- Contribution settings\n- Employee participation\n- Performance reports\n\nNote: API call failed, showing interface only.`);
+      setSuccessMessage(`Error updating retirement plan: ${error.message}`);
       setShowSuccessMessage(true);
     }
   };
@@ -1316,6 +1332,116 @@ export default function Benefits() {
                   Close
                 </button>
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Manage Retirement Plan Modal */}
+      {showManagePlan && selectedPlanToManage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <h3 className="text-xl font-bold mb-4">Manage Retirement Plan: {selectedPlanToManage.name}</h3>
+              <form onSubmit={handleUpdateRetirementPlan} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Employer Match Percentage</label>
+                    <input
+                      type="text"
+                      value={managePlanData.employer_match_percentage}
+                      onChange={(e) => setManagePlanData({...managePlanData, employer_match_percentage: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="e.g., 3% up to 6%"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Vesting Schedule</label>
+                    <select
+                      value={managePlanData.vesting_schedule}
+                      onChange={(e) => setManagePlanData({...managePlanData, vesting_schedule: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="Immediate">Immediate</option>
+                      <option value="1-year cliff">1-year cliff</option>
+                      <option value="2-year cliff">2-year cliff</option>
+                      <option value="3-year cliff">3-year cliff</option>
+                      <option value="3-year graded">3-year graded</option>
+                      <option value="4-year graded">4-year graded</option>
+                      <option value="5-year graded">5-year graded</option>
+                      <option value="6-year graded">6-year graded</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Annual Contribution Limit ($)</label>
+                    <input
+                      type="number"
+                      value={managePlanData.contribution_limit}
+                      onChange={(e) => setManagePlanData({...managePlanData, contribution_limit: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="19500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Investment Options Count</label>
+                    <input
+                      type="number"
+                      value={managePlanData.investment_options}
+                      onChange={(e) => setManagePlanData({...managePlanData, investment_options: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="15"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Management Fees (%)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={managePlanData.management_fees}
+                      onChange={(e) => setManagePlanData({...managePlanData, management_fees: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      placeholder="0.5"
+                    />
+                  </div>
+                </div>
+                
+                <div className="bg-neutral-800 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2 text-indigo-400">Current Plan Information</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-neutral-400">Provider:</span>
+                      <div className="font-medium">{selectedPlanToManage.provider}</div>
+                    </div>
+                    <div>
+                      <span className="text-neutral-400">Current Balance:</span>
+                      <div className="font-medium">${selectedPlanToManage.current_balance?.toLocaleString() || 'N/A'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowManagePlan(false);
+                      setSelectedPlanToManage(null);
+                    }}
+                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  >
+                    Update Plan Settings
+                  </button>
+                </div>
+              </form>
             </div>
           </motion.div>
         </div>
