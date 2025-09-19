@@ -5,6 +5,19 @@ import { formatCurrency, formatHours } from "../utils/formatting.js";
 
 const r = express.Router();
 
+// Test endpoint to verify API is working
+r.get("/test", async (req, res) => {
+  try {
+    res.json({ 
+      message: "Payroll API is working", 
+      timestamp: new Date().toISOString(),
+      version: "1.0.0"
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get all payroll periods
 r.get("/periods", async (req, res) => {
   try {
