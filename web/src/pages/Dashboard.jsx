@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import Greeting from "../components/Greeting.jsx";
 import MetricCard from "../components/MetricCard.jsx";
 import Donut from "../components/Donut.jsx";
 import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import { API } from '../config/api.js';
 
-export default function Dashboard() {
-  const navigate = useNavigate();
+export default function Dashboard({ onNavigate }) {
   const [analytics, setAnalytics] = useState(null);
   const [wf, setWf] = useState(null);
   const [att, setAtt] = useState(null);
@@ -54,21 +52,23 @@ export default function Dashboard() {
   };
 
   const handleQuickAction = (action) => {
-    switch (action) {
-      case 'add-employee':
-        navigate('/employees');
-        break;
-      case 'leave-request':
-        navigate('/leave-management');
-        break;
-      case 'process-payroll':
-        navigate('/payroll');
-        break;
-      case 'view-reports':
-        navigate('/analytics');
-        break;
-      default:
-        break;
+    if (onNavigate) {
+      switch (action) {
+        case 'add-employee':
+          onNavigate('employees');
+          break;
+        case 'leave-request':
+          onNavigate('leave');
+          break;
+        case 'process-payroll':
+          onNavigate('payroll');
+          break;
+        case 'view-reports':
+          onNavigate('compliance');
+          break;
+        default:
+          break;
+      }
     }
   };
 
