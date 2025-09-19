@@ -347,4 +347,58 @@ r.post("/fix-schema", async (req, res) => {
   }
 });
 
+// Quick fix endpoint - execute SQL directly
+r.get("/quick-fix", async (req, res) => {
+  try {
+    console.log('🚀 QUICK FIX: Adding missing columns...');
+    
+    // Execute all SQL commands in sequence
+    const commands = [
+      `ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255)`,
+      `ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approval_notes TEXT`,
+      `ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS payment_date DATE`,
+      `ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejected_by VARCHAR(255)`,
+      `ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_reason VARCHAR(255)`,
+      `ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_notes TEXT`,
+      `ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP`,
+      `CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status)`,
+      `CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id)`,
+      `CREATE INDEX IF NOT EXISTS idx_bonuses_created_at ON bonuses(created_at)`
+    ];
+    
+    for (let i = 0; i < commands.length; i++) {
+      try {
+        await q(commands[i]);
+        console.log(`✅ Command ${i + 1}/${commands.length} executed successfully`);
+      } catch (cmdError) {
+        console.log(`⚠️  Command ${i + 1} warning:`, cmdError.message);
+      }
+    }
+    
+    // Test the new columns
+    await q(`
+      UPDATE bonuses 
+      SET approved_by = 'Quick Fix Admin', 
+          approval_notes = 'Quick fix test',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+    `);
+    console.log('✅ Test update successful');
+    
+    res.json({
+      success: true,
+      message: "Quick fix completed! All bonus approval/rejection fields added to database.",
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('❌ Quick fix error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: "Quick fix failed",
+      details: error.message 
+    });
+  }
+});
+
 export default r;
