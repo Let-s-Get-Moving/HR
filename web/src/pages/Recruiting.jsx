@@ -398,17 +398,20 @@ export default function Recruiting() {
     }
   };
 
-  const handleCancelInterview = (interview) => {
+  const handleDeleteInterview = (interview) => {
     setCancelingInterview(interview);
     setCancelReason("");
     setShowCancelInterview(true);
   };
 
-  const handleSubmitCancelInterview = async (e) => {
+  const handleSubmitDeleteInterview = async (e) => {
     e.preventDefault();
     try {
-      // In a real app, this would call an API to cancel the interview
-      setSuccessMessage(`Interview cancelled successfully. Reason: ${cancelReason}`);
+      await API(`/api/recruiting/interviews/${cancelingInterview.id}`, {
+        method: "DELETE"
+      });
+      
+      setSuccessMessage(`Interview deleted successfully.`);
       setShowSuccessMessage(true);
       setShowCancelInterview(false);
       setCancelingInterview(null);
@@ -417,8 +420,8 @@ export default function Recruiting() {
       // Reload interviews data
       loadRecruitingData();
     } catch (error) {
-      console.error("Error cancelling interview:", error);
-      setSuccessMessage(`Error cancelling interview: ${error.message}`);
+      console.error("Error deleting interview:", error);
+      setSuccessMessage(`Error deleting interview: ${error.message}`);
       setShowSuccessMessage(true);
     }
   };
@@ -436,7 +439,11 @@ export default function Recruiting() {
   const handleSubmitCompleteInterview = async (e) => {
     e.preventDefault();
     try {
-      // In a real app, this would call an API to complete the interview
+      await API(`/api/recruiting/interviews/${completingInterview.id}/complete`, {
+        method: "PUT",
+        body: JSON.stringify(completionData)
+      });
+      
       setSuccessMessage(`Interview completed successfully! Outcome: ${completionData.outcome}`);
       setShowSuccessMessage(true);
       setShowCompleteInterview(false);
@@ -544,7 +551,7 @@ export default function Recruiting() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {interviews.map((interview) => {
+          {interviews.filter(interview => interview.status !== 'Completed').map((interview) => {
             const candidate = candidates.find(c => c.id === interview.candidate_id);
             const interviewer = employees.find(e => e.id === interview.interviewer_id);
             const jobPosting = jobPostings.find(j => j.id === interview.job_posting_id);
@@ -610,10 +617,10 @@ export default function Recruiting() {
                       Edit
                     </button>
                     <button 
-                      onClick={() => handleCancelInterview(interview)}
+                      onClick={() => handleDeleteInterview(interview)}
                       className="text-red-400 hover:text-red-300 transition-colors"
                     >
-                      Cancel
+                      Delete
                     </button>
                     <button 
                       onClick={() => handleCompleteInterview(interview)}
@@ -1578,8 +1585,15 @@ export default function Recruiting() {
             className="card w-full max-w-lg mx-4"
           >
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Cancel Interview</h3>
-              <form onSubmit={handleSubmitCancelInterview} className="space-y-4">
+              <div className="flex items-center mb-4">
+                <div className="text-red-500 text-2xl mr-3">⚠️</div>
+                <h3 className="text-xl font-bold">Delete Interview</h3>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <p className="text-red-800 font-medium">Are you sure you want to delete this interview?</p>
+                <p className="text-red-600 text-sm mt-1">This action cannot be undone.</p>
+              </div>
                 <div className="bg-neutral-800 p-4 rounded-lg">
                   <h4 className="font-medium mb-2">Interview Details</h4>
                   <div className="text-sm text-neutral-300">
@@ -1590,19 +1604,7 @@ export default function Recruiting() {
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Cancellation Reason *</label>
-                  <textarea
-                    required
-                    value={cancelReason}
-                    onChange={(e) => setCancelReason(e.target.value)}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-red-500"
-                    rows={3}
-                    placeholder="Please provide a reason for cancelling this interview..."
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end space-x-3 pt-4">
                   <button
                     type="button"
                     onClick={() => {
@@ -1610,18 +1612,17 @@ export default function Recruiting() {
                       setCancelingInterview(null);
                       setCancelReason("");
                     }}
-                    className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
+                    className="px-4 py-2 border border-neutral-600 rounded-lg font-medium transition-colors hover:bg-neutral-700"
                   >
-                    Keep Interview
+                    Cancel
                   </button>
                   <button
-                    type="submit"
+                    onClick={handleSubmitDeleteInterview}
                     className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    Cancel Interview
+                    Delete Interview
                   </button>
                 </div>
-              </form>
             </div>
           </motion.div>
         </div>

@@ -326,6 +326,31 @@ r.put("/interviews/:id/complete", async (req, res) => {
   }
 });
 
+// Delete interview
+r.delete("/interviews/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`🔄 Deleting interview ${id}...`);
+    
+    const { rows } = await q(`
+      DELETE FROM interviews 
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+    
+    console.log(`✅ Interview ${id} deleted successfully`);
+    res.json({ success: true, message: "Interview deleted successfully" });
+  } catch (error) {
+    console.error('❌ Error deleting interview:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Update candidate status
 r.put("/candidates/:id/status", async (req, res) => {
   const { id } = req.params;
