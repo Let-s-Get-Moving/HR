@@ -482,4 +482,46 @@ r.get("/immediate-fix", async (req, res) => {
   }
 });
 
+// Fix constraint endpoint - update status constraint to include Rejected
+r.get("/constraint-fix", async (req, res) => {
+  try {
+    console.log('🔧 CONSTRAINT FIX: Updating status constraint...');
+    
+    // Drop the existing constraint
+    await q(`ALTER TABLE bonuses DROP CONSTRAINT IF EXISTS bonuses_status_check`);
+    console.log('✅ Old constraint dropped');
+    
+    // Add new constraint with Rejected status
+    await q(`ALTER TABLE bonuses ADD CONSTRAINT bonuses_status_check CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Paid'))`);
+    console.log('✅ New constraint added with Rejected status');
+    
+    // Test reject functionality
+    await q(`
+      UPDATE bonuses 
+      SET status = 'Rejected', 
+          rejected_by = 'Constraint Fix Admin',
+          rejection_reason = 'Constraint fix test',
+          rejection_notes = 'Testing reject functionality after constraint update',
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 3
+    `);
+    console.log('✅ Reject test successful after constraint fix');
+    
+    res.json({
+      success: true,
+      message: "CONSTRAINT FIX COMPLETED! Status constraint updated to include 'Rejected' status.",
+      timestamp: new Date().toISOString(),
+      constraint: "Updated to include Pending, Approved, Rejected, Paid"
+    });
+    
+  } catch (error) {
+    console.error('❌ Constraint fix error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: "Constraint fix failed",
+      details: error.message 
+    });
+  }
+});
+
 export default r;
