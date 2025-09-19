@@ -18,6 +18,7 @@ export default function Payroll() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredSubmissions, setFilteredSubmissions] = useState([]);
   const [filteredPayrollCalculations, setFilteredPayrollCalculations] = useState([]);
+  const [apiStatus, setApiStatus] = useState("loading");
 
   const tabs = [
     { id: "overview", name: "Payroll Submissions", icon: "📊" },
@@ -98,9 +99,14 @@ export default function Payroll() {
   const loadData = async () => {
     try {
       // Load payroll submissions (each import creates a submission)
-      const submissions = await API("/api/payroll/submissions").catch(() => []);
+      const submissions = await API("/api/payroll/submissions").catch((error) => {
+        console.log("Payroll submissions not available yet (API needs deployment):", error.message);
+        setApiStatus("error");
+        return [];
+      });
       setPayrollSubmissions(submissions);
       setFilteredSubmissions(submissions);
+      setApiStatus("success");
       
       // Load employees for calculations
       const emps = await API("/api/employees").catch(() => []);
@@ -295,7 +301,13 @@ export default function Payroll() {
           </button>
         </div>
         
-        {filteredSubmissions.length === 0 ? (
+        {apiStatus === "error" ? (
+          <div className="text-center py-8 text-neutral-400">
+            <div className="text-4xl mb-4">⚠️</div>
+            <p>Payroll submissions API is being updated</p>
+            <p className="text-sm mt-2">Please try again in a few minutes or use the Import tab to add new data</p>
+          </div>
+        ) : filteredSubmissions.length === 0 ? (
           <div className="text-center py-8 text-neutral-400">
             <div className="text-4xl mb-4">📊</div>
             <p>No payroll submissions found</p>
