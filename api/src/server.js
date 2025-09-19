@@ -20,6 +20,8 @@ import health from "./routes/health.js";
 import termination from "./routes/termination.js";
 import bonuses from "./routes/bonuses.js";
 import commissions from "./routes/commissions.js";
+import recruiting from "./routes/recruiting.js";
+import benefits from "./routes/benefits.js";
 import imports from "./routes/imports.js";
 import logger from "./utils/logger.js";
 
@@ -168,6 +170,8 @@ app.use("/api/health", health);
 app.use("/api/termination", termination);
 app.use("/api/bonuses", bonuses);
 app.use("/api/commissions", commissions);
+app.use("/api/recruiting", recruiting);
+app.use("/api/benefits", benefits);
 app.use("/api/imports", imports);
 
 const port = process.env.PORT || 8080;

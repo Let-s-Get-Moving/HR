@@ -15,6 +15,16 @@ export default function Recruiting() {
   const [editingJob, setEditingJob] = useState(null);
   const [showAddCandidate, setShowAddCandidate] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [showScheduleInterview, setShowScheduleInterview] = useState(false);
+  const [schedulingCandidate, setSchedulingCandidate] = useState(null);
+  const [interviewData, setInterviewData] = useState({
+    interview_date: "",
+    interview_time: "",
+    interview_type: "Video",
+    interviewer_id: "",
+    location: "",
+    notes: ""
+  });
   const [newCandidate, setNewCandidate] = useState({
     name: "",
     email: "",
@@ -352,7 +362,7 @@ export default function Recruiting() {
                       View
                     </button>
                     <button 
-                      onClick={() => alert(`Scheduling interview for ${candidate.name}`)}
+                      onClick={() => handleScheduleInterview(candidate)}
                       className="text-green-400 hover:text-green-300 transition-colors"
                     >
                       Schedule
@@ -987,10 +997,7 @@ export default function Recruiting() {
                   Close
                 </button>
                 <button
-                  onClick={() => {
-                    alert(`Scheduling interview for ${selectedCandidate.name}`);
-                    setSelectedCandidate(null);
-                  }}
+                  onClick={() => handleScheduleInterview(selectedCandidate)}
                   className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   Schedule Interview
