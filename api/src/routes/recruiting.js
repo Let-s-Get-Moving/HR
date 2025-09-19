@@ -278,6 +278,19 @@ r.put("/interviews/:id/cancel", async (req, res) => {
     
     console.log(`🔄 Cancelling interview ${id}...`);
     
+    // Check if status column exists, if not add it
+    const columnCheck = await q(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'interviews' AND column_name = 'status'
+    `);
+    
+    if (columnCheck.rows.length === 0) {
+      console.log('📊 Adding status column to interviews table...');
+      await q(`ALTER TABLE interviews ADD COLUMN status VARCHAR(50) DEFAULT 'Scheduled'`);
+      console.log('✅ Status column added to interviews table');
+    }
+    
     const { rows } = await q(`
       UPDATE interviews 
       SET status = 'Cancelled', notes = COALESCE(notes, '') || ' | Cancelled: ' || $1, updated_at = CURRENT_TIMESTAMP
@@ -304,6 +317,19 @@ r.put("/interviews/:id/complete", async (req, res) => {
     const { outcome, feedback, next_steps } = req.body;
     
     console.log(`🔄 Completing interview ${id}...`);
+    
+    // Check if status column exists, if not add it
+    const columnCheck = await q(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'interviews' AND column_name = 'status'
+    `);
+    
+    if (columnCheck.rows.length === 0) {
+      console.log('📊 Adding status column to interviews table...');
+      await q(`ALTER TABLE interviews ADD COLUMN status VARCHAR(50) DEFAULT 'Scheduled'`);
+      console.log('✅ Status column added to interviews table');
+    }
     
     const { rows } = await q(`
       UPDATE interviews 

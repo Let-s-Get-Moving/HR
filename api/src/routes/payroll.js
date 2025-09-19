@@ -21,11 +21,38 @@ r.get("/periods", async (req, res) => {
 // Get all payroll submissions
 r.get("/submissions", async (req, res) => {
   try {
+    // First check if payroll_submissions table exists
+    const tableCheck = await q(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'payroll_submissions'
+      );
+    `);
+    
+    if (!tableCheck.rows[0].exists) {
+      console.log('📊 Creating payroll_submissions table...');
+      
+      // Create payroll_submissions table
+      await q(`
+        CREATE TABLE IF NOT EXISTS payroll_submissions (
+            id SERIAL PRIMARY KEY,
+            submission_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            period_name VARCHAR(255),
+            notes TEXT,
+            status VARCHAR(50) DEFAULT 'Processed',
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      console.log('✅ payroll_submissions table created');
+    }
+    
     const { rows } = await q(`
       SELECT 
         ps.*,
         COUNT(pc.id) as employee_count,
-        SUM(pc.gross_pay) as total_amount
+        COALESCE(SUM(pc.gross_pay), 0) as total_amount
       FROM payroll_submissions ps
       LEFT JOIN payroll_calculations pc ON ps.id = pc.submission_id
       GROUP BY ps.id
