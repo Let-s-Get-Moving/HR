@@ -321,6 +321,11 @@ export const sqlInjectionPrevention = (req, res, next) => {
   ];
   
   const checkObject = (obj, path = '') => {
+    // Check if obj is null, undefined, or not an object
+    if (!obj || typeof obj !== 'object') {
+      return null;
+    }
+    
     for (const [key, value] of Object.entries(obj)) {
       const currentPath = path ? `${path}.${key}` : key;
       
