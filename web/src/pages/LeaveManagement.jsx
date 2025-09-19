@@ -452,32 +452,169 @@ export default function LeaveManagement() {
       {/* Leave Balances Tab */}
       {activeTab === "balances" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold mb-4">Leave Balances</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="card p-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium">Total Available</p>
+                    <p className="text-3xl font-bold">{balances.reduce((sum, b) => sum + (b.available_days || 0), 0)}</p>
+                    <p className="text-blue-100 text-sm">days remaining</p>
+                  </div>
+                  <div className="text-4xl opacity-80">📅</div>
+                </div>
+              </div>
+              
+              <div className="card p-6 bg-gradient-to-br from-green-500 to-green-600 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-100 text-sm font-medium">This Year Used</p>
+                    <p className="text-3xl font-bold">{balances.reduce((sum, b) => sum + (b.used_days || 0), 0)}</p>
+                    <p className="text-green-100 text-sm">days taken</p>
+                  </div>
+                  <div className="text-4xl opacity-80">✅</div>
+                </div>
+              </div>
+              
+              <div className="card p-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-purple-100 text-sm font-medium">Accrual Rate</p>
+                    <p className="text-3xl font-bold">2.5</p>
+                    <p className="text-purple-100 text-sm">days per month</p>
+                  </div>
+                  <div className="text-4xl opacity-80">⚡</div>
+                </div>
+              </div>
+              
+              <div className="card p-6 bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-orange-100 text-sm font-medium">Expiring Soon</p>
+                    <p className="text-3xl font-bold">5</p>
+                    <p className="text-orange-100 text-sm">days in 30 days</p>
+                  </div>
+                  <div className="text-4xl opacity-80">⚠️</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Leave Types Breakdown */}
+            <div className="card p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold">Leave Type Breakdown</h3>
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span>Available</span>
+                  <div className="w-3 h-3 bg-gray-400 rounded-full ml-4"></div>
+                  <span>Used</span>
+                </div>
+              </div>
+              
               {balances.length === 0 ? (
-                <p className="text-muted text-center py-8 col-span-full">No leave balances found</p>
-              ) : (
-                balances.map((balance) => (
-                  <div key={balance.id} className="card p-4">
-                    <h4 className="font-medium mb-2">{balance.leave_type_name}</h4>
-                    <div className="space-y-1">
-                      <p className="text-sm text-secondary">
-                        Available: <span className="font-medium">{balance.available_days}</span> days
-                      </p>
-                      <p className="text-sm text-secondary">
-                        Used: <span className="font-medium">{balance.used_days}</span> days
-                      </p>
-                      <div className="progress-bar">
-                        <div
-                          className="progress-fill"
-                          style={{ width: `${(balance.used_days / (balance.available_days + balance.used_days)) * 100}%` }}
-                        ></div>
-                      </div>
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📊</div>
+                  <h4 className="text-xl font-semibold mb-2">No Leave Data Available</h4>
+                  <p className="text-gray-500 mb-6">Leave balances will appear here once employees start using the system.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <div className="text-2xl mb-2">🏖️</div>
+                      <h5 className="font-medium">Vacation</h5>
+                      <p className="text-sm text-gray-500">20 days/year</p>
+                    </div>
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <div className="text-2xl mb-2">🤒</div>
+                      <h5 className="font-medium">Sick Leave</h5>
+                      <p className="text-sm text-gray-500">10 days/year</p>
+                    </div>
+                    <div className="p-4 border border-gray-200 rounded-lg">
+                      <div className="text-2xl mb-2">🎯</div>
+                      <h5 className="font-medium">Personal</h5>
+                      <p className="text-sm text-gray-500">5 days/year</p>
                     </div>
                   </div>
-                ))
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {balances.map((balance) => {
+                    const totalDays = (balance.available_days || 0) + (balance.used_days || 0);
+                    const usedPercentage = totalDays > 0 ? ((balance.used_days || 0) / totalDays) * 100 : 0;
+                    const availablePercentage = 100 - usedPercentage;
+                    
+                    return (
+                      <div key={balance.id} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="text-2xl">
+                              {balance.leave_type_name === 'Vacation' ? '🏖️' :
+                               balance.leave_type_name === 'Sick Leave' ? '🤒' :
+                               balance.leave_type_name === 'Personal Leave' ? '🎯' : '📋'}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-lg">{balance.leave_type_name}</h4>
+                              <p className="text-sm text-gray-500">
+                                {balance.accrual_rate || 2.5} days/month • Expires {balance.expiry_date || 'Never'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-blue-600">{balance.available_days || 0}</div>
+                            <div className="text-sm text-gray-500">available</div>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Used: {balance.used_days || 0} days</span>
+                            <span className="text-gray-600">Available: {balance.available_days || 0} days</span>
+                          </div>
+                          
+                          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                            <div className="flex h-full">
+                              <div 
+                                className="bg-gray-400 transition-all duration-500"
+                                style={{ width: `${usedPercentage}%` }}
+                              ></div>
+                              <div 
+                                className="bg-blue-500 transition-all duration-500"
+                                style={{ width: `${availablePercentage}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>{usedPercentage.toFixed(1)}% used</span>
+                            <span>{availablePercentage.toFixed(1)}% available</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                  <div className="text-2xl mb-2">📝</div>
+                  <h4 className="font-medium">Request Leave</h4>
+                  <p className="text-sm text-gray-500">Submit a new leave request</p>
+                </button>
+                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                  <div className="text-2xl mb-2">📊</div>
+                  <h4 className="font-medium">View History</h4>
+                  <p className="text-sm text-gray-500">Check past leave requests</p>
+                </button>
+                <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
+                  <div className="text-2xl mb-2">⚙️</div>
+                  <h4 className="font-medium">Settings</h4>
+                  <p className="text-sm text-gray-500">Manage leave policies</p>
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
