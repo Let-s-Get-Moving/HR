@@ -457,7 +457,6 @@ export default function LeaveManagement() {
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-6 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105">
-                <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-blue-500/30 rounded-xl">
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -470,11 +469,9 @@ export default function LeaveManagement() {
                     </div>
                   </div>
                   <p className="text-blue-100 text-sm font-medium">days remaining</p>
-                </div>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105">
-                <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-emerald-500/30 rounded-xl">
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -487,11 +484,9 @@ export default function LeaveManagement() {
                     </div>
                   </div>
                   <p className="text-emerald-100 text-sm font-medium">days taken</p>
-                </div>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700 p-6 text-white shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 hover:scale-105">
-                <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-violet-500/30 rounded-xl">
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -504,11 +499,9 @@ export default function LeaveManagement() {
                     </div>
                   </div>
                   <p className="text-violet-100 text-sm font-medium">days per month</p>
-                </div>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-6 text-white shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105">
-                <div className="relative z-10">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-3 bg-amber-500/30 rounded-xl">
                       <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -521,7 +514,6 @@ export default function LeaveManagement() {
                     </div>
                   </div>
                   <p className="text-amber-100 text-sm font-medium">days in 30 days</p>
-                </div>
               </div>
             </div>
 
@@ -865,17 +857,17 @@ export default function LeaveManagement() {
                       </div>
                       <h4 className="text-lg font-semibold text-white">Vacation Policy</h4>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Annual Allocation:</span>
+                        <span className="text-blue-100">Annual Allocation:</span>
                         <span className="text-white font-medium">20 days</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Accrual Rate:</span>
+                        <span className="text-blue-100">Accrual Rate:</span>
                         <span className="text-white font-medium">1.67 days/month</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Carry Over:</span>
+                        <span className="text-blue-100">Carry Over:</span>
                         <span className="text-white font-medium">5 days max</span>
                       </div>
                     </div>
@@ -890,17 +882,17 @@ export default function LeaveManagement() {
                       </div>
                       <h4 className="text-lg font-semibold text-white">Sick Leave Policy</h4>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Annual Allocation:</span>
+                        <span className="text-emerald-100">Annual Allocation:</span>
                         <span className="text-white font-medium">10 days</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Accrual Rate:</span>
+                        <span className="text-emerald-100">Accrual Rate:</span>
                         <span className="text-white font-medium">0.83 days/month</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Carry Over:</span>
+                        <span className="text-emerald-100">Carry Over:</span>
                         <span className="text-white font-medium">Unlimited</span>
                       </div>
                     </div>
@@ -915,17 +907,17 @@ export default function LeaveManagement() {
                       </div>
                       <h4 className="text-lg font-semibold text-white">Personal Leave</h4>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Annual Allocation:</span>
+                        <span className="text-violet-100">Annual Allocation:</span>
                         <span className="text-white font-medium">5 days</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Accrual Rate:</span>
+                        <span className="text-violet-100">Accrual Rate:</span>
                         <span className="text-white font-medium">0.42 days/month</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-neutral-300">Carry Over:</span>
+                        <span className="text-violet-100">Carry Over:</span>
                         <span className="text-white font-medium">No carry over</span>
                       </div>
                     </div>
