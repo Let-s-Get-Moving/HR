@@ -23,6 +23,7 @@ import commissions from "./routes/commissions.js";
 import recruiting from "./routes/recruiting.js";
 import benefits from "./routes/benefits.js";
 import imports from "./routes/imports.js";
+import admin from "./routes/admin.js";
 import logger from "./utils/logger.js";
 
 const app = express();
@@ -173,6 +174,7 @@ app.use("/api/commissions", commissions);
 app.use("/api/recruiting", recruiting);
 app.use("/api/benefits", benefits);
 app.use("/api/imports", imports);
+app.use("/api/admin", admin);
 
 const port = process.env.PORT || 8080;
 app.listen(port, () => {
