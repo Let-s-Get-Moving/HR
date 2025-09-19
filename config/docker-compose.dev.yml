@@ -38,7 +38,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: config/Dockerfile
     container_name: hr-api
     environment:
       NODE_ENV: development

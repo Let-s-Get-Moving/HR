@@ -9,50 +9,6 @@ A comprehensive **Human Resources Management System** built with modern web tech
 - ✅ **Database**: PostgreSQL with 248 employees, 5,430 payroll records
 - ✅ **Adminer**: Available on `http://localhost:8081`
 
-## 📁 **Project Structure**
-
-```
-HR/
-├── 📁 api/                    # Backend API (Node.js + Express)
-│   ├── 📁 src/               # Source code
-│   │   ├── 📁 routes/        # API endpoints
-│   │   ├── 📁 middleware/    # Custom middleware
-│   │   ├── 📁 utils/         # Utility functions
-│   │   └── 📁 tests/         # API tests
-│   ├── 📁 logs/              # Application logs
-│   └── 📄 package.json       # Dependencies
-├── 📁 web/                   # Frontend (React + Vite)
-│   ├── 📁 src/               # Source code
-│   │   ├── 📁 pages/         # Page components
-│   │   ├── 📁 components/    # Reusable components
-│   │   ├── 📁 utils/         # Utility functions
-│   │   └── 📁 hooks/         # Custom React hooks
-│   └── 📄 package.json       # Dependencies
-├── 📁 db/                    # Database schema
-│   └── 📁 init/              # SQL initialization scripts
-├── 📁 tests/                 # All test files
-│   ├── test-*.js            # Individual test files
-│   ├── comprehensive-test.js # Full system tests
-│   └── real-api-test.js     # API integration tests
-├── 📁 scripts/               # Utility scripts
-│   ├── import_lgm.py        # Data import script
-│   ├── setup-*.js           # Database setup scripts
-│   └── create-*.js          # Data creation scripts
-├── 📁 docs/                  # Documentation
-│   ├── README.md            # This file
-│   ├── SYSTEM_OVERVIEW.md   # System architecture
-│   ├── IMPLEMENTATION_SUMMARY.md
-│   └── BACKEND_INTEGRATION_ANALYSIS.md
-├── 📁 config/                # Configuration files
-│   ├── docker-compose.yml   # Docker configuration
-│   ├── docker-compose.dev.yml
-│   ├── Dockerfile           # Container definition
-│   ├── render.yaml          # Deployment config
-│   └── lighthouse.config.js # Performance testing
-└── 📁 .github/               # CI/CD workflows
-    └── 📁 workflows/
-```
-
 ## 📊 **Current Data Status**
 
 | Data Type | Count | Status |
@@ -104,6 +60,25 @@ HR/
 - Timecard management
 - Attendance analytics
 
+## 🏗️ **Architecture**
+
+```
+HR System/
+├── 📁 web/                 # React Frontend (Vite + Tailwind)
+│   ├── 📄 App.jsx         # Main application
+│   ├── 📁 pages/          # Page components
+│   └── 📁 components/     # Reusable UI components
+├── 📁 api/                # Node.js Backend (Express)
+│   ├── 📄 server.js       # Main server
+│   ├── 📁 routes/         # API endpoints
+│   └── 📄 db.js          # Database connection
+├── 📁 db/                 # Database schema
+│   └── 📁 init/          # SQL initialization scripts
+├── 📁 LGM/               # Data import files
+│   └── 📁 csv/           # CSV data files
+└── 📁 scripts/           # Data import scripts
+```
+
 ## 🛠️ **Technology Stack**
 
 ### **Frontend**
@@ -137,8 +112,7 @@ cd HR
 
 ### **2. Start the System**
 ```bash
-# Use the config files from the config folder
-docker compose -f config/docker-compose.yml up -d
+docker compose up -d
 ```
 
 ### **3. Import Data (First Time)**
@@ -183,26 +157,34 @@ docker run --rm --network hr_default \
 - `POST /api/performance/reviews` - Create review
 - `GET /api/performance/goals` - Get performance goals
 
-## 🧪 **Testing**
+## 🎨 **UI/UX Features**
 
-### **Run All Tests**
-```bash
-# From project root
-cd tests
-node comprehensive-test.js
-```
+### **Professional Design**
+- **Metal-themed** color scheme with minimal colors
+- **Responsive design** for all devices
+- **Smooth animations** and transitions
+- **Intuitive navigation** with breadcrumbs
 
-### **Run Individual Tests**
-```bash
-# API Tests
-node tests/real-api-test.js
+### **Dashboard Analytics**
+- **Real-time metrics** and KPIs
+- **Interactive charts** and graphs
+- **Performance indicators**
+- **Compliance status** overview
 
-# Specific Feature Tests
-node tests/test-payroll-system.js
-node tests/test-leave-management.js
-node tests/test-performance-management.js
-node tests/test-compliance-management.js
-```
+## 📊 **Data Integration**
+
+### **LGM Data Import**
+The system automatically imports data from LGM files:
+- **Employee onboarding** forms (75 employees)
+- **Payroll stubs** (173 employees, 16 pay periods)
+- **Timecard data** (ready for import)
+- **Document management** (contracts, permits)
+
+### **Automated Processing**
+- **Data validation** and cleaning
+- **Duplicate detection** and merging
+- **Relationship mapping** (employees to departments)
+- **Compliance checking** and alert generation
 
 ## 🔧 **Development**
 
@@ -266,12 +248,12 @@ curl http://localhost:8080/api/employees
 ### **Cloud Deployment**
 ```bash
 # Deploy to cloud platform
-docker compose -f config/docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ## 📞 **Support & Maintenance**
 
-### **System Monitoring**
+### **Monitoring**
 - **Application logs** via Docker
 - **Database performance** monitoring
 - **API endpoint** health checks
@@ -302,10 +284,3 @@ docker compose -f config/docker-compose.prod.yml up -d
 ---
 
 **🎯 The HR Management System is now fully operational and ready for production use!**
-
-## 📚 **Documentation**
-
-- [System Overview](docs/SYSTEM_OVERVIEW.md) - Complete system architecture
-- [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md) - What's been implemented
-- [Backend Integration Analysis](docs/BACKEND_INTEGRATION_ANALYSIS.md) - API status and fixes
-- [Button Audit](docs/BUTTON_AUDIT.md) - UI functionality status

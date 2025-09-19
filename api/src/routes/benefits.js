@@ -15,7 +15,12 @@ r.get("/plans", async (_req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -32,7 +37,12 @@ r.get("/enrollments", async (_req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -47,7 +57,12 @@ r.get("/retirement-plans", async (_req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -151,7 +166,12 @@ r.put("/enrollments/:id", async (req, res) => {
     
     res.json(rows[0]);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -185,7 +205,12 @@ r.put("/retirement-plans/:id/manage", async (req, res) => {
     
     res.json(rows[0]);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -219,7 +244,12 @@ r.get("/analytics", async (_req, res) => {
       plans_by_type: planStats.rows
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 

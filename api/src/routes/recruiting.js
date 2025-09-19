@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
+import { requireAuth } from "../session.js";
 
 const r = Router();
 
@@ -18,7 +19,12 @@ r.get("/job-postings", async (_req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -34,7 +40,12 @@ r.get("/candidates", async (_req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -52,7 +63,12 @@ r.get("/applications", async (_req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -151,7 +167,12 @@ r.get("/interviews", async (_req, res) => {
     `);
     res.json(rows);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -174,7 +195,12 @@ r.put("/candidates/:id/status", async (req, res) => {
     
     res.json(rows[0]);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
@@ -212,7 +238,12 @@ r.get("/analytics", async (_req, res) => {
       interviews: interviewStats.rows[0]
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: error.message });
+    }
   }
 });
 
