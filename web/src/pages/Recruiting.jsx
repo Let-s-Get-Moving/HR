@@ -177,6 +177,46 @@ export default function Recruiting() {
     }
   };
 
+  const handleScheduleInterview = (candidate) => {
+    setSchedulingCandidate(candidate);
+    setShowScheduleInterview(true);
+    setInterviewData({
+      interview_date: "",
+      interview_time: "",
+      interview_type: "Video",
+      interviewer_id: "",
+      location: "",
+      notes: ""
+    });
+  };
+
+  const handleSubmitInterview = async (e) => {
+    e.preventDefault();
+    try {
+      // For now, simulate API call - in production this would call the recruiting API
+      console.log("Scheduling interview:", {
+        candidate: schedulingCandidate.name,
+        ...interviewData
+      });
+      
+      // Update candidate status locally
+      setCandidates(candidates.map(c => 
+        c.id === schedulingCandidate.id 
+          ? { ...c, status: "Interview Scheduled" }
+          : c
+      ));
+      
+      setShowScheduleInterview(false);
+      setSchedulingCandidate(null);
+      setSelectedCandidate(null);
+      
+      alert(`Interview scheduled for ${schedulingCandidate.name} on ${interviewData.interview_date} at ${interviewData.interview_time}`);
+    } catch (error) {
+      console.error("Error scheduling interview:", error);
+      alert("Failed to schedule interview. Please try again.");
+    }
+  };
+
   const handleEditJob = (job) => {
     setEditingJob({...job});
     setShowEditJob(true);
