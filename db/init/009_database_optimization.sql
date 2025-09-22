@@ -72,11 +72,12 @@ ALTER TABLE training_records ADD CONSTRAINT chk_training_dates
 CREATE INDEX IF NOT EXISTS idx_employees_active ON employees(id) 
   WHERE status = 'Active';
 
-CREATE INDEX IF NOT EXISTS idx_time_entries_recent ON time_entries(employee_id, work_date) 
-  WHERE work_date >= CURRENT_DATE - INTERVAL '1 year';
+-- Remove problematic partial indexes with functions
+-- CREATE INDEX IF NOT EXISTS idx_time_entries_recent ON time_entries(employee_id, work_date) 
+--   WHERE work_date >= CURRENT_DATE - INTERVAL '1 year';
 
-CREATE INDEX IF NOT EXISTS idx_leaves_current ON leaves(employee_id, start_date, end_date) 
-  WHERE start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE;
+-- CREATE INDEX IF NOT EXISTS idx_leaves_current ON leaves(employee_id, start_date, end_date) 
+--   WHERE start_date <= CURRENT_DATE AND end_date >= CURRENT_DATE;
 
 -- Add composite indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_employees_dept_status ON employees(department_id, status);

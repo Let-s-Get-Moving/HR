@@ -3,8 +3,9 @@
 -- 1. Fix departments table - add missing description column
 ALTER TABLE departments ADD COLUMN IF NOT EXISTS description TEXT;
 
--- 2. Fix job_postings table - add missing location column
-ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS location VARCHAR(255);
+-- 2. Fix job_postings table - add missing columns
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS location_id INTEGER REFERENCES locations(id);
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS employment_type VARCHAR(50);
 
 -- 3. Fix leave_requests table - add missing leave_type column
 ALTER TABLE leave_requests ADD COLUMN IF NOT EXISTS leave_type VARCHAR(50) DEFAULT 'Annual';
@@ -27,8 +28,9 @@ CREATE TABLE IF NOT EXISTS candidates (
 CREATE TABLE IF NOT EXISTS job_postings (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    department VARCHAR(100),
-    location VARCHAR(255),
+    department_id INTEGER REFERENCES departments(id),
+    location_id INTEGER REFERENCES locations(id),
+    employment_type VARCHAR(50),
     description TEXT,
     requirements TEXT,
     salary_range VARCHAR(100),
@@ -96,10 +98,10 @@ INSERT INTO candidates (first_name, last_name, email, phone, status) VALUES
 ('Bob', 'Johnson', 'bob.johnson@example.com', '+1-555-0125', 'Applied')
 ON CONFLICT (email) DO NOTHING;
 
-INSERT INTO job_postings (title, department, location, description, requirements, salary_range, status) VALUES
-('Software Engineer', 'Engineering', 'San Francisco, CA', 'Full-stack developer position', '3+ years experience', '$80,000 - $120,000', 'Open'),
-('HR Manager', 'Human Resources', 'New York, NY', 'Manage HR operations', '5+ years HR experience', '$70,000 - $90,000', 'Open'),
-('Marketing Specialist', 'Marketing', 'Remote', 'Digital marketing role', '2+ years marketing experience', '$50,000 - $70,000', 'Open')
+INSERT INTO job_postings (title, department_id, location_id, employment_type, description, requirements, salary_range, status) VALUES
+('Software Engineer', 1, 1, 'Full-time', 'Full-stack developer position', '3+ years experience', '$80,000 - $120,000', 'Open'),
+('HR Manager', 2, 2, 'Full-time', 'Manage HR operations', '5+ years HR experience', '$70,000 - $90,000', 'Open'),
+('Marketing Specialist', 3, 3, 'Full-time', 'Digital marketing role', '2+ years marketing experience', '$50,000 - $70,000', 'Open')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO payroll_submissions (period_name, notes, submission_date, status) VALUES

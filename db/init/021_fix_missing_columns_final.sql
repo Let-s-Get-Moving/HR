@@ -16,7 +16,7 @@ END $$;
 
 -- Fix job_postings table - add missing columns
 DO $$ BEGIN
-    ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS location VARCHAR(255);
+    ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS location_id INTEGER;
 EXCEPTION
     WHEN duplicate_column THEN NULL;
 END $$;
@@ -139,10 +139,10 @@ INSERT INTO departments (name, description) VALUES
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert sample job postings
-INSERT INTO job_postings (title, description, requirements, location, department_id, status) VALUES
-('Senior Software Engineer', 'Develop and maintain web applications', '5+ years experience, Node.js, React', 'Remote', 2, 'Open'),
-('HR Manager', 'Manage HR operations and employee relations', '3+ years HR experience, degree preferred', 'Office', 1, 'Open'),
-('Marketing Specialist', 'Create and execute marketing campaigns', '2+ years marketing experience', 'Hybrid', 3, 'Open')
+INSERT INTO job_postings (title, description, requirements, location_id, department_id, status) VALUES
+('Senior Software Engineer', 'Develop and maintain web applications', '5+ years experience, Node.js, React', 5, 2, 'Open'),
+('HR Manager', 'Manage HR operations and employee relations', '3+ years HR experience, degree preferred', 1, 1, 'Open'),
+('Marketing Specialist', 'Create and execute marketing campaigns', '2+ years marketing experience', 2, 3, 'Open')
 ON CONFLICT DO NOTHING;
 
 COMMIT;

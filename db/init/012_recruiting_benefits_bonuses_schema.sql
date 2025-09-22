@@ -9,8 +9,8 @@
 CREATE TABLE IF NOT EXISTS job_postings (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    department VARCHAR(100) NOT NULL,
-    location VARCHAR(100) NOT NULL,
+    department_id INTEGER REFERENCES departments(id),
+    location_id INTEGER REFERENCES locations(id),
     employment_type VARCHAR(50) NOT NULL, -- Full-time, Part-time, Contract
     salary_range VARCHAR(100),
     description TEXT NOT NULL,
@@ -205,7 +205,7 @@ CREATE TABLE IF NOT EXISTS commissions (
 
 -- Recruiting indexes
 CREATE INDEX IF NOT EXISTS idx_job_postings_status ON job_postings(status);
-CREATE INDEX IF NOT EXISTS idx_job_postings_department ON job_postings(department);
+CREATE INDEX IF NOT EXISTS idx_job_postings_department ON job_postings(department_id);
 CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates(status);
 CREATE INDEX IF NOT EXISTS idx_candidates_email ON candidates(email);
 CREATE INDEX IF NOT EXISTS idx_job_applications_candidate ON job_applications(candidate_id);
@@ -233,11 +233,11 @@ CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
 -- SAMPLE DATA
 -- =============================================
 
--- Insert sample job postings
-INSERT INTO job_postings (title, department, location, employment_type, salary_range, description, requirements, created_by) VALUES
-('Senior Software Engineer', 'Engineering', 'San Francisco, CA', 'Full-time', '$120,000 - $150,000', 'We are looking for a senior software engineer to join our team...', '5+ years experience, React, Node.js, PostgreSQL', 1),
-('HR Manager', 'Human Resources', 'New York, NY', 'Full-time', '$80,000 - $100,000', 'Lead our HR team and manage employee relations...', 'Bachelor degree, 3+ years HR experience', 1),
-('Sales Representative', 'Sales', 'Chicago, IL', 'Full-time', '$60,000 - $80,000 + Commission', 'Drive sales growth and build client relationships...', '2+ years sales experience, excellent communication', 1);
+-- Insert sample job postings (assuming departments and locations exist)
+INSERT INTO job_postings (title, department_id, location_id, employment_type, salary_range, description, requirements, created_by) VALUES
+('Senior Software Engineer', 1, 1, 'Full-time', '$120,000 - $150,000', 'We are looking for a senior software engineer to join our team...', '5+ years experience, React, Node.js, PostgreSQL', 1),
+('HR Manager', 2, 2, 'Full-time', '$80,000 - $100,000', 'Lead our HR team and manage employee relations...', 'Bachelor degree, 3+ years HR experience', 1),
+('Sales Representative', 3, 3, 'Full-time', '$60,000 - $80,000 + Commission', 'Drive sales growth and build client relationships...', '2+ years sales experience, excellent communication', 1);
 
 -- Insert sample candidates
 INSERT INTO candidates (first_name, last_name, email, phone, status, source, experience_years, current_position, current_company) VALUES

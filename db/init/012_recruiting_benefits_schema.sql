@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS job_postings (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     department_id INTEGER REFERENCES departments(id),
-    location VARCHAR(255) NOT NULL,
+    location_id INTEGER REFERENCES locations(id),
     employment_type VARCHAR(50) NOT NULL CHECK (employment_type IN ('Full-time', 'Part-time', 'Contract', 'Internship')),
     salary_range VARCHAR(100),
     description TEXT,
@@ -117,10 +117,10 @@ CREATE TABLE IF NOT EXISTS retirement_enrollments (
 );
 
 -- Insert sample data for testing
-INSERT INTO job_postings (title, department_id, location, employment_type, salary_range, description, requirements, status) VALUES
-('Senior Software Engineer', 1, 'Toronto', 'Full-time', '$80,000 - $120,000', 'We are looking for a senior software engineer to join our team.', '5+ years experience, React, Node.js', 'Open'),
-('HR Coordinator', 2, 'Vancouver', 'Full-time', '$50,000 - $70,000', 'Join our HR team as a coordinator.', '2+ years HR experience, communication skills', 'Open'),
-('Logistics Manager', 3, 'Montreal', 'Full-time', '$70,000 - $90,000', 'Manage our logistics operations.', '3+ years logistics experience, leadership skills', 'Closed');
+INSERT INTO job_postings (title, department_id, location_id, employment_type, salary_range, description, requirements, status) VALUES
+('Senior Software Engineer', 1, 1, 'Full-time', '$80,000 - $120,000', 'We are looking for a senior software engineer to join our team.', '5+ years experience, React, Node.js', 'Open'),
+('HR Coordinator', 2, 2, 'Full-time', '$50,000 - $70,000', 'Join our HR team as a coordinator.', '2+ years HR experience, communication skills', 'Open'),
+('Logistics Manager', 3, 3, 'Full-time', '$70,000 - $90,000', 'Manage our logistics operations.', '3+ years logistics experience, leadership skills', 'Closed');
 
 INSERT INTO candidates (name, email, phone, position_id, experience_years, source, status) VALUES
 ('Sarah Johnson', 'sarah.johnson@email.com', '+1 (416) 555-0123', 1, 5, 'LinkedIn', 'Interview Scheduled'),

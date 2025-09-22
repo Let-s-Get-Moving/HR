@@ -2,22 +2,22 @@
 -- This creates realistic test data for all system functionality
 
 -- Insert Departments
-INSERT INTO departments (name, description, manager_id, budget) VALUES
-('Engineering', 'Software development and technical operations', NULL, 500000),
-('Sales', 'Customer acquisition and revenue generation', NULL, 300000),
-('Marketing', 'Brand awareness and lead generation', NULL, 250000),
-('Human Resources', 'Employee management and organizational development', NULL, 200000),
-('Finance', 'Financial planning and accounting', NULL, 180000),
-('Operations', 'Business operations and process management', NULL, 220000),
-('Customer Success', 'Client relationship management and support', NULL, 150000);
+INSERT INTO departments (name) VALUES
+('Engineering'),
+('Sales'),
+('Marketing'),
+('Human Resources'),
+('Finance'),
+('Operations'),
+('Customer Success');
 
 -- Insert Locations
-INSERT INTO locations (name, address, city, province, postal_code, country) VALUES
-('Toronto HQ', '123 King Street West', 'Toronto', 'ON', 'M5H 3T9', 'Canada'),
-('Vancouver Office', '456 Robson Street', 'Vancouver', 'BC', 'V6B 6L5', 'Canada'),
-('Montreal Branch', '789 Rue Saint-Jacques', 'Montreal', 'QC', 'H2Y 1N9', 'Canada'),
-('Calgary Office', '321 8th Avenue SW', 'Calgary', 'AB', 'T2P 1C5', 'Canada'),
-('Remote', 'Various locations', 'Remote', 'N/A', 'N/A', 'Canada');
+INSERT INTO locations (name, region) VALUES
+('Toronto HQ', 'Ontario'),
+('Vancouver Office', 'British Columbia'),
+('Montreal Branch', 'Quebec'),
+('Calgary Office', 'Alberta'),
+('Remote', 'Various');
 
 -- Insert realistic employees (25 employees across departments)
 INSERT INTO employees (

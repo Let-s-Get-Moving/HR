@@ -2,23 +2,23 @@
 
 -- Insert Leave Requests (various types and statuses)
 INSERT INTO leave_requests (
-    employee_id, leave_type, start_date, end_date, days_requested, 
-    reason, status, approved_by, approved_date, notes
+    employee_id, leave_type_id, start_date, end_date, total_days, 
+    reason, status, approved_by, approved_at, notes
 ) VALUES
--- Recent approved leaves
-((SELECT id FROM employees WHERE email = 'sarah.chen@company.com'), 'Vacation', '2025-08-15', '2025-08-22', 6, 'Family vacation to Europe', 'Approved', (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-08-01', 'Enjoy your trip!'),
-((SELECT id FROM employees WHERE email = 'michael.rodriguez@company.com'), 'Sick', '2025-09-05', '2025-09-06', 2, 'Flu symptoms', 'Approved', (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-09-05', 'Get well soon'),
-((SELECT id FROM employees WHERE email = 'james.wilson@company.com'), 'Personal', '2025-07-20', '2025-07-20', 1, 'Moving day', 'Approved', (SELECT id FROM employees WHERE email = 'avneet.admin@company.com'), '2025-07-18', 'Approved'),
-((SELECT id FROM employees WHERE email = 'amanda.davis@company.com'), 'Vacation', '2025-10-01', '2025-10-08', 6, 'Wedding anniversary trip', 'Approved', (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-09-15', 'Congratulations!'),
+-- Recent approved leaves (assuming leave_types table has id 1=Vacation, 2=Sick, 3=Personal)
+((SELECT id FROM employees WHERE email = 'sarah.chen@company.com'), 1, '2025-08-15', '2025-08-22', 6, 'Family vacation to Europe', 'Approved', (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-08-01', 'Enjoy your trip!'),
+((SELECT id FROM employees WHERE email = 'michael.rodriguez@company.com'), 2, '2025-09-05', '2025-09-06', 2, 'Flu symptoms', 'Approved', (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-09-05', 'Get well soon'),
+((SELECT id FROM employees WHERE email = 'james.wilson@company.com'), 3, '2025-07-20', '2025-07-20', 1, 'Moving day', 'Approved', (SELECT id FROM employees WHERE email = 'avneet.admin@company.com'), '2025-07-18', 'Approved'),
+((SELECT id FROM employees WHERE email = 'amanda.davis@company.com'), 1, '2025-10-01', '2025-10-08', 6, 'Wedding anniversary trip', 'Approved', (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-09-15', 'Congratulations!'),
 
 -- Pending requests
-((SELECT id FROM employees WHERE email = 'jennifer.wong@company.com'), 'Vacation', '2025-12-20', '2025-12-31', 8, 'Christmas holidays with family', 'Pending', NULL, NULL, NULL),
-((SELECT id FROM employees WHERE email = 'alex.kim@company.com'), 'Personal', '2025-10-15', '2025-10-15', 1, 'Medical appointment', 'Pending', NULL, NULL, NULL),
-((SELECT id FROM employees WHERE email = 'priya.patel@company.com'), 'Vacation', '2025-11-15', '2025-11-22', 6, 'Diwali celebrations', 'Pending', NULL, NULL, NULL),
+((SELECT id FROM employees WHERE email = 'jennifer.wong@company.com'), 1, '2025-12-20', '2025-12-31', 8, 'Christmas holidays with family', 'Pending', NULL, NULL, NULL),
+((SELECT id FROM employees WHERE email = 'alex.kim@company.com'), 3, '2025-10-15', '2025-10-15', 1, 'Medical appointment', 'Pending', NULL, NULL, NULL),
+((SELECT id FROM employees WHERE email = 'priya.patel@company.com'), 1, '2025-11-15', '2025-11-22', 6, 'Diwali celebrations', 'Pending', NULL, NULL, NULL),
 
 -- Some denied requests (for testing)
-((SELECT id FROM employees WHERE email = 'carlos.garcia@company.com'), 'Vacation', '2025-09-20', '2025-09-27', 6, 'Last minute trip', 'Denied', (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-09-18', 'Peak sales period, please reschedule'),
-((SELECT id FROM employees WHERE email = 'david.thompson@company.com'), 'Personal', '2025-08-30', '2025-09-03', 3, 'Extended weekend', 'Denied', (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-08-28', 'Critical deployment scheduled');
+((SELECT id FROM employees WHERE email = 'carlos.garcia@company.com'), 1, '2025-09-20', '2025-09-27', 6, 'Last minute trip', 'Rejected', (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-09-18', 'Peak sales period, please reschedule'),
+((SELECT id FROM employees WHERE email = 'david.thompson@company.com'), 3, '2025-08-30', '2025-09-03', 3, 'Extended weekend', 'Rejected', (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-08-28', 'Critical deployment scheduled');
 
 -- Insert Performance Reviews
 INSERT INTO performance_reviews (
