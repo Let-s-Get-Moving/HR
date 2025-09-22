@@ -73,16 +73,23 @@ r.get("/dashboard", async (req, res) => {
     
     const timeIntervalDays = getTimeInterval(timeRange);
     
-    // Employee stats with time range filtering
-    const employeeStats = await q(`
+    // Get total employees (always the same regardless of time range)
+    const totalEmployeeStats = await q(`
       SELECT 
         COUNT(*) as total_employees,
-        COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees,
-        COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as new_hires_this_period
+        COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees
       FROM employees
     `);
 
-    // Payroll stats with time range filtering
+    // Employee stats for the specific time range
+    const employeeStats = await q(`
+      SELECT 
+        COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as new_hires_this_period,
+        COUNT(CASE WHEN termination_date IS NOT NULL AND termination_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as terminations_this_period
+      FROM employees
+    `);
+
+    // Payroll stats for the specific time range
     const payrollStats = await q(`
       SELECT 
         COUNT(*) as total_calculations,
@@ -102,13 +109,23 @@ r.get("/dashboard", async (req, res) => {
       LIMIT 5
     `);
 
-    const totalEmployees = parseInt(employeeStats.rows[0].total_employees);
-    const activeEmployees = parseInt(employeeStats.rows[0].active_employees);
+    const totalEmployees = parseInt(totalEmployeeStats.rows[0].total_employees);
+    const activeEmployees = parseInt(totalEmployeeStats.rows[0].active_employees);
     const newHiresThisPeriod = parseInt(employeeStats.rows[0].new_hires_this_period);
+    const terminationsThisPeriod = parseInt(employeeStats.rows[0].terminations_this_period);
     const totalCalculations = parseInt(payrollStats.rows[0].total_calculations);
     const completedCalculations = parseInt(payrollStats.rows[0].completed_calculations);
     const avgGrossPay = payrollStats.rows[0].avg_gross_pay || "0.00";
     const totalPayrollAmount = payrollStats.rows[0].total_payroll_amount || "0.00";
+
+    // Calculate turnover rate based on time range
+    const turnoverRate = totalEmployees > 0 ? ((terminationsThisPeriod * 12) / totalEmployees * 100) : 0;
+    
+    // Calculate completion rate for payroll
+    const completionRate = totalCalculations > 0 ? (completedCalculations / totalCalculations * 100) : 0;
+    
+    // Calculate new hire rate
+    const newHireRate = totalEmployees > 0 ? (newHiresThisPeriod / totalEmployees * 100) : 0;
 
     // Create simple department breakdown
     const departmentBreakdown = {
@@ -131,12 +148,14 @@ r.get("/dashboard", async (req, res) => {
       totalEmployees: totalEmployees,
       activeEmployees: activeEmployees,
       newHiresThisMonth: newHiresThisPeriod,
-      turnoverRate: 0, // Simplified for now
+      turnoverRate: Math.round(turnoverRate * 10) / 10,
+      newHireRate: Math.round(newHireRate * 10) / 10,
       departmentBreakdown,
       recentActivities,
       payrollStats: {
         totalCalculations: totalCalculations,
         completedCalculations: completedCalculations,
+        completionRate: Math.round(completionRate * 10) / 10,
         avgGrossPay: avgGrossPay,
         totalPayrollAmount: totalPayrollAmount
       }
