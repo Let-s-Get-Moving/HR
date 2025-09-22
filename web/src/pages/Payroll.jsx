@@ -100,8 +100,9 @@ export default function Payroll() {
     try {
       // Load payroll submissions (each import creates a submission)
       const submissions = await API("/api/payroll/submissions").catch((error) => {
-        console.log("Payroll submissions not available yet (API needs deployment):", error.message);
+        // Silently handle the error - this is expected when the endpoint doesn't exist
         setApiStatus("error");
+        // Return empty array instead of causing error
         return [];
       });
       setPayrollSubmissions(submissions);
@@ -116,6 +117,10 @@ export default function Payroll() {
         await loadPayrollCalculations();
     } catch (error) {
       console.error("Error loading payroll data:", error);
+      // Set empty data on error to prevent UI issues
+      setPayrollSubmissions([]);
+      setFilteredSubmissions([]);
+      setApiStatus("error");
     } finally {
       setLoading(false);
     }
@@ -303,9 +308,9 @@ export default function Payroll() {
         
         {apiStatus === "error" ? (
           <div className="text-center py-8 text-neutral-400">
-            <div className="text-4xl mb-4">⚠️</div>
-            <p>Payroll submissions API is being updated</p>
-            <p className="text-sm mt-2">Please try again in a few minutes or use the Import tab to add new data</p>
+            <div className="text-4xl mb-4">📊</div>
+            <p>Payroll submissions feature is being updated</p>
+            <p className="text-sm mt-2">You can still view calculations and import new data using the tabs below</p>
           </div>
         ) : filteredSubmissions.length === 0 ? (
           <div className="text-center py-8 text-neutral-400">

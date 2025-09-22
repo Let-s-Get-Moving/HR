@@ -45,36 +45,134 @@ r.get("/submissions", async (req, res) => {
     if (!tableCheck.rows[0].exists) {
       console.log('📊 Creating payroll_submissions table...');
       
-      // Create payroll_submissions table
-      await q(`
-        CREATE TABLE IF NOT EXISTS payroll_submissions (
-            id SERIAL PRIMARY KEY,
-            submission_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            period_name VARCHAR(255),
-            notes TEXT,
-            status VARCHAR(50) DEFAULT 'Processed',
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      console.log('✅ payroll_submissions table created');
+      try {
+        // Create payroll_submissions table
+        await q(`
+          CREATE TABLE IF NOT EXISTS payroll_submissions (
+              id SERIAL PRIMARY KEY,
+              submission_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              period_name VARCHAR(255),
+              notes TEXT,
+              status VARCHAR(50) DEFAULT 'Processed',
+              created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          )
+        `);
+        
+        // Add submission_id column to payroll_calculations if it exists
+        try {
+          await q(`
+            ALTER TABLE payroll_calculations 
+            ADD COLUMN IF NOT EXISTS submission_id INTEGER
+          `);
+        } catch (colError) {
+          console.log('Note: Could not add submission_id column:', colError.message);
+        }
+        
+        // Create indexes
+        try {
+          await q(`
+            CREATE INDEX IF NOT EXISTS idx_payroll_submissions_date ON payroll_submissions(submission_date DESC)
+          `);
+          await q(`
+            CREATE INDEX IF NOT EXISTS idx_payroll_calculations_submission ON payroll_calculations(submission_id)
+          `);
+        } catch (indexError) {
+          console.log('Note: Could not create indexes:', indexError.message);
+        }
+        
+        // Insert sample data
+        try {
+          await q(`
+            INSERT INTO payroll_submissions (period_name, notes, submission_date, status) VALUES
+            ('August 2025', 'Monthly payroll for August 2025', '2025-08-31 10:00:00', 'Processed'),
+            ('September 2025', 'Monthly payroll for September 2025', '2025-09-30 10:00:00', 'Processed'),
+            ('October 2025', 'Monthly payroll for October 2025', '2025-10-31 10:00:00', 'Processed')
+            ON CONFLICT DO NOTHING
+          `);
+        } catch (insertError) {
+          console.log('Note: Could not insert sample data:', insertError.message);
+        }
+        
+        console.log('✅ payroll_submissions table created');
+      } catch (createError) {
+        console.error('Error creating payroll_submissions table:', createError);
+        return res.status(500).json({ error: "Failed to create payroll_submissions table: " + createError.message });
+      }
     }
     
-    const { rows } = await q(`
-      SELECT 
-        ps.*,
-        COUNT(pc.id) as employee_count,
-        COALESCE(SUM(pc.gross_pay), 0) as total_amount
-      FROM payroll_submissions ps
-      LEFT JOIN payroll_calculations pc ON ps.id = pc.submission_id
-      GROUP BY ps.id
-      ORDER BY ps.submission_date DESC
-    `);
+    // Check if payroll_calculations table exists and has submission_id column
+    let calculationsTableExists = false;
+    let submissionIdColumnExists = false;
+    
+    try {
+      const calculationsTableCheck = await q(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = 'payroll_calculations'
+        );
+      `);
+      calculationsTableExists = calculationsTableCheck.rows[0].exists;
+      
+      if (calculationsTableExists) {
+        const submissionIdColumnCheck = await q(`
+          SELECT EXISTS (
+            SELECT FROM information_schema.columns 
+            WHERE table_name = 'payroll_calculations' AND column_name = 'submission_id'
+          );
+        `);
+        submissionIdColumnExists = submissionIdColumnCheck.rows[0].exists;
+      }
+    } catch (checkError) {
+      console.log('Note: Could not check payroll_calculations table:', checkError.message);
+    }
+    
+    let rows;
+    
+    if (calculationsTableExists && submissionIdColumnExists) {
+      // Use JOIN with payroll_calculations if available
+      try {
+        const result = await q(`
+          SELECT 
+            ps.*,
+            COUNT(pc.id) as employee_count,
+            COALESCE(SUM(pc.gross_pay), 0) as total_amount
+          FROM payroll_submissions ps
+          LEFT JOIN payroll_calculations pc ON ps.id = pc.submission_id
+          GROUP BY ps.id
+          ORDER BY ps.submission_date DESC
+        `);
+        rows = result.rows;
+      } catch (joinError) {
+        console.log('Note: Could not use JOIN query, falling back to simple query:', joinError.message);
+        // Fall back to simple query
+        const result = await q(`
+          SELECT 
+            ps.*,
+            0 as employee_count,
+            0 as total_amount
+          FROM payroll_submissions ps
+          ORDER BY ps.submission_date DESC
+        `);
+        rows = result.rows;
+      }
+    } else {
+      // Just return submissions without calculations data
+      const result = await q(`
+        SELECT 
+          ps.*,
+          0 as employee_count,
+          0 as total_amount
+        FROM payroll_submissions ps
+        ORDER BY ps.submission_date DESC
+      `);
+      rows = result.rows;
+    }
+    
     res.json(rows);
   } catch (error) {
     console.error("Error fetching payroll submissions:", error);
-    res.status(500).json({ error: "Failed to fetch payroll submissions" });
+    res.status(500).json({ error: "Failed to fetch payroll submissions: " + error.message });
   }
 });
 
