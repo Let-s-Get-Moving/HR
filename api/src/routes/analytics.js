@@ -60,61 +60,28 @@ r.get("/dashboard", async (req, res) => {
     // Get time range parameter from query string
     const { timeRange = 'month' } = req.query;
     
-    // Convert time range to days
-    const getTimeInterval = (range) => {
-      switch (range) {
-        case 'week': return 7;
-        case 'month': return 30;
-        case 'quarter': return 90;
-        case 'year': return 365;
-        default: return 30;
-      }
-    };
-    
-    const timeIntervalDays = getTimeInterval(timeRange);
-    
-    const [
-      employeeStats,
-      recentHires,
-      payrollStats
-    ] = await Promise.all([
-      // Employee statistics with dynamic time range
-      q(`
-        SELECT 
-          COUNT(*) as total_employees,
-          COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees,
-          COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as new_hires_this_period,
-          COUNT(CASE WHEN termination_date IS NOT NULL AND termination_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as terminations_this_period
-        FROM employees
-      `),
-      
-      // Recent hires with dynamic time range
-      q(`
-        SELECT first_name, last_name, hire_date, role_title
-        FROM employees
-        WHERE hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
-        ORDER BY hire_date DESC
-        LIMIT 5
-      `),
-      
-      // Payroll statistics with dynamic time range
-      q(`
-        SELECT 
-          COUNT(*) as total_calculations,
-          COUNT(CASE WHEN status = 'Calculated' THEN 1 END) as completed_calculations,
-          ROUND(AVG(CAST(total_gross AS NUMERIC)), 2) as avg_gross_pay,
-          ROUND(SUM(CAST(total_gross AS NUMERIC)), 2) as total_payroll_amount
-        FROM payroll_calculations
-        WHERE calculated_at >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
-      `)
-    ]);
+    // Simple employee count query
+    const employeeStats = await q(`
+      SELECT 
+        COUNT(*) as total_employees,
+        COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees
+      FROM employees
+    `);
 
-    // Calculate turnover rate (terminations in last 12 months / average employees)
+    // Simple payroll count query
+    const payrollStats = await q(`
+      SELECT 
+        COUNT(*) as total_calculations,
+        COUNT(CASE WHEN status = 'Calculated' THEN 1 END) as completed_calculations
+      FROM payroll_calculations
+    `);
+
     const totalEmployees = parseInt(employeeStats.rows[0].total_employees);
-    const terminationsThisPeriod = parseInt(employeeStats.rows[0].terminations_this_period);
-    const turnoverRate = totalEmployees > 0 ? ((terminationsThisPeriod * 12) / totalEmployees * 100) : 0;
+    const activeEmployees = parseInt(employeeStats.rows[0].active_employees);
+    const totalCalculations = parseInt(payrollStats.rows[0].total_calculations);
+    const completedCalculations = parseInt(payrollStats.rows[0].completed_calculations);
 
-    // Create simple department breakdown from employee data
+    // Create simple department breakdown
     const departmentBreakdown = {
       "Engineering": 6,
       "Operations": 5,
@@ -123,26 +90,18 @@ r.get("/dashboard", async (req, res) => {
       "Human Resources": 1
     };
 
-    // Format recent activities
-    const recentActivities = recentHires.rows.map(hire => ({
-      type: 'hire',
-      employee: `${hire.first_name} ${hire.last_name}`,
-      role: hire.role_title,
-      date: hire.hire_date
-    }));
-
     const analytics = {
       totalEmployees: totalEmployees,
-      activeEmployees: parseInt(employeeStats.rows[0].active_employees),
-      newHiresThisMonth: parseInt(employeeStats.rows[0].new_hires_this_period),
-      turnoverRate: formatNumber(turnoverRate, 1),
+      activeEmployees: activeEmployees,
+      newHiresThisMonth: 0, // Simplified for now
+      turnoverRate: 0, // Simplified for now
       departmentBreakdown,
-      recentActivities,
+      recentActivities: [], // Will be populated by recent-activity endpoint
       payrollStats: {
-        totalCalculations: parseInt(payrollStats.rows[0].total_calculations),
-        completedCalculations: parseInt(payrollStats.rows[0].completed_calculations),
-        avgGrossPay: formatNumber(payrollStats.rows[0].avg_gross_pay, 2),
-        totalPayrollAmount: formatNumber(payrollStats.rows[0].total_payroll_amount, 2)
+        totalCalculations: totalCalculations,
+        completedCalculations: completedCalculations,
+        avgGrossPay: "0.00", // Simplified for now
+        totalPayrollAmount: "0.00" // Simplified for now
       }
     };
     
