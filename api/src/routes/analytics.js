@@ -12,8 +12,8 @@ r.get("/test", (_req, res) => {
 // Get recent activity
 r.get("/recent-activity", async (_req, res) => {
   try {
-    // Get real recent activity from database
-    const [recentHires, recentPayroll, recentLeave, recentPerformance] = await Promise.all([
+    // Get real recent activity from database - only use tables that exist
+    const [recentHires, recentPayroll] = await Promise.all([
       // Recent hires
       q(`
         SELECT 
@@ -38,43 +38,13 @@ r.get("/recent-activity", async (_req, res) => {
         WHERE submission_date >= CURRENT_DATE - INTERVAL '30 days'
         ORDER BY submission_date DESC
         LIMIT 5
-      `),
-      
-      // Recent leave requests
-      q(`
-        SELECT 
-          'leave' as type,
-          CONCAT('Leave request ', status, ' for ', e.first_name, ' ', e.last_name) as description,
-          created_at as timestamp,
-          lr.id
-        FROM leave_requests lr
-        JOIN employees e ON lr.employee_id = e.id
-        WHERE lr.created_at >= CURRENT_DATE - INTERVAL '30 days'
-        ORDER BY lr.created_at DESC
-        LIMIT 5
-      `),
-      
-      // Recent performance reviews
-      q(`
-        SELECT 
-          'performance' as type,
-          CONCAT('Performance review completed for ', e.first_name, ' ', e.last_name) as description,
-          review_date as timestamp,
-          pr.id
-        FROM performance_reviews pr
-        JOIN employees e ON pr.employee_id = e.id
-        WHERE pr.review_date >= CURRENT_DATE - INTERVAL '30 days'
-        ORDER BY pr.review_date DESC
-        LIMIT 5
       `)
     ]);
     
     // Combine all activities and sort by timestamp
     const allActivities = [
       ...recentHires.rows,
-      ...recentPayroll.rows,
-      ...recentLeave.rows,
-      ...recentPerformance.rows
+      ...recentPayroll.rows
     ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
     
     res.json(allActivities);
@@ -107,9 +77,7 @@ r.get("/dashboard", async (req, res) => {
       employeeStats,
       departmentStats,
       recentHires,
-      leaveStats,
-      performanceStats,
-      timeStats
+      payrollStats
     ] = await Promise.all([
       // Employee statistics with dynamic time range
       q(`
@@ -141,41 +109,15 @@ r.get("/dashboard", async (req, res) => {
         LIMIT 5
       `),
       
-      // Leave statistics with dynamic time range
+      // Payroll statistics with dynamic time range
       q(`
         SELECT 
-          COUNT(*) as total_requests,
-          COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending_requests,
-          COUNT(CASE WHEN status = 'Approved' THEN 1 END) as approved_requests
-        FROM leave_requests
-        WHERE created_at >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
-      `),
-      
-      // Performance statistics with dynamic time range
-      q(`
-        SELECT 
-          COUNT(*) as total_reviews,
-          AVG(overall_rating) as average_rating,
-          COUNT(CASE WHEN overall_rating >= 4.0 THEN 1 END) as high_performers
-        FROM performance_reviews
-        WHERE review_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
-      `),
-      
-      // Time tracking statistics with dynamic time range
-      q(`
-        SELECT 
-          COUNT(*) as total_entries,
-          AVG(
-            CASE 
-              WHEN hours_worked IS NOT NULL THEN hours_worked
-              WHEN clock_in IS NOT NULL AND clock_out IS NOT NULL THEN 
-                EXTRACT(EPOCH FROM (clock_out - clock_in))/3600
-              ELSE 8.0
-            END
-          ) as avg_hours_per_day,
-          SUM(COALESCE(overtime_hours, 0)) as total_overtime
-        FROM time_entries
-        WHERE work_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
+          COUNT(*) as total_calculations,
+          COUNT(CASE WHEN status = 'Calculated' THEN 1 END) as completed_calculations,
+          ROUND(AVG(CAST(total_gross AS NUMERIC)), 2) as avg_gross_pay,
+          ROUND(SUM(CAST(total_gross AS NUMERIC)), 2) as total_payroll_amount
+        FROM payroll_calculations
+        WHERE calculated_at >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
       `)
     ]);
 
@@ -205,20 +147,11 @@ r.get("/dashboard", async (req, res) => {
       turnoverRate: formatNumber(turnoverRate, 1),
       departmentBreakdown,
       recentActivities,
-      leaveStats: {
-        totalRequests: parseInt(leaveStats.rows[0].total_requests),
-        pendingRequests: parseInt(leaveStats.rows[0].pending_requests),
-        approvedRequests: parseInt(leaveStats.rows[0].approved_requests)
-      },
-      performanceStats: {
-        totalReviews: parseInt(performanceStats.rows[0].total_reviews),
-        averageRating: formatRating(performanceStats.rows[0].average_rating),
-        highPerformers: parseInt(performanceStats.rows[0].high_performers)
-      },
-      timeStats: {
-        totalEntries: parseInt(timeStats.rows[0].total_entries),
-        avgHoursPerDay: formatHours(timeStats.rows[0].avg_hours_per_day),
-        totalOvertime: formatHours(timeStats.rows[0].total_overtime)
+      payrollStats: {
+        totalCalculations: parseInt(payrollStats.rows[0].total_calculations),
+        completedCalculations: parseInt(payrollStats.rows[0].completed_calculations),
+        avgGrossPay: formatNumber(payrollStats.rows[0].avg_gross_pay, 2),
+        totalPayrollAmount: formatNumber(payrollStats.rows[0].total_payroll_amount, 2)
       }
     };
     
