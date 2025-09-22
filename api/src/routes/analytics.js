@@ -90,18 +90,18 @@ r.get("/dashboard", async (req, res) => {
     // Get time range parameter from query string
     const { timeRange = 'month' } = req.query;
     
-    // Convert time range to SQL interval
+    // Convert time range to days
     const getTimeInterval = (range) => {
       switch (range) {
-        case 'week': return "7 days";
-        case 'month': return "30 days";
-        case 'quarter': return "90 days";
-        case 'year': return "365 days";
-        default: return "30 days";
+        case 'week': return 7;
+        case 'month': return 30;
+        case 'quarter': return 90;
+        case 'year': return 365;
+        default: return 30;
       }
     };
     
-    const timeInterval = getTimeInterval(timeRange);
+    const timeIntervalDays = getTimeInterval(timeRange);
     
     const [
       employeeStats,
@@ -116,8 +116,8 @@ r.get("/dashboard", async (req, res) => {
         SELECT 
           COUNT(*) as total_employees,
           COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees,
-          COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '${timeInterval}' THEN 1 END) as new_hires_this_period,
-          COUNT(CASE WHEN termination_date IS NOT NULL AND termination_date >= CURRENT_DATE - INTERVAL '${timeInterval}' THEN 1 END) as terminations_this_period
+          COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as new_hires_this_period,
+          COUNT(CASE WHEN termination_date IS NOT NULL AND termination_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as terminations_this_period
         FROM employees
       `),
       
@@ -136,7 +136,7 @@ r.get("/dashboard", async (req, res) => {
       q(`
         SELECT first_name, last_name, hire_date, role_title
         FROM employees
-        WHERE hire_date >= CURRENT_DATE - INTERVAL '${timeInterval}'
+        WHERE hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
         ORDER BY hire_date DESC
         LIMIT 5
       `),
@@ -148,7 +148,7 @@ r.get("/dashboard", async (req, res) => {
           COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending_requests,
           COUNT(CASE WHEN status = 'Approved' THEN 1 END) as approved_requests
         FROM leave_requests
-        WHERE created_at >= CURRENT_DATE - INTERVAL '${timeInterval}'
+        WHERE created_at >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
       `),
       
       // Performance statistics with dynamic time range
@@ -158,7 +158,7 @@ r.get("/dashboard", async (req, res) => {
           AVG(overall_rating) as average_rating,
           COUNT(CASE WHEN overall_rating >= 4.0 THEN 1 END) as high_performers
         FROM performance_reviews
-        WHERE review_date >= CURRENT_DATE - INTERVAL '${timeInterval}'
+        WHERE review_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
       `),
       
       // Time tracking statistics with dynamic time range
@@ -175,7 +175,7 @@ r.get("/dashboard", async (req, res) => {
           ) as avg_hours_per_day,
           SUM(COALESCE(overtime_hours, 0)) as total_overtime
         FROM time_entries
-        WHERE work_date >= CURRENT_DATE - INTERVAL '${timeInterval}'
+        WHERE work_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
       `)
     ]);
 
