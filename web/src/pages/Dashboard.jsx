@@ -25,7 +25,7 @@ export default function Dashboard({ onNavigate }) {
     try {
       setRefreshing(true);
       const [analyticsData, wfData, attData, cmpData, payrollData, activityData] = await Promise.all([
-        API("/api/analytics/dashboard").catch(() => null),
+        API(`/api/analytics/dashboard?timeRange=${selectedTimeRange}`).catch(() => null),
         API("/api/metrics/workforce").catch(() => null),
         API("/api/metrics/attendance").catch(() => null),
         API("/api/metrics/compliance").catch(() => null),

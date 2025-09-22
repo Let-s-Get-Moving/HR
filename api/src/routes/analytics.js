@@ -12,29 +12,72 @@ r.get("/test", (_req, res) => {
 // Get recent activity
 r.get("/recent-activity", async (_req, res) => {
   try {
-    // Return mock recent activity data for now
-    const recentActivity = [
-      {
-        id: 1,
-        description: "New employee John Doe was hired",
-        timestamp: new Date().toISOString(),
-        type: "hire"
-      },
-      {
-        id: 2,
-        description: "Payroll processed for August 2025",
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        type: "payroll"
-      },
-      {
-        id: 3,
-        description: "Leave request approved for Jane Smith",
-        timestamp: new Date(Date.now() - 7200000).toISOString(),
-        type: "leave"
-      }
-    ];
+    // Get real recent activity from database
+    const [recentHires, recentPayroll, recentLeave, recentPerformance] = await Promise.all([
+      // Recent hires
+      q(`
+        SELECT 
+          'hire' as type,
+          CONCAT('New employee ', first_name, ' ', last_name, ' was hired') as description,
+          hire_date as timestamp,
+          id
+        FROM employees 
+        WHERE hire_date >= CURRENT_DATE - INTERVAL '30 days'
+        ORDER BY hire_date DESC
+        LIMIT 5
+      `),
+      
+      // Recent payroll submissions
+      q(`
+        SELECT 
+          'payroll' as type,
+          CONCAT('Payroll processed for ', period_name) as description,
+          submission_date as timestamp,
+          id
+        FROM payroll_submissions 
+        WHERE submission_date >= CURRENT_DATE - INTERVAL '30 days'
+        ORDER BY submission_date DESC
+        LIMIT 5
+      `),
+      
+      // Recent leave requests
+      q(`
+        SELECT 
+          'leave' as type,
+          CONCAT('Leave request ', status, ' for ', e.first_name, ' ', e.last_name) as description,
+          created_at as timestamp,
+          lr.id
+        FROM leave_requests lr
+        JOIN employees e ON lr.employee_id = e.id
+        WHERE lr.created_at >= CURRENT_DATE - INTERVAL '30 days'
+        ORDER BY lr.created_at DESC
+        LIMIT 5
+      `),
+      
+      // Recent performance reviews
+      q(`
+        SELECT 
+          'performance' as type,
+          CONCAT('Performance review completed for ', e.first_name, ' ', e.last_name) as description,
+          review_date as timestamp,
+          pr.id
+        FROM performance_reviews pr
+        JOIN employees e ON pr.employee_id = e.id
+        WHERE pr.review_date >= CURRENT_DATE - INTERVAL '30 days'
+        ORDER BY pr.review_date DESC
+        LIMIT 5
+      `)
+    ]);
     
-    res.json(recentActivity);
+    // Combine all activities and sort by timestamp
+    const allActivities = [
+      ...recentHires.rows,
+      ...recentPayroll.rows,
+      ...recentLeave.rows,
+      ...recentPerformance.rows
+    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+    
+    res.json(allActivities);
   } catch (error) {
     console.error("Error fetching recent activity:", error);
     res.status(500).json({ error: "Failed to fetch recent activity" });
@@ -42,8 +85,24 @@ r.get("/recent-activity", async (_req, res) => {
 });
 
 // Get dashboard analytics
-r.get("/dashboard", async (_req, res) => {
+r.get("/dashboard", async (req, res) => {
   try {
+    // Get time range parameter from query string
+    const { timeRange = 'month' } = req.query;
+    
+    // Convert time range to SQL interval
+    const getTimeInterval = (range) => {
+      switch (range) {
+        case 'week': return "7 days";
+        case 'month': return "30 days";
+        case 'quarter': return "90 days";
+        case 'year': return "365 days";
+        default: return "30 days";
+      }
+    };
+    
+    const timeInterval = getTimeInterval(timeRange);
+    
     const [
       employeeStats,
       departmentStats,
@@ -52,13 +111,13 @@ r.get("/dashboard", async (_req, res) => {
       performanceStats,
       timeStats
     ] = await Promise.all([
-      // Employee statistics
+      // Employee statistics with dynamic time range
       q(`
         SELECT 
           COUNT(*) as total_employees,
           COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees,
-          COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as new_hires_this_month,
-          COUNT(CASE WHEN termination_date IS NOT NULL AND termination_date >= CURRENT_DATE - INTERVAL '30 days' THEN 1 END) as terminations_this_month
+          COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '${timeInterval}' THEN 1 END) as new_hires_this_period,
+          COUNT(CASE WHEN termination_date IS NOT NULL AND termination_date >= CURRENT_DATE - INTERVAL '${timeInterval}' THEN 1 END) as terminations_this_period
         FROM employees
       `),
       
@@ -73,36 +132,36 @@ r.get("/dashboard", async (_req, res) => {
         ORDER BY employee_count DESC
       `),
       
-      // Recent hires
+      // Recent hires with dynamic time range
       q(`
         SELECT first_name, last_name, hire_date, role_title
         FROM employees
-        WHERE hire_date >= CURRENT_DATE - INTERVAL '30 days'
+        WHERE hire_date >= CURRENT_DATE - INTERVAL '${timeInterval}'
         ORDER BY hire_date DESC
         LIMIT 5
       `),
       
-      // Leave statistics
+      // Leave statistics with dynamic time range
       q(`
         SELECT 
           COUNT(*) as total_requests,
           COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending_requests,
           COUNT(CASE WHEN status = 'Approved' THEN 1 END) as approved_requests
         FROM leave_requests
-        WHERE start_date >= CURRENT_DATE - INTERVAL '30 days'
+        WHERE created_at >= CURRENT_DATE - INTERVAL '${timeInterval}'
       `),
       
-      // Performance statistics
+      // Performance statistics with dynamic time range
       q(`
         SELECT 
           COUNT(*) as total_reviews,
           AVG(overall_rating) as average_rating,
           COUNT(CASE WHEN overall_rating >= 4.0 THEN 1 END) as high_performers
         FROM performance_reviews
-        WHERE review_date >= CURRENT_DATE - INTERVAL '90 days'
+        WHERE review_date >= CURRENT_DATE - INTERVAL '${timeInterval}'
       `),
       
-      // Time tracking statistics
+      // Time tracking statistics with dynamic time range
       q(`
         SELECT 
           COUNT(*) as total_entries,
@@ -116,14 +175,14 @@ r.get("/dashboard", async (_req, res) => {
           ) as avg_hours_per_day,
           SUM(COALESCE(overtime_hours, 0)) as total_overtime
         FROM time_entries
-        WHERE work_date >= CURRENT_DATE - INTERVAL '30 days'
+        WHERE work_date >= CURRENT_DATE - INTERVAL '${timeInterval}'
       `)
     ]);
 
     // Calculate turnover rate (terminations in last 12 months / average employees)
     const totalEmployees = parseInt(employeeStats.rows[0].total_employees);
-    const terminationsThisMonth = parseInt(employeeStats.rows[0].terminations_this_month);
-    const turnoverRate = totalEmployees > 0 ? ((terminationsThisMonth * 12) / totalEmployees * 100) : 0;
+    const terminationsThisPeriod = parseInt(employeeStats.rows[0].terminations_this_period);
+    const turnoverRate = totalEmployees > 0 ? ((terminationsThisPeriod * 12) / totalEmployees * 100) : 0;
 
     // Format department breakdown
     const departmentBreakdown = {};
@@ -142,7 +201,7 @@ r.get("/dashboard", async (_req, res) => {
     const analytics = {
       totalEmployees: totalEmployees,
       activeEmployees: parseInt(employeeStats.rows[0].active_employees),
-      newHiresThisMonth: parseInt(employeeStats.rows[0].new_hires_this_month),
+      newHiresThisMonth: parseInt(employeeStats.rows[0].new_hires_this_period),
       turnoverRate: formatNumber(turnoverRate, 1),
       departmentBreakdown,
       recentActivities,
