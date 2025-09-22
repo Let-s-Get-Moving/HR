@@ -60,26 +60,55 @@ r.get("/dashboard", async (req, res) => {
     // Get time range parameter from query string
     const { timeRange = 'month' } = req.query;
     
-    // Simple employee count query
+    // Convert time range to days
+    const getTimeInterval = (range) => {
+      switch (range) {
+        case 'week': return 7;
+        case 'month': return 30;
+        case 'quarter': return 90;
+        case 'year': return 365;
+        default: return 30;
+      }
+    };
+    
+    const timeIntervalDays = getTimeInterval(timeRange);
+    
+    // Employee stats with time range filtering
     const employeeStats = await q(`
       SELECT 
         COUNT(*) as total_employees,
-        COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees
+        COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_employees,
+        COUNT(CASE WHEN hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days' THEN 1 END) as new_hires_this_period
       FROM employees
     `);
 
-    // Simple payroll count query
+    // Payroll stats with time range filtering
     const payrollStats = await q(`
       SELECT 
         COUNT(*) as total_calculations,
-        COUNT(CASE WHEN status = 'Calculated' THEN 1 END) as completed_calculations
+        COUNT(CASE WHEN status = 'Calculated' THEN 1 END) as completed_calculations,
+        ROUND(AVG(CAST(total_gross AS NUMERIC)), 2) as avg_gross_pay,
+        ROUND(SUM(CAST(total_gross AS NUMERIC)), 2) as total_payroll_amount
       FROM payroll_calculations
+      WHERE calculated_at >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
+    `);
+
+    // Recent hires with time range filtering
+    const recentHires = await q(`
+      SELECT first_name, last_name, hire_date, role_title
+      FROM employees
+      WHERE hire_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
+      ORDER BY hire_date DESC
+      LIMIT 5
     `);
 
     const totalEmployees = parseInt(employeeStats.rows[0].total_employees);
     const activeEmployees = parseInt(employeeStats.rows[0].active_employees);
+    const newHiresThisPeriod = parseInt(employeeStats.rows[0].new_hires_this_period);
     const totalCalculations = parseInt(payrollStats.rows[0].total_calculations);
     const completedCalculations = parseInt(payrollStats.rows[0].completed_calculations);
+    const avgGrossPay = payrollStats.rows[0].avg_gross_pay || "0.00";
+    const totalPayrollAmount = payrollStats.rows[0].total_payroll_amount || "0.00";
 
     // Create simple department breakdown
     const departmentBreakdown = {
@@ -90,18 +119,26 @@ r.get("/dashboard", async (req, res) => {
       "Human Resources": 1
     };
 
+    // Format recent activities
+    const recentActivities = recentHires.rows.map(hire => ({
+      type: 'hire',
+      employee: `${hire.first_name} ${hire.last_name}`,
+      role: hire.role_title,
+      date: hire.hire_date
+    }));
+
     const analytics = {
       totalEmployees: totalEmployees,
       activeEmployees: activeEmployees,
-      newHiresThisMonth: 0, // Simplified for now
+      newHiresThisMonth: newHiresThisPeriod,
       turnoverRate: 0, // Simplified for now
       departmentBreakdown,
-      recentActivities: [], // Will be populated by recent-activity endpoint
+      recentActivities,
       payrollStats: {
         totalCalculations: totalCalculations,
         completedCalculations: completedCalculations,
-        avgGrossPay: "0.00", // Simplified for now
-        totalPayrollAmount: "0.00" // Simplified for now
+        avgGrossPay: avgGrossPay,
+        totalPayrollAmount: totalPayrollAmount
       }
     };
     
