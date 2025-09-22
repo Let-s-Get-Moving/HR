@@ -1,20 +1,13 @@
 -- Recruiting and Benefits Management Schema
 -- This file creates the necessary tables for recruiting and benefits functionality
 
--- Job Postings Table
-CREATE TABLE IF NOT EXISTS job_postings (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    department_id INTEGER REFERENCES departments(id),
-    location_id INTEGER REFERENCES locations(id),
-    employment_type VARCHAR(50) NOT NULL CHECK (employment_type IN ('Full-time', 'Part-time', 'Contract', 'Internship')),
-    salary_range VARCHAR(100),
-    description TEXT,
-    requirements TEXT,
-    status VARCHAR(20) NOT NULL DEFAULT 'Open' CHECK (status IN ('Open', 'Closed', 'On Hold')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Add missing columns to existing job_postings table
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS employment_type VARCHAR(50);
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS salary_range VARCHAR(100);
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS requirements TEXT;
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 -- Candidates Table
 CREATE TABLE IF NOT EXISTS candidates (

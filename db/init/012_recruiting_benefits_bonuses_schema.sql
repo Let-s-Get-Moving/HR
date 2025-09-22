@@ -5,21 +5,14 @@
 -- RECRUITING TABLES
 -- =============================================
 
--- Job postings table
-CREATE TABLE IF NOT EXISTS job_postings (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    department_id INTEGER REFERENCES departments(id),
-    location_id INTEGER REFERENCES locations(id),
-    employment_type VARCHAR(50) NOT NULL, -- Full-time, Part-time, Contract
-    salary_range VARCHAR(100),
-    description TEXT NOT NULL,
-    requirements TEXT,
-    status VARCHAR(50) DEFAULT 'Open', -- Open, Closed, On Hold
-    created_by INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Add missing columns to existing job_postings table
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS employment_type VARCHAR(50);
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS salary_range VARCHAR(100);
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS requirements TEXT;
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id);
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
 -- Candidates table
 CREATE TABLE IF NOT EXISTS candidates (

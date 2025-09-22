@@ -24,23 +24,23 @@ INSERT INTO leave_requests (
 INSERT INTO performance_reviews (
     employee_id, reviewer_id, review_date, review_period, 
     overall_rating, strengths, areas_for_improvement, goals_for_next_period,
-    status, completed_date
+    comments
 ) VALUES
 -- Engineering team reviews
-((SELECT id FROM employees WHERE email = 'sarah.chen@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-06-15', 'H1 2025', 4.5, 'Excellent technical skills, great team player, delivers on time', 'Could improve documentation practices', 'Lead a major feature development, mentor junior developers', 'Completed', '2025-06-15'),
+((SELECT id FROM employees WHERE email = 'sarah.chen@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-06-15', 'H1 2025', 4.5, 'Excellent technical skills, great team player, delivers on time', 'Could improve documentation practices', 'Lead a major feature development, mentor junior developers', 'Great performance overall'),
 
-((SELECT id FROM employees WHERE email = 'michael.rodriguez@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-06-20', 'H1 2025', 4.8, 'Outstanding leadership, technical expertise, drives innovation', 'Sometimes takes on too much, needs to delegate more', 'Develop team scalability plan, improve delegation skills', 'Completed', '2025-06-20'),
+((SELECT id FROM employees WHERE email = 'michael.rodriguez@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-06-20', 'H1 2025', 4.8, 'Outstanding leadership, technical expertise, drives innovation', 'Sometimes takes on too much, needs to delegate more', 'Develop team scalability plan, improve delegation skills', 'Exceptional leadership qualities'),
 
-((SELECT id FROM employees WHERE email = 'jennifer.wong@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-06-10', 'H1 2025', 4.2, 'Strong frontend skills, good eye for design, learns quickly', 'Needs more backend experience, improve code review participation', 'Complete full-stack training, contribute to backend projects', 'Completed', '2025-06-10'),
+((SELECT id FROM employees WHERE email = 'jennifer.wong@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-06-10', 'H1 2025', 4.2, 'Strong frontend skills, good eye for design, learns quickly', 'Needs more backend experience, improve code review participation', 'Complete full-stack training, contribute to backend projects', 'Good progress, keep it up'),
 
 -- Sales team reviews
-((SELECT id FROM employees WHERE email = 'james.wilson@company.com'), (SELECT id FROM employees WHERE email = 'avneet.admin@company.com'), '2025-07-01', 'H1 2025', 4.9, 'Exceptional sales results, great team leadership, strategic thinking', 'Could improve CRM data entry consistency', 'Achieve 120% of sales target, develop new market strategy', 'Completed', '2025-07-01'),
+((SELECT id FROM employees WHERE email = 'james.wilson@company.com'), (SELECT id FROM employees WHERE email = 'avneet.admin@company.com'), '2025-07-01', 'H1 2025', 4.9, 'Exceptional sales results, great team leadership, strategic thinking', 'Could improve CRM data entry consistency', 'Achieve 120% of sales target, develop new market strategy', 'Outstanding sales performance'),
 
-((SELECT id FROM employees WHERE email = 'amanda.davis@company.com'), (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-06-25', 'H1 2025', 4.6, 'Excellent closing skills, great client relationships, consistent performer', 'Needs to improve prospecting activities', 'Increase pipeline by 30%, mentor junior sales rep', 'Completed', '2025-06-25'),
+((SELECT id FROM employees WHERE email = 'amanda.davis@company.com'), (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-06-25', 'H1 2025', 4.6, 'Excellent closing skills, great client relationships, consistent performer', 'Needs to improve prospecting activities', 'Increase pipeline by 30%, mentor junior sales rep', 'Strong sales execution'),
 
 -- Pending reviews
-((SELECT id FROM employees WHERE email = 'alex.kim@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-09-15', 'H2 2025', NULL, NULL, NULL, NULL, 'Scheduled', NULL),
-((SELECT id FROM employees WHERE email = 'stephanie.taylor@company.com'), (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-09-20', 'H2 2025', NULL, NULL, NULL, NULL, 'Scheduled', NULL);
+((SELECT id FROM employees WHERE email = 'alex.kim@company.com'), (SELECT id FROM employees WHERE email = 'robert.johnson@company.com'), '2025-09-15', 'H2 2025', NULL, NULL, NULL, NULL, 'Review scheduled for next quarter'),
+((SELECT id FROM employees WHERE email = 'stephanie.taylor@company.com'), (SELECT id FROM employees WHERE email = 'james.wilson@company.com'), '2025-09-20', 'H2 2025', NULL, NULL, NULL, NULL, 'Review scheduled for next quarter');
 
 -- Insert Performance Goals
 INSERT INTO performance_goals (
