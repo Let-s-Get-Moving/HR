@@ -122,10 +122,10 @@ r.get("/dashboard", async (req, res) => {
     const turnoverRate = totalEmployees > 0 ? ((terminationsThisPeriod * 12) / totalEmployees * 100) : 0;
     
     // Calculate completion rate for payroll
-    const completionRate = totalCalculations > 0 ? (completedCalculations / totalCalculations * 100) : 0;
+    const completionRate = totalCalculations > 0 ? Math.round((completedCalculations / totalCalculations * 100) * 10) / 10 : 0;
     
     // Calculate new hire rate
-    const newHireRate = totalEmployees > 0 ? (newHiresThisPeriod / totalEmployees * 100) : 0;
+    const newHireRate = totalEmployees > 0 ? Math.round((newHiresThisPeriod / totalEmployees * 100) * 10) / 10 : 0;
 
     // Create simple department breakdown
     const departmentBreakdown = {
@@ -149,13 +149,13 @@ r.get("/dashboard", async (req, res) => {
       activeEmployees: activeEmployees,
       newHiresThisMonth: newHiresThisPeriod,
       turnoverRate: Math.round(turnoverRate * 10) / 10,
-      newHireRate: Math.round(newHireRate * 10) / 10,
+      newHireRate: newHireRate,
       departmentBreakdown,
       recentActivities,
       payrollStats: {
         totalCalculations: totalCalculations,
         completedCalculations: completedCalculations,
-        completionRate: Math.round(completionRate * 10) / 10,
+        completionRate: completionRate,
         avgGrossPay: avgGrossPay,
         totalPayrollAmount: totalPayrollAmount
       }
