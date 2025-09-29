@@ -77,6 +77,8 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
         throw new Error('Employee name cannot be empty');
     }
     
+    console.log(`[findOrCreateEmployee] Looking for: "${nameRaw}" (normalized: "${nameKey}")`);
+    
     // First try to find by normalized name
     const existingResult = await queryFn(`
         SELECT id, first_name, last_name, LOWER(TRIM(first_name || ' ' || last_name)) as name_key
@@ -86,8 +88,12 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
     `, [nameKey]);
     
     if (existingResult.rows.length > 0) {
+        console.log(`[findOrCreateEmployee] ✓ FOUND existing ID ${existingResult.rows[0].id} for "${nameRaw}"`);
         return existingResult.rows[0].id;
     }
+    
+    console.log(`[findOrCreateEmployee] ✗ NOT FOUND - creating new employee for "${nameRaw}"`);
+    
     
     // If not found, create new employee record
     // Split name into first/last (simple approach)
@@ -112,7 +118,9 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
         'Full-time' // Default employment type
     ]);
     
-    return createResult.rows[0].id;
+    const newId = createResult.rows[0].id;
+    console.log(`[findOrCreateEmployee] ✓ CREATED new employee ID ${newId} for "${nameRaw}" (${firstName} ${lastName})`);
+    return newId;
 }
 
 /**
@@ -160,6 +168,8 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                     summary.addDebugLog(`Row ${rowNum} - Finding/creating employee: "${nameRaw}"`);
                 }
                 employeeId = await findOrCreateEmployee(nameRaw, queryFn);
+                // ALWAYS log employee matching to detect duplicate issues
+                summary.addDebugLog(`✓ Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
                 if (rowNum <= 5) {
                     summary.addDebugLog(`Row ${rowNum} - Employee ID: ${employeeId}`);
                 }
