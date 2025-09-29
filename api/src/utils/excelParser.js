@@ -9,18 +9,33 @@
 
 import * as XLSX from 'xlsx';
 
-// Header keywords for detecting each block type
+// Header keywords for detecting each block type - broad variations
 const MAIN_COMMISSION_KEYWORDS = [
-    "Name", "Hourly Rate", "Revenue on Smart Moving", "Commission Earned", 
-    "Total Revenue", "Booking %", "Commission %", "Total due", "Remaining amount"
+    "Name", "Employee", "Person", "Agent", "Staff",
+    "Hourly Rate", "Rate", "Hour Rate", "Hourly", "HR",
+    "Revenue", "Rev", "Sales", "Income", "Earnings", "Smart Moving", "SM",
+    "Commission Earned", "Commission", "Comm Earned", "Earned", "Total Comm",
+    "Total Revenue", "Total Rev", "Total Sales", "Total Earnings", "Revenue Total",
+    "Booking %", "Booking", "Book %", "Booking Percent", "Book Percent",
+    "Commission %", "Comm %", "Commission Percent", "Comm Percent",
+    "Total due", "Total Due", "Amount Due", "Due", "Owed", "Balance",
+    "Remaining amount", "Remaining", "Balance", "Outstanding", "Left", "Remaining Due"
 ];
 
 const AGENT_US_KEYWORDS = [
-    "Agents", "total US revenue", "commission %", "Commission earned", "1.25X", "Bonus"
+    "Agents", "Agent", "Name", "Employee", "Person", "Staff",
+    "US revenue", "total US revenue", "US Rev", "Revenue US", "US Sales",
+    "commission %", "Commission", "Comm %", "Commission Percent", "Comm Percent",
+    "Commission earned", "Commission Earned", "Earned", "Comm Earned", "Total Comm",
+    "1.25X", "125X", "1.25", "125", "Bonus Multiplier", "Multiplier",
+    "Bonus", "Bonuses", "Extra", "Premium", "Incentive"
 ];
 
 const HOURLY_PAYOUT_KEYWORDS = [
-    "hourly paid out", "cash paid", "TOTAL HOURLY PAID"
+    "hourly paid out", "hourly paid", "hourly", "paid out", "payout", 
+    "cash paid", "cash", "payment", "paid", "pay",
+    "TOTAL HOURLY PAID", "total hourly", "hourly total", "total paid",
+    "hours", "time", "worked", "labor"
 ];
 
 // Column mapping for exact field matching
@@ -97,7 +112,7 @@ export function normalizeHeaderText(text) {
 /**
  * Check if header fuzzy matches target keyword
  */
-export function fuzzyMatchHeader(header, target, threshold = 0.6) {
+export function fuzzyMatchHeader(header, target, threshold = 0.3) {
     const headerNorm = normalizeHeaderText(header);
     const targetNorm = normalizeHeaderText(target);
     
@@ -124,7 +139,7 @@ export function fuzzyMatchHeader(header, target, threshold = 0.6) {
  */
 export function detectHeaderRow(data, keywords, minMatches = null) {
     if (minMatches === null) {
-        minMatches = Math.max(1, Math.floor(keywords.length * 0.6));
+        minMatches = Math.max(2, Math.floor(keywords.length * 0.3));  // Only need 30% matches, minimum 2
     }
     
     console.log(`Looking for keywords: ${keywords.join(', ')}, min matches needed: ${minMatches}`);
