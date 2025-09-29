@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { API } from '../config/api.js';
 
 export default function BonusesCommissions() {
-  const [activeTab, setActiveTab] = useState("bonuses");
+  const [activeTab, setActiveTab] = useState("import");
   const [employees, setEmployees] = useState([]);
   const [bonuses, setBonuses] = useState([]);
   const [commissions, setCommissions] = useState([]);
@@ -100,10 +100,7 @@ export default function BonusesCommissions() {
   const [selectedPeriod, setSelectedPeriod] = useState('2025-07-01');
 
   const tabs = [
-    { id: "bonuses", name: "Bonuses", icon: "🎁" },
-    { id: "commissions", name: "Commissions", icon: "💰" },
     { id: "import", name: "Excel Import", icon: "📥" },
-    { id: "structures", name: "Compensation Structures", icon: "🏗️" },
     { id: "analytics", name: "Analytics", icon: "📊" }
   ];
 
@@ -114,176 +111,11 @@ export default function BonusesCommissions() {
 
   const loadBonusesCommissionsData = async () => {
     try {
-      // Mock data for now - in production this would come from API
-      const mockEmployees = [
-        {
-          id: 1,
-          name: "Sarah Johnson",
-          department: "Sales",
-          position: "Senior Sales Representative",
-          base_salary: 65000,
-          commission_rate: 8,
-          bonus_eligible: true,
-          performance_rating: 4.2,
-          total_earnings_ytd: 85000
-        },
-        {
-          id: 2,
-          name: "Michael Chen",
-          department: "Engineering",
-          position: "Software Engineer",
-          base_salary: 75000,
-          commission_rate: 0,
-          bonus_eligible: true,
-          performance_rating: 3.8,
-          total_earnings_ytd: 82000
-        },
-        {
-          id: 3,
-          name: "Lisa Rodriguez",
-          department: "Sales",
-          position: "Account Manager",
-          base_salary: 55000,
-          commission_rate: 6,
-          bonus_eligible: true,
-          performance_rating: 4.5,
-          total_earnings_ytd: 72000
-        }
-      ];
-
-      const mockBonuses = [
-        {
-          id: 1,
-          employee_id: 1,
-          employee_name: "Sarah Johnson",
-          bonus_type: "Performance Bonus",
-          amount: 5000,
-          percentage: 7.7,
-          criteria: "Exceeded Q4 sales targets by 25%",
-          period: "Q4 2024",
-          status: "Approved",
-          payment_date: "2025-01-15",
-          approved_by: "Sales Manager"
-        },
-        {
-          id: 2,
-          employee_id: 2,
-          employee_name: "Michael Chen",
-          bonus_type: "Project Completion",
-          amount: 3000,
-          percentage: 4.0,
-          criteria: "Successfully delivered major client project",
-          period: "Q4 2024",
-          status: "Pending",
-          payment_date: null,
-          approved_by: null
-        },
-        {
-          id: 3,
-          employee_id: 3,
-          employee_name: "Lisa Rodriguez",
-          bonus_type: "Customer Satisfaction",
-          amount: 2500,
-          percentage: 4.5,
-          criteria: "Achieved 98% customer satisfaction score",
-          period: "Q4 2024",
-          status: "Approved",
-          payment_date: "2025-01-15",
-          approved_by: "Sales Manager"
-        }
-      ];
-
-      const mockCommissions = [
-        {
-          id: 1,
-          employee_id: 1,
-          employee_name: "Sarah Johnson",
-          commission_type: "Sales Commission",
-          base_amount: 150000,
-          commission_rate: 8,
-          commission_amount: 12000,
-          period: "Q4 2024",
-          status: "Paid",
-          payment_date: "2025-01-15",
-          sales_target: 120000,
-          target_achievement: 125
-        },
-        {
-          id: 2,
-          employee_id: 3,
-          employee_name: "Lisa Rodriguez",
-          commission_type: "Sales Commission",
-          base_amount: 95000,
-          commission_rate: 6,
-          commission_amount: 5700,
-          period: "Q4 2024",
-          status: "Paid",
-          payment_date: "2025-01-15",
-          sales_target: 80000,
-          target_achievement: 119
-        }
-      ];
-
-      const mockBonusStructures = [
-        {
-          id: 1,
-          name: "Sales Performance Bonus",
-          department: "Sales",
-          type: "Performance-based",
-          calculation_method: "Percentage of base salary",
-          tiers: [
-            { min_performance: 90, max_performance: 100, bonus_percentage: 10 },
-            { min_performance: 80, max_performance: 89, bonus_percentage: 7 },
-            { min_performance: 70, max_performance: 79, bonus_percentage: 5 }
-          ],
-          max_bonus: 15000,
-          eligibility_criteria: "Sales targets met, customer satisfaction >90%",
-          status: "Active"
-        },
-        {
-          id: 2,
-          name: "Engineering Project Bonus",
-          department: "Engineering",
-          type: "Project-based",
-          calculation_method: "Fixed amount per project milestone",
-          tiers: [
-            { min_performance: 100, max_performance: 100, bonus_percentage: 5 },
-            { min_performance: 90, max_performance: 99, bonus_percentage: 3 },
-            { min_performance: 80, max_performance: 89, bonus_percentage: 2 }
-          ],
-          max_bonus: 8000,
-          eligibility_criteria: "Project completed on time and within budget",
-          status: "Active"
-        }
-      ];
-
-      const mockCommissionStructures = [
-        {
-          id: 1,
-          name: "Standard Sales Commission",
-          department: "Sales",
-          base_rate: 6,
-          acceleration_rate: 8,
-          threshold: 100000,
-          max_commission: 20000,
-          calculation_method: "Progressive tiered structure",
-          tiers: [
-            { min_sales: 0, max_sales: 50000, rate: 4 },
-            { min_sales: 50001, max_sales: 100000, rate: 6 },
-            { min_sales: 100001, max_sales: 200000, rate: 8 },
-            { min_sales: 200001, max_sales: 999999, rate: 10 }
-          ],
-          status: "Active"
-        }
-      ];
-
-      setEmployees(mockEmployees);
-      setBonuses(mockBonuses);
-      setCommissions(mockCommissions);
-      setBonusStructures(mockBonusStructures);
-      setCommissionStructures(mockCommissionStructures);
+      setLoading(true);
+      // Load only real commission data from API
+      await loadCommissionsData();
     } catch (error) {
-      console.error("Error loading bonuses and commissions data:", error);
+      console.error("Error loading commission data:", error);
     } finally {
       setLoading(false);
     }
@@ -1314,10 +1146,7 @@ export default function BonusesCommissions() {
 
       {/* Tab Content */}
       <div className="space-y-6">
-        {activeTab === "bonuses" && renderBonuses()}
-        {activeTab === "commissions" && renderCommissions()}
         {activeTab === "import" && renderImport()}
-        {activeTab === "structures" && renderStructures()}
         {activeTab === "analytics" && renderAnalytics()}
       </div>
 
