@@ -328,9 +328,16 @@ export default function BonusesCommissions() {
       const formData = new FormData();
       formData.append('excel_file', importFile);
       
-      const response = await fetch('/api/commissions/import', {
+      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
+      const sessionId = localStorage.getItem('sessionId');
+      
+      const response = await fetch(`${API_BASE_URL}/api/commissions/import`, {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'include',
+        headers: {
+          ...(sessionId && { 'x-session-id': sessionId }),
+        }
       });
       
       const result = await response.json();

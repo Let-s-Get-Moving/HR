@@ -84,6 +84,29 @@ app.use("/api/benefits", benefits);
 app.use("/api/imports", imports);
 app.use("/api/admin", admin);
 
+// Emergency database migration endpoint
+app.post("/api/migrate-db", async (req, res) => {
+  try {
+    logger.info("Running database migration...");
+    
+    // Import and run the database initialization
+    const { execSync } = await import("child_process");
+    execSync("node src/initDb.js", { cwd: process.cwd() });
+    
+    res.json({ 
+      success: true, 
+      message: "Database migration completed successfully" 
+    });
+  } catch (error) {
+    logger.error("Database migration failed:", error);
+    res.status(500).json({ 
+      success: false, 
+      error: "Database migration failed",
+      details: error.message
+    });
+  }
+});
+
 // Root endpoint
 app.get("/", (req, res) => {
   res.json({
