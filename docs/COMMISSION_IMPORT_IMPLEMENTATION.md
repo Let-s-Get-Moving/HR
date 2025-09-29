@@ -127,6 +127,7 @@ The system automatically detects three types of data blocks in Excel files:
 - Automatically finds existing employees by normalized name
 - Creates new employee records if not found (with placeholder email)
 - Links all commission data to employee IDs
+- **Fixed (2025-09-29):** Removed non-existent `created_at` column from employee INSERT statements
 
 ### Error Handling & Reliability
 - **Transaction safety:** Entire import wrapped in database transaction

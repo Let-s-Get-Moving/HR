@@ -86,9 +86,9 @@ async function findOrCreateEmployee(nameRaw, client = null) {
     const createResult = await queryFn(`
         INSERT INTO employees (
             first_name, last_name, email, role_title, status, 
-            hire_date, employment_type, created_at
+            hire_date, employment_type
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id
     `, [
         firstName,

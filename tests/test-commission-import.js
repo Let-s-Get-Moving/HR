@@ -126,8 +126,8 @@ async function testEmployeeCreation() {
         
         // Test creating employee
         const result = await q(`
-            INSERT INTO employees (first_name, last_name, email, role_title, status, created_at)
-            VALUES ('Test', 'Employee Commission Import', 'test.commission@test.local', 'Test Role', 'Active', CURRENT_TIMESTAMP)
+            INSERT INTO employees (first_name, last_name, email, role_title, status, hire_date, employment_type)
+            VALUES ('Test', 'Employee Commission Import', 'test.commission@test.local', 'Test Role', 'Active', CURRENT_DATE, 'Full-time')
             RETURNING id, first_name || ' ' || last_name as full_name
         `);
         
