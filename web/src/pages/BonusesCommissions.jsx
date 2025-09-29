@@ -97,7 +97,9 @@ export default function BonusesCommissions() {
   const [monthlyCommissions, setMonthlyCommissions] = useState([]);
   const [agentCommissions, setAgentCommissions] = useState([]);
   const [hourlyPayouts, setHourlyPayouts] = useState([]);
-  const [selectedPeriod, setSelectedPeriod] = useState('2025-07-01');
+  
+  // Analytics data
+  const [analyticsData, setAnalyticsData] = useState(null);
 
   const tabs = [
     { id: "import", name: "Excel Import", icon: "📥" },
@@ -105,39 +107,41 @@ export default function BonusesCommissions() {
   ];
 
   useEffect(() => {
-    loadBonusesCommissionsData();
-    loadCommissionsData();
-  }, [selectedPeriod]);
+    loadAnalyticsData();
+  }, []);
 
-  const loadBonusesCommissionsData = async () => {
+  const loadAnalyticsData = async () => {
     try {
       setLoading(true);
-      // Load only real commission data from API
-      await loadCommissionsData();
+      // Get most recent period with data
+      const response = await API('/api/commissions/summary?period_month=2025-07-01');
+      setAnalyticsData(response);
     } catch (error) {
-      console.error("Error loading commission data:", error);
+      console.error("Error loading analytics data:", error);
+      setAnalyticsData(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Load new commission data from API
-  const loadCommissionsData = async () => {
+  // Refresh data after import
+  const refreshImportedData = async () => {
     try {
+      // Get the most recent data (this will be updated after successful import)
       const [monthly, agents, hourly] = await Promise.all([
-        API(`/api/commissions/monthly?period_month=${selectedPeriod}`).catch(() => []),
-        API(`/api/commissions/agents-us?period_month=${selectedPeriod}`).catch(() => []),
-        API(`/api/commissions/hourly-payouts?period_month=${selectedPeriod}`).catch(() => [])
+        API('/api/commissions/monthly?period_month=2025-07-01').catch(() => []),
+        API('/api/commissions/agents-us?period_month=2025-07-01').catch(() => []),
+        API('/api/commissions/hourly-payouts?period_month=2025-07-01').catch(() => [])
       ]);
       
       setMonthlyCommissions(monthly);
       setAgentCommissions(agents);
       setHourlyPayouts(hourly);
+      
+      // Also refresh analytics
+      await loadAnalyticsData();
     } catch (error) {
-      console.error("Error loading commission data:", error);
-      setMonthlyCommissions([]);
-      setAgentCommissions([]);
-      setHourlyPayouts([]);
+      console.error("Error refreshing commission data:", error);
     }
   };
 
@@ -187,7 +191,7 @@ export default function BonusesCommissions() {
       setShowSuccessMessage(true);
       
       // Reload data
-      await loadCommissionsData();
+      await refreshImportedData();
       
     } catch (error) {
       console.error("Error importing Excel:", error);
@@ -680,18 +684,6 @@ export default function BonusesCommissions() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-semibold">Excel Commission Import</h3>
-        <div className="flex items-center space-x-3">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="bg-neutral-800 border border-neutral-600 px-3 py-2 rounded-lg text-sm"
-          >
-            <option value="2025-07-01">July 2025</option>
-            <option value="2025-06-01">June 2025</option>
-            <option value="2025-05-01">May 2025</option>
-            <option value="2025-04-01">April 2025</option>
-          </select>
-        </div>
       </div>
 
       <div className="bg-neutral-900 p-6 rounded-lg">
@@ -972,28 +964,53 @@ export default function BonusesCommissions() {
     </div>
   );
 
-  const renderAnalytics = () => (
+  const renderAnalytics = () => {
+    if (loading) {
+      return <div className="text-center py-8">Loading analytics...</div>;
+    }
+    
+    if (!analyticsData) {
+      return (
+        <div className="text-center py-8">
+          <div className="text-neutral-400">No commission data available</div>
+          <div className="text-sm text-neutral-500 mt-2">Import Excel data to see analytics</div>
+        </div>
+      );
+    }
+    
+    return (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Bonuses & Commissions Analytics</h3>
+      <h3 className="text-lg font-semibold">Commission Analytics</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-green-400">$20.5K</div>
-          <div className="text-sm text-tertiary">Total Bonuses Q4</div>
+          <div className="text-2xl font-bold text-green-400">
+            ${(analyticsData.total_commission_earned || 0).toLocaleString()}
+          </div>
+          <div className="text-sm text-tertiary">Total Commissions</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-blue-400">$17.7K</div>
-          <div className="text-sm text-tertiary">Total Commissions Q4</div>
+          <div className="text-2xl font-bold text-blue-400">
+            ${(analyticsData.total_amount_paid || 0).toLocaleString()}
+          </div>
+          <div className="text-sm text-tertiary">Amount Paid</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-purple-400">$38.2K</div>
-          <div className="text-sm text-tertiary">Total Variable Pay</div>
+          <div className="text-2xl font-bold text-purple-400">
+            ${(analyticsData.total_remaining || 0).toLocaleString()}
+          </div>
+          <div className="text-sm text-tertiary">Remaining Due</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-indigo-400">12.3%</div>
-          <div className="text-sm text-tertiary">Avg Bonus % of Base</div>
+          <div className="text-2xl font-bold text-indigo-400">
+            {analyticsData.total_employees || 0}
+          </div>
+          <div className="text-sm text-tertiary">Employees</div>
         </div>
       </div>
+    </div>
+    );
+  };
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="card p-6">
