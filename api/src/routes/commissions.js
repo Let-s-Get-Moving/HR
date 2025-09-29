@@ -1,118 +1,246 @@
 import { Router } from "express";
+import multer from "multer";
 import { q } from "../db.js";
 import { z } from "zod";
 import { formatCurrency, formatNumber } from "../utils/formatting.js";
+import { importCommissionsFromExcel } from "../utils/commissionImporter.js";
 
 const r = Router();
 
-// Commission schema
-const commissionSchema = z.object({
-  employee_id: z.number().int().positive(),
-  commission_rate: z.number().min(0).max(100),
-  threshold_amount: z.number().min(0).optional(),
-  deal_amount: z.number().positive(),
-  commission_amount: z.number().positive(),
-  period: z.string().min(1),
-  status: z.enum(['Pending', 'Approved', 'Paid']).default('Pending')
+// Configure multer for file uploads (memory storage for Excel files)
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.includes('sheet') || file.originalname.endsWith('.xlsx') || file.originalname.endsWith('.xls')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel files are allowed'), false);
+    }
+  }
 });
 
-// Get all commissions
-r.get("/", async (req, res) => {
+// Excel import endpoint
+r.post("/import", upload.single('excel_file'), async (req, res) => {
   try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No Excel file uploaded" });
+    }
+
+    const { sheet_name } = req.body;
+    
+    console.log(`Starting commission import for file: ${req.file.originalname}`);
+    
+    const summary = await importCommissionsFromExcel(
+      req.file.buffer, 
+      req.file.originalname,
+      sheet_name
+    );
+    
+    console.log(`Commission import completed:`, summary);
+    
+    res.json({
+      message: "Commission import completed successfully",
+      summary: summary
+    });
+    
+  } catch (error) {
+    console.error("Commission import failed:", error);
+    res.status(500).json({ 
+      error: "Commission import failed", 
+      details: error.message 
+    });
+  }
+});
+
+// Get monthly commission data
+r.get("/monthly", async (req, res) => {
+  try {
+    const { period_month, employee_id } = req.query;
+    
+    let whereClause = "WHERE 1=1";
+    const params = [];
+    
+    if (period_month) {
+      params.push(period_month);
+      whereClause += ` AND ecm.period_month = $${params.length}`;
+    }
+    
+    if (employee_id) {
+      params.push(employee_id);
+      whereClause += ` AND ecm.employee_id = $${params.length}`;
+    }
+    
     const { rows } = await q(`
       SELECT 
-        c.*,
+        ecm.*,
         e.first_name || ' ' || e.last_name as employee_name,
-        e.role_title,
-        d.name as department
-      FROM commissions c
-      JOIN employees e ON c.employee_id = e.id
-      LEFT JOIN departments d ON e.department_id = d.id
-      ORDER BY c.created_at DESC
-    `);
+        e.role_title
+      FROM employee_commission_monthly ecm
+      JOIN employees e ON ecm.employee_id = e.id
+      ${whereClause}
+      ORDER BY ecm.period_month DESC, e.first_name, e.last_name
+    `, params);
     
     const formattedRows = rows.map(row => ({
       ...row,
-      commission_rate: formatNumber(row.commission_rate, 1),
-      threshold_amount: formatCurrency(row.threshold_amount),
-      deal_amount: formatCurrency(row.deal_amount),
-      commission_amount: formatCurrency(row.commission_amount)
+      hourly_rate: formatCurrency(row.hourly_rate),
+      rev_sm_all_locations: formatCurrency(row.rev_sm_all_locations),
+      rev_add_ons: formatCurrency(row.rev_add_ons),
+      rev_deduction: formatCurrency(row.rev_deduction),
+      total_revenue_all: formatCurrency(row.total_revenue_all),
+      booking_pct: formatNumber(row.booking_pct, 1),
+      commission_pct: formatNumber(row.commission_pct, 1),
+      commission_earned: formatCurrency(row.commission_earned),
+      spiff_bonus: formatCurrency(row.spiff_bonus),
+      revenue_bonus: formatCurrency(row.revenue_bonus),
+      total_due: formatCurrency(row.total_due),
+      amount_paid: formatCurrency(row.amount_paid),
+      remaining_amount: formatCurrency(row.remaining_amount)
     }));
     
     res.json(formattedRows);
   } catch (error) {
-    console.error("Error fetching commissions:", error);
-    res.status(500).json({ error: "Failed to fetch commissions" });
+    console.error("Error fetching monthly commissions:", error);
+    // If tables don't exist yet, return empty array
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: "Failed to fetch monthly commissions" });
+    }
   }
 });
 
-// Create new commission
-r.post("/", async (req, res) => {
+// Get agent US commission data
+r.get("/agents-us", async (req, res) => {
   try {
-    const validatedData = commissionSchema.parse(req.body);
+    const { period_month, employee_id } = req.query;
+    
+    let whereClause = "WHERE 1=1";
+    const params = [];
+    
+    if (period_month) {
+      params.push(period_month);
+      whereClause += ` AND acu.period_month = $${params.length}`;
+    }
+    
+    if (employee_id) {
+      params.push(employee_id);
+      whereClause += ` AND acu.employee_id = $${params.length}`;
+    }
     
     const { rows } = await q(`
-      INSERT INTO commissions (
-        employee_id, commission_rate, threshold_amount, deal_amount, 
-        commission_amount, period, status, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
-      RETURNING *
-    `, [
-      validatedData.employee_id,
-      validatedData.commission_rate,
-      validatedData.threshold_amount || 0,
-      validatedData.deal_amount,
-      validatedData.commission_amount,
-      validatedData.period,
-      validatedData.status
-    ]);
+      SELECT 
+        acu.*,
+        e.first_name || ' ' || e.last_name as employee_name,
+        e.role_title
+      FROM agent_commission_us acu
+      JOIN employees e ON acu.employee_id = e.id
+      ${whereClause}
+      ORDER BY acu.period_month DESC, e.first_name, e.last_name
+    `, params);
     
-    res.status(201).json({
-      message: "Commission created successfully",
-      commission: rows[0]
-    });
+    const formattedRows = rows.map(row => ({
+      ...row,
+      total_us_revenue: formatCurrency(row.total_us_revenue),
+      commission_pct: formatNumber(row.commission_pct, 1),
+      commission_earned: formatCurrency(row.commission_earned),
+      commission_125x: formatCurrency(row.commission_125x),
+      bonus: formatCurrency(row.bonus)
+    }));
+    
+    res.json(formattedRows);
   } catch (error) {
-    console.error("Error creating commission:", error);
-    
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Validation error", 
-        details: error.errors 
-      });
+    console.error("Error fetching agent US commissions:", error);
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: "Failed to fetch agent US commissions" });
     }
-    
-    res.status(500).json({ error: "Failed to create commission" });
   }
 });
 
-// Update commission status
-r.put("/:id", async (req, res) => {
+// Get hourly payout data
+r.get("/hourly-payouts", async (req, res) => {
   try {
-    const { id } = req.params;
-    const { status } = req.body;
+    const { period_month, employee_id } = req.query;
     
-    if (!['Pending', 'Approved', 'Paid'].includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+    let whereClause = "WHERE 1=1";
+    const params = [];
+    
+    if (period_month) {
+      params.push(period_month);
+      whereClause += ` AND hp.period_month = $${params.length}`;
+    }
+    
+    if (employee_id) {
+      params.push(employee_id);
+      whereClause += ` AND hp.employee_id = $${params.length}`;
     }
     
     const { rows } = await q(`
-      UPDATE commissions 
-      SET status = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE id = $2
-      RETURNING *
-    `, [status, id]);
+      SELECT 
+        hp.*,
+        e.first_name || ' ' || e.last_name as employee_name,
+        e.role_title
+      FROM hourly_payout hp
+      JOIN employees e ON hp.employee_id = e.id
+      ${whereClause}
+      ORDER BY hp.period_month DESC, e.first_name, e.last_name, hp.period_label
+    `, params);
     
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Commission not found" });
+    const formattedRows = rows.map(row => ({
+      ...row,
+      amount: formatCurrency(row.amount),
+      total_for_month: formatCurrency(row.total_for_month)
+    }));
+    
+    res.json(formattedRows);
+  } catch (error) {
+    console.error("Error fetching hourly payouts:", error);
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: "Failed to fetch hourly payouts" });
     }
+  }
+});
+
+// Get commission summary by period
+r.get("/summary", async (req, res) => {
+  try {
+    const { period_month } = req.query;
+    
+    if (!period_month) {
+      return res.status(400).json({ error: "period_month parameter is required" });
+    }
+    
+    const { rows } = await q(`
+      SELECT 
+        COUNT(DISTINCT ecm.employee_id) as total_employees,
+        SUM(ecm.commission_earned) as total_commission_earned,
+        SUM(ecm.total_revenue_all) as total_revenue,
+        SUM(ecm.amount_paid) as total_amount_paid,
+        SUM(ecm.remaining_amount) as total_remaining,
+        AVG(ecm.commission_pct) as avg_commission_rate
+      FROM employee_commission_monthly ecm
+      WHERE ecm.period_month = $1
+    `, [period_month]);
+    
+    const summary = rows[0];
     
     res.json({
-      message: "Commission updated successfully",
-      commission: rows[0]
+      period_month,
+      total_employees: parseInt(summary.total_employees) || 0,
+      total_commission_earned: formatCurrency(summary.total_commission_earned),
+      total_revenue: formatCurrency(summary.total_revenue),
+      total_amount_paid: formatCurrency(summary.total_amount_paid),
+      total_remaining: formatCurrency(summary.total_remaining),
+      avg_commission_rate: formatNumber(summary.avg_commission_rate, 2)
     });
   } catch (error) {
-    console.error("Error updating commission:", error);
-    res.status(500).json({ error: "Failed to update commission" });
+    console.error("Error fetching commission summary:", error);
+    res.status(500).json({ error: "Failed to fetch commission summary" });
   }
 });
 

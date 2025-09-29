@@ -22,7 +22,9 @@
     "pg": "8.11.5",
     "zod": "3.23.8",
     "dompurify": "^3.0.5",
-    "jsdom": "^23.0.1"
+    "jsdom": "^23.0.1",
+    "multer": "^2.0.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "vitest": "^1.0.4",

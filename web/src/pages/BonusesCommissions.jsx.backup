@@ -90,27 +90,17 @@ export default function BonusesCommissions() {
     is_active: true
   });
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  
-  // Import-related state variables
-  const [importFile, setImportFile] = useState(null);
-  const [importStatus, setImportStatus] = useState(null);
-  const [monthlyCommissions, setMonthlyCommissions] = useState([]);
-  const [agentCommissions, setAgentCommissions] = useState([]);
-  const [hourlyPayouts, setHourlyPayouts] = useState([]);
-  const [selectedPeriod, setSelectedPeriod] = useState('2025-07-01');
 
   const tabs = [
     { id: "bonuses", name: "Bonuses", icon: "🎁" },
     { id: "commissions", name: "Commissions", icon: "💰" },
-    { id: "import", name: "Excel Import", icon: "📥" },
     { id: "structures", name: "Compensation Structures", icon: "🏗️" },
     { id: "analytics", name: "Analytics", icon: "📊" }
   ];
 
   useEffect(() => {
     loadBonusesCommissionsData();
-    loadCommissionsData();
-  }, [selectedPeriod]);
+  }, []);
 
   const loadBonusesCommissionsData = async () => {
     try {
@@ -286,78 +276,6 @@ export default function BonusesCommissions() {
       console.error("Error loading bonuses and commissions data:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Load new commission data from API
-  const loadCommissionsData = async () => {
-    try {
-      const [monthly, agents, hourly] = await Promise.all([
-        API(`/api/commissions/monthly?period_month=${selectedPeriod}`).catch(() => []),
-        API(`/api/commissions/agents-us?period_month=${selectedPeriod}`).catch(() => []),
-        API(`/api/commissions/hourly-payouts?period_month=${selectedPeriod}`).catch(() => [])
-      ]);
-      
-      setMonthlyCommissions(monthly);
-      setAgentCommissions(agents);
-      setHourlyPayouts(hourly);
-    } catch (error) {
-      console.error("Error loading commission data:", error);
-      setMonthlyCommissions([]);
-      setAgentCommissions([]);
-      setHourlyPayouts([]);
-    }
-  };
-
-  // Excel Import Functions
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    setImportFile(file);
-  };
-
-  const handleImport = async () => {
-    if (!importFile) {
-      setErrorMessage("Please select an Excel file to import");
-      setShowErrorMessage(true);
-      return;
-    }
-
-    setImportStatus({ status: "processing", message: "Processing Excel file..." });
-    
-    try {
-      const formData = new FormData();
-      formData.append('excel_file', importFile);
-      
-      const response = await fetch('/api/commissions/import', {
-        method: 'POST',
-        body: formData
-      });
-      
-      const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.details || result.error);
-      }
-      
-      setImportStatus({
-        status: "success",
-        message: `Import completed! Main: ${result.summary.main.inserted} inserted, ${result.summary.main.updated} updated. Agents US: ${result.summary.agents_us.inserted} inserted, ${result.summary.agents_us.updated} updated. Hourly: ${result.summary.hourly.inserted} inserted, ${result.summary.hourly.updated} updated.`
-      });
-      
-      setSuccessMessage("Commission data imported successfully!");
-      setShowSuccessMessage(true);
-      
-      // Reload data
-      await loadCommissionsData();
-      
-    } catch (error) {
-      console.error("Error importing Excel:", error);
-      setImportStatus({
-        status: "error",
-        message: `Import failed: ${error.message}`
-      });
-      setErrorMessage(`Import failed: ${error.message}`);
-      setShowErrorMessage(true);
     }
   };
 
@@ -837,139 +755,6 @@ export default function BonusesCommissions() {
     </div>
   );
 
-  const renderImport = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Excel Commission Import</h3>
-        <div className="flex items-center space-x-3">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-            className="bg-neutral-800 border border-neutral-600 px-3 py-2 rounded-lg text-sm"
-          >
-            <option value="2025-07-01">July 2025</option>
-            <option value="2025-06-01">June 2025</option>
-            <option value="2025-05-01">May 2025</option>
-            <option value="2025-04-01">April 2025</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="bg-neutral-900 p-6 rounded-lg">
-        <div className="space-y-4">
-          <div className="bg-amber-900/20 border border-amber-700/30 p-3 rounded-lg">
-            <p className="text-xs text-amber-200">
-              💡 <strong>Supported Format:</strong> Excel files (.xlsx, .xls) with commission data. 
-              The system will automatically detect Main Commission, Agent US, and Hourly Payout tables.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Upload Excel File</label>
-            <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="excel-upload"
-              />
-              <label htmlFor="excel-upload" className="cursor-pointer">
-                <div className="text-4xl mb-2">📊</div>
-                <p className="text-neutral-400">
-                  {importFile ? importFile.name : "Click to upload Excel file"}
-                </p>
-                <p className="text-xs text-neutral-500 mt-1">
-                  Supports .xlsx and .xls formats with multiple data tables
-                </p>
-              </label>
-            </div>
-          </div>
-
-          {importStatus && (
-            <div className={`p-4 rounded-lg ${
-              importStatus.status === 'success' ? 'bg-green-900 text-green-300' :
-              importStatus.status === 'error' ? 'bg-red-900 text-red-300' :
-              'bg-blue-900 text-blue-300'
-            }`}>
-              {importStatus.message}
-            </div>
-          )}
-
-          <div className="flex space-x-3">
-            <button
-              onClick={handleImport}
-              disabled={!importFile}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-600 px-6 py-3 rounded-lg font-medium transition-colors"
-            >
-              Import Commission Data
-            </button>
-            <button
-              onClick={() => {
-                setImportFile(null);
-                setImportStatus(null);
-              }}
-              className="px-6 py-3 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors"
-            >
-              Clear
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Display imported data */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Monthly Commissions */}
-        <div className="bg-neutral-900 rounded-lg p-6">
-          <h4 className="font-semibold mb-4 text-indigo-400">Monthly Commissions ({monthlyCommissions.length})</h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {monthlyCommissions.length > 0 ? monthlyCommissions.map((commission, idx) => (
-              <div key={idx} className="bg-neutral-800 p-3 rounded text-sm">
-                <div className="font-medium">{commission.employee_name}</div>
-                <div className="text-neutral-400">Commission: {commission.commission_earned}</div>
-                <div className="text-neutral-400">Total Due: {commission.total_due}</div>
-              </div>
-            )) : (
-              <p className="text-neutral-500 text-sm">No monthly commission data</p>
-            )}
-          </div>
-        </div>
-
-        {/* Agent US Commissions */}
-        <div className="bg-neutral-900 rounded-lg p-6">
-          <h4 className="font-semibold mb-4 text-indigo-400">Agent US Commissions ({agentCommissions.length})</h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {agentCommissions.length > 0 ? agentCommissions.map((commission, idx) => (
-              <div key={idx} className="bg-neutral-800 p-3 rounded text-sm">
-                <div className="font-medium">{commission.employee_name}</div>
-                <div className="text-neutral-400">Revenue: {commission.total_us_revenue}</div>
-                <div className="text-neutral-400">Commission: {commission.commission_earned}</div>
-              </div>
-            )) : (
-              <p className="text-neutral-500 text-sm">No agent US commission data</p>
-            )}
-          </div>
-        </div>
-
-        {/* Hourly Payouts */}
-        <div className="bg-neutral-900 rounded-lg p-6">
-          <h4 className="font-semibold mb-4 text-indigo-400">Hourly Payouts ({hourlyPayouts.length})</h4>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
-            {hourlyPayouts.length > 0 ? hourlyPayouts.map((payout, idx) => (
-              <div key={idx} className="bg-neutral-800 p-3 rounded text-sm">
-                <div className="font-medium">{payout.employee_name}</div>
-                <div className="text-neutral-400">Period: {payout.period_label}</div>
-                <div className="text-neutral-400">Amount: {payout.amount}</div>
-              </div>
-            )) : (
-              <p className="text-neutral-500 text-sm">No hourly payout data</p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderStructures = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -1309,7 +1094,6 @@ export default function BonusesCommissions() {
       <div className="space-y-6">
         {activeTab === "bonuses" && renderBonuses()}
         {activeTab === "commissions" && renderCommissions()}
-        {activeTab === "import" && renderImport()}
         {activeTab === "structures" && renderStructures()}
         {activeTab === "analytics" && renderAnalytics()}
       </div>
