@@ -1088,36 +1088,72 @@ export default function BonusesCommissions() {
           </div>
         )}
 
-        {/* Monthly Commissions Table */}
+        {/* Monthly Commissions Table - Dynamic Columns */}
         <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             📋 Monthly Commissions ({analyticsMonthly.length})
           </h4>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-neutral-700">
-                  <th className="text-left py-3 px-4">Name</th>
-                  <th className="text-left py-3 px-4">Hourly Rate</th>
-                  <th className="text-left py-3 px-4">Commission Earned</th>
-                  <th className="text-left py-3 px-4">Total Due</th>
-                  <th className="text-left py-3 px-4">Amount Paid</th>
-                  <th className="text-left py-3 px-4">Remaining</th>
+                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-10">Name</th>
+                  <th className="text-left py-2 px-3">Hourly Rate</th>
+                  <th className="text-left py-2 px-3">Revenue SM</th>
+                  <th className="text-left py-2 px-3">Add Ons</th>
+                  <th className="text-left py-2 px-3">Deduction</th>
+                  <th className="text-left py-2 px-3">Total Revenue</th>
+                  <th className="text-left py-2 px-3">Booking %</th>
+                  <th className="text-left py-2 px-3">Commission %</th>
+                  <th className="text-left py-2 px-3">Commission Earned</th>
+                  <th className="text-left py-2 px-3">Spiff Bonus</th>
+                  <th className="text-left py-2 px-3">Revenue Bonus</th>
+                  <th className="text-left py-2 px-3">US Jobs 1.25X</th>
+                  <th className="text-left py-2 px-3">Booking Bonus +</th>
+                  <th className="text-left py-2 px-3">Booking Bonus -</th>
+                  <th className="text-left py-2 px-3">Hourly Paid Out</th>
+                  <th className="text-left py-2 px-3">Sales Mgr Ded</th>
+                  <th className="text-left py-2 px-3">Missing Punch</th>
+                  <th className="text-left py-2 px-3">Cust Support</th>
+                  <th className="text-left py-2 px-3">Post Comm</th>
+                  <th className="text-left py-2 px-3">Dispatch Ded</th>
+                  <th className="text-left py-2 px-3">Other Ded</th>
+                  <th className="text-left py-2 px-3 text-green-400">Total Due</th>
+                  <th className="text-left py-2 px-3 text-blue-400">Amount Paid</th>
+                  <th className="text-left py-2 px-3 text-purple-400">Remaining</th>
                 </tr>
               </thead>
               <tbody>
                 {analyticsMonthly.length > 0 ? analyticsMonthly.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-3 px-4 font-medium">{record.name_raw}</td>
-                    <td className="py-3 px-4">${record.hourly_rate || 0}</td>
-                    <td className="py-3 px-4 text-green-400">${(record.commission_earned || 0).toLocaleString()}</td>
-                    <td className="py-3 px-4">${(record.total_due || 0).toLocaleString()}</td>
-                    <td className="py-3 px-4 text-blue-400">${(record.amount_paid || 0).toLocaleString()}</td>
-                    <td className="py-3 px-4 text-purple-400">${(record.remaining_amount || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
+                    <td className="py-2 px-3">${record.hourly_rate || 0}</td>
+                    <td className="py-2 px-3">${(record.rev_sm_all_locations || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.rev_add_ons || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.rev_deduction || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.total_revenue_all || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">{(record.booking_pct || 0)}%</td>
+                    <td className="py-2 px-3">{(record.commission_pct || 0)}%</td>
+                    <td className="py-2 px-3 text-green-400">${(record.commission_earned || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.spiff_bonus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.revenue_bonus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.bonus_us_jobs_125x || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.booking_bonus_plus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.booking_bonus_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.hourly_paid_out_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.deduction_sales_manager_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.deduction_missing_punch_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.deduction_customer_support_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.deduction_post_commission_collected_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.deduction_dispatch_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">${(record.deduction_other_minus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_due || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-blue-400 font-semibold">${(record.amount_paid || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-purple-400 font-semibold">${(record.remaining_amount || 0).toLocaleString()}</td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="6" className="py-4 px-4 text-center text-neutral-500">
+                    <td colSpan="24" className="py-4 px-4 text-center text-neutral-500">
                       No monthly commission data for this period
                     </td>
                   </tr>
@@ -1127,32 +1163,32 @@ export default function BonusesCommissions() {
           </div>
         </div>
 
-        {/* Agent US Commissions Table */}
+        {/* Agent US Commissions Table - All Columns */}
         <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             🇺🇸 Agent US Commissions ({analyticsAgents.length})
           </h4>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-neutral-700">
-                  <th className="text-left py-3 px-4">Name</th>
-                  <th className="text-left py-3 px-4">US Revenue</th>
-                  <th className="text-left py-3 px-4">Commission %</th>
-                  <th className="text-left py-3 px-4">Commission Earned</th>
-                  <th className="text-left py-3 px-4">1.25X Bonus</th>
-                  <th className="text-left py-3 px-4">Other Bonus</th>
+                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-10">Name</th>
+                  <th className="text-left py-2 px-3">Total US Revenue</th>
+                  <th className="text-left py-2 px-3">Commission %</th>
+                  <th className="text-left py-2 px-3">Commission Earned</th>
+                  <th className="text-left py-2 px-3">1.25X Bonus</th>
+                  <th className="text-left py-2 px-3">Other Bonus</th>
                 </tr>
               </thead>
               <tbody>
                 {analyticsAgents.length > 0 ? analyticsAgents.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-3 px-4 font-medium">{record.name_raw}</td>
-                    <td className="py-3 px-4">${(record.total_us_revenue || 0).toLocaleString()}</td>
-                    <td className="py-3 px-4">{(record.commission_pct || 0)}%</td>
-                    <td className="py-3 px-4 text-green-400">${(record.commission_earned || 0).toLocaleString()}</td>
-                    <td className="py-3 px-4 text-yellow-400">${(record.commission_125x || 0).toLocaleString()}</td>
-                    <td className="py-3 px-4 text-blue-400">${(record.bonus || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
+                    <td className="py-2 px-3">${(record.total_us_revenue || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3">{(record.commission_pct || 0)}%</td>
+                    <td className="py-2 px-3 text-green-400 font-semibold">${(record.commission_earned || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-yellow-400">${(record.commission_125x || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-blue-400">${(record.bonus || 0).toLocaleString()}</td>
                   </tr>
                 )) : (
                   <tr>
@@ -1166,28 +1202,28 @@ export default function BonusesCommissions() {
         </div>
       </div>
 
-        {/* Hourly Payouts Table */}
+        {/* Hourly Payouts Table - All Date Columns */}
       <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             ⏰ Hourly Payouts ({analyticsHourly.length})
           </h4>
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-700">
-                  <th className="text-left py-3 px-4">Name</th>
-                  <th className="text-left py-3 px-4">Period Label</th>
-                  <th className="text-left py-3 px-4">Amount</th>
-                  <th className="text-left py-3 px-4">Total for Month</th>
+                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-10">Name</th>
+                  <th className="text-left py-2 px-3">Period Label</th>
+                  <th className="text-left py-2 px-3">Amount</th>
+                  <th className="text-left py-2 px-3 text-green-400">Total for Month</th>
               </tr>
             </thead>
             <tbody>
                 {analyticsHourly.length > 0 ? analyticsHourly.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-3 px-4 font-medium">{record.name_raw}</td>
-                    <td className="py-3 px-4">{record.period_label}</td>
-                    <td className="py-3 px-4 text-green-400">${(record.amount || 0).toLocaleString()}</td>
-                    <td className="py-3 px-4">${(record.total_for_month || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
+                    <td className="py-2 px-3">{record.period_label}</td>
+                    <td className="py-2 px-3 text-blue-400">${(record.amount || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_for_month || 0).toLocaleString()}</td>
                   </tr>
                 )) : (
                   <tr>
