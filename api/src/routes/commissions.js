@@ -265,6 +265,29 @@ r.get("/hourly-payouts", async (req, res) => {
   }
 });
 
+// Get available periods
+r.get("/periods", async (req, res) => {
+  try {
+    const result = await q(`
+      SELECT DISTINCT period_month, 
+             TO_CHAR(period_month::date, 'Month YYYY') as period_label,
+             COUNT(*) as employee_count
+      FROM employee_commission_monthly 
+      GROUP BY period_month
+      ORDER BY period_month DESC
+    `);
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error fetching periods:", error);
+    if (error.message.includes('does not exist')) {
+      res.json([]);
+    } else {
+      res.status(500).json({ error: "Failed to fetch periods" });
+    }
+  }
+});
+
 // Get commission summary by period
 r.get("/summary", async (req, res) => {
   try {

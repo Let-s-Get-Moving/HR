@@ -100,6 +100,11 @@ export default function BonusesCommissions() {
   
   // Analytics data
   const [analyticsData, setAnalyticsData] = useState(null);
+  const [availablePeriods, setAvailablePeriods] = useState([]);
+  const [selectedPeriod, setSelectedPeriod] = useState('2025-07-01');
+  const [analyticsMonthly, setAnalyticsMonthly] = useState([]);
+  const [analyticsAgents, setAnalyticsAgents] = useState([]);
+  const [analyticsHourly, setAnalyticsHourly] = useState([]);
 
   const tabs = [
     { id: "import", name: "Excel Import", icon: "📥" },
@@ -107,18 +112,55 @@ export default function BonusesCommissions() {
   ];
 
   useEffect(() => {
-    loadAnalyticsData();
+    loadAvailablePeriods();
   }, []);
 
+  useEffect(() => {
+    if (selectedPeriod) {
+      loadAnalyticsData();
+    }
+  }, [selectedPeriod]);
+
+  const loadAvailablePeriods = async () => {
+    try {
+      const periods = await API('/api/commissions/periods');
+      setAvailablePeriods(periods);
+      
+      // Set first available period as selected
+      if (periods.length > 0 && !selectedPeriod) {
+        setSelectedPeriod(periods[0].period_month);
+      }
+    } catch (error) {
+      console.error("Error loading periods:", error);
+      setAvailablePeriods([]);
+    }
+  };
+
   const loadAnalyticsData = async () => {
+    if (!selectedPeriod) return;
+    
     try {
       setLoading(true);
-      // Get most recent period with data
-      const response = await API('/api/commissions/summary?period_month=2025-07-01');
-      setAnalyticsData(response);
+      
+      // Load all analytics data for selected period
+      const [summary, monthly, agents, hourly] = await Promise.all([
+        API(`/api/commissions/summary?period_month=${selectedPeriod}`).catch(() => null),
+        API(`/api/commissions/monthly?period_month=${selectedPeriod}`).catch(() => []),
+        API(`/api/commissions/agents-us?period_month=${selectedPeriod}`).catch(() => []),
+        API(`/api/commissions/hourly-payouts?period_month=${selectedPeriod}`).catch(() => [])
+      ]);
+      
+      setAnalyticsData(summary);
+      setAnalyticsMonthly(monthly);
+      setAnalyticsAgents(agents);
+      setAnalyticsHourly(hourly);
+      
     } catch (error) {
       console.error("Error loading analytics data:", error);
       setAnalyticsData(null);
+      setAnalyticsMonthly([]);
+      setAnalyticsAgents([]);
+      setAnalyticsHourly([]);
     } finally {
       setLoading(false);
     }
@@ -138,7 +180,8 @@ export default function BonusesCommissions() {
       setAgentCommissions(agents);
       setHourlyPayouts(hourly);
       
-      // Also refresh analytics
+      // Refresh periods list and analytics
+      await loadAvailablePeriods();
       await loadAnalyticsData();
     } catch (error) {
       console.error("Error refreshing commission data:", error);
@@ -969,7 +1012,7 @@ export default function BonusesCommissions() {
       return <div className="text-center py-8">Loading analytics...</div>;
     }
     
-    if (!analyticsData) {
+    if (availablePeriods.length === 0) {
       return (
         <div className="text-center py-8">
           <div className="text-neutral-400">No commission data available</div>
@@ -979,36 +1022,174 @@ export default function BonusesCommissions() {
     }
     
     return (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Commission Analytics</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-green-400">
-            ${(analyticsData.total_commission_earned || 0).toLocaleString()}
+      <div className="space-y-6">
+        {/* Period Selector */}
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">Commission Analytics</h3>
+          <div className="flex items-center space-x-3">
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="bg-neutral-800 border border-neutral-600 px-3 py-2 rounded-lg text-sm"
+            >
+              {availablePeriods.map((period) => (
+                <option key={period.period_month} value={period.period_month}>
+                  {period.period_label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={loadAnalyticsData}
+              className="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg text-sm transition-colors"
+            >
+              Refresh
+            </button>
           </div>
-          <div className="text-sm text-tertiary">Total Commissions</div>
         </div>
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-blue-400">
-            ${(analyticsData.total_amount_paid || 0).toLocaleString()}
+
+        {/* Summary Cards */}
+        {analyticsData && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="card p-4 text-center">
+              <div className="text-2xl font-bold text-green-400">
+                ${(analyticsData.total_commission_earned || 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-tertiary">Total Commissions</div>
+            </div>
+            <div className="card p-4 text-center">
+              <div className="text-2xl font-bold text-blue-400">
+                ${(analyticsData.total_amount_paid || 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-tertiary">Amount Paid</div>
+            </div>
+            <div className="card p-4 text-center">
+              <div className="text-2xl font-bold text-purple-400">
+                ${(analyticsData.total_remaining || 0).toLocaleString()}
+              </div>
+              <div className="text-sm text-tertiary">Remaining Due</div>
+            </div>
+            <div className="card p-4 text-center">
+              <div className="text-2xl font-bold text-indigo-400">
+                {analyticsData.total_employees || 0}
+              </div>
+              <div className="text-sm text-tertiary">Employees</div>
+            </div>
           </div>
-          <div className="text-sm text-tertiary">Amount Paid</div>
+        )}
+
+        {/* Monthly Commissions Table */}
+        <div className="card p-6">
+          <h4 className="text-lg font-semibold mb-4 text-indigo-400">
+            📋 Monthly Commissions ({analyticsMonthly.length})
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-neutral-700">
+                  <th className="text-left py-3 px-4">Name</th>
+                  <th className="text-left py-3 px-4">Hourly Rate</th>
+                  <th className="text-left py-3 px-4">Commission Earned</th>
+                  <th className="text-left py-3 px-4">Total Due</th>
+                  <th className="text-left py-3 px-4">Amount Paid</th>
+                  <th className="text-left py-3 px-4">Remaining</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsMonthly.length > 0 ? analyticsMonthly.map((record, idx) => (
+                  <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
+                    <td className="py-3 px-4 font-medium">{record.name_raw}</td>
+                    <td className="py-3 px-4">${record.hourly_rate || 0}</td>
+                    <td className="py-3 px-4 text-green-400">${(record.commission_earned || 0).toLocaleString()}</td>
+                    <td className="py-3 px-4">${(record.total_due || 0).toLocaleString()}</td>
+                    <td className="py-3 px-4 text-blue-400">${(record.amount_paid || 0).toLocaleString()}</td>
+                    <td className="py-3 px-4 text-purple-400">${(record.remaining_amount || 0).toLocaleString()}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="6" className="py-4 px-4 text-center text-neutral-500">
+                      No monthly commission data for this period
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-purple-400">
-            ${(analyticsData.total_remaining || 0).toLocaleString()}
+
+        {/* Agent US Commissions Table */}
+        <div className="card p-6">
+          <h4 className="text-lg font-semibold mb-4 text-indigo-400">
+            🇺🇸 Agent US Commissions ({analyticsAgents.length})
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-neutral-700">
+                  <th className="text-left py-3 px-4">Name</th>
+                  <th className="text-left py-3 px-4">US Revenue</th>
+                  <th className="text-left py-3 px-4">Commission %</th>
+                  <th className="text-left py-3 px-4">Commission Earned</th>
+                  <th className="text-left py-3 px-4">1.25X Bonus</th>
+                  <th className="text-left py-3 px-4">Other Bonus</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsAgents.length > 0 ? analyticsAgents.map((record, idx) => (
+                  <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
+                    <td className="py-3 px-4 font-medium">{record.name_raw}</td>
+                    <td className="py-3 px-4">${(record.total_us_revenue || 0).toLocaleString()}</td>
+                    <td className="py-3 px-4">{(record.commission_pct || 0)}%</td>
+                    <td className="py-3 px-4 text-green-400">${(record.commission_earned || 0).toLocaleString()}</td>
+                    <td className="py-3 px-4 text-yellow-400">${(record.commission_125x || 0).toLocaleString()}</td>
+                    <td className="py-3 px-4 text-blue-400">${(record.bonus || 0).toLocaleString()}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="6" className="py-4 px-4 text-center text-neutral-500">
+                      No agent US commission data for this period
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <div className="text-sm text-tertiary">Remaining Due</div>
         </div>
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-indigo-400">
-            {analyticsData.total_employees || 0}
+
+        {/* Hourly Payouts Table */}
+        <div className="card p-6">
+          <h4 className="text-lg font-semibold mb-4 text-indigo-400">
+            ⏰ Hourly Payouts ({analyticsHourly.length})
+          </h4>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-neutral-700">
+                  <th className="text-left py-3 px-4">Name</th>
+                  <th className="text-left py-3 px-4">Period Label</th>
+                  <th className="text-left py-3 px-4">Amount</th>
+                  <th className="text-left py-3 px-4">Total for Month</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analyticsHourly.length > 0 ? analyticsHourly.map((record, idx) => (
+                  <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
+                    <td className="py-3 px-4 font-medium">{record.name_raw}</td>
+                    <td className="py-3 px-4">{record.period_label}</td>
+                    <td className="py-3 px-4 text-green-400">${(record.amount || 0).toLocaleString()}</td>
+                    <td className="py-3 px-4">${(record.total_for_month || 0).toLocaleString()}</td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="4" className="py-4 px-4 text-center text-neutral-500">
+                      No hourly payout data for this period
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-          <div className="text-sm text-tertiary">Employees</div>
         </div>
       </div>
-    </div>
     );
   };
 
