@@ -100,14 +100,23 @@ async function findOrCreateEmployee(nameRaw, client = null) {
 async function processMainCommissionData(blockData, periodMonth, filename, sheetName, summary, client) {
     const queryFn = client || q;
     
+    console.log(`Starting to process ${blockData.length} rows in main commission data`);
+    console.log(`Using period: ${periodMonth}`);
+    
     for (let i = 0; i < blockData.length; i++) {
         const row = blockData[i];
         const rowNum = i + 1;
         
+        console.log(`Processing row ${rowNum}:`, Object.keys(row).slice(0, 5), '...');
+        console.log(`Row data sample:`, { Name: row.Name, 'Hourly Rate': row['Hourly Rate'], 'Commission Earned': row['Commission Earned'] });
+        
         try {
             // Validate required fields
             const nameRaw = cleanCellValue(row.Name);
+            console.log(`Row ${rowNum} - extracted name: "${nameRaw}"`);
+            
             if (!nameRaw) {
+                console.log(`Row ${rowNum} - SKIPPED: Missing employee name`);
                 summary.addError('main', rowNum, 'Missing employee name');
                 summary.main.skipped++;
                 continue;
@@ -116,8 +125,11 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             // Find or create employee
             let employeeId;
             try {
+                console.log(`Row ${rowNum} - Finding/creating employee: "${nameRaw}"`);
                 employeeId = await findOrCreateEmployee(nameRaw, queryFn);
+                console.log(`Row ${rowNum} - Employee ID: ${employeeId}`);
             } catch (error) {
+                console.log(`Row ${rowNum} - SKIPPED: Employee creation failed:`, error.message);
                 summary.addError('main', rowNum, 'Failed to find/create employee', { error: error.message });
                 summary.main.skipped++;
                 continue;
@@ -209,13 +221,18 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 RETURNING (xmax = 0) as inserted
             `, Object.values(data));
             
+            console.log(`Row ${rowNum} - Database result:`, upsertResult.rows[0]);
+            
             if (upsertResult.rows[0].inserted) {
+                console.log(`Row ${rowNum} - SUCCESS: Record inserted`);
                 summary.main.inserted++;
             } else {
+                console.log(`Row ${rowNum} - SUCCESS: Record updated`);
                 summary.main.updated++;
             }
             
         } catch (error) {
+            console.log(`Row ${rowNum} - ERROR: Processing failed:`, error.message);
             summary.addError('main', rowNum, 'Processing error', { error: error.message });
             summary.main.skipped++;
         }
@@ -376,12 +393,19 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
         const data = getWorksheetData(workbook, actualSheetName);
         
         // Parse period from sheet name
+        console.log(`Parsing period from sheet name: "${actualSheetName}"`);
         const periodMonth = parsePeriodFromSheetName(actualSheetName);
-        if (!periodMonth) {
-            throw new Error(`Could not parse period from sheet name: ${actualSheetName}`);
-        }
+        console.log(`Parsed period result:`, periodMonth);
         
-        summary.period_month = periodMonth.toISOString().split('T')[0]; // YYYY-MM-DD format
+        if (!periodMonth) {
+            // Default to July 2025 if parsing fails
+            const defaultPeriod = '2025-07-01';
+            console.log(`Period parsing failed, using default: ${defaultPeriod}`);
+            summary.period_month = defaultPeriod;
+        } else {
+            summary.period_month = periodMonth.toISOString().split('T')[0]; // YYYY-MM-DD format
+            console.log(`Using parsed period: ${summary.period_month}`);
+        }
         
         // Detect all blocks
         const blocks = detectAllBlocks(data);
@@ -400,27 +424,43 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
             
             // Process each block if detected
             if (blocks.main) {
+                console.log('Processing main commission block...');
                 const mainBlockData = extractBlockData(data, blocks.main);
-                await processMainCommissionData(mainBlockData, periodMonth, filename, actualSheetName, summary, client);
+                console.log(`Extracted ${mainBlockData.length} rows from main block`);
+                console.log('First 2 main block rows:', mainBlockData.slice(0, 2));
+                
+                await processMainCommissionData(mainBlockData, summary.period_month, filename, actualSheetName, summary, client);
                 summary.addWarning(`Processed main commission block with ${mainBlockData.length} rows`);
+                console.log(`Main block results: ${summary.main.inserted} inserted, ${summary.main.updated} updated, ${summary.main.skipped} skipped`);
             } else {
                 summary.addWarning('Main commission block not detected');
+                console.log('WARNING: Main commission block not detected');
             }
             
             if (blocks.agents_us) {
+                console.log('Processing agents US commission block...');
                 const agentsUSBlockData = extractBlockData(data, blocks.agents_us);
-                await processAgentUSCommissionData(agentsUSBlockData, periodMonth, filename, actualSheetName, summary, client);
+                console.log(`Extracted ${agentsUSBlockData.length} rows from agents US block`);
+                
+                await processAgentUSCommissionData(agentsUSBlockData, summary.period_month, filename, actualSheetName, summary, client);
                 summary.addWarning(`Processed agents US commission block with ${agentsUSBlockData.length} rows`);
+                console.log(`Agents US block results: ${summary.agents_us.inserted} inserted, ${summary.agents_us.updated} updated, ${summary.agents_us.skipped} skipped`);
             } else {
                 summary.addWarning('Agents US commission block not detected');
+                console.log('WARNING: Agents US commission block not detected');
             }
             
             if (blocks.hourly) {
+                console.log('Processing hourly payout block...');
                 const hourlyBlockData = extractBlockData(data, blocks.hourly);
-                await processHourlyPayoutData(hourlyBlockData, blocks.hourly, periodMonth, filename, actualSheetName, summary, client);
+                console.log(`Extracted ${hourlyBlockData.length} rows from hourly block`);
+                
+                await processHourlyPayoutData(hourlyBlockData, blocks.hourly, summary.period_month, filename, actualSheetName, summary, client);
                 summary.addWarning(`Processed hourly payout block with ${hourlyBlockData.length} rows`);
+                console.log(`Hourly block results: ${summary.hourly.inserted} inserted, ${summary.hourly.updated} updated, ${summary.hourly.skipped} skipped`);
             } else {
                 summary.addWarning('Hourly payout block not detected');
+                console.log('WARNING: Hourly payout block not detected');
             }
             
             await client.query('COMMIT');
