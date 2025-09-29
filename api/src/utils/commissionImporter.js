@@ -75,15 +75,20 @@ async function findOrCreateEmployee(nameRaw, client = null) {
     const lastName = nameParts.slice(1).join(' ') || '';
     
     const createResult = await queryFn(`
-        INSERT INTO employees (first_name, last_name, email, role_title, status, created_at)
-        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+        INSERT INTO employees (
+            first_name, last_name, email, role_title, status, 
+            hire_date, employment_type, created_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP)
         RETURNING id
     `, [
         firstName,
         lastName,
         `${nameKey.replace(/\s/g, '.')}@imported.local`, // Placeholder email
         'Sales Representative', // Default role
-        'Active'
+        'Active',
+        new Date().toISOString().split('T')[0], // Today's date as hire_date
+        'Full-time' // Default employment type
     ]);
     
     return createResult.rows[0].id;

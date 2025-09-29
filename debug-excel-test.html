@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Excel Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .container { max-width: 800px; margin: 0 auto; }
+        input[type="file"] { margin: 10px 0; padding: 10px; }
+        button { background: #4f46e5; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #3730a3; }
+        #results { background: #2d2d2d; padding: 15px; margin-top: 20px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Excel Debug Test</h1>
+        <p>Upload your Excel file to see exactly what the parser detects:</p>
+        
+        <input type="file" id="excelFile" accept=".xlsx,.xls" />
+        <button onclick="debugExcel()">Debug Excel File</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        async function debugExcel() {
+            const fileInput = document.getElementById('excelFile');
+            const resultsDiv = document.getElementById('results');
+            
+            if (!fileInput.files[0]) {
+                resultsDiv.innerHTML = '<span class="error">Please select an Excel file first!</span>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = 'Uploading and analyzing...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('excel_file', fileInput.files[0]);
+                
+                const response = await fetch('https://hr-api-wbzs.onrender.com/api/commissions/debug-headers', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultsDiv.innerHTML = `<span class="success">✅ DEBUG RESULTS:</span>
+
+📊 Sheet Name: ${data.sheetName}
+📈 Total Rows: ${data.totalRows}
+🎯 Main Block Found: ${data.mainBlockFound}
+🇺🇸 Agent US Block Found: ${data.agentBlockFound}  
+⏰ Hourly Block Found: ${data.hourlyBlockFound}
+
+📋 First 10 Rows:
+${JSON.stringify(data.firstRows, null, 2)}
+
+🔍 Detected Blocks:
+${JSON.stringify(data.detectedBlocks, null, 2)}`;
+                } else {
+                    resultsDiv.innerHTML = `<span class="error">❌ ERROR:</span>
+${data.error}
+${data.stack || ''}`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">❌ NETWORK ERROR:</span>
+${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
