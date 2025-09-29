@@ -409,31 +409,47 @@ export function detectMainCommissionBlock(data) {
  * Detect agent US commission data block
  */
 export function detectAgentUSCommissionBlock(data) {
-    const headerRow = detectHeaderRow(data, AGENT_US_KEYWORDS);
+    return detectAgentUSCommissionBlockFrom(data, 0);
+}
+
+/**
+ * Detect agent US commission data block starting from a specific row
+ */
+export function detectAgentUSCommissionBlockFrom(data, startSearchRow = 0) {
+    // Search only from the specified start row
+    const searchData = data.slice(startSearchRow);
+    const headerRow = detectHeaderRow(searchData, AGENT_US_KEYWORDS);
     if (headerRow === null) return null;
     
-    const columnMapping = extractColumnMapping(data, headerRow, Object.keys(AGENT_COMMISSION_COLUMN_MAPPING));
+    // Adjust header row to original data array index
+    const actualHeaderRow = startSearchRow + headerRow;
+    
+    const columnMapping = extractColumnMapping(data, actualHeaderRow, Object.keys(AGENT_COMMISSION_COLUMN_MAPPING));
     
     // Find name column
     let nameColIdx = null;
     for (const [colName, colIdx] of Object.entries(columnMapping)) {
-        if (fuzzyMatchHeader(colName, "Name")) {
+        if (fuzzyMatchHeader(colName, "Name") || fuzzyMatchHeader(colName, "Agents") || fuzzyMatchHeader(colName, "Agent")) {
             nameColIdx = colIdx;
             break;
         }
     }
     
-    if (nameColIdx === null) return null;
+    if (nameColIdx === null) {
+        // Default to first column if no name column found
+        nameColIdx = 0;
+    }
     
-    const startRow = headerRow + 1;
+    const startRow = actualHeaderRow + 1;
     const endRow = findDataEndRow(data, startRow, nameColIdx);
     
     return {
         type: 'agents_us',
-        headerRow,
+        headerRow: actualHeaderRow,
         startRow,
         endRow,
-        columns: columnMapping
+        columns: columnMapping,
+        nameColIdx
     };
 }
 
@@ -486,12 +502,71 @@ export function detectHourlyPayoutBlock(data) {
 }
 
 /**
- * Detect all blocks in worksheet
+ * Detect hourly payout data block starting from a specific row
+ */
+export function detectHourlyPayoutBlockFrom(data, startSearchRow = 0) {
+    // Search only from the specified start row
+    const searchData = data.slice(startSearchRow);
+    const headerRow = detectHeaderRow(searchData, HOURLY_PAYOUT_KEYWORDS);
+    if (headerRow === null) return null;
+    
+    // Adjust header row to original data array index
+    const actualHeaderRow = startSearchRow + headerRow;
+    
+    const headerData = data[actualHeaderRow];
+    if (!Array.isArray(headerData)) return null;
+    
+    const columnMapping = {};
+    let nameColIdx = null;
+    
+    // Find name column (usually first column)
+    for (let colIdx = 0; colIdx < headerData.length; colIdx++) {
+        const cellValue = headerData[colIdx];
+        if (cellValue && fuzzyMatchHeader(String(cellValue), "Name")) {
+            columnMapping[String(cellValue)] = colIdx;
+            nameColIdx = colIdx;
+            break;
+        }
+    }
+    
+    // If no explicit name column, use first column
+    if (nameColIdx === null) {
+        nameColIdx = 0;
+        if (headerData[0]) {
+            columnMapping[String(headerData[0])] = 0;
+        }
+    }
+    
+    // Find date range columns
+    const dateColumns = detectDateRangeColumns(headerData);
+    Object.assign(columnMapping, dateColumns);
+    
+    const startRow = actualHeaderRow + 1;
+    const endRow = findDataEndRow(data, startRow, nameColIdx);
+    
+    return {
+        type: 'hourly',
+        headerRow: actualHeaderRow,
+        startRow,
+        endRow,
+        columns: columnMapping,
+        nameColIdx
+    };
+}
+
+/**
+ * Detect all blocks in worksheet - search sequentially to avoid overlaps
  */
 export function detectAllBlocks(data) {
     const mainBlock = detectMainCommissionBlock(data);
-    const agentsUSBlock = detectAgentUSCommissionBlock(data);
-    const hourlyBlock = detectHourlyPayoutBlock(data);
+    
+    // Search for Agent US block starting AFTER main block ends
+    let searchStartRow = mainBlock ? mainBlock.endRow + 1 : 0;
+    const agentsUSBlock = detectAgentUSCommissionBlockFrom(data, searchStartRow);
+    
+    // Search for Hourly block starting AFTER agent US block ends
+    searchStartRow = agentsUSBlock ? agentsUSBlock.endRow + 1 : searchStartRow;
+    const hourlyBlock = detectHourlyPayoutBlockFrom(data, searchStartRow);
     
     return {
         main: mainBlock,
