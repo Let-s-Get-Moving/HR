@@ -353,6 +353,7 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
             }
             
             const employeeId = await findOrCreateEmployee(nameRaw, queryFn);
+            summary.addDebugLog(`✓ Agent US Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
             
             const data = {
                 employee_id: employeeId,
@@ -446,6 +447,7 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             }
             
             const employeeId = await findOrCreateEmployee(nameRaw, queryFn);
+            summary.addDebugLog(`✓ Hourly Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
             
             // Process each date range column as separate payout records
             for (const [colName, colIdx] of Object.entries(block.columns)) {
