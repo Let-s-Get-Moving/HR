@@ -252,11 +252,12 @@ export function extractAllColumns(data, headerRow) {
 }
 
 /**
- * Find data end by looking for consecutive empty name rows OR a new header row
+ * Find data end by looking for new header rows OR consecutive empty name rows
+ * Priority: Header detection (primary), then empty rows (backup)
  */
 export function findDataEndRow(data, startRow, nameColIdx) {
     let emptyCount = 0;
-    const REQUIRED_EMPTY_ROWS = 10; // Require 10 consecutive empty rows to end block (max gap between blocks is 14)
+    const REQUIRED_EMPTY_ROWS = 3; // Only 2-3 empty rows between sections in practice
     
     for (let rowIdx = startRow; rowIdx < data.length; rowIdx++) {
         const row = data[rowIdx];
@@ -265,27 +266,45 @@ export function findDataEndRow(data, startRow, nameColIdx) {
         }
         
         const nameValue = row[nameColIdx];
-        const nameStr = nameValue ? String(nameValue).trim() : '';
+        const nameStr = nameValue ? String(nameValue).trim().toLowerCase() : '';
         
-        // Check if this looks like a header row (e.g., "Agents", "hourly paid out", etc.)
-        if (nameStr && (
-            nameStr.toLowerCase().includes('agent') && nameStr.length < 20 ||
-            nameStr.toLowerCase().includes('hourly') && nameStr.length < 30 ||
-            nameStr.toLowerCase() === 'name' ||
-            nameStr.toLowerCase() === 'employee'
-        )) {
-            // Likely hit a new section header
-            console.log(`[findDataEndRow] Detected potential header at row ${rowIdx}: "${nameStr}" - ending block`);
-            return rowIdx;
-        }
-        
-        if (!nameStr) {
+        // PRIMARY STOP CONDITION: Check if this looks like a section header
+        // Be aggressive about detecting headers since gaps are only 2 rows
+        if (nameStr) {
+            // Check for Agent US section headers
+            if (nameStr === 'agents' || 
+                nameStr === 'agent' || 
+                nameStr === 'agents us' ||
+                (nameStr.includes('agent') && nameStr.length < 25 && !nameStr.includes('andrea') && !nameStr.includes('agent')) ||
+                nameStr.startsWith('agent ')) {
+                console.log(`[findDataEndRow] Detected Agent US header at row ${rowIdx}: "${nameStr}" - ending block`);
+                return rowIdx;
+            }
+            
+            // Check for Hourly Payout section headers
+            if (nameStr.includes('hourly paid out') ||
+                nameStr.includes('hourly payout') ||
+                nameStr === 'hourly paid' ||
+                (nameStr.includes('hourly') && nameStr.includes('paid') && nameStr.length < 40)) {
+                console.log(`[findDataEndRow] Detected Hourly header at row ${rowIdx}: "${nameStr}" - ending block`);
+                return rowIdx;
+            }
+            
+            // Check for generic header rows
+            if (nameStr === 'name' || nameStr === 'employee' || nameStr === 'staff') {
+                console.log(`[findDataEndRow] Detected generic header at row ${rowIdx}: "${nameStr}" - ending block`);
+                return rowIdx;
+            }
+            
+            // Reset empty counter when we see real data
+            emptyCount = 0;
+        } else {
+            // BACKUP STOP CONDITION: Count empty rows
             emptyCount++;
             if (emptyCount >= REQUIRED_EMPTY_ROWS) {
+                console.log(`[findDataEndRow] Found ${REQUIRED_EMPTY_ROWS} consecutive empty rows at row ${rowIdx} - ending block`);
                 return rowIdx - REQUIRED_EMPTY_ROWS + 1;
             }
-        } else {
-            emptyCount = 0;
         }
     }
     
