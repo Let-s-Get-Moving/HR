@@ -173,6 +173,17 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             }
             
             // Parse all numeric fields with flexible column matching
+            if (rowNum === 1) {
+                // Log all available columns for debugging
+                summary.addDebugLog(`Row ${rowNum} - ALL available columns: ${Object.keys(row).join(', ')}`);
+                const sampleValues = {
+                    hourlyRate: getColumnValue(row, 'Hourly Rate', ' Hourly Rate '),
+                    commissionEarned: getColumnValue(row, 'Commission Earned', ' Commission Earned '),
+                    totalDue: getColumnValue(row, 'Total due', ' Total due ')
+                };
+                summary.addDebugLog(`Row ${rowNum} - Sample extracted values: ${JSON.stringify(sampleValues)}`);
+            }
+            
             const data = {
                 employee_id: employeeId,
                 period_month: periodMonth,

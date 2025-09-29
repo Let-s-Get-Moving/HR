@@ -73,11 +73,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       last_name: employee.last_name,
       email: employee.email,
       phone: employee.phone,
+      gender: employee.gender,
+      birth_date: employee.birth_date ? employee.birth_date.split('T')[0] : '',
       role_title: employee.role_title,
       hourly_rate: employee.hourly_rate || 25,
       employment_type: employee.employment_type,
       department_id: employee.department_id,
-      location_id: employee.location_id
+      location_id: employee.location_id,
+      hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : '',
+      status: employee.status
     });
     setIsEditing(true);
   };
@@ -137,8 +141,38 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               {employee.first_name[0]}{employee.last_name[0]}
             </div>
             <div>
-              <h1 className="text-3xl font-bold">{employee.first_name} {employee.last_name}</h1>
-              <p className="text-neutral-400">{employee.role_title} • {employee.department_name}</p>
+              {isEditing ? (
+                <div className="space-y-2">
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={editData.first_name || ''}
+                      onChange={(e) => setEditData({...editData, first_name: e.target.value})}
+                      placeholder="First Name"
+                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-xl font-bold"
+                    />
+                    <input
+                      type="text"
+                      value={editData.last_name || ''}
+                      onChange={(e) => setEditData({...editData, last_name: e.target.value})}
+                      placeholder="Last Name"
+                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-xl font-bold"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={editData.role_title || ''}
+                    onChange={(e) => setEditData({...editData, role_title: e.target.value})}
+                    placeholder="Role Title"
+                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-sm text-neutral-400 w-full"
+                  />
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-3xl font-bold">{employee.first_name} {employee.last_name}</h1>
+                  <p className="text-neutral-400">{employee.role_title} • {employee.department_name}</p>
+                </>
+              )}
             </div>
           </div>
           <div className="flex space-x-3">
@@ -260,11 +294,34 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Gender:</span>
-                  <span>{employee.gender || 'Not specified'}</span>
+                  {isEditing ? (
+                    <select
+                      value={editData.gender || ''}
+                      onChange={(e) => setEditData({...editData, gender: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    >
+                      <option value="">Not specified</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Non-binary">Non-binary</option>
+                      <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                  ) : (
+                    <span>{employee.gender || 'Not specified'}</span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Birth Date:</span>
-                  <span>{employee.birth_date ? new Date(employee.birth_date).toLocaleDateString() : 'Not provided'}</span>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editData.birth_date || ''}
+                      onChange={(e) => setEditData({...editData, birth_date: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    />
+                  ) : (
+                    <span>{employee.birth_date ? new Date(employee.birth_date).toLocaleDateString() : 'Not provided'}</span>
+                  )}
                 </div>
               </div>
             </div>
