@@ -558,15 +558,38 @@ export function detectHourlyPayoutBlockFrom(data, startSearchRow = 0) {
  * Detect all blocks in worksheet - search sequentially to avoid overlaps
  */
 export function detectAllBlocks(data) {
+    console.log(`[detectAllBlocks] Starting detection with ${data.length} total rows`);
+    
     const mainBlock = detectMainCommissionBlock(data);
+    console.log(`[detectAllBlocks] Main block:`, mainBlock ? `Found at row ${mainBlock.headerRow}, data rows ${mainBlock.startRow} to ${mainBlock.endRow}` : 'Not found');
     
     // Search for Agent US block starting AFTER main block ends
     let searchStartRow = mainBlock ? mainBlock.endRow + 1 : 0;
+    console.log(`[detectAllBlocks] Searching for Agent US starting from row ${searchStartRow}`);
+    
+    // Log a sample of rows around the search area
+    if (searchStartRow < data.length) {
+        for (let i = searchStartRow; i < Math.min(searchStartRow + 5, data.length); i++) {
+            console.log(`[detectAllBlocks] Row ${i} sample:`, data[i] ? data[i].slice(0, 5) : 'empty');
+        }
+    }
+    
     const agentsUSBlock = detectAgentUSCommissionBlockFrom(data, searchStartRow);
+    console.log(`[detectAllBlocks] Agent US block:`, agentsUSBlock ? `Found at row ${agentsUSBlock.headerRow}, data rows ${agentsUSBlock.startRow} to ${agentsUSBlock.endRow}` : 'Not found');
     
     // Search for Hourly block starting AFTER agent US block ends
     searchStartRow = agentsUSBlock ? agentsUSBlock.endRow + 1 : searchStartRow;
+    console.log(`[detectAllBlocks] Searching for Hourly starting from row ${searchStartRow}`);
+    
+    // Log a sample of rows around the search area
+    if (searchStartRow < data.length) {
+        for (let i = searchStartRow; i < Math.min(searchStartRow + 5, data.length); i++) {
+            console.log(`[detectAllBlocks] Row ${i} sample:`, data[i] ? data[i].slice(0, 5) : 'empty');
+        }
+    }
+    
     const hourlyBlock = detectHourlyPayoutBlockFrom(data, searchStartRow);
+    console.log(`[detectAllBlocks] Hourly block:`, hourlyBlock ? `Found at row ${hourlyBlock.headerRow}, data rows ${hourlyBlock.startRow} to ${hourlyBlock.endRow}` : 'Not found');
     
     return {
         main: mainBlock,
