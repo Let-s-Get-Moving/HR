@@ -20,6 +20,65 @@ const upload = multer({
   }
 });
 
+// Debug endpoint to test header detection
+r.post("/debug-headers", upload.single('excel_file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No Excel file uploaded' });
+    }
+
+    const { loadExcelWorkbook, getWorksheetData, detectAllBlocks } = await import('../utils/excelParser.js');
+    
+    // Load workbook
+    const workbook = loadExcelWorkbook(req.file.buffer);
+    console.log('Sheet names:', workbook.SheetNames);
+    
+    // Get worksheet data  
+    const sheetName = workbook.SheetNames[workbook.SheetNames.length - 1];
+    const data = getWorksheetData(workbook, sheetName);
+    
+    console.log('Total rows:', data.length);
+    console.log('First 10 rows:');
+    for (let i = 0; i < Math.min(10, data.length); i++) {
+      console.log(`Row ${i}:`, data[i]);
+    }
+    
+    // Test block detection
+    const blocks = detectAllBlocks(data);
+    
+    res.json({
+      success: true,
+      sheetName,
+      totalRows: data.length,
+      firstRows: data.slice(0, 10),
+      detectedBlocks: {
+        main: blocks.main ? {
+          type: blocks.main.type,
+          headerRow: blocks.main.headerRow,
+          startRow: blocks.main.startRow,
+          endRow: blocks.main.endRow,
+          columns: Object.keys(blocks.main.columns || {})
+        } : null,
+        agents_us: blocks.agents_us ? {
+          type: blocks.agents_us.type,
+          headerRow: blocks.agents_us.headerRow
+        } : null,
+        hourly: blocks.hourly ? {
+          type: blocks.hourly.type,
+          headerRow: blocks.hourly.headerRow
+        } : null
+      },
+      mainBlockFound: !!blocks.main,
+      agentBlockFound: !!blocks.agents_us, 
+      hourlyBlockFound: !!blocks.hourly
+    });
+    
+  } catch (error) {
+    console.error('Debug error:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
 // Excel import endpoint
 r.post("/import", upload.single('excel_file'), async (req, res) => {
   try {
