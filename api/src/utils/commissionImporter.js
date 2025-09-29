@@ -184,38 +184,46 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 summary.addDebugLog(`Row ${rowNum} - Sample extracted values: ${JSON.stringify(sampleValues)}`);
             }
             
+            // Enable debug logging for first row
+            const debug = rowNum === 1 ? 'Row1' : null;
+            
             const data = {
                 employee_id: employeeId,
                 period_month: periodMonth,
                 name_raw: nameRaw,
-                hourly_rate: parseMoney(getColumnValue(row, 'Hourly Rate', ' Hourly Rate ')),
-                rev_sm_all_locations: parseMoney(getColumnValue(row, 'Revenue on Smart Moving (All locations combined )', ' Revenue on Smart Moving (All locations combined ) ')),
-                rev_add_ons: parseMoney(getColumnValue(row, 'Revenue Add Ons+', ' Revenue Add Ons+ ', 'Revenue Add Ons')),
-                rev_deduction: parseMoney(getColumnValue(row, 'Revenue Deduction', ' Revenue Deduction ')),
-                total_revenue_all: parseMoney(getColumnValue(row, 'Total Revenue(all locations combined )', ' Total Revenue(all locations combined ) ')),
+                hourly_rate: parseMoney(getColumnValue(row, 'Hourly Rate', ' Hourly Rate '), debug ? `${debug}_hourly_rate` : null),
+                rev_sm_all_locations: parseMoney(getColumnValue(row, 'Revenue on Smart Moving (All locations combined )', ' Revenue on Smart Moving (All locations combined ) '), debug ? `${debug}_rev_sm` : null),
+                rev_add_ons: parseMoney(getColumnValue(row, 'Revenue Add Ons+', ' Revenue Add Ons+ ', 'Revenue Add Ons'), debug ? `${debug}_rev_add_ons` : null),
+                rev_deduction: parseMoney(getColumnValue(row, 'Revenue Deduction', ' Revenue Deduction '), debug ? `${debug}_rev_deduction` : null),
+                total_revenue_all: parseMoney(getColumnValue(row, 'Total Revenue(all locations combined )', ' Total Revenue(all locations combined ) '), debug ? `${debug}_total_rev` : null),
                 booking_pct: parsePercent(getColumnValue(row, 'Booking %', ' Booking % ')),
                 commission_pct: parsePercent(getColumnValue(row, 'Commission %', ' Commission % ')),
-                commission_earned: parseMoney(getColumnValue(row, 'Commission Earned', ' Commission Earned ')),
-                spiff_bonus: parseMoney(getColumnValue(row, 'Spiff Bonus', ' Spiff Bonus ')),
-                revenue_bonus: parseMoney(getColumnValue(row, 'Revenue Bonus', ' Revenue Bonus ')),
-                bonus_us_jobs_125x: parseMoney(getColumnValue(row, 'Bonuses for booking US jobs  1.25X', ' Bonuses for booking US jobs  1.25X ')),
-                booking_bonus_plus: parseMoney(getColumnValue(row, '$5/$10 Bonus for Booking Bonus', ' $5/$10 Bonus for Booking Bonus ')),
-                booking_bonus_minus: parseMoney(getColumnValue(row, '$5/$10 Deduction for Booking Bonus', ' $5/$10 Deduction for Booking Bonus ')),
-                hourly_paid_out_minus: parseMoney(getColumnValue(row, '- Hourly Paid Out', ' - Hourly Paid Out ')),
-                deduction_sales_manager_minus: parseMoney(getColumnValue(row, '-Deduction by Sales Manager', ' -Deduction by Sales Manager ')),
-                deduction_missing_punch_minus: parseMoney(getColumnValue(row, 'Deductions for missing punch in/out on the time report for all pay periods of the month', ' Deductions for missing punch in/out …', 'Deductions for missing punch in/out')),
-                deduction_customer_support_minus: parseMoney(getColumnValue(row, 'Deductions from Customer Support', ' Deductions from Customer Support ')),
-                deduction_post_commission_collected_minus: parseMoney(getColumnValue(row, 'Deduction Post Commission collected', ' Deduction Post Commission collected ')),
-                deduction_dispatch_minus: parseMoney(getColumnValue(row, 'Deductions from dispatch', ' Deductions from dispatch ')),
-                deduction_other_minus: parseMoney(getColumnValue(row, 'deduction', ' deduction ')),
-                total_due: parseMoney(getColumnValue(row, 'Total due', ' Total due ')),
-                amount_paid: parseMoney(getColumnValue(row, 'Amount paid (date included in comment)', ' Amount paid (date included in comment) ')),
-                remaining_amount: parseMoney(getColumnValue(row, 'Remaining amount', ' Remaining amount ')),
+                commission_earned: parseMoney(getColumnValue(row, 'Commission Earned', ' Commission Earned '), debug ? `${debug}_commission_earned` : null),
+                spiff_bonus: parseMoney(getColumnValue(row, 'Spiff Bonus', ' Spiff Bonus '), debug ? `${debug}_spiff` : null),
+                revenue_bonus: parseMoney(getColumnValue(row, 'Revenue Bonus', ' Revenue Bonus '), debug ? `${debug}_rev_bonus` : null),
+                bonus_us_jobs_125x: parseMoney(getColumnValue(row, 'Bonuses for booking US jobs  1.25X', ' Bonuses for booking US jobs  1.25X '), debug ? `${debug}_bonus_125x` : null),
+                booking_bonus_plus: parseMoney(getColumnValue(row, '$5/$10 Bonus for Booking Bonus', ' $5/$10 Bonus for Booking Bonus '), debug ? `${debug}_booking_plus` : null),
+                booking_bonus_minus: parseMoney(getColumnValue(row, '$5/$10 Deduction for Booking Bonus', ' $5/$10 Deduction for Booking Bonus '), debug ? `${debug}_booking_minus` : null),
+                hourly_paid_out_minus: parseMoney(getColumnValue(row, '- Hourly Paid Out', ' - Hourly Paid Out '), debug ? `${debug}_hourly_paid_out` : null),
+                deduction_sales_manager_minus: parseMoney(getColumnValue(row, '-Deduction by Sales Manager', ' -Deduction by Sales Manager '), debug ? `${debug}_ded_sales_mgr` : null),
+                deduction_missing_punch_minus: parseMoney(getColumnValue(row, 'Deductions for missing punch in/out on the time report for all pay periods of the month', ' Deductions for missing punch in/out …', 'Deductions for missing punch in/out'), debug ? `${debug}_ded_punch` : null),
+                deduction_customer_support_minus: parseMoney(getColumnValue(row, 'Deductions from Customer Support', ' Deductions from Customer Support '), debug ? `${debug}_ded_cs` : null),
+                deduction_post_commission_collected_minus: parseMoney(getColumnValue(row, 'Deduction Post Commission collected', ' Deduction Post Commission collected '), debug ? `${debug}_ded_post_comm` : null),
+                deduction_dispatch_minus: parseMoney(getColumnValue(row, 'Deductions from dispatch', ' Deductions from dispatch '), debug ? `${debug}_ded_dispatch` : null),
+                deduction_other_minus: parseMoney(getColumnValue(row, 'deduction', ' deduction '), debug ? `${debug}_ded_other` : null),
+                total_due: parseMoney(getColumnValue(row, 'Total due', ' Total due '), debug ? `${debug}_total_due` : null),
+                amount_paid: parseMoney(getColumnValue(row, 'Amount paid (date included in comment)', ' Amount paid (date included in comment) '), debug ? `${debug}_amount_paid` : null),
+                remaining_amount: parseMoney(getColumnValue(row, 'Remaining amount', ' Remaining amount '), debug ? `${debug}_remaining` : null),
                 corporate_open_jobs_note: cleanCellValue(getColumnValue(row, 'CORPORATE LOCATIONS JOBS STILL OPEN', ' CORPORATE LOCATIONS JOBS STILL OPEN …')),
                 parking_pass_fee_note: cleanCellValue(getColumnValue(row, 'Paid parking pass fee to be deducted from', ' Paid parking pass fee to be deducted from ')),
                 source_file: filename,
                 sheet_name: sheetName
             };
+            
+            // Debug log for first few rows
+            if (rowNum <= 3) {
+                summary.addDebugLog(`Row ${rowNum} - Prepared data for DB: hourly_rate=${data.hourly_rate}, commission_earned=${data.commission_earned}, total_due=${data.total_due}, amount_paid=${data.amount_paid}`);
+            }
             
             // Use savepoint for each row to allow recovery from errors
             try {

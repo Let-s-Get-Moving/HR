@@ -229,6 +229,29 @@ export function extractColumnMapping(data, headerRow, keywords) {
 }
 
 /**
+ * Extract ALL columns from header row (not just matching keywords)
+ */
+export function extractAllColumns(data, headerRow) {
+    const mapping = {};
+    const headerData = data[headerRow];
+    
+    if (!Array.isArray(headerData)) return mapping;
+    
+    for (let colIdx = 0; colIdx < headerData.length; colIdx++) {
+        const cellValue = headerData[colIdx];
+        if (cellValue === null || cellValue === undefined) continue;
+        
+        const cellStr = String(cellValue).trim();
+        if (!cellStr) continue;
+        
+        // Map ALL columns, not just matching ones
+        mapping[cellStr] = colIdx;
+    }
+    
+    return mapping;
+}
+
+/**
  * Find data end by looking for consecutive empty name rows
  */
 export function findDataEndRow(data, startRow, nameColIdx) {
@@ -279,25 +302,40 @@ export function detectDateRangeColumns(headerData) {
 /**
  * Parse monetary value handling various formats
  */
-export function parseMoney(value) {
-    if (value === null || value === undefined || value === '') return null;
+export function parseMoney(value, debugLabel = null) {
+    if (value === null || value === undefined || value === '') {
+        if (debugLabel) console.log(`[parseMoney:${debugLabel}] Input is null/undefined/empty`);
+        return null;
+    }
     
     try {
         const valueStr = String(value).trim();
-        if (!valueStr) return null;
+        if (!valueStr) {
+            if (debugLabel) console.log(`[parseMoney:${debugLabel}] String is empty after trim`);
+            return null;
+        }
         
         // Check for negative (parentheses)
         const isNegative = valueStr.startsWith('(') && valueStr.endsWith(')');
         
         // Remove monetary formatting
         const cleanValue = valueStr.replace(/[\$,\s\(\)]/g, '');
-        if (!cleanValue || cleanValue === '-') return null;
+        if (!cleanValue || cleanValue === '-') {
+            if (debugLabel) console.log(`[parseMoney:${debugLabel}] Clean value is empty or dash: "${cleanValue}"`);
+            return null;
+        }
         
         const numValue = parseFloat(cleanValue);
-        if (isNaN(numValue)) return null;
+        if (isNaN(numValue)) {
+            if (debugLabel) console.log(`[parseMoney:${debugLabel}] parseFloat returned NaN for: "${cleanValue}"`);
+            return null;
+        }
         
-        return isNegative ? -numValue : numValue;
+        const result = isNegative ? -numValue : numValue;
+        if (debugLabel) console.log(`[parseMoney:${debugLabel}] Input="${valueStr}" -> Parsed=${result}`);
+        return result;
     } catch (error) {
+        if (debugLabel) console.log(`[parseMoney:${debugLabel}] Error: ${error.message}`);
         return null;
     }
 }
