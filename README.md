@@ -8,7 +8,7 @@ A comprehensive **Human Resources Management System** built with modern web tech
 - ✅ **API Server**: Running on `http://localhost:8080`
 - ✅ **Database**: PostgreSQL with 248 employees, 5,430 payroll records
 - ✅ **Adminer**: Available on `http://localhost:8081`
-- ✅ **Commission Import**: Fixed schema & query function issues (2025-09-29)
+- ✅ **Commission Import**: FULLY FIXED - transaction recovery + field overflow protection (2025-09-29)
 
 ## 📁 **Project Structure**
 

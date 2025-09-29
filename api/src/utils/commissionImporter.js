@@ -189,72 +189,83 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 sheet_name: sheetName
             };
             
-            // Upsert data
-            const upsertResult = await queryFn(`
-                INSERT INTO employee_commission_monthly (
-                    employee_id, period_month, name_raw, hourly_rate, rev_sm_all_locations,
-                    rev_add_ons, rev_deduction, total_revenue_all, booking_pct, commission_pct,
-                    commission_earned, spiff_bonus, revenue_bonus, bonus_us_jobs_125x,
-                    booking_bonus_plus, booking_bonus_minus, hourly_paid_out_minus,
-                    deduction_sales_manager_minus, deduction_missing_punch_minus,
-                    deduction_customer_support_minus, deduction_post_commission_collected_minus,
-                    deduction_dispatch_minus, deduction_other_minus, total_due, amount_paid,
-                    remaining_amount, corporate_open_jobs_note, parking_pass_fee_note,
-                    source_file, sheet_name, created_at, updated_at
-                ) VALUES (
-                    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                    $11, $12, $13, $14, $15, $16, $17, $18, $19,
-                    $20, $21, $22, $23, $24, $25, $26, $27, $28,
-                    $29, $30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-                )
-                ON CONFLICT (employee_id, period_month)
-                DO UPDATE SET
-                    name_raw = EXCLUDED.name_raw,
-                    hourly_rate = EXCLUDED.hourly_rate,
-                    rev_sm_all_locations = EXCLUDED.rev_sm_all_locations,
-                    rev_add_ons = EXCLUDED.rev_add_ons,
-                    rev_deduction = EXCLUDED.rev_deduction,
-                    total_revenue_all = EXCLUDED.total_revenue_all,
-                    booking_pct = EXCLUDED.booking_pct,
-                    commission_pct = EXCLUDED.commission_pct,
-                    commission_earned = EXCLUDED.commission_earned,
-                    spiff_bonus = EXCLUDED.spiff_bonus,
-                    revenue_bonus = EXCLUDED.revenue_bonus,
-                    bonus_us_jobs_125x = EXCLUDED.bonus_us_jobs_125x,
-                    booking_bonus_plus = EXCLUDED.booking_bonus_plus,
-                    booking_bonus_minus = EXCLUDED.booking_bonus_minus,
-                    hourly_paid_out_minus = EXCLUDED.hourly_paid_out_minus,
-                    deduction_sales_manager_minus = EXCLUDED.deduction_sales_manager_minus,
-                    deduction_missing_punch_minus = EXCLUDED.deduction_missing_punch_minus,
-                    deduction_customer_support_minus = EXCLUDED.deduction_customer_support_minus,
-                    deduction_post_commission_collected_minus = EXCLUDED.deduction_post_commission_collected_minus,
-                    deduction_dispatch_minus = EXCLUDED.deduction_dispatch_minus,
-                    deduction_other_minus = EXCLUDED.deduction_other_minus,
-                    total_due = EXCLUDED.total_due,
-                    amount_paid = EXCLUDED.amount_paid,
-                    remaining_amount = EXCLUDED.remaining_amount,
-                    corporate_open_jobs_note = EXCLUDED.corporate_open_jobs_note,
-                    parking_pass_fee_note = EXCLUDED.parking_pass_fee_note,
-                    source_file = EXCLUDED.source_file,
-                    sheet_name = EXCLUDED.sheet_name,
-                    updated_at = CURRENT_TIMESTAMP
-                RETURNING (xmax = 0) as inserted
-            `, Object.values(data));
-            
-            if (rowNum <= 5) {
-                summary.addDebugLog(`Row ${rowNum} - Database result: ${JSON.stringify(upsertResult.rows[0])}`);
-            }
-            
-            if (upsertResult.rows[0].inserted) {
+            // Use savepoint for each row to allow recovery from errors
+            try {
+                await queryFn('SAVEPOINT row_insert');
+                
+                // Upsert data
+                const upsertResult = await queryFn(`
+                    INSERT INTO employee_commission_monthly (
+                        employee_id, period_month, name_raw, hourly_rate, rev_sm_all_locations,
+                        rev_add_ons, rev_deduction, total_revenue_all, booking_pct, commission_pct,
+                        commission_earned, spiff_bonus, revenue_bonus, bonus_us_jobs_125x,
+                        booking_bonus_plus, booking_bonus_minus, hourly_paid_out_minus,
+                        deduction_sales_manager_minus, deduction_missing_punch_minus,
+                        deduction_customer_support_minus, deduction_post_commission_collected_minus,
+                        deduction_dispatch_minus, deduction_other_minus, total_due, amount_paid,
+                        remaining_amount, corporate_open_jobs_note, parking_pass_fee_note,
+                        source_file, sheet_name, created_at, updated_at
+                    ) VALUES (
+                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                        $11, $12, $13, $14, $15, $16, $17, $18, $19,
+                        $20, $21, $22, $23, $24, $25, $26, $27, $28,
+                        $29, $30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                    )
+                    ON CONFLICT (employee_id, period_month)
+                    DO UPDATE SET
+                        name_raw = EXCLUDED.name_raw,
+                        hourly_rate = EXCLUDED.hourly_rate,
+                        rev_sm_all_locations = EXCLUDED.rev_sm_all_locations,
+                        rev_add_ons = EXCLUDED.rev_add_ons,
+                        rev_deduction = EXCLUDED.rev_deduction,
+                        total_revenue_all = EXCLUDED.total_revenue_all,
+                        booking_pct = EXCLUDED.booking_pct,
+                        commission_pct = EXCLUDED.commission_pct,
+                        commission_earned = EXCLUDED.commission_earned,
+                        spiff_bonus = EXCLUDED.spiff_bonus,
+                        revenue_bonus = EXCLUDED.revenue_bonus,
+                        bonus_us_jobs_125x = EXCLUDED.bonus_us_jobs_125x,
+                        booking_bonus_plus = EXCLUDED.booking_bonus_plus,
+                        booking_bonus_minus = EXCLUDED.booking_bonus_minus,
+                        hourly_paid_out_minus = EXCLUDED.hourly_paid_out_minus,
+                        deduction_sales_manager_minus = EXCLUDED.deduction_sales_manager_minus,
+                        deduction_missing_punch_minus = EXCLUDED.deduction_missing_punch_minus,
+                        deduction_customer_support_minus = EXCLUDED.deduction_customer_support_minus,
+                        deduction_post_commission_collected_minus = EXCLUDED.deduction_post_commission_collected_minus,
+                        deduction_dispatch_minus = EXCLUDED.deduction_dispatch_minus,
+                        deduction_other_minus = EXCLUDED.deduction_other_minus,
+                        total_due = EXCLUDED.total_due,
+                        amount_paid = EXCLUDED.amount_paid,
+                        remaining_amount = EXCLUDED.remaining_amount,
+                        corporate_open_jobs_note = EXCLUDED.corporate_open_jobs_note,
+                        parking_pass_fee_note = EXCLUDED.parking_pass_fee_note,
+                        source_file = EXCLUDED.source_file,
+                        sheet_name = EXCLUDED.sheet_name,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING (xmax = 0) as inserted
+                `, Object.values(data));
+                
+                await queryFn('RELEASE SAVEPOINT row_insert');
+                
                 if (rowNum <= 5) {
-                    summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record inserted`);
+                    summary.addDebugLog(`Row ${rowNum} - Database result: ${JSON.stringify(upsertResult.rows[0])}`);
                 }
-                summary.main.inserted++;
-            } else {
-                if (rowNum <= 5) {
-                    summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record updated`);
+                
+                if (upsertResult.rows[0].inserted) {
+                    if (rowNum <= 5) {
+                        summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record inserted`);
+                    }
+                    summary.main.inserted++;
+                } else {
+                    if (rowNum <= 5) {
+                        summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record updated`);
+                    }
+                    summary.main.updated++;
                 }
-                summary.main.updated++;
+            } catch (insertError) {
+                // Rollback to savepoint to recover transaction
+                await queryFn('ROLLBACK TO SAVEPOINT row_insert');
+                throw insertError;
             }
             
         } catch (error) {
@@ -308,29 +319,38 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
                 sheet_name: sheetName
             };
             
-            const upsertResult = await queryFn(`
-                INSERT INTO agent_commission_us (
-                    employee_id, period_month, total_us_revenue, commission_pct,
-                    commission_earned, commission_125x, bonus, source_file, sheet_name,
-                    created_at, updated_at
-                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                ON CONFLICT (employee_id, period_month)
-                DO UPDATE SET
-                    total_us_revenue = EXCLUDED.total_us_revenue,
-                    commission_pct = EXCLUDED.commission_pct,
-                    commission_earned = EXCLUDED.commission_earned,
-                    commission_125x = EXCLUDED.commission_125x,
-                    bonus = EXCLUDED.bonus,
-                    source_file = EXCLUDED.source_file,
-                    sheet_name = EXCLUDED.sheet_name,
-                    updated_at = CURRENT_TIMESTAMP
-                RETURNING (xmax = 0) as inserted
-            `, Object.values(data));
-            
-            if (upsertResult.rows[0].inserted) {
-                summary.agents_us.inserted++;
-            } else {
-                summary.agents_us.updated++;
+            try {
+                await queryFn('SAVEPOINT agent_row_insert');
+                
+                const upsertResult = await queryFn(`
+                    INSERT INTO agent_commission_us (
+                        employee_id, period_month, total_us_revenue, commission_pct,
+                        commission_earned, commission_125x, bonus, source_file, sheet_name,
+                        created_at, updated_at
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT (employee_id, period_month)
+                    DO UPDATE SET
+                        total_us_revenue = EXCLUDED.total_us_revenue,
+                        commission_pct = EXCLUDED.commission_pct,
+                        commission_earned = EXCLUDED.commission_earned,
+                        commission_125x = EXCLUDED.commission_125x,
+                        bonus = EXCLUDED.bonus,
+                        source_file = EXCLUDED.source_file,
+                        sheet_name = EXCLUDED.sheet_name,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING (xmax = 0) as inserted
+                `, Object.values(data));
+                
+                await queryFn('RELEASE SAVEPOINT agent_row_insert');
+                
+                if (upsertResult.rows[0].inserted) {
+                    summary.agents_us.inserted++;
+                } else {
+                    summary.agents_us.updated++;
+                }
+            } catch (insertError) {
+                await queryFn('ROLLBACK TO SAVEPOINT agent_row_insert');
+                throw insertError;
             }
             
         } catch (error) {
@@ -397,25 +417,34 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
                     sheet_name: sheetName
                 };
                 
-                const upsertResult = await queryFn(`
-                    INSERT INTO hourly_payout (
-                        employee_id, period_month, period_label, amount, total_for_month,
-                        source_file, sheet_name, created_at, updated_at
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT (employee_id, period_month, period_label)
-                    DO UPDATE SET
-                        amount = EXCLUDED.amount,
-                        total_for_month = EXCLUDED.total_for_month,
-                        source_file = EXCLUDED.source_file,
-                        sheet_name = EXCLUDED.sheet_name,
-                        updated_at = CURRENT_TIMESTAMP
-                    RETURNING (xmax = 0) as inserted
-                `, Object.values(data));
-                
-                if (upsertResult.rows[0].inserted) {
-                    summary.hourly.inserted++;
-                } else {
-                    summary.hourly.updated++;
+                try {
+                    await queryFn('SAVEPOINT hourly_row_insert');
+                    
+                    const upsertResult = await queryFn(`
+                        INSERT INTO hourly_payout (
+                            employee_id, period_month, period_label, amount, total_for_month,
+                            source_file, sheet_name, created_at, updated_at
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        ON CONFLICT (employee_id, period_month, period_label)
+                        DO UPDATE SET
+                            amount = EXCLUDED.amount,
+                            total_for_month = EXCLUDED.total_for_month,
+                            source_file = EXCLUDED.source_file,
+                            sheet_name = EXCLUDED.sheet_name,
+                            updated_at = CURRENT_TIMESTAMP
+                        RETURNING (xmax = 0) as inserted
+                    `, Object.values(data));
+                    
+                    await queryFn('RELEASE SAVEPOINT hourly_row_insert');
+                    
+                    if (upsertResult.rows[0].inserted) {
+                        summary.hourly.inserted++;
+                    } else {
+                        summary.hourly.updated++;
+                    }
+                } catch (insertError) {
+                    await queryFn('ROLLBACK TO SAVEPOINT hourly_row_insert');
+                    throw insertError;
                 }
             }
             

@@ -135,9 +135,11 @@ The system automatically detects three types of data blocks in Excel files:
 
 ### Error Handling & Reliability
 - **Transaction safety:** Entire import wrapped in database transaction
+- **Savepoint recovery:** Each row uses savepoints to prevent single-row failures from aborting entire transaction
 - **Idempotent:** Re-importing same file updates existing records
-- **Detailed logging:** Every skip/error recorded with reason
+- **Detailed logging:** Every skip/error recorded with reason (first 10 errors plus sampling)
 - **Validation:** Required fields checked, malformed data skipped gracefully
+- **Field overflow protection:** Database fields increased from NUMERIC(14,2) to NUMERIC(18,2) for values up to $999 trillion
 
 ## File Structure
 
