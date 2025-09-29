@@ -328,9 +328,10 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
         const rowNum = i + 1;
         
         try {
-            const nameRaw = cleanCellValue(row.Name);
+            // Agent US uses "Agents" column for names, not "Name"
+            const nameRaw = cleanCellValue(row.Agents || row.Agent || row.Name);
             if (rowNum <= 5) {
-                summary.addDebugLog(`Agent US Row ${rowNum} - Name: "${nameRaw}", Columns: ${Object.keys(row).join(', ')}`);
+                summary.addDebugLog(`Agent US Row ${rowNum} - Name: "${nameRaw}", Raw: "${row.Agents}", Columns: ${Object.keys(row).join(', ')}`);
             }
             if (!nameRaw) {
                 if (rowNum <= 5 || summary.agents_us.skipped < 10) {
