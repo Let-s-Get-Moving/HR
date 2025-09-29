@@ -1033,7 +1033,7 @@ export default function BonusesCommissions() {
     }
     
     return (
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Period Selector */}
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-semibold">Commission Analytics</h3>
@@ -1060,31 +1060,31 @@ export default function BonusesCommissions() {
 
         {/* Summary Cards */}
         {analyticsData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="card p-4 text-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-green-400">
                 ${(analyticsData.total_commission_earned || 0).toLocaleString()}
               </div>
               <div className="text-sm text-tertiary">Total Commissions</div>
-            </div>
-            <div className="card p-4 text-center">
+        </div>
+        <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-blue-400">
                 ${(analyticsData.total_amount_paid || 0).toLocaleString()}
               </div>
               <div className="text-sm text-tertiary">Amount Paid</div>
-            </div>
-            <div className="card p-4 text-center">
+        </div>
+        <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-purple-400">
                 ${(analyticsData.total_remaining || 0).toLocaleString()}
               </div>
               <div className="text-sm text-tertiary">Remaining Due</div>
-            </div>
-            <div className="card p-4 text-center">
+        </div>
+        <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-indigo-400">
                 {analyticsData.total_employees || 0}
-              </div>
+        </div>
               <div className="text-sm text-tertiary">Employees</div>
-            </div>
+      </div>
           </div>
         )}
 
@@ -1163,25 +1163,25 @@ export default function BonusesCommissions() {
                 )}
               </tbody>
             </table>
-          </div>
         </div>
+      </div>
 
         {/* Hourly Payouts Table */}
-        <div className="card p-6">
+      <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             ⏰ Hourly Payouts ({analyticsHourly.length})
           </h4>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-neutral-700">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-neutral-700">
                   <th className="text-left py-3 px-4">Name</th>
                   <th className="text-left py-3 px-4">Period Label</th>
                   <th className="text-left py-3 px-4">Amount</th>
                   <th className="text-left py-3 px-4">Total for Month</th>
-                </tr>
-              </thead>
-              <tbody>
+              </tr>
+            </thead>
+            <tbody>
                 {analyticsHourly.length > 0 ? analyticsHourly.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
                     <td className="py-3 px-4 font-medium">{record.name_raw}</td>
@@ -1196,12 +1196,12 @@ export default function BonusesCommissions() {
                     </td>
                   </tr>
                 )}
-              </tbody>
-            </table>
-          </div>
+            </tbody>
+          </table>
         </div>
       </div>
-    );
+    </div>
+  );
   };
 
   if (loading) {

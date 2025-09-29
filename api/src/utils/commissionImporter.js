@@ -51,7 +51,10 @@ class ImportSummary {
  * Find or create employee by name
  */
 async function findOrCreateEmployee(nameRaw, client = null) {
-    const queryFn = client || q;
+    // Create a function wrapper that works with both client and q
+    const queryFn = client ? 
+        (sql, params) => client.query(sql, params) : 
+        q;
     
     if (!nameRaw || typeof nameRaw !== 'string') {
         throw new Error('Invalid employee name');
