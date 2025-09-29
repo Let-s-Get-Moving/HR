@@ -1121,6 +1121,8 @@ export default function BonusesCommissions() {
                   <th className="text-left py-2 px-3 text-green-400">Total Due</th>
                   <th className="text-left py-2 px-3 text-blue-400">Amount Paid</th>
                   <th className="text-left py-2 px-3 text-purple-400">Remaining</th>
+                  <th className="text-left py-2 px-3">Corporate Jobs Note</th>
+                  <th className="text-left py-2 px-3">Parking Pass Note</th>
                 </tr>
               </thead>
               <tbody>
@@ -1150,10 +1152,12 @@ export default function BonusesCommissions() {
                     <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_due || 0).toLocaleString()}</td>
                     <td className="py-2 px-3 text-blue-400 font-semibold">${(record.amount_paid || 0).toLocaleString()}</td>
                     <td className="py-2 px-3 text-purple-400 font-semibold">${(record.remaining_amount || 0).toLocaleString()}</td>
+                    <td className="py-2 px-3 text-neutral-400 text-xs">{record.corporate_open_jobs_note || '-'}</td>
+                    <td className="py-2 px-3 text-neutral-400 text-xs">{record.parking_pass_fee_note || '-'}</td>
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="24" className="py-4 px-4 text-center text-neutral-500">
+                    <td colSpan="26" className="py-4 px-4 text-center text-neutral-500">
                       No monthly commission data for this period
                     </td>
                   </tr>
