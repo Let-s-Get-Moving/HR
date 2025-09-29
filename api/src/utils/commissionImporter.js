@@ -58,9 +58,9 @@ async function findOrCreateEmployee(nameRaw, client = null) {
     
     // First try to find by normalized name
     const existingResult = await queryFn(`
-        SELECT id, first_name, last_name, LOWER(TRIM(CONCAT(first_name, ' ', last_name))) as name_key
+        SELECT id, first_name, last_name, LOWER(TRIM(first_name || ' ' || last_name)) as name_key
         FROM employees 
-        WHERE LOWER(TRIM(CONCAT(first_name, ' ', last_name))) = $1
+        WHERE LOWER(TRIM(first_name || ' ' || last_name)) = $1
         LIMIT 1
     `, [nameKey]);
     

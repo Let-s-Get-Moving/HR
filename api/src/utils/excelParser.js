@@ -62,20 +62,6 @@ const AGENT_COMMISSION_COLUMN_MAPPING = {
     "Bonus": "bonus"
 };
 
-// Header keywords for detecting each block type
-const MAIN_COMMISSION_KEYWORDS = [
-    "Name", "Hourly Rate", "Revenue on Smart Moving", "Commission Earned", 
-    "Total Revenue", "Booking %", "Commission %", "Total due", "Remaining amount"
-];
-
-const AGENT_US_KEYWORDS = [
-    "Agents", "total US revenue", "commission %", "Commission earned", "1.25X", "Bonus"
-];
-
-const HOURLY_PAYOUT_KEYWORDS = [
-    "hourly paid out", "cash paid", "TOTAL HOURLY PAID"
-];
-
 /**
  * Load Excel workbook from buffer
  */

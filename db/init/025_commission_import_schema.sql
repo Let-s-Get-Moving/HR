@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS commissions CASCADE;
 
 -- Employee table (extend existing or create if needed)
 -- Note: This assumes employees table already exists, just adding index for name matching
-CREATE INDEX IF NOT EXISTS idx_employees_name_key ON employees(LOWER(TRIM(CONCAT(first_name, ' ', last_name))));
+CREATE INDEX IF NOT EXISTS idx_employees_name_key ON employees(LOWER(TRIM(first_name || ' ' || last_name)));
 
 -- Main commission data table
 CREATE TABLE IF NOT EXISTS employee_commission_monthly (
