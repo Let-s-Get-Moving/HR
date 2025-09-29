@@ -106,23 +106,31 @@ async function findOrCreateEmployee(nameRaw, client = null) {
 async function processMainCommissionData(blockData, periodMonth, filename, sheetName, summary, client) {
     const queryFn = client || q;
     
-    console.log(`Starting to process ${blockData.length} rows in main commission data`);
-    console.log(`Using period: ${periodMonth}`);
+    summary.addDebugLog(`Starting to process ${blockData.length} rows in main commission data`);
+    summary.addDebugLog(`Using period: ${periodMonth}`);
     
     for (let i = 0; i < blockData.length; i++) {
         const row = blockData[i];
         const rowNum = i + 1;
         
-        console.log(`Processing row ${rowNum}:`, Object.keys(row).slice(0, 5), '...');
-        console.log(`Row data sample:`, { Name: row.Name, 'Hourly Rate': row['Hourly Rate'], 'Commission Earned': row['Commission Earned'] });
+        // Only log first few rows to avoid overwhelming output
+        if (rowNum <= 5) {
+            summary.addDebugLog(`Row ${rowNum} - Processing keys: ${Object.keys(row).slice(0, 5).join(', ')}...`);
+            summary.addDebugLog(`Row ${rowNum} - Sample data: Name="${row.Name}", HourlyRate="${row['Hourly Rate']}", Commission="${row['Commission Earned']}"`);
+        }
         
         try {
             // Validate required fields
             const nameRaw = cleanCellValue(row.Name);
-            console.log(`Row ${rowNum} - extracted name: "${nameRaw}"`);
+            
+            if (rowNum <= 5) {
+                summary.addDebugLog(`Row ${rowNum} - Extracted name: "${nameRaw}"`);
+            }
             
             if (!nameRaw) {
-                console.log(`Row ${rowNum} - SKIPPED: Missing employee name`);
+                if (rowNum <= 5) {
+                    summary.addDebugLog(`Row ${rowNum} - SKIPPED: Missing employee name`);
+                }
                 summary.addError('main', rowNum, 'Missing employee name');
                 summary.main.skipped++;
                 continue;
@@ -131,11 +139,17 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             // Find or create employee
             let employeeId;
             try {
-                console.log(`Row ${rowNum} - Finding/creating employee: "${nameRaw}"`);
+                if (rowNum <= 5) {
+                    summary.addDebugLog(`Row ${rowNum} - Finding/creating employee: "${nameRaw}"`);
+                }
                 employeeId = await findOrCreateEmployee(nameRaw, queryFn);
-                console.log(`Row ${rowNum} - Employee ID: ${employeeId}`);
+                if (rowNum <= 5) {
+                    summary.addDebugLog(`Row ${rowNum} - Employee ID: ${employeeId}`);
+                }
             } catch (error) {
-                console.log(`Row ${rowNum} - SKIPPED: Employee creation failed:`, error.message);
+                if (rowNum <= 5) {
+                    summary.addDebugLog(`Row ${rowNum} - SKIPPED: Employee creation failed: ${error.message}`);
+                }
                 summary.addError('main', rowNum, 'Failed to find/create employee', { error: error.message });
                 summary.main.skipped++;
                 continue;
@@ -227,18 +241,26 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 RETURNING (xmax = 0) as inserted
             `, Object.values(data));
             
-            console.log(`Row ${rowNum} - Database result:`, upsertResult.rows[0]);
+            if (rowNum <= 5) {
+                summary.addDebugLog(`Row ${rowNum} - Database result: ${JSON.stringify(upsertResult.rows[0])}`);
+            }
             
             if (upsertResult.rows[0].inserted) {
-                console.log(`Row ${rowNum} - SUCCESS: Record inserted`);
+                if (rowNum <= 5) {
+                    summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record inserted`);
+                }
                 summary.main.inserted++;
             } else {
-                console.log(`Row ${rowNum} - SUCCESS: Record updated`);
+                if (rowNum <= 5) {
+                    summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record updated`);
+                }
                 summary.main.updated++;
             }
             
         } catch (error) {
-            console.log(`Row ${rowNum} - ERROR: Processing failed:`, error.message);
+            if (rowNum <= 5) {
+                summary.addDebugLog(`Row ${rowNum} - ERROR: Processing failed: ${error.message}`);
+            }
             summary.addError('main', rowNum, 'Processing error', { error: error.message });
             summary.main.skipped++;
         }
