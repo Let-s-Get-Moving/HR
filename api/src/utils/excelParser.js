@@ -269,30 +269,30 @@ export function findDataEndRow(data, startRow, nameColIdx) {
         const nameStr = nameValue ? String(nameValue).trim().toLowerCase() : '';
         
         // PRIMARY STOP CONDITION: Check if this looks like a section header
-        // Be aggressive about detecting headers since gaps are only 2 rows
+        // Based on actual Excel headers provided by user
         if (nameStr) {
-            // Check for Agent US section headers
+            // Check for Agent US section header: "Agents"
             if (nameStr === 'agents' || 
                 nameStr === 'agent' || 
-                nameStr === 'agents us' ||
-                (nameStr.includes('agent') && nameStr.length < 25 && !nameStr.includes('andrea') && !nameStr.includes('agent')) ||
-                nameStr.startsWith('agent ')) {
+                nameStr === 'agents us') {
                 console.log(`[findDataEndRow] Detected Agent US header at row ${rowIdx}: "${nameStr}" - ending block`);
                 return rowIdx;
             }
             
-            // Check for Hourly Payout section headers
-            if (nameStr.includes('hourly paid out') ||
-                nameStr.includes('hourly payout') ||
+            // Check for Hourly Payout section header: "hourly paid out"
+            if (nameStr === 'hourly paid out' ||
                 nameStr === 'hourly paid' ||
-                (nameStr.includes('hourly') && nameStr.includes('paid') && nameStr.length < 40)) {
+                nameStr === 'hourly payout' ||
+                nameStr.startsWith('hourly paid out')) {
                 console.log(`[findDataEndRow] Detected Hourly header at row ${rowIdx}: "${nameStr}" - ending block`);
                 return rowIdx;
             }
             
-            // Check for generic header rows
-            if (nameStr === 'name' || nameStr === 'employee' || nameStr === 'staff') {
-                console.log(`[findDataEndRow] Detected generic header at row ${rowIdx}: "${nameStr}" - ending block`);
+            // Check for Main Commission header: "Name"
+            // Only stop if we're AFTER the initial header (startRow > 5)
+            // to avoid stopping at the actual main commission "Name" header
+            if (rowIdx > startRow + 10 && nameStr === 'name') {
+                console.log(`[findDataEndRow] Detected Main header at row ${rowIdx}: "${nameStr}" - ending block`);
                 return rowIdx;
             }
             
