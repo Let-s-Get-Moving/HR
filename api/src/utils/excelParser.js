@@ -252,10 +252,11 @@ export function extractAllColumns(data, headerRow) {
 }
 
 /**
- * Find data end by looking for consecutive empty name rows
+ * Find data end by looking for consecutive empty name rows OR a new header row
  */
 export function findDataEndRow(data, startRow, nameColIdx) {
     let emptyCount = 0;
+    const REQUIRED_EMPTY_ROWS = 5; // Require 5 consecutive empty rows to end block
     
     for (let rowIdx = startRow; rowIdx < data.length; rowIdx++) {
         const row = data[rowIdx];
@@ -264,10 +265,24 @@ export function findDataEndRow(data, startRow, nameColIdx) {
         }
         
         const nameValue = row[nameColIdx];
-        if (!nameValue || String(nameValue).trim() === '') {
+        const nameStr = nameValue ? String(nameValue).trim() : '';
+        
+        // Check if this looks like a header row (e.g., "Agents", "hourly paid out", etc.)
+        if (nameStr && (
+            nameStr.toLowerCase().includes('agent') && nameStr.length < 20 ||
+            nameStr.toLowerCase().includes('hourly') && nameStr.length < 30 ||
+            nameStr.toLowerCase() === 'name' ||
+            nameStr.toLowerCase() === 'employee'
+        )) {
+            // Likely hit a new section header
+            console.log(`[findDataEndRow] Detected potential header at row ${rowIdx}: "${nameStr}" - ending block`);
+            return rowIdx;
+        }
+        
+        if (!nameStr) {
             emptyCount++;
-            if (emptyCount >= 2) {
-                return rowIdx - 1;
+            if (emptyCount >= REQUIRED_EMPTY_ROWS) {
+                return rowIdx - REQUIRED_EMPTY_ROWS + 1;
             }
         } else {
             emptyCount = 0;
