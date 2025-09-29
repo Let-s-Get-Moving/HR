@@ -128,7 +128,7 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             }
             
             if (!nameRaw) {
-                if (rowNum <= 5) {
+                if (rowNum <= 5 || summary.main.skipped < 10) {
                     summary.addDebugLog(`Row ${rowNum} - SKIPPED: Missing employee name`);
                 }
                 summary.addError('main', rowNum, 'Missing employee name');
@@ -258,7 +258,8 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             }
             
         } catch (error) {
-            if (rowNum <= 5) {
+            // Log first 5 and every 100th row, plus sample of errors
+            if (rowNum <= 5 || rowNum % 100 === 0 || summary.main.skipped < 10) {
                 summary.addDebugLog(`Row ${rowNum} - ERROR: Processing failed: ${error.message}`);
             }
             summary.addError('main', rowNum, 'Processing error', { error: error.message });
@@ -281,7 +282,13 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
         
         try {
             const nameRaw = cleanCellValue(row.Name);
+            if (rowNum <= 5) {
+                summary.addDebugLog(`Agent US Row ${rowNum} - Name: "${nameRaw}", Columns: ${Object.keys(row).join(', ')}`);
+            }
             if (!nameRaw) {
+                if (rowNum <= 5 || summary.agents_us.skipped < 10) {
+                    summary.addDebugLog(`Agent US Row ${rowNum} - SKIPPED: Missing employee name`);
+                }
                 summary.addError('agents_us', rowNum, 'Missing employee name');
                 summary.agents_us.skipped++;
                 continue;
@@ -327,6 +334,9 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
             }
             
         } catch (error) {
+            if (rowNum <= 5 || summary.agents_us.skipped < 10) {
+                summary.addDebugLog(`Agent US Row ${rowNum} - ERROR: ${error.message}`);
+            }
             summary.addError('agents_us', rowNum, 'Processing error', { error: error.message });
             summary.agents_us.skipped++;
         }
@@ -355,7 +365,14 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
                 }
             }
             
+            if (rowNum <= 5) {
+                summary.addDebugLog(`Hourly Row ${rowNum} - Name: "${nameRaw}", NameColIdx: ${block.nameColIdx}, Columns: ${Object.keys(row).slice(0, 5).join(', ')}...`);
+            }
+            
             if (!nameRaw) {
+                if (rowNum <= 5 || summary.hourly.skipped < 10) {
+                    summary.addDebugLog(`Hourly Row ${rowNum} - SKIPPED: Missing employee name`);
+                }
                 summary.addError('hourly', rowNum, 'Missing employee name');
                 summary.hourly.skipped++;
                 continue;
@@ -403,6 +420,9 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             }
             
         } catch (error) {
+            if (rowNum <= 5 || summary.hourly.skipped < 10) {
+                summary.addDebugLog(`Hourly Row ${rowNum} - ERROR: ${error.message}`);
+            }
             summary.addError('hourly', rowNum, 'Processing error', { error: error.message });
             summary.hourly.skipped++;
         }

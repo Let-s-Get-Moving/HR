@@ -131,6 +131,7 @@ The system automatically detects three types of data blocks in Excel files:
   - Removed non-existent `created_at` column from employee INSERT statements
   - Fixed `queryFn` wrapper in all three processing functions to properly handle client connections
   - Fixed `findOrCreateEmployee` to accept `queryFn` directly instead of trying to wrap it again
+  - Added comprehensive error logging for first 10 skipped rows to diagnose import issues
 
 ### Error Handling & Reliability
 - **Transaction safety:** Entire import wrapped in database transaction
