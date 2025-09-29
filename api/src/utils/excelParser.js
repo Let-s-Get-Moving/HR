@@ -141,6 +141,8 @@ export function detectHeaderRow(data, keywords, minMatches = null) {
         minMatches = Math.max(1, Math.floor(keywords.length * 0.6));
     }
     
+    console.log(`Looking for keywords: ${keywords.join(', ')}, min matches needed: ${minMatches}`);
+    
     let bestRow = null;
     let bestScore = 0;
     
@@ -149,6 +151,8 @@ export function detectHeaderRow(data, keywords, minMatches = null) {
         if (!Array.isArray(row)) continue;
         
         let score = 0;
+        const matchedHeaders = [];
+        
         for (const cellValue of row) {
             if (cellValue === null || cellValue === undefined) continue;
             
@@ -156,14 +160,29 @@ export function detectHeaderRow(data, keywords, minMatches = null) {
             for (const keyword of keywords) {
                 if (fuzzyMatchHeader(cellStr, keyword)) {
                     score++;
+                    matchedHeaders.push(`"${cellStr}" matches "${keyword}"`);
                     break; // Only count each cell once
                 }
             }
         }
         
+        if (score > 0) {
+            console.log(`Row ${rowIdx}: score ${score}, matches: ${matchedHeaders.join(', ')}`);
+        }
+        
         if (score >= minMatches && score > bestScore) {
             bestScore = score;
             bestRow = rowIdx;
+        }
+    }
+    
+    if (bestRow !== null) {
+        console.log(`Best header row: ${bestRow} with score ${bestScore}`);
+    } else {
+        console.log(`No header row found with minimum ${minMatches} matches`);
+        console.log('First 10 rows of data for debugging:');
+        for (let i = 0; i < Math.min(10, data.length); i++) {
+            console.log(`Row ${i}:`, data[i]);
         }
     }
     

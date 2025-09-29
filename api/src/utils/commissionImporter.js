@@ -381,6 +381,12 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
         // Detect all blocks
         const blocks = detectAllBlocks(data);
         
+        console.log('Detected blocks:', {
+            main: blocks.main ? `Found at row ${blocks.main.headerRow}` : 'Not found',
+            agents_us: blocks.agents_us ? `Found at row ${blocks.agents_us.headerRow}` : 'Not found',
+            hourly: blocks.hourly ? `Found at row ${blocks.hourly.headerRow}` : 'Not found'
+        });
+        
         // Start database transaction
         const client = await pool.connect();
         
