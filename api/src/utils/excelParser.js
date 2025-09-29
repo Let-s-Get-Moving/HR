@@ -256,7 +256,7 @@ export function extractAllColumns(data, headerRow) {
  */
 export function findDataEndRow(data, startRow, nameColIdx) {
     let emptyCount = 0;
-    const REQUIRED_EMPTY_ROWS = 20; // Require 20 consecutive empty rows to end block
+    const REQUIRED_EMPTY_ROWS = 10; // Require 10 consecutive empty rows to end block (max gap between blocks is 14)
     
     for (let rowIdx = startRow; rowIdx < data.length; rowIdx++) {
         const row = data[rowIdx];
