@@ -1093,36 +1093,36 @@ export default function BonusesCommissions() {
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             📋 Monthly Commissions ({analyticsMonthly.length})
           </h4>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="sticky top-0 bg-neutral-900 z-20">
                 <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-10">Name</th>
-                  <th className="text-left py-2 px-3">Hourly Rate</th>
-                  <th className="text-left py-2 px-3">Revenue SM</th>
-                  <th className="text-left py-2 px-3">Add Ons</th>
-                  <th className="text-left py-2 px-3">Deduction</th>
-                  <th className="text-left py-2 px-3">Total Revenue</th>
-                  <th className="text-left py-2 px-3">Booking %</th>
-                  <th className="text-left py-2 px-3">Commission %</th>
-                  <th className="text-left py-2 px-3">Commission Earned</th>
-                  <th className="text-left py-2 px-3">Spiff Bonus</th>
-                  <th className="text-left py-2 px-3">Revenue Bonus</th>
-                  <th className="text-left py-2 px-3">US Jobs 1.25X</th>
-                  <th className="text-left py-2 px-3">Booking Bonus +</th>
-                  <th className="text-left py-2 px-3">Booking Bonus -</th>
-                  <th className="text-left py-2 px-3">Hourly Paid Out</th>
-                  <th className="text-left py-2 px-3">Sales Mgr Ded</th>
-                  <th className="text-left py-2 px-3">Missing Punch</th>
-                  <th className="text-left py-2 px-3">Cust Support</th>
-                  <th className="text-left py-2 px-3">Post Comm</th>
-                  <th className="text-left py-2 px-3">Dispatch Ded</th>
-                  <th className="text-left py-2 px-3">Other Ded</th>
-                  <th className="text-left py-2 px-3 text-green-400">Total Due</th>
-                  <th className="text-left py-2 px-3 text-blue-400">Amount Paid</th>
-                  <th className="text-left py-2 px-3 text-purple-400">Remaining</th>
-                  <th className="text-left py-2 px-3">Corporate Jobs Note</th>
-                  <th className="text-left py-2 px-3">Parking Pass Note</th>
+                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Hourly Rate</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue SM</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Add Ons</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Deduction</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Total Revenue</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Booking %</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Commission %</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Commission Earned</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Spiff Bonus</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue Bonus</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">US Jobs 1.25X</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Booking Bonus +</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Booking Bonus -</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Hourly Paid Out</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Sales Mgr Ded</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Missing Punch</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Cust Support</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Post Comm</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Dispatch Ded</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Other Ded</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400">Total Due</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-blue-400">Amount Paid</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-purple-400">Remaining</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Corporate Jobs Note</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Parking Pass Note</th>
                 </tr>
               </thead>
               <tbody>
@@ -1172,16 +1172,16 @@ export default function BonusesCommissions() {
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             🇺🇸 Agent US Commissions ({analyticsAgents.length})
           </h4>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="sticky top-0 bg-neutral-900 z-20">
                 <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-10">Name</th>
-                  <th className="text-left py-2 px-3">Total US Revenue</th>
-                  <th className="text-left py-2 px-3">Commission %</th>
-                  <th className="text-left py-2 px-3">Commission Earned</th>
-                  <th className="text-left py-2 px-3">1.25X Bonus</th>
-                  <th className="text-left py-2 px-3">Other Bonus</th>
+                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Total US Revenue</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Commission %</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Commission Earned</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">1.25X Bonus</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Other Bonus</th>
                 </tr>
               </thead>
               <tbody>
@@ -1211,14 +1211,14 @@ export default function BonusesCommissions() {
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             ⏰ Hourly Payouts ({analyticsHourly.length})
           </h4>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="sticky top-0 bg-neutral-900 z-20">
               <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-10">Name</th>
-                  <th className="text-left py-2 px-3">Period Label</th>
-                  <th className="text-left py-2 px-3">Amount</th>
-                  <th className="text-left py-2 px-3 text-green-400">Total for Month</th>
+                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Period Label</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Amount</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400">Total for Month</th>
               </tr>
             </thead>
             <tbody>
