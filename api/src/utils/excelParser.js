@@ -268,6 +268,11 @@ export function findDataEndRow(data, startRow, nameColIdx) {
         const nameValue = row[nameColIdx];
         const nameStr = nameValue ? String(nameValue).trim().toLowerCase() : '';
         
+        // Debug: Log rows that might be headers (short strings, contains key words)
+        if (nameStr && nameStr.length < 30 && (nameStr.includes('agent') || nameStr.includes('hourly') || nameStr === 'name')) {
+            console.log(`[findDataEndRow] Row ${rowIdx}: Checking potential header="${nameStr}" (original: "${nameValue}")`);
+        }
+        
         // PRIMARY STOP CONDITION: Check if this looks like a section header
         // Based on actual Excel headers provided by user
         if (nameStr) {
@@ -275,7 +280,7 @@ export function findDataEndRow(data, startRow, nameColIdx) {
             if (nameStr === 'agents' || 
                 nameStr === 'agent' || 
                 nameStr === 'agents us') {
-                console.log(`[findDataEndRow] Detected Agent US header at row ${rowIdx}: "${nameStr}" - ending block`);
+                console.log(`[findDataEndRow] ✅ Detected Agent US header at row ${rowIdx}: "${nameStr}" - ending block`);
                 return rowIdx;
             }
             
@@ -284,7 +289,7 @@ export function findDataEndRow(data, startRow, nameColIdx) {
                 nameStr === 'hourly paid' ||
                 nameStr === 'hourly payout' ||
                 nameStr.startsWith('hourly paid out')) {
-                console.log(`[findDataEndRow] Detected Hourly header at row ${rowIdx}: "${nameStr}" - ending block`);
+                console.log(`[findDataEndRow] ✅ Detected Hourly header at row ${rowIdx}: "${nameStr}" - ending block`);
                 return rowIdx;
             }
             
@@ -292,7 +297,7 @@ export function findDataEndRow(data, startRow, nameColIdx) {
             // Only stop if we're AFTER the initial header (startRow > 5)
             // to avoid stopping at the actual main commission "Name" header
             if (rowIdx > startRow + 10 && nameStr === 'name') {
-                console.log(`[findDataEndRow] Detected Main header at row ${rowIdx}: "${nameStr}" - ending block`);
+                console.log(`[findDataEndRow] ✅ Detected Main header at row ${rowIdx}: "${nameStr}" - ending block`);
                 return rowIdx;
             }
             
