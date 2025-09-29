@@ -48,6 +48,23 @@ class ImportSummary {
 }
 
 /**
+ * Flexibly get column value by trying multiple name variations
+ */
+function getColumnValue(row, ...possibleNames) {
+    for (const name of possibleNames) {
+        if (row[name] !== undefined) {
+            return row[name];
+        }
+        // Try trimmed version
+        const trimmedName = name.trim();
+        if (row[trimmedName] !== undefined) {
+            return row[trimmedName];
+        }
+    }
+    return null;
+}
+
+/**
  * Find or create employee by name
  */
 async function findOrCreateEmployee(nameRaw, queryFn) {
@@ -155,36 +172,36 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 continue;
             }
             
-            // Parse all numeric fields
+            // Parse all numeric fields with flexible column matching
             const data = {
                 employee_id: employeeId,
                 period_month: periodMonth,
                 name_raw: nameRaw,
-                hourly_rate: parseMoney(row['Hourly Rate']),
-                rev_sm_all_locations: parseMoney(row['Revenue on Smart Moving (All locations combined )']),
-                rev_add_ons: parseMoney(row['Revenue Add Ons+']),
-                rev_deduction: parseMoney(row['Revenue Deduction']),
-                total_revenue_all: parseMoney(row['Total Revenue(all locations combined )']),
-                booking_pct: parsePercent(row['Booking %']),
-                commission_pct: parsePercent(row['Commission %']),
-                commission_earned: parseMoney(row['Commission Earned']),
-                spiff_bonus: parseMoney(row[' Spiff Bonus ']),
-                revenue_bonus: parseMoney(row[' Revenue Bonus ']),
-                bonus_us_jobs_125x: parseMoney(row[' Bonuses for booking US jobs  1.25X ']),
-                booking_bonus_plus: parseMoney(row[' $5/$10 Bonus for Booking Bonus ']),
-                booking_bonus_minus: parseMoney(row[' $5/$10 Deduction for Booking Bonus ']),
-                hourly_paid_out_minus: parseMoney(row[' - Hourly Paid Out ']),
-                deduction_sales_manager_minus: parseMoney(row[' -Deduction by Sales Manager ']),
-                deduction_missing_punch_minus: parseMoney(row[' Deductions for missing punch in/out …']),
-                deduction_customer_support_minus: parseMoney(row[' Deductions from Customer Support ']),
-                deduction_post_commission_collected_minus: parseMoney(row[' Deduction Post Commission collected ']),
-                deduction_dispatch_minus: parseMoney(row[' Deductions from dispatch ']),
-                deduction_other_minus: parseMoney(row[' deduction ']),
-                total_due: parseMoney(row['Total due']),
-                amount_paid: parseMoney(row[' Amount paid (date included in comment) ']),
-                remaining_amount: parseMoney(row['Remaining amount']),
-                corporate_open_jobs_note: cleanCellValue(row[' CORPORATE LOCATIONS JOBS STILL OPEN …']),
-                parking_pass_fee_note: cleanCellValue(row[' Paid parking pass fee to be deducted from ']),
+                hourly_rate: parseMoney(getColumnValue(row, 'Hourly Rate', ' Hourly Rate ')),
+                rev_sm_all_locations: parseMoney(getColumnValue(row, 'Revenue on Smart Moving (All locations combined )', ' Revenue on Smart Moving (All locations combined ) ')),
+                rev_add_ons: parseMoney(getColumnValue(row, 'Revenue Add Ons+', ' Revenue Add Ons+ ', 'Revenue Add Ons')),
+                rev_deduction: parseMoney(getColumnValue(row, 'Revenue Deduction', ' Revenue Deduction ')),
+                total_revenue_all: parseMoney(getColumnValue(row, 'Total Revenue(all locations combined )', ' Total Revenue(all locations combined ) ')),
+                booking_pct: parsePercent(getColumnValue(row, 'Booking %', ' Booking % ')),
+                commission_pct: parsePercent(getColumnValue(row, 'Commission %', ' Commission % ')),
+                commission_earned: parseMoney(getColumnValue(row, 'Commission Earned', ' Commission Earned ')),
+                spiff_bonus: parseMoney(getColumnValue(row, 'Spiff Bonus', ' Spiff Bonus ')),
+                revenue_bonus: parseMoney(getColumnValue(row, 'Revenue Bonus', ' Revenue Bonus ')),
+                bonus_us_jobs_125x: parseMoney(getColumnValue(row, 'Bonuses for booking US jobs  1.25X', ' Bonuses for booking US jobs  1.25X ')),
+                booking_bonus_plus: parseMoney(getColumnValue(row, '$5/$10 Bonus for Booking Bonus', ' $5/$10 Bonus for Booking Bonus ')),
+                booking_bonus_minus: parseMoney(getColumnValue(row, '$5/$10 Deduction for Booking Bonus', ' $5/$10 Deduction for Booking Bonus ')),
+                hourly_paid_out_minus: parseMoney(getColumnValue(row, '- Hourly Paid Out', ' - Hourly Paid Out ')),
+                deduction_sales_manager_minus: parseMoney(getColumnValue(row, '-Deduction by Sales Manager', ' -Deduction by Sales Manager ')),
+                deduction_missing_punch_minus: parseMoney(getColumnValue(row, 'Deductions for missing punch in/out on the time report for all pay periods of the month', ' Deductions for missing punch in/out …', 'Deductions for missing punch in/out')),
+                deduction_customer_support_minus: parseMoney(getColumnValue(row, 'Deductions from Customer Support', ' Deductions from Customer Support ')),
+                deduction_post_commission_collected_minus: parseMoney(getColumnValue(row, 'Deduction Post Commission collected', ' Deduction Post Commission collected ')),
+                deduction_dispatch_minus: parseMoney(getColumnValue(row, 'Deductions from dispatch', ' Deductions from dispatch ')),
+                deduction_other_minus: parseMoney(getColumnValue(row, 'deduction', ' deduction ')),
+                total_due: parseMoney(getColumnValue(row, 'Total due', ' Total due ')),
+                amount_paid: parseMoney(getColumnValue(row, 'Amount paid (date included in comment)', ' Amount paid (date included in comment) ')),
+                remaining_amount: parseMoney(getColumnValue(row, 'Remaining amount', ' Remaining amount ')),
+                corporate_open_jobs_note: cleanCellValue(getColumnValue(row, 'CORPORATE LOCATIONS JOBS STILL OPEN', ' CORPORATE LOCATIONS JOBS STILL OPEN …')),
+                parking_pass_fee_note: cleanCellValue(getColumnValue(row, 'Paid parking pass fee to be deducted from', ' Paid parking pass fee to be deducted from ')),
                 source_file: filename,
                 sheet_name: sheetName
             };
@@ -310,11 +327,11 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
             const data = {
                 employee_id: employeeId,
                 period_month: periodMonth,
-                total_us_revenue: parseMoney(row['total US revenue']),
-                commission_pct: parsePercent(row['commission %']),
-                commission_earned: parseMoney(row['Commission earned']),
-                commission_125x: parseMoney(row['1.25X']),
-                bonus: parseMoney(row['Bonus']),
+                total_us_revenue: parseMoney(getColumnValue(row, 'total US revenue', ' total US revenue ')),
+                commission_pct: parsePercent(getColumnValue(row, 'commission %', ' commission % ', 'Commission %')),
+                commission_earned: parseMoney(getColumnValue(row, 'Commission earned', ' Commission earned ', 'Commission Earned')),
+                commission_125x: parseMoney(getColumnValue(row, '1.25X', ' 1.25X ')),
+                bonus: parseMoney(getColumnValue(row, 'Bonus', ' Bonus ')),
                 source_file: filename,
                 sheet_name: sheetName
             };
