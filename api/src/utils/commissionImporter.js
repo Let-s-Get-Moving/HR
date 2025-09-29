@@ -107,7 +107,9 @@ async function findOrCreateEmployee(nameRaw, client = null) {
  * Process main commission data block
  */
 async function processMainCommissionData(blockData, periodMonth, filename, sheetName, summary, client) {
-    const queryFn = client || q;
+    const queryFn = client ? 
+        (sql, params) => client.query(sql, params) : 
+        q;
     
     summary.addDebugLog(`Starting to process ${blockData.length} rows in main commission data`);
     summary.addDebugLog(`Using period: ${periodMonth}`);
@@ -274,7 +276,9 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
  * Process agent US commission data block
  */
 async function processAgentUSCommissionData(blockData, periodMonth, filename, sheetName, summary, client) {
-    const queryFn = client || q;
+    const queryFn = client ? 
+        (sql, params) => client.query(sql, params) : 
+        q;
     
     for (let i = 0; i < blockData.length; i++) {
         const row = blockData[i];
@@ -338,7 +342,9 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
  * Process hourly payout data block
  */
 async function processHourlyPayoutData(blockData, block, periodMonth, filename, sheetName, summary, client) {
-    const queryFn = client || q;
+    const queryFn = client ? 
+        (sql, params) => client.query(sql, params) : 
+        q;
     
     for (let i = 0; i < blockData.length; i++) {
         const row = blockData[i];
