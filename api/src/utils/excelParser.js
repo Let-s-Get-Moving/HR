@@ -311,9 +311,18 @@ export function parsePeriodFromSheetName(sheetName) {
 
 /**
  * Normalize employee name for matching
+ * Handles: case, spaces, underscores, special chars
  */
 export function normalizeNameKey(name) {
-    return name.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!name) return '';
+    
+    return name
+        .trim()                          // Remove leading/trailing whitespace
+        .toLowerCase()                   // Convert to lowercase for case-insensitive matching
+        .replace(/^_+|_+$/g, '')        // Remove leading/trailing underscores
+        .replace(/\s+/g, ' ')           // Collapse multiple spaces to single space
+        .replace(/[^\w\s-]/g, '')       // Remove special chars except letters, numbers, spaces, hyphens
+        .trim();                         // Final trim after removals
 }
 
 /**

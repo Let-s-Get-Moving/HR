@@ -77,13 +77,20 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
         throw new Error('Employee name cannot be empty');
     }
     
-    console.log(`[findOrCreateEmployee] Looking for: "${nameRaw}" (normalized: "${nameKey}")`);
+    console.log(`[findOrCreateEmployee] "${nameRaw}" → normalized: "${nameKey}"`);
     
     // First try to find by normalized name
+    // SQL applies same normalization: lowercase, trim, collapse spaces, remove special chars
     const existingResult = await queryFn(`
-        SELECT id, first_name, last_name, LOWER(TRIM(first_name || ' ' || last_name)) as name_key
+        SELECT id, first_name, last_name
         FROM employees 
-        WHERE LOWER(TRIM(first_name || ' ' || last_name)) = $1
+        WHERE TRIM(REGEXP_REPLACE(
+            REGEXP_REPLACE(
+                LOWER(TRIM(first_name || ' ' || last_name)),
+                '[^a-z0-9\\s-]', '', 'g'
+            ),
+            '\\s+', ' ', 'g'
+        )) = $1
         LIMIT 1
     `, [nameKey]);
     
