@@ -30,6 +30,7 @@ class ImportSummary {
         this.agents_us = { inserted: 0, updated: 0, skipped: 0, errors: [] };
         this.hourly = { inserted: 0, updated: 0, skipped: 0, errors: [] };
         this.warnings = [];
+        this.debug_logs = [];
     }
 
     addError(section, row, reason, data = {}) {
@@ -38,6 +39,11 @@ class ImportSummary {
 
     addWarning(message) {
         this.warnings.push(message);
+    }
+
+    addDebugLog(message) {
+        this.debug_logs.push(`[${new Date().toISOString()}] ${message}`);
+        console.log(message); // Keep server logs too
     }
 }
 
@@ -393,28 +399,24 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
         const data = getWorksheetData(workbook, actualSheetName);
         
         // Parse period from sheet name
-        console.log(`Parsing period from sheet name: "${actualSheetName}"`);
+        summary.addDebugLog(`Parsing period from sheet name: "${actualSheetName}"`);
         const periodMonth = parsePeriodFromSheetName(actualSheetName);
-        console.log(`Parsed period result:`, periodMonth);
+        summary.addDebugLog(`Parsed period result: ${periodMonth}`);
         
         if (!periodMonth) {
             // Default to July 2025 if parsing fails
             const defaultPeriod = '2025-07-01';
-            console.log(`Period parsing failed, using default: ${defaultPeriod}`);
+            summary.addDebugLog(`Period parsing failed, using default: ${defaultPeriod}`);
             summary.period_month = defaultPeriod;
         } else {
             summary.period_month = periodMonth.toISOString().split('T')[0]; // YYYY-MM-DD format
-            console.log(`Using parsed period: ${summary.period_month}`);
+            summary.addDebugLog(`Using parsed period: ${summary.period_month}`);
         }
         
         // Detect all blocks
         const blocks = detectAllBlocks(data);
         
-        console.log('Detected blocks:', {
-            main: blocks.main ? `Found at row ${blocks.main.headerRow}` : 'Not found',
-            agents_us: blocks.agents_us ? `Found at row ${blocks.agents_us.headerRow}` : 'Not found',
-            hourly: blocks.hourly ? `Found at row ${blocks.hourly.headerRow}` : 'Not found'
-        });
+        summary.addDebugLog(`Block detection results: Main=${blocks.main ? 'Row ' + blocks.main.headerRow : 'Not found'}, Agent US=${blocks.agents_us ? 'Row ' + blocks.agents_us.headerRow : 'Not found'}, Hourly=${blocks.hourly ? 'Row ' + blocks.hourly.headerRow : 'Not found'}`);
         
         // Start database transaction
         const client = await pool.connect();
@@ -424,43 +426,43 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
             
             // Process each block if detected
             if (blocks.main) {
-                console.log('Processing main commission block...');
+                summary.addDebugLog('Processing main commission block...');
                 const mainBlockData = extractBlockData(data, blocks.main);
-                console.log(`Extracted ${mainBlockData.length} rows from main block`);
-                console.log('First 2 main block rows:', mainBlockData.slice(0, 2));
+                summary.addDebugLog(`Extracted ${mainBlockData.length} rows from main block`);
+                summary.addDebugLog(`First 2 main rows: ${JSON.stringify(mainBlockData.slice(0, 2))}`);
                 
                 await processMainCommissionData(mainBlockData, summary.period_month, filename, actualSheetName, summary, client);
                 summary.addWarning(`Processed main commission block with ${mainBlockData.length} rows`);
-                console.log(`Main block results: ${summary.main.inserted} inserted, ${summary.main.updated} updated, ${summary.main.skipped} skipped`);
+                summary.addDebugLog(`Main block results: ${summary.main.inserted} inserted, ${summary.main.updated} updated, ${summary.main.skipped} skipped`);
             } else {
                 summary.addWarning('Main commission block not detected');
-                console.log('WARNING: Main commission block not detected');
+                summary.addDebugLog('WARNING: Main commission block not detected');
             }
             
             if (blocks.agents_us) {
-                console.log('Processing agents US commission block...');
+                summary.addDebugLog('Processing agents US commission block...');
                 const agentsUSBlockData = extractBlockData(data, blocks.agents_us);
-                console.log(`Extracted ${agentsUSBlockData.length} rows from agents US block`);
+                summary.addDebugLog(`Extracted ${agentsUSBlockData.length} rows from agents US block`);
                 
                 await processAgentUSCommissionData(agentsUSBlockData, summary.period_month, filename, actualSheetName, summary, client);
                 summary.addWarning(`Processed agents US commission block with ${agentsUSBlockData.length} rows`);
-                console.log(`Agents US block results: ${summary.agents_us.inserted} inserted, ${summary.agents_us.updated} updated, ${summary.agents_us.skipped} skipped`);
+                summary.addDebugLog(`Agents US block results: ${summary.agents_us.inserted} inserted, ${summary.agents_us.updated} updated, ${summary.agents_us.skipped} skipped`);
             } else {
                 summary.addWarning('Agents US commission block not detected');
-                console.log('WARNING: Agents US commission block not detected');
+                summary.addDebugLog('WARNING: Agents US commission block not detected');
             }
             
             if (blocks.hourly) {
-                console.log('Processing hourly payout block...');
+                summary.addDebugLog('Processing hourly payout block...');
                 const hourlyBlockData = extractBlockData(data, blocks.hourly);
-                console.log(`Extracted ${hourlyBlockData.length} rows from hourly block`);
+                summary.addDebugLog(`Extracted ${hourlyBlockData.length} rows from hourly block`);
                 
                 await processHourlyPayoutData(hourlyBlockData, blocks.hourly, summary.period_month, filename, actualSheetName, summary, client);
                 summary.addWarning(`Processed hourly payout block with ${hourlyBlockData.length} rows`);
-                console.log(`Hourly block results: ${summary.hourly.inserted} inserted, ${summary.hourly.updated} updated, ${summary.hourly.skipped} skipped`);
+                summary.addDebugLog(`Hourly block results: ${summary.hourly.inserted} inserted, ${summary.hourly.updated} updated, ${summary.hourly.skipped} skipped`);
             } else {
                 summary.addWarning('Hourly payout block not detected');
-                console.log('WARNING: Hourly payout block not detected');
+                summary.addDebugLog('WARNING: Hourly payout block not detected');
             }
             
             await client.query('COMMIT');

@@ -230,6 +230,17 @@ export default function BonusesCommissions() {
         message: `Import completed! Main: ${result.summary.main.inserted} inserted, ${result.summary.main.updated} updated. Agents US: ${result.summary.agents_us.inserted} inserted, ${result.summary.agents_us.updated} updated. Hourly: ${result.summary.hourly.inserted} inserted, ${result.summary.hourly.updated} updated.`
       });
       
+      // Show debug logs in console for troubleshooting
+      if (result.summary && result.summary.debug_logs) {
+        console.log('🔍 IMPORT DEBUG LOGS:');
+        result.summary.debug_logs.forEach(log => console.log(log));
+      }
+      
+      if (result.summary && result.summary.warnings) {
+        console.log('⚠️ IMPORT WARNINGS:');
+        result.summary.warnings.forEach(warning => console.log(warning));
+      }
+      
       setSuccessMessage("Commission data imported successfully!");
       setShowSuccessMessage(true);
       
