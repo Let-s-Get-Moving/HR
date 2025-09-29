@@ -476,6 +476,28 @@ export function detectAllBlocks(data) {
 }
 
 /**
+ * Extract data from detected block
+ */
+export function extractBlockData(data, block) {
+    if (!block) return [];
+    
+    const result = [];
+    for (let rowIdx = block.startRow; rowIdx < block.endRow && rowIdx < data.length; rowIdx++) {
+        const row = data[rowIdx];
+        if (!Array.isArray(row)) continue;
+        
+        const extractedRow = {};
+        for (const [colName, colIdx] of Object.entries(block.columns)) {
+            extractedRow[colName] = colIdx < row.length ? row[colIdx] : null;
+        }
+        
+        result.push(extractedRow);
+    }
+    
+    return result;
+}
+
+/**
  * Clean cell value for processing
  */
 export function cleanCellValue(value) {
