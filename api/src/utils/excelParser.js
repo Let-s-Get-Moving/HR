@@ -9,17 +9,21 @@
 
 import * as XLSX from 'xlsx';
 
-// Header keywords for detecting each block type - broad variations
+// Header keywords for detecting each block type - exact matches from real file
 const MAIN_COMMISSION_KEYWORDS = [
-    "Name", "Employee", "Person", "Agent", "Staff",
-    "Hourly Rate", "Rate", "Hour Rate", "Hourly", "HR",
-    "Revenue", "Rev", "Sales", "Income", "Earnings", "Smart Moving", "SM",
-    "Commission Earned", "Commission", "Comm Earned", "Earned", "Total Comm",
-    "Total Revenue", "Total Rev", "Total Sales", "Total Earnings", "Revenue Total",
-    "Booking %", "Booking", "Book %", "Booking Percent", "Book Percent",
-    "Commission %", "Comm %", "Commission Percent", "Comm Percent",
-    "Total due", "Total Due", "Amount Due", "Due", "Owed", "Balance",
-    "Remaining amount", "Remaining", "Balance", "Outstanding", "Left", "Remaining Due"
+    // Core identification columns (these must exist)
+    "Name",
+    "Hourly Rate", 
+    "Commission Earned",
+    "Total due",
+    
+    // Supporting columns (nice to have)
+    "Revenue on Smart Moving", "Smart Moving", "Revenue",
+    "Total Revenue", "Revenue Total", 
+    "Booking %", "Booking", "Commission %", "Commission",
+    "Remaining amount", "Remaining", "Amount paid",
+    "Spiff Bonus", "Revenue Bonus", "Bonus", "Bonuses",
+    "Hourly Paid Out", "Paid Out", "Deduction", "Deductions"
 ];
 
 const AGENT_US_KEYWORDS = [
@@ -38,34 +42,40 @@ const HOURLY_PAYOUT_KEYWORDS = [
     "hours", "time", "worked", "labor"
 ];
 
-// Column mapping for exact field matching
+// Column mapping - flexible fuzzy matching
 const MAIN_COMMISSION_COLUMN_MAPPING = {
+    // Exact matches first
     "Name": "name_raw",
-    "Hourly Rate": "hourly_rate",
-    "Revenue on Smart Moving (All locations combined )": "rev_sm_all_locations",
-    "Revenue Add Ons+": "rev_add_ons",
+    "Hourly Rate": "hourly_rate", 
+    "Commission Earned": "commission_earned",
+    "Total due": "total_due",
+    "Remaining amount": "remaining_amount",
+    "Amount paid": "amount_paid",
+    
+    // Flexible patterns for revenue columns
+    "Revenue on Smart Moving": "rev_sm_all_locations",
+    "Total Revenue": "total_revenue_all",
+    "Revenue Add Ons": "rev_add_ons",
     "Revenue Deduction": "rev_deduction",
-    "Total Revenue(all locations combined )": "total_revenue_all",
+    
+    // Percentage and rate columns
     "Booking %": "booking_pct",
     "Commission %": "commission_pct",
-    "Commission Earned": "commission_earned",
-    " Spiff Bonus ": "spiff_bonus",
-    " Revenue Bonus ": "revenue_bonus",
-    " Bonuses for booking US jobs  1.25X ": "bonus_us_jobs_125x",
-    " $5/$10 Bonus for Booking Bonus ": "booking_bonus_plus",
-    " $5/$10 Deduction for Booking Bonus ": "booking_bonus_minus",
-    " - Hourly Paid Out ": "hourly_paid_out_minus",
-    " -Deduction by Sales Manager ": "deduction_sales_manager_minus",
-    " Deductions for missing punch in/out …": "deduction_missing_punch_minus",
-    " Deductions from Customer Support ": "deduction_customer_support_minus",
-    " Deduction Post Commission collected ": "deduction_post_commission_collected_minus",
-    " Deductions from dispatch ": "deduction_dispatch_minus",
-    " deduction ": "deduction_other_minus",
-    "Total due": "total_due",
-    " Amount paid (date included in comment) ": "amount_paid",
-    "Remaining amount": "remaining_amount",
-    " CORPORATE LOCATIONS JOBS STILL OPEN …": "corporate_open_jobs_note",
-    " Paid parking pass fee to be deducted from ": "parking_pass_fee_note"
+    
+    // Bonus columns
+    "Spiff Bonus": "spiff_bonus",
+    "Revenue Bonus": "revenue_bonus", 
+    "Bonuses for booking US jobs": "bonus_us_jobs_125x",
+    "Bonus for Booking": "booking_bonus_plus",
+    
+    // Deduction columns  
+    "Hourly Paid Out": "hourly_paid_out_minus",
+    "Deduction by Sales Manager": "deduction_sales_manager_minus",
+    "Deductions for missing punch": "deduction_missing_punch_minus",
+    "Deductions from Customer Support": "deduction_customer_support_minus", 
+    "Deduction Post Commission": "deduction_post_commission_collected_minus",
+    "Deductions from dispatch": "deduction_dispatch_minus",
+    "deduction": "deduction_other_minus"
 };
 
 const AGENT_COMMISSION_COLUMN_MAPPING = {
@@ -139,7 +149,7 @@ export function fuzzyMatchHeader(header, target, threshold = 0.3) {
  */
 export function detectHeaderRow(data, keywords, minMatches = null) {
     if (minMatches === null) {
-        minMatches = Math.max(2, Math.floor(keywords.length * 0.3));  // Only need 30% matches, minimum 2
+        minMatches = Math.max(3, Math.floor(keywords.length * 0.25));  // Need 25% matches, minimum 3 core columns
     }
     
     console.log(`Looking for keywords: ${keywords.join(', ')}, min matches needed: ${minMatches}`);
