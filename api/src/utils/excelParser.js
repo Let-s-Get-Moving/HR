@@ -280,6 +280,12 @@ export function parsePercent(value) {
         const numValue = parseFloat(cleanValue);
         if (isNaN(numValue)) return null;
         
+        // Excel often stores percentages as decimals (0.035 for 3.5%)
+        // If value is between 0 and 1, multiply by 100
+        if (numValue > 0 && numValue < 1) {
+            return numValue * 100;
+        }
+        
         return numValue;
     } catch (error) {
         return null;

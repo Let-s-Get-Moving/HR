@@ -1206,7 +1206,7 @@ export default function BonusesCommissions() {
         </div>
       </div>
 
-        {/* Hourly Payouts Table - All Date Columns */}
+        {/* Hourly Payouts Table - Dynamic Date Columns */}
       <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
             ⏰ Hourly Payouts ({analyticsHourly.length})
@@ -1216,22 +1216,36 @@ export default function BonusesCommissions() {
             <thead className="sticky top-0 bg-neutral-900 z-20">
               <tr className="border-b border-neutral-700">
                   <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Period Label</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Amount</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400">Total for Month</th>
+                  {/* Dynamically render date period columns from first record */}
+                  {analyticsHourly.length > 0 && analyticsHourly[0].date_periods && 
+                    JSON.parse(analyticsHourly[0].date_periods).map((period, idx) => (
+                      <th key={idx} className="text-left py-2 px-3 bg-neutral-900">
+                        {period.label}
+                        {period.cash_paid && <span className="ml-1 text-xs text-green-400">💵</span>}
+                      </th>
+                    ))
+                  }
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400">Total</th>
               </tr>
             </thead>
             <tbody>
-                {analyticsHourly.length > 0 ? analyticsHourly.map((record, idx) => (
-                  <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
-                    <td className="py-2 px-3">{record.period_label}</td>
-                    <td className="py-2 px-3 text-blue-400">${(record.amount || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_for_month || 0).toLocaleString()}</td>
-                  </tr>
-                )) : (
+                {analyticsHourly.length > 0 ? analyticsHourly.map((record, idx) => {
+                  const periods = record.date_periods ? JSON.parse(record.date_periods) : [];
+                  return (
+                    <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
+                      <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
+                      {periods.map((period, pIdx) => (
+                        <td key={pIdx} className="py-2 px-3 text-blue-400">
+                          ${(period.amount || 0).toLocaleString()}
+                          {period.cash_paid && <span className="ml-1 text-xs text-green-400">✓</span>}
+                        </td>
+                      ))}
+                      <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_for_month || 0).toLocaleString()}</td>
+                    </tr>
+                  );
+                }) : (
                   <tr>
-                    <td colSpan="4" className="py-4 px-4 text-center text-neutral-500">
+                    <td colSpan="10" className="py-4 px-4 text-center text-neutral-500">
                       No hourly payout data for this period
                     </td>
                   </tr>

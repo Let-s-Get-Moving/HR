@@ -220,6 +220,7 @@ r.get("/agents-us", async (req, res) => {
 });
 
 // Get hourly payout data
+// Returns data with dynamic date periods as JSON
 r.get("/hourly-payouts", async (req, res) => {
   try {
     const { period_month, employee_id } = req.query;
@@ -245,13 +246,13 @@ r.get("/hourly-payouts", async (req, res) => {
       FROM hourly_payout hp
       JOIN employees e ON hp.employee_id = e.id
       ${whereClause}
-      ORDER BY hp.period_month DESC, e.first_name, e.last_name, hp.period_label
+      ORDER BY hp.period_month DESC, e.first_name, e.last_name
     `, params);
     
     const formattedRows = rows.map(row => ({
       ...row,
-      amount: formatCurrency(row.amount),
-      total_for_month: formatCurrency(row.total_for_month)
+      total_for_month: formatCurrency(row.total_for_month),
+      // date_periods is already JSON from DB
     }));
     
     res.json(formattedRows);

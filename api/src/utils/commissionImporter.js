@@ -420,11 +420,51 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
 
 /**
  * Process hourly payout data block
+ * Structure: Name | Date1 | cash paid | Date2 | cash paid | TOTAL
  */
 async function processHourlyPayoutData(blockData, block, periodMonth, filename, sheetName, summary, client) {
     const queryFn = client ? 
         (sql, params) => client.query(sql, params) : 
         q;
+    
+    // Parse column structure to identify date periods and cash paid flags
+    const columnNames = blockData.length > 0 ? Object.keys(blockData[0]) : [];
+    const datePeriods = [];
+    let totalColumnName = null;
+    
+    for (let i = 0; i < columnNames.length; i++) {
+        const colName = columnNames[i];
+        const colLower = colName.toLowerCase().trim();
+        
+        // Skip name column
+        if (i === block.nameColIdx) continue;
+        
+        // Check if this is the TOTAL column
+        if (colLower.includes('total') && colLower.includes('hourly')) {
+            totalColumnName = colName;
+            continue;
+        }
+        
+        // Check if this is a "cash paid" column
+        if (colLower.includes('cash') && colLower.includes('paid')) {
+            continue; // Skip, we'll handle this when processing the previous date column
+        }
+        
+        // This is a date period column
+        const nextCol = columnNames[i + 1];
+        const isCashPaidNext = nextCol && nextCol.toLowerCase().includes('cash') && nextCol.toLowerCase().includes('paid');
+        
+        datePeriods.push({
+            label: colName,
+            cashPaidColumn: isCashPaidNext ? nextCol : null
+        });
+    }
+    
+    if (datePeriods.length === 0) {
+        summary.addDebugLog(`⚠️ No date period columns found in hourly payout block`);
+    } else {
+        summary.addDebugLog(`📅 Found ${datePeriods.length} date periods: ${datePeriods.map(p => p.label).join(', ')}`);
+    }
     
     for (let i = 0; i < blockData.length; i++) {
         const row = blockData[i];
@@ -441,7 +481,7 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             }
             
             if (rowNum <= 5) {
-                summary.addDebugLog(`Hourly Row ${rowNum} - Name: "${nameRaw}", NameColIdx: ${block.nameColIdx}, Columns: ${Object.keys(row).slice(0, 5).join(', ')}...`);
+                summary.addDebugLog(`Hourly Row ${rowNum} - Name: "${nameRaw}"`);
             }
             
             if (!nameRaw) {
@@ -456,52 +496,71 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             const employeeId = await findOrCreateEmployee(nameRaw, queryFn);
             summary.addDebugLog(`✓ Hourly Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
             
-            // Process each date range column as separate payout records
-            for (const [colName, colIdx] of Object.entries(block.columns)) {
-                if (colIdx === block.nameColIdx) continue; // Skip name column
+            // Extract date period data
+            const periods = [];
+            for (const period of datePeriods) {
+                const amount = parseMoney(row[period.label]);
+                const cashPaid = period.cashPaidColumn ? Boolean(row[period.cashPaidColumn]) : false;
                 
-                const amount = parseMoney(row[colName]);
-                if (amount === null) continue; // Skip empty amounts
-                
-                const data = {
-                    employee_id: employeeId,
-                    period_month: periodMonth,
-                    period_label: colName,
-                    amount: amount,
-                    total_for_month: null, // Could be calculated later
-                    source_file: filename,
-                    sheet_name: sheetName
-                };
-                
-                try {
-                    await queryFn('SAVEPOINT hourly_row_insert');
-                    
-                    const upsertResult = await queryFn(`
-                        INSERT INTO hourly_payout (
-                            employee_id, period_month, period_label, amount, total_for_month,
-                            source_file, sheet_name, created_at, updated_at
-                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                        ON CONFLICT (employee_id, period_month, period_label)
-                        DO UPDATE SET
-                            amount = EXCLUDED.amount,
-                            total_for_month = EXCLUDED.total_for_month,
-                            source_file = EXCLUDED.source_file,
-                            sheet_name = EXCLUDED.sheet_name,
-                            updated_at = CURRENT_TIMESTAMP
-                        RETURNING (xmax = 0) as inserted
-                    `, Object.values(data));
-                    
-                    await queryFn('RELEASE SAVEPOINT hourly_row_insert');
-                    
-                    if (upsertResult.rows[0].inserted) {
-                        summary.hourly.inserted++;
-                    } else {
-                        summary.hourly.updated++;
-                    }
-                } catch (insertError) {
-                    await queryFn('ROLLBACK TO SAVEPOINT hourly_row_insert');
-                    throw insertError;
+                if (amount !== null && amount !== 0) {
+                    periods.push({
+                        label: period.label,
+                        amount: amount,
+                        cash_paid: cashPaid
+                    });
                 }
+            }
+            
+            // Get total
+            const totalAmount = totalColumnName ? parseMoney(row[totalColumnName]) : null;
+            
+            if (periods.length === 0 && !totalAmount) {
+                if (rowNum <= 5) {
+                    summary.addDebugLog(`Hourly Row ${rowNum} - SKIPPED: No payout data`);
+                }
+                summary.hourly.skipped++;
+                continue;
+            }
+            
+            const data = {
+                employee_id: employeeId,
+                period_month: periodMonth,
+                name_raw: nameRaw,
+                date_periods: JSON.stringify(periods),
+                total_for_month: totalAmount,
+                source_file: filename,
+                sheet_name: sheetName
+            };
+            
+            try {
+                await queryFn('SAVEPOINT hourly_row_insert');
+                
+                const upsertResult = await queryFn(`
+                    INSERT INTO hourly_payout (
+                        employee_id, period_month, name_raw, date_periods, total_for_month,
+                        source_file, sheet_name, created_at, updated_at
+                    ) VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT (employee_id, period_month)
+                    DO UPDATE SET
+                        name_raw = EXCLUDED.name_raw,
+                        date_periods = EXCLUDED.date_periods,
+                        total_for_month = EXCLUDED.total_for_month,
+                        source_file = EXCLUDED.source_file,
+                        sheet_name = EXCLUDED.sheet_name,
+                        updated_at = CURRENT_TIMESTAMP
+                    RETURNING (xmax = 0) as inserted
+                `, Object.values(data));
+                
+                await queryFn('RELEASE SAVEPOINT hourly_row_insert');
+                
+                if (upsertResult.rows[0].inserted) {
+                    summary.hourly.inserted++;
+                } else {
+                    summary.hourly.updated++;
+                }
+            } catch (insertError) {
+                await queryFn('ROLLBACK TO SAVEPOINT hourly_row_insert');
+                throw insertError;
             }
             
         } catch (error) {
