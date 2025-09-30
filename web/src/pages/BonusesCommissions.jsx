@@ -785,45 +785,29 @@ export default function BonusesCommissions() {
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-sm"
             >
               <option value="">Auto-detect from sheet name</option>
-              <option value="2024-01-01">January 2024</option>
-              <option value="2024-02-01">February 2024</option>
-              <option value="2024-03-01">March 2024</option>
-              <option value="2024-04-01">April 2024</option>
-              <option value="2024-05-01">May 2024</option>
-              <option value="2024-06-01">June 2024</option>
-              <option value="2024-07-01">July 2024</option>
-              <option value="2024-08-01">August 2024</option>
-              <option value="2024-09-01">September 2024</option>
-              <option value="2024-10-01">October 2024</option>
-              <option value="2024-11-01">November 2024</option>
-              <option value="2024-12-01">December 2024</option>
-              <option value="2025-01-01">January 2025</option>
-              <option value="2025-02-01">February 2025</option>
-              <option value="2025-03-01">March 2025</option>
-              <option value="2025-04-01">April 2025</option>
-              <option value="2025-05-01">May 2025</option>
-              <option value="2025-06-01">June 2025</option>
-              <option value="2025-07-01">July 2025</option>
-              <option value="2025-08-01">August 2025</option>
-              <option value="2025-09-01">September 2025</option>
-              <option value="2025-10-01">October 2025</option>
-              <option value="2025-11-01">November 2025</option>
-              <option value="2025-12-01">December 2025</option>
-              <option value="2026-01-01">January 2026</option>
-              <option value="2026-02-01">February 2026</option>
-              <option value="2026-03-01">March 2026</option>
-              <option value="2026-04-01">April 2026</option>
-              <option value="2026-05-01">May 2026</option>
-              <option value="2026-06-01">June 2026</option>
-              <option value="2026-07-01">July 2026</option>
-              <option value="2026-08-01">August 2026</option>
-              <option value="2026-09-01">September 2026</option>
-              <option value="2026-10-01">October 2026</option>
-              <option value="2026-11-01">November 2026</option>
-              <option value="2026-12-01">December 2026</option>
+              {(() => {
+                // Generate last 3 months dynamically
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+                const today = new Date();
+                const options = [];
+                
+                for (let i = 0; i < 3; i++) {
+                  const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                  const monthName = months[date.getMonth()];
+                  const year = date.getFullYear();
+                  const value = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
+                  const label = i === 0 ? `${monthName} ${year} (this month)` : 
+                               i === 1 ? `${monthName} ${year} (last month)` :
+                               `${monthName} ${year}`;
+                  options.push(<option key={value} value={value}>{label}</option>);
+                }
+                
+                return options;
+              })()}
             </select>
             <p className="text-xs text-neutral-500 mt-1">
-              Leave as "Auto-detect" if your sheet is named like "July 2025". Otherwise, manually select the period.
+              Leave as "Auto-detect" if your sheet is named like "July 2025". Otherwise, select from recent months.
             </p>
           </div>
 
