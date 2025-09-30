@@ -22,6 +22,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   }, [employeeId]);
 
   const loadEmployeeData = async () => {
+    console.log(`🔄 [EmployeeProfile] Loading data for employee ${employeeId}...`);
     try {
       const [empData, timeData, docData, trainingData, payrollData, hrData] = await Promise.all([
         API(`/api/employees/${employeeId}`),
@@ -32,6 +33,22 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         API(`/api/employees/${employeeId}/hr-details`)
       ]);
       
+      console.log(`✅ [EmployeeProfile] Employee data loaded:`, {
+        employee: `${empData?.first_name} ${empData?.last_name}`,
+        timeEntries: timeData?.length || 0,
+        documents: docData?.length || 0,
+        trainingRecords: trainingData?.length || 0,
+        payrollHistory: payrollData?.length || 0,
+        hrDetails: {
+          addresses: hrData?.addresses?.length || 0,
+          emergencyContacts: hrData?.emergency_contacts?.length || 0,
+          bankAccounts: hrData?.bank_accounts?.length || 0,
+          identifiers: hrData?.identifiers?.length || 0,
+          compensationHistory: hrData?.compensation_history?.length || 0,
+          statusHistory: hrData?.status_history?.length || 0
+        }
+      });
+      
       setEmployee(empData);
       setTimeEntries(timeData);
       setDocuments(docData);
@@ -39,7 +56,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       setPayrollHistory(payrollData);
       setHrDetails(hrData);
     } catch (error) {
-      console.error("Error loading employee data:", error);
+      console.error("❌ [EmployeeProfile] Error loading employee data:", error);
     } finally {
       setLoading(false);
     }
@@ -114,6 +131,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
     { id: "documents", name: "Documents", icon: "📄" },
     { id: "training", name: "Training", icon: "✅" }
   ];
+
+  const handleTabChange = (tabId) => {
+    console.log(`📑 [EmployeeProfile] Switching to tab: ${tabId}`);
+    setActiveTab(tabId);
+  };
 
   if (loading) {
     return (
@@ -242,7 +264,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
               activeTab === tab.id
                 ? "bg-indigo-600 text-white"
