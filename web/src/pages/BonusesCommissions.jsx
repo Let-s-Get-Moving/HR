@@ -94,6 +94,7 @@ export default function BonusesCommissions() {
   // Import-related state variables
   const [importFile, setImportFile] = useState(null);
   const [importStatus, setImportStatus] = useState(null);
+  const [manualPeriod, setManualPeriod] = useState(''); // For manual month/year selection
   const [monthlyCommissions, setMonthlyCommissions] = useState([]);
   const [agentCommissions, setAgentCommissions] = useState([]);
   const [hourlyPayouts, setHourlyPayouts] = useState([]);
@@ -206,6 +207,11 @@ export default function BonusesCommissions() {
     try {
       const formData = new FormData();
       formData.append('excel_file', importFile);
+      
+      // Add manual period if specified
+      if (manualPeriod) {
+        formData.append('period_month', manualPeriod);
+      }
       
       const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
       const sessionId = localStorage.getItem('sessionId');
@@ -769,6 +775,56 @@ export default function BonusesCommissions() {
                 </p>
               </label>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Period Month (Optional)</label>
+            <select
+              value={manualPeriod}
+              onChange={(e) => setManualPeriod(e.target.value)}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-sm"
+            >
+              <option value="">Auto-detect from sheet name</option>
+              <option value="2024-01-01">January 2024</option>
+              <option value="2024-02-01">February 2024</option>
+              <option value="2024-03-01">March 2024</option>
+              <option value="2024-04-01">April 2024</option>
+              <option value="2024-05-01">May 2024</option>
+              <option value="2024-06-01">June 2024</option>
+              <option value="2024-07-01">July 2024</option>
+              <option value="2024-08-01">August 2024</option>
+              <option value="2024-09-01">September 2024</option>
+              <option value="2024-10-01">October 2024</option>
+              <option value="2024-11-01">November 2024</option>
+              <option value="2024-12-01">December 2024</option>
+              <option value="2025-01-01">January 2025</option>
+              <option value="2025-02-01">February 2025</option>
+              <option value="2025-03-01">March 2025</option>
+              <option value="2025-04-01">April 2025</option>
+              <option value="2025-05-01">May 2025</option>
+              <option value="2025-06-01">June 2025</option>
+              <option value="2025-07-01">July 2025</option>
+              <option value="2025-08-01">August 2025</option>
+              <option value="2025-09-01">September 2025</option>
+              <option value="2025-10-01">October 2025</option>
+              <option value="2025-11-01">November 2025</option>
+              <option value="2025-12-01">December 2025</option>
+              <option value="2026-01-01">January 2026</option>
+              <option value="2026-02-01">February 2026</option>
+              <option value="2026-03-01">March 2026</option>
+              <option value="2026-04-01">April 2026</option>
+              <option value="2026-05-01">May 2026</option>
+              <option value="2026-06-01">June 2026</option>
+              <option value="2026-07-01">July 2026</option>
+              <option value="2026-08-01">August 2026</option>
+              <option value="2026-09-01">September 2026</option>
+              <option value="2026-10-01">October 2026</option>
+              <option value="2026-11-01">November 2026</option>
+              <option value="2026-12-01">December 2026</option>
+            </select>
+            <p className="text-xs text-neutral-500 mt-1">
+              Leave as "Auto-detect" if your sheet is named like "July 2025". Otherwise, manually select the period.
+            </p>
           </div>
 
           {importStatus && (

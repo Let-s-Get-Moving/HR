@@ -86,14 +86,18 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
       return res.status(400).json({ error: "No Excel file uploaded" });
     }
 
-    const { sheet_name } = req.body;
+    const { sheet_name, period_month } = req.body;
     
     console.log(`Starting commission import for file: ${req.file.originalname}`);
+    if (period_month) {
+      console.log(`Using manual period override: ${period_month}`);
+    }
     
     const summary = await importCommissionsFromExcel(
       req.file.buffer, 
       req.file.originalname,
-      sheet_name
+      sheet_name,
+      period_month // Pass optional manual period
     );
     
     console.log(`Commission import completed:`, summary);

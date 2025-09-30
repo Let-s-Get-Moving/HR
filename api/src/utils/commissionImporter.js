@@ -616,7 +616,7 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
 /**
  * Main import function
  */
-export async function importCommissionsFromExcel(fileBuffer, filename, sheetName = null) {
+export async function importCommissionsFromExcel(fileBuffer, filename, sheetName = null, manualPeriodMonth = null) {
     const summary = new ImportSummary(filename, sheetName || 'default');
     
     try {
@@ -628,19 +628,26 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
         // Get worksheet data
         const data = getWorksheetData(workbook, actualSheetName);
         
-        // Parse period from sheet name
-        summary.addDebugLog(`Parsing period from sheet name: "${actualSheetName}"`);
-        const periodMonth = parsePeriodFromSheetName(actualSheetName);
-        summary.addDebugLog(`Parsed period result: ${periodMonth}`);
-        
-        if (!periodMonth) {
-            // Default to July 2025 if parsing fails
-            const defaultPeriod = '2025-07-01';
-            summary.addDebugLog(`Period parsing failed, using default: ${defaultPeriod}`);
-            summary.period_month = defaultPeriod;
+        // Determine period month (priority: manual > parsed > default)
+        if (manualPeriodMonth) {
+            // Manual period provided (e.g., "2025-08-01")
+            summary.addDebugLog(`Using manual period override: ${manualPeriodMonth}`);
+            summary.period_month = manualPeriodMonth;
         } else {
-            summary.period_month = periodMonth.toISOString().split('T')[0]; // YYYY-MM-DD format
-            summary.addDebugLog(`Using parsed period: ${summary.period_month}`);
+            // Try to parse from sheet name
+            summary.addDebugLog(`Parsing period from sheet name: "${actualSheetName}"`);
+            const periodMonth = parsePeriodFromSheetName(actualSheetName);
+            summary.addDebugLog(`Parsed period result: ${periodMonth}`);
+            
+            if (!periodMonth) {
+                // Default to July 2025 if parsing fails
+                const defaultPeriod = '2025-07-01';
+                summary.addDebugLog(`Period parsing failed, using default: ${defaultPeriod}`);
+                summary.period_month = defaultPeriod;
+            } else {
+                summary.period_month = periodMonth.toISOString().split('T')[0]; // YYYY-MM-DD format
+                summary.addDebugLog(`Using parsed period: ${summary.period_month}`);
+            }
         }
         
         // Detect all blocks
