@@ -88,16 +88,25 @@ function findHeaderAnywhere(data, requiredKeywords, blockName) {
             if (isHeaderMatch) {
                 // Found header! Now map all columns in this row
                 const columnMapping = {};
+                const columnCounts = {}; // Track duplicate column names
                 let nameColIdx = null;
                 
                 for (let c = 0; c < row.length; c++) {
                     const headerCell = row[c];
                     if (headerCell) {
-                        const headerStr = String(headerCell).trim();
+                        let headerStr = String(headerCell).trim();
+                        
+                        // Handle duplicate column names by adding suffix
+                        if (columnMapping.hasOwnProperty(headerStr)) {
+                            columnCounts[headerStr] = (columnCounts[headerStr] || 1) + 1;
+                            headerStr = `${headerStr}__${columnCounts[headerStr]}`;
+                            console.log(`[findHeaderAnywhere:${blockName}] Duplicate column "${String(headerCell).trim()}" → renamed to "${headerStr}"`);
+                        }
+                        
                         columnMapping[headerStr] = c;
                         
-                        // Identify name column
-                        const headerLower = headerStr.toLowerCase();
+                        // Identify name column (use original name for matching)
+                        const headerLower = String(headerCell).trim().toLowerCase();
                         if (headerLower === 'name' || headerLower === 'employee' || 
                             headerLower === 'agents' || headerLower === 'agent' ||
                             headerLower === 'hourly paid out') {
