@@ -139,17 +139,31 @@ function findDataEndRowFlexible(data, startRow, nameColIdx) {
         }
         
         const nameValue = row[nameColIdx];
-        const nameStr = nameValue ? String(nameValue).trim() : '';
+        const nameStr = nameValue ? String(nameValue).trim().toLowerCase() : '';
         
-        if (!nameStr) {
+        // PRIMARY STOP CONDITION: Detect section headers
+        if (nameStr) {
+            // Check for section headers
+            if (nameStr === 'agents' || 
+                nameStr === 'agent' ||
+                nameStr === 'agents us' ||
+                nameStr === 'hourly paid out' ||
+                nameStr === 'hourly paid' ||
+                nameStr === 'hourly payout' ||
+                nameStr.includes('hourly paid out')) {
+                console.log(`[findDataEndRow] ✅ Detected section header at row ${rowIdx + 1}: "${nameStr}" - ending block`);
+                return rowIdx;
+            }
+            
+            emptyCount = 0;
+        } else {
+            // BACKUP STOP CONDITION: Count empty rows
             emptyCount++;
             if (emptyCount >= REQUIRED_EMPTY) {
                 const endRow = rowIdx - REQUIRED_EMPTY + 1;
                 console.log(`[findDataEndRow] Found ${REQUIRED_EMPTY} empty rows, ending at row ${endRow + 1}`);
                 return endRow;
             }
-        } else {
-            emptyCount = 0;
         }
     }
     
