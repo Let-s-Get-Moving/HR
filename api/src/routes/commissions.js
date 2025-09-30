@@ -306,6 +306,7 @@ r.get("/summary", async (req, res) => {
       SELECT 
         COUNT(DISTINCT ecm.employee_id) as total_employees,
         SUM(ecm.commission_earned) as total_commission_earned,
+        SUM(ecm.total_due) as total_due,
         SUM(ecm.total_revenue_all) as total_revenue,
         SUM(ecm.amount_paid) as total_amount_paid,
         SUM(ecm.remaining_amount) as total_remaining,
@@ -320,6 +321,7 @@ r.get("/summary", async (req, res) => {
       period_month,
       total_employees: parseInt(summary.total_employees) || 0,
       total_commission_earned: formatCurrency(summary.total_commission_earned),
+      total_due: formatCurrency(summary.total_due),
       total_revenue: formatCurrency(summary.total_revenue),
       total_amount_paid: formatCurrency(summary.total_amount_paid),
       total_remaining: formatCurrency(summary.total_remaining),

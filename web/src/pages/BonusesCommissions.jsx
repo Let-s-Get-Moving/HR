@@ -1126,30 +1126,41 @@ export default function BonusesCommissions() {
 
         {/* Summary Cards */}
         {analyticsData && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-green-400">
                 ${(analyticsData.total_commission_earned || 0).toLocaleString()}
               </div>
-              <div className="text-sm text-tertiary">Total Commissions</div>
+              <div className="text-xs text-tertiary">Commission Earned</div>
+              <div className="text-xs text-neutral-500 mt-1">(before deductions)</div>
+        </div>
+        <div className="card p-4 text-center">
+              <div className="text-2xl font-bold text-yellow-400">
+                ${(analyticsData.total_due || 0).toLocaleString()}
+              </div>
+              <div className="text-xs text-tertiary">Total Due</div>
+              <div className="text-xs text-neutral-500 mt-1">(after deductions)</div>
         </div>
         <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-blue-400">
                 ${(analyticsData.total_amount_paid || 0).toLocaleString()}
               </div>
-              <div className="text-sm text-tertiary">Amount Paid</div>
+              <div className="text-xs text-tertiary">Amount Paid</div>
+              <div className="text-xs text-neutral-500 mt-1">(paid to employees)</div>
         </div>
         <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-purple-400">
                 ${(analyticsData.total_remaining || 0).toLocaleString()}
               </div>
-              <div className="text-sm text-tertiary">Remaining Due</div>
+              <div className="text-xs text-tertiary">Remaining</div>
+              <div className="text-xs text-neutral-500 mt-1">(still owed)</div>
         </div>
         <div className="card p-4 text-center">
               <div className="text-2xl font-bold text-indigo-400">
                 {analyticsData.total_employees || 0}
         </div>
-              <div className="text-sm text-tertiary">Employees</div>
+              <div className="text-xs text-tertiary">Employees</div>
+              <div className="text-xs text-neutral-500 mt-1">(with commissions)</div>
       </div>
           </div>
         )}
