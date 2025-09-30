@@ -1061,9 +1061,11 @@ export default function BonusesCommissions() {
                     {(() => {
                       const selectedPeriodData = availablePeriods.find(p => p.period_month === selectedPeriod);
                       if (!selectedPeriodData) return 'Select a period';
-                      const date = new Date(selectedPeriod);
-                      const monthName = date.toLocaleString('default', { month: 'long' });
-                      const year = date.getFullYear();
+                      // Parse date manually to avoid timezone issues
+                      const [year, month] = selectedPeriod.split('-');
+                      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                         'July', 'August', 'September', 'October', 'November', 'December'];
+                      const monthName = monthNames[parseInt(month) - 1];
                       return `${monthName} ${year}`;
                     })()}
                   </div>
@@ -1097,8 +1099,8 @@ export default function BonusesCommissions() {
                 {/* Group periods by year */}
                 {(() => {
                   const periodsByYear = availablePeriods.reduce((acc, period) => {
-                    const date = new Date(period.period_month);
-                    const year = date.getFullYear();
+                    // Parse year manually to avoid timezone issues
+                    const [year] = period.period_month.split('-');
                     if (!acc[year]) acc[year] = [];
                     acc[year].push(period);
                     return acc;
@@ -1112,8 +1114,11 @@ export default function BonusesCommissions() {
                       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                         {periodsByYear[year].map((period) => {
                           const isSelected = selectedPeriod === period.period_month;
-                          const date = new Date(period.period_month);
-                          const monthName = date.toLocaleString('default', { month: 'short' });
+                          // Parse month manually to avoid timezone issues
+                          const [, month] = period.period_month.split('-');
+                          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                             'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                          const monthName = monthNames[parseInt(month) - 1];
                           
                           return (
                             <button
