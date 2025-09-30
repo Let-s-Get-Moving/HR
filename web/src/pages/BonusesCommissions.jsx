@@ -170,14 +170,34 @@ export default function BonusesCommissions() {
     
     try {
       setLoading(true);
+      console.log(`📊 [Commissions] Loading analytics for period: ${selectedPeriod}`);
       
       // Load all analytics data for selected period
       const [summary, monthly, agents, hourly] = await Promise.all([
-        API(`/api/commissions/summary?period_month=${selectedPeriod}`).catch(() => null),
-        API(`/api/commissions/monthly?period_month=${selectedPeriod}`).catch(() => []),
-        API(`/api/commissions/agents-us?period_month=${selectedPeriod}`).catch(() => []),
-        API(`/api/commissions/hourly-payouts?period_month=${selectedPeriod}`).catch(() => [])
+        API(`/api/commissions/summary?period_month=${selectedPeriod}`).catch((err) => {
+          console.error('❌ [Commissions] Summary failed:', err);
+          return null;
+        }),
+        API(`/api/commissions/monthly?period_month=${selectedPeriod}`).catch((err) => {
+          console.error('❌ [Commissions] Monthly failed:', err);
+          return [];
+        }),
+        API(`/api/commissions/agents-us?period_month=${selectedPeriod}`).catch((err) => {
+          console.error('❌ [Commissions] Agents US failed:', err);
+          return [];
+        }),
+        API(`/api/commissions/hourly-payouts?period_month=${selectedPeriod}`).catch((err) => {
+          console.error('❌ [Commissions] Hourly Payouts failed:', err);
+          return [];
+        })
       ]);
+      
+      console.log('✅ [Commissions] Loaded data:', {
+        summary: summary ? 'OK' : 'null',
+        monthly: `${monthly?.length || 0} records`,
+        agents: `${agents?.length || 0} records`,
+        hourly: `${hourly?.length || 0} records`
+      });
       
       setAnalyticsData(summary);
       setAnalyticsMonthly(monthly);
@@ -185,7 +205,7 @@ export default function BonusesCommissions() {
       setAnalyticsHourly(hourly);
       
     } catch (error) {
-      console.error("Error loading analytics data:", error);
+      console.error("❌ [Commissions] Error loading analytics data:", error);
       setAnalyticsData(null);
       setAnalyticsMonthly([]);
       setAnalyticsAgents([]);

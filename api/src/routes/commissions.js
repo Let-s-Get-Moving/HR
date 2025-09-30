@@ -229,6 +229,8 @@ r.get("/hourly-payouts", async (req, res) => {
   try {
     const { period_month, employee_id } = req.query;
     
+    console.log(`[Hourly Payouts] Fetching for period_month=${period_month}, employee_id=${employee_id}`);
+    
     let whereClause = "WHERE 1=1";
     const params = [];
     
@@ -242,9 +244,18 @@ r.get("/hourly-payouts", async (req, res) => {
       whereClause += ` AND hp.employee_id = $${params.length}`;
     }
     
+    // Query the table
     const { rows } = await q(`
       SELECT 
-        hp.*,
+        hp.id,
+        hp.employee_id,
+        hp.period_month,
+        hp.name_raw,
+        hp.date_periods,
+        hp.total_for_month,
+        hp.source_file,
+        hp.sheet_name,
+        hp.created_at,
         e.first_name || ' ' || e.last_name as employee_name,
         e.role_title
       FROM hourly_payout hp
@@ -253,19 +264,46 @@ r.get("/hourly-payouts", async (req, res) => {
       ORDER BY hp.period_month DESC, e.first_name, e.last_name
     `, params);
     
-    const formattedRows = rows.map(row => ({
-      ...row,
-      total_for_month: formatCurrency(row.total_for_month),
-      // date_periods is already JSON from DB
-    }));
+    console.log(`[Hourly Payouts] Found ${rows.length} records`);
     
+    // Format the data
+    const formattedRows = rows.map(row => {
+      const formatted = {
+        id: row.id,
+        employee_id: row.employee_id,
+        period_month: row.period_month,
+        name_raw: row.name_raw || row.employee_name,
+        employee_name: row.employee_name,
+        role_title: row.role_title,
+        date_periods: row.date_periods || [],
+        total_for_month: parseFloat(row.total_for_month) || 0,
+        source_file: row.source_file,
+        sheet_name: row.sheet_name,
+        created_at: row.created_at
+      };
+      
+      // Log first few records for debugging
+      if (rows.indexOf(row) < 3) {
+        console.log(`[Hourly Payouts] Record ${rows.indexOf(row)}:`, {
+          name: formatted.name_raw,
+          periods: formatted.date_periods?.length || 0,
+          total: formatted.total_for_month
+        });
+      }
+      
+      return formatted;
+    });
+    
+    console.log(`[Hourly Payouts] Returning ${formattedRows.length} formatted records`);
     res.json(formattedRows);
+    
   } catch (error) {
-    console.error("Error fetching hourly payouts:", error);
+    console.error("[Hourly Payouts] Error fetching hourly payouts:", error);
     if (error.message.includes('does not exist')) {
+      console.log("[Hourly Payouts] Table doesn't exist, returning empty array");
       res.json([]);
     } else {
-      res.status(500).json({ error: "Failed to fetch hourly payouts" });
+      res.status(500).json({ error: "Failed to fetch hourly payouts", details: error.message });
     }
   }
 });
