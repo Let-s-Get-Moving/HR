@@ -336,12 +336,13 @@ export function parsePercent(value) {
 
 /**
  * Parse period from sheet name (e.g., "July 2025" -> "2025-07-01")
+ * Returns a string in format "YYYY-MM-01" to avoid timezone issues
  */
 export function parsePeriodFromSheetName(sheetName) {
     const monthNames = ['january', 'february', 'march', 'april', 'may', 'june',
                         'july', 'august', 'september', 'october', 'november', 'december'];
     
-    const nameLower = sheetName.toLowerCase();
+    const nameLower = sheetName.toLowerCase().trim();
     const yearMatch = nameLower.match(/20\d{2}/);
     
     if (!yearMatch) return null;
@@ -350,7 +351,8 @@ export function parsePeriodFromSheetName(sheetName) {
     for (let i = 0; i < monthNames.length; i++) {
         if (nameLower.includes(monthNames[i])) {
             const month = String(i + 1).padStart(2, '0');
-            return new Date(`${year}-${month}-01`);
+            // Return string to avoid timezone conversion issues
+            return `${year}-${month}-01`;
         }
     }
     
