@@ -65,9 +65,9 @@ function getColumnValue(row, ...possibleNames) {
 }
 
 /**
- * Find or create employee by name
+ * Find employee by name - DOES NOT CREATE (only timecards create employees)
  */
-async function findOrCreateEmployee(nameRaw, queryFn) {
+async function findEmployeeOnly(nameRaw, queryFn) {
     if (!nameRaw || typeof nameRaw !== 'string') {
         throw new Error('Invalid employee name');
     }
@@ -77,14 +77,9 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
         throw new Error('Employee name cannot be empty');
     }
     
-    // Split name to preserve important suffixes (I, II, Jr, Sr, etc.)
-    const nameParts = nameRaw.trim().split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    console.log(`[findEmployeeOnly] Searching for: "${nameRaw}" → normalized: "${nameKey}"`);
     
-    console.log(`[findOrCreateEmployee] "${nameRaw}" → normalized: "${nameKey}" (first: "${firstName}", last: "${lastName}")`);
-    
-    // First try to find by normalized name
+    // Try to find by normalized name
     // SQL applies same normalization: lowercase, trim, collapse spaces, remove special chars
     const existingResult = await queryFn(`
         SELECT id, first_name, last_name
@@ -100,34 +95,12 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
     `, [nameKey]);
     
     if (existingResult.rows.length > 0) {
-        console.log(`[findOrCreateEmployee] ✓ FOUND existing ID ${existingResult.rows[0].id} for "${nameRaw}"`);
+        console.log(`[findEmployeeOnly] ✓ FOUND existing ID ${existingResult.rows[0].id} for "${nameRaw}"`);
         return existingResult.rows[0].id;
     }
     
-    console.log(`[findOrCreateEmployee] ✗ NOT FOUND - creating new employee for "${nameRaw}"`);
-    
-    // If not found, create new employee record (names already split above)
-    
-    const createResult = await queryFn(`
-        INSERT INTO employees (
-            first_name, last_name, email, role_title, status, 
-            hire_date, employment_type
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id
-    `, [
-        firstName,
-        lastName,
-        `${nameKey.replace(/\s/g, '.')}@imported.local`, // Placeholder email
-        'Sales Representative', // Default role
-        'Active',
-        new Date().toISOString().split('T')[0], // Today's date as hire_date
-        'Full-time' // Default employment type
-    ]);
-    
-    const newId = createResult.rows[0].id;
-    console.log(`[findOrCreateEmployee] ✓ CREATED new employee ID ${newId} for "${nameRaw}" (${firstName} ${lastName})`);
-    return newId;
+    console.log(`[findEmployeeOnly] ✗ NOT FOUND - "${nameRaw}" not in employee database (must be in timecards first)`);
+    throw new Error(`Employee "${nameRaw}" not found. Upload timecards first to create employee records.`);
 }
 
 /**
@@ -171,13 +144,13 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 continue;
             }
             
-            // Find or create employee
+            // Find employee (DO NOT CREATE - only timecards create employees)
             let employeeId;
             try {
                 if (rowNum <= 5) {
-                    summary.addDebugLog(`Row ${rowNum} - Finding/creating employee: "${nameRaw}"`);
+                    summary.addDebugLog(`Row ${rowNum} - Finding employee: "${nameRaw}"`);
                 }
-                employeeId = await findOrCreateEmployee(nameRaw, queryFn);
+                employeeId = await findEmployeeOnly(nameRaw, queryFn);
                 // ALWAYS log employee matching to detect duplicate issues
                 summary.addDebugLog(`✓ Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
                 if (rowNum <= 5) {
@@ -185,9 +158,10 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 }
             } catch (error) {
                 if (rowNum <= 5) {
-                    summary.addDebugLog(`Row ${rowNum} - SKIPPED: Employee creation failed: ${error.message}`);
+                    summary.addDebugLog(`Row ${rowNum} - SKIPPED: Employee not found (upload timecards first): ${error.message}`);
                 }
-                summary.addError('main', rowNum, 'Failed to find/create employee', { error: error.message });
+                summary.addWarning(`"${nameRaw}" not found - must appear in timecards before receiving commissions`);
+                summary.addError('main', rowNum, 'Employee not found in database', { error: error.message });
                 summary.main.skipped++;
                 continue;
             }
@@ -392,8 +366,16 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
                 continue;
             }
             
-            const employeeId = await findOrCreateEmployee(nameRaw, queryFn);
-            summary.addDebugLog(`✓ Agent US Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
+            let employeeId;
+            try {
+                employeeId = await findEmployeeOnly(nameRaw, queryFn);
+                summary.addDebugLog(`✓ Agent US Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
+            } catch (error) {
+                summary.addWarning(`Agent US: "${nameRaw}" not found - must appear in timecards before receiving commissions`);
+                summary.addError('agents_us', rowNum, 'Employee not found in database', { error: error.message });
+                summary.agents_us.skipped++;
+                continue;
+            }
             
             const data = {
                 employee_id: employeeId,

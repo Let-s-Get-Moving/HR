@@ -23,6 +23,7 @@ import benefits from "./routes/benefits.js";
 import imports from "./routes/imports.js";
 import admin from "./routes/admin.js";
 import timecards from "./routes/timecards.js";
+import employeeMatching from "./routes/employee-matching.js";
 import logger from "./utils/logger.js";
 
 const app = express();
@@ -85,6 +86,7 @@ app.use("/api/benefits", benefits);
 app.use("/api/imports", imports);
 app.use("/api/admin", admin);
 app.use("/api/timecards", timecards);
+app.use("/api/employee-matching", employeeMatching);
 
 // Emergency database migration endpoint
 app.post("/api/migrate-db", async (req, res) => {
