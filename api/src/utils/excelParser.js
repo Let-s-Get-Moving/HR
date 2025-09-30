@@ -148,29 +148,41 @@ function findDataEndRowFlexible(data, startRow, nameColIdx) {
     
     for (let rowIdx = startRow; rowIdx < data.length; rowIdx++) {
         const row = data[rowIdx];
-        if (!Array.isArray(row) || nameColIdx >= row.length) {
+        if (!Array.isArray(row)) {
             break;
         }
         
-        const nameValue = row[nameColIdx];
+        // PRIMARY STOP CONDITION: Check ALL cells in this row for section headers
+        // (not just the name column, since headers can be in different columns)
+        let foundSectionHeader = false;
+        for (let colIdx = 0; colIdx < row.length; colIdx++) {
+            const cellValue = row[colIdx];
+            const cellStr = cellValue ? String(cellValue).trim().toLowerCase() : '';
+            
+            if (cellStr && (
+                cellStr === 'agents' || 
+                cellStr === 'agent' ||
+                cellStr === 'agents us' ||
+                cellStr === 'hourly paid out' ||
+                cellStr === 'hourly paid' ||
+                cellStr === 'hourly payout' ||
+                cellStr.includes('hourly paid out') ||
+                cellStr.includes('paid parking pass'))) {
+                console.log(`[findDataEndRow] ✅ Detected section header at row ${rowIdx + 1}, col ${String.fromCharCode(65 + colIdx)}: "${cellStr}" - ending block`);
+                foundSectionHeader = true;
+                break;
+            }
+        }
+        
+        if (foundSectionHeader) {
+            return rowIdx;
+        }
+        
+        // Check if name column is empty (for empty row counting)
+        const nameValue = nameColIdx < row.length ? row[nameColIdx] : null;
         const nameStr = nameValue ? String(nameValue).trim().toLowerCase() : '';
         
-        // PRIMARY STOP CONDITION: Detect section headers
-        if (nameStr) {
-            // Check for section headers
-            if (nameStr === 'agents' || 
-                nameStr === 'agent' ||
-                nameStr === 'agents us' ||
-                nameStr === 'hourly paid out' ||
-                nameStr === 'hourly paid' ||
-                nameStr === 'hourly payout' ||
-                nameStr.includes('hourly paid out')) {
-                console.log(`[findDataEndRow] ✅ Detected section header at row ${rowIdx + 1}: "${nameStr}" - ending block`);
-                return rowIdx;
-            }
-            
-            emptyCount = 0;
-        } else {
+        if (!nameStr) {
             // BACKUP STOP CONDITION: Count empty rows
             emptyCount++;
             if (emptyCount >= REQUIRED_EMPTY) {
@@ -178,6 +190,8 @@ function findDataEndRowFlexible(data, startRow, nameColIdx) {
                 console.log(`[findDataEndRow] Found ${REQUIRED_EMPTY} empty rows, ending at row ${endRow + 1}`);
                 return endRow;
             }
+        } else {
+            emptyCount = 0;
         }
     }
     
