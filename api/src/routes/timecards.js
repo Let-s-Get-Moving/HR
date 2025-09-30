@@ -1,0 +1,406 @@
+import express from "express";
+import { z } from "zod";
+import { q } from "../db.js";
+import multer from "multer";
+import { importTimecardsFromExcel } from "../utils/timecardImporter.js";
+
+const r = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Get all timecards with filters
+r.get("/", async (req, res) => {
+  try {
+    const { employee_id, pay_period_start, pay_period_end, status } = req.query;
+    
+    let query = `
+      SELECT 
+        t.*,
+        e.first_name,
+        e.last_name,
+        e.email,
+        e.role_title,
+        CONCAT(e.first_name, ' ', e.last_name) as employee_name
+      FROM timecards t
+      JOIN employees e ON t.employee_id = e.id
+      WHERE 1=1
+    `;
+    
+    const params = [];
+    let paramCount = 1;
+    
+    if (employee_id) {
+      query += ` AND t.employee_id = $${paramCount}`;
+      params.push(employee_id);
+      paramCount++;
+    }
+    
+    if (pay_period_start) {
+      query += ` AND t.pay_period_start >= $${paramCount}`;
+      params.push(pay_period_start);
+      paramCount++;
+    }
+    
+    if (pay_period_end) {
+      query += ` AND t.pay_period_end <= $${paramCount}`;
+      params.push(pay_period_end);
+      paramCount++;
+    }
+    
+    if (status) {
+      query += ` AND t.status = $${paramCount}`;
+      params.push(status);
+      paramCount++;
+    }
+    
+    query += ` ORDER BY t.pay_period_start DESC, e.last_name, e.first_name`;
+    
+    const { rows } = await q(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching timecards:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get timecard by ID with all entries
+r.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get timecard details
+    const { rows: timecards } = await q(
+      `SELECT 
+        t.*,
+        e.first_name,
+        e.last_name,
+        e.email,
+        e.role_title,
+        CONCAT(e.first_name, ' ', e.last_name) as employee_name
+      FROM timecards t
+      JOIN employees e ON t.employee_id = e.id
+      WHERE t.id = $1`,
+      [id]
+    );
+    
+    if (timecards.length === 0) {
+      return res.status(404).json({ error: "Timecard not found" });
+    }
+    
+    // Get all entries for this timecard
+    const { rows: entries } = await q(
+      `SELECT * FROM timecard_entries 
+       WHERE timecard_id = $1 
+       ORDER BY work_date, clock_in`,
+      [id]
+    );
+    
+    const timecard = timecards[0];
+    timecard.entries = entries;
+    
+    res.json(timecard);
+  } catch (error) {
+    console.error("Error fetching timecard:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get timecard entries for a specific employee and pay period
+r.get("/employee/:employee_id/period", async (req, res) => {
+  try {
+    const { employee_id } = req.params;
+    const { pay_period_start, pay_period_end } = req.query;
+    
+    if (!pay_period_start || !pay_period_end) {
+      return res.status(400).json({ error: "pay_period_start and pay_period_end required" });
+    }
+    
+    const { rows } = await q(
+      `SELECT 
+        t.*,
+        e.first_name,
+        e.last_name,
+        e.email,
+        CONCAT(e.first_name, ' ', e.last_name) as employee_name
+      FROM timecards t
+      JOIN employees e ON t.employee_id = e.id
+      WHERE t.employee_id = $1 
+        AND t.pay_period_start = $2 
+        AND t.pay_period_end = $3`,
+      [employee_id, pay_period_start, pay_period_end]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Timecard not found" });
+    }
+    
+    // Get entries
+    const { rows: entries } = await q(
+      `SELECT * FROM timecard_entries 
+       WHERE timecard_id = $1 
+       ORDER BY work_date, clock_in`,
+      [rows[0].id]
+    );
+    
+    const timecard = rows[0];
+    timecard.entries = entries;
+    
+    res.json(timecard);
+  } catch (error) {
+    console.error("Error fetching timecard:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get summary statistics (for dashboard)
+r.get("/stats/summary", async (req, res) => {
+  try {
+    const { pay_period_start, pay_period_end } = req.query;
+    
+    if (!pay_period_start || !pay_period_end) {
+      return res.status(400).json({ error: "pay_period_start and pay_period_end required" });
+    }
+    
+    // Get totals by employee
+    const { rows: employeeTotals } = await q(
+      `SELECT 
+        e.id as employee_id,
+        CONCAT(e.first_name, ' ', e.last_name) as employee_name,
+        t.total_hours,
+        t.overtime_hours,
+        t.status,
+        (
+          SELECT COUNT(*) 
+          FROM timecard_entries te 
+          WHERE te.timecard_id = t.id 
+            AND (te.clock_out IS NULL OR te.notes ILIKE '%missing%')
+        ) as missing_punches_count
+      FROM timecards t
+      JOIN employees e ON t.employee_id = e.id
+      WHERE t.pay_period_start = $1 AND t.pay_period_end = $2
+      ORDER BY e.last_name, e.first_name`,
+      [pay_period_start, pay_period_end]
+    );
+    
+    // Calculate overall statistics
+    const totalHours = employeeTotals.reduce((sum, emp) => sum + parseFloat(emp.total_hours || 0), 0);
+    const totalOvertime = employeeTotals.reduce((sum, emp) => sum + parseFloat(emp.overtime_hours || 0), 0);
+    const totalMissingPunches = employeeTotals.reduce((sum, emp) => sum + parseInt(emp.missing_punches_count || 0), 0);
+    const employeesWithOvertime = employeeTotals.filter(emp => parseFloat(emp.overtime_hours || 0) > 0).length;
+    
+    res.json({
+      period: {
+        start: pay_period_start,
+        end: pay_period_end
+      },
+      summary: {
+        total_employees: employeeTotals.length,
+        total_hours: totalHours,
+        total_overtime: totalOvertime,
+        total_missing_punches: totalMissingPunches,
+        employees_with_overtime: employeesWithOvertime
+      },
+      employees: employeeTotals
+    });
+  } catch (error) {
+    console.error("Error fetching timecard stats:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all pay periods that have timecards
+r.get("/periods/list", async (req, res) => {
+  try {
+    const { rows } = await q(
+      `SELECT DISTINCT 
+        pay_period_start,
+        pay_period_end,
+        TO_CHAR(pay_period_start, 'YYYY-MM-DD') || ' - ' || TO_CHAR(pay_period_end, 'YYYY-MM-DD') as period_label,
+        COUNT(*) as timecard_count
+      FROM timecards
+      GROUP BY pay_period_start, pay_period_end
+      ORDER BY pay_period_start DESC`
+    );
+    
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching pay periods:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Excel import endpoint
+r.post("/import", upload.single('excel_file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No Excel file uploaded" });
+    }
+
+    const { sheet_name, pay_period_start, pay_period_end } = req.body;
+    
+    console.log(`Starting timecard import for file: ${req.file.originalname}`);
+    
+    const summary = await importTimecardsFromExcel(
+      req.file.buffer, 
+      req.file.originalname,
+      sheet_name,
+      pay_period_start,
+      pay_period_end
+    );
+    
+    console.log(`Timecard import completed:`, summary);
+    
+    res.json({
+      message: "Timecard import completed successfully",
+      summary: summary
+    });
+    
+  } catch (error) {
+    console.error("Timecard import failed:", error);
+    res.status(500).json({ 
+      error: "Timecard import failed", 
+      details: error.message 
+    });
+  }
+});
+
+// Create or update timecard entry (for admin edits)
+r.post("/entries", async (req, res) => {
+  try {
+    const entrySchema = z.object({
+      timecard_id: z.number().optional(),
+      employee_id: z.number(),
+      work_date: z.string(),
+      clock_in: z.string().nullable(),
+      clock_out: z.string().nullable(),
+      notes: z.string().optional().nullable()
+    });
+    
+    const data = entrySchema.parse(req.body);
+    
+    // Calculate hours worked
+    let hours_worked = null;
+    if (data.clock_in && data.clock_out) {
+      const inTime = new Date(`${data.work_date}T${data.clock_in}`);
+      const outTime = new Date(`${data.work_date}T${data.clock_out}`);
+      const diff = (outTime - inTime) / (1000 * 60 * 60); // Convert to hours
+      hours_worked = Math.round(diff * 100) / 100; // Round to 2 decimals
+    }
+    
+    // If timecard_id not provided, find or create timecard
+    let timecard_id = data.timecard_id;
+    if (!timecard_id) {
+      // Try to find existing timecard or create one
+      const { rows: existingTimecard } = await q(
+        `SELECT id FROM timecards 
+         WHERE employee_id = $1 
+           AND $2 BETWEEN pay_period_start AND pay_period_end`,
+        [data.employee_id, data.work_date]
+      );
+      
+      if (existingTimecard.length > 0) {
+        timecard_id = existingTimecard[0].id;
+      } else {
+        // Need pay period info to create timecard
+        return res.status(400).json({ 
+          error: "No timecard found for this employee and date. Please provide timecard_id or pay period." 
+        });
+      }
+    }
+    
+    const { rows } = await q(
+      `INSERT INTO timecard_entries 
+       (timecard_id, employee_id, work_date, clock_in, clock_out, hours_worked, notes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [timecard_id, data.employee_id, data.work_date, data.clock_in, data.clock_out, hours_worked, data.notes]
+    );
+    
+    res.json(rows[0]);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Invalid data", details: error.errors });
+    }
+    console.error("Error creating timecard entry:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update timecard entry
+r.put("/entries/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const entrySchema = z.object({
+      work_date: z.string().optional(),
+      clock_in: z.string().nullable().optional(),
+      clock_out: z.string().nullable().optional(),
+      notes: z.string().nullable().optional()
+    });
+    
+    const data = entrySchema.parse(req.body);
+    
+    // Get existing entry
+    const { rows: existing } = await q(
+      `SELECT * FROM timecard_entries WHERE id = $1`,
+      [id]
+    );
+    
+    if (existing.length === 0) {
+      return res.status(404).json({ error: "Entry not found" });
+    }
+    
+    const entry = existing[0];
+    const work_date = data.work_date || entry.work_date;
+    const clock_in = data.clock_in !== undefined ? data.clock_in : entry.clock_in;
+    const clock_out = data.clock_out !== undefined ? data.clock_out : entry.clock_out;
+    
+    // Recalculate hours
+    let hours_worked = null;
+    if (clock_in && clock_out) {
+      const inTime = new Date(`${work_date}T${clock_in}`);
+      const outTime = new Date(`${work_date}T${clock_out}`);
+      const diff = (outTime - inTime) / (1000 * 60 * 60);
+      hours_worked = Math.round(diff * 100) / 100;
+    }
+    
+    const { rows } = await q(
+      `UPDATE timecard_entries 
+       SET work_date = $1, clock_in = $2, clock_out = $3, 
+           hours_worked = $4, notes = $5
+       WHERE id = $6
+       RETURNING *`,
+      [work_date, clock_in, clock_out, hours_worked, data.notes, id]
+    );
+    
+    res.json(rows[0]);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Invalid data", details: error.errors });
+    }
+    console.error("Error updating timecard entry:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete timecard entry
+r.delete("/entries/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const { rows } = await q(
+      `DELETE FROM timecard_entries WHERE id = $1 RETURNING *`,
+      [id]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Entry not found" });
+    }
+    
+    res.json({ message: "Entry deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting timecard entry:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+export default r;
+

@@ -54,11 +54,15 @@ A comprehensive **Human Resources Management System** built with modern web tech
 - 360° feedback collection
 - Performance analytics and reporting
 
-### **⏰ Time Tracking**
-- Clock in/out functionality
-- Overtime tracking
-- Timecard management
-- Attendance analytics
+### **⏰ Time Tracking & Timecards**
+- Comprehensive timecard management system
+- Excel-based import for bulk timecard uploads
+- Multiple clock-in/out pairs per day
+- Automatic overtime detection (>8 hours/day)
+- Missing punch alerts
+- Three view system: Main table, Individual details, Dashboard statistics
+- Role-based access (Admin, HR, User)
+- Pay period filtering and employee search
 
 ## 🏗️ **Architecture**
 
