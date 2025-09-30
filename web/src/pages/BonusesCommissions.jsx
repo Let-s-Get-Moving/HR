@@ -1022,26 +1022,53 @@ export default function BonusesCommissions() {
     return (
     <div className="space-y-6">
         {/* Period Selector */}
-        <div className="flex justify-between items-center">
+        <div className="space-y-4">
           <h3 className="text-lg font-semibold">Commission Analytics</h3>
-          <div className="flex items-center space-x-3">
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="bg-neutral-800 border border-neutral-600 px-3 py-2 rounded-lg text-sm"
-            >
-              {availablePeriods.map((period) => (
-                <option key={period.period_month} value={period.period_month}>
-                  {period.period_label}
-                </option>
-              ))}
-            </select>
-            <button
-              onClick={loadAnalyticsData}
-              className="bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg text-sm transition-colors"
-            >
-              Refresh
-            </button>
+          
+          {/* Calendar-style month selector */}
+          <div className="bg-neutral-800 p-4 rounded-lg border border-neutral-700">
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-neutral-400">Select Period</span>
+              <button
+                onClick={loadAnalyticsData}
+                className="bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded text-xs transition-colors"
+              >
+                🔄 Refresh
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+              {availablePeriods.map((period) => {
+                const isSelected = selectedPeriod === period.period_month;
+                const date = new Date(period.period_month);
+                const monthName = date.toLocaleString('default', { month: 'short' });
+                const year = date.getFullYear();
+                
+                return (
+                  <button
+                    key={period.period_month}
+                    onClick={() => setSelectedPeriod(period.period_month)}
+                    className={`
+                      p-3 rounded-lg border-2 transition-all text-center
+                      ${isSelected 
+                        ? 'border-indigo-500 bg-indigo-600 shadow-lg shadow-indigo-500/20' 
+                        : 'border-neutral-700 bg-neutral-900 hover:border-indigo-400 hover:bg-neutral-800'
+                      }
+                    `}
+                  >
+                    <div className={`text-xs ${isSelected ? 'text-indigo-200' : 'text-neutral-500'}`}>
+                      {year}
+                    </div>
+                    <div className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-neutral-300'}`}>
+                      {monthName}
+                    </div>
+                    <div className={`text-xs ${isSelected ? 'text-indigo-300' : 'text-neutral-600'}`}>
+                      {period.employee_count} emp
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
