@@ -378,13 +378,39 @@ export async function importTimecardsFromExcel(fileBuffer, filename, sheetName =
                         summary.timecards_created++;
                     }
                     
+                    // Delete old time_entries for this employee/period to avoid conflicts (old table has unique constraint)
+                    await client.query(
+                        `DELETE FROM time_entries 
+                         WHERE employee_id = $1 
+                         AND work_date >= $2 
+                         AND work_date <= $3`,
+                        [employeeId, timecard.pay_period_start, timecard.pay_period_end]
+                    );
+                    
                     for (const entry of timecard.entries) {
                         if (!entry.work_date) continue;
+                        
+                        // Insert into new timecard_entries table
                         await client.query(
                             `INSERT INTO timecard_entries (timecard_id, employee_id, work_date, clock_in, clock_out, hours_worked, notes)
                              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
                             [timecardId, employeeId, entry.work_date, entry.clock_in, entry.clock_out, entry.hours_worked || 0, entry.notes]
                         );
+                        
+                        // ALSO insert into old time_entries table for backward compatibility
+                        // Note: old table has unique constraint on (employee_id, work_date), so only first entry per day goes here
+                        const overtimeHours = Math.max(0, (entry.hours_worked || 0) - 8);
+                        await client.query(
+                            `INSERT INTO time_entries (employee_id, work_date, clock_in, clock_out, hours_worked, overtime_hours, notes)
+                             VALUES ($1, $2, $3, $4, $5, $6, $7)
+                             ON CONFLICT (employee_id, work_date) DO UPDATE SET
+                               clock_in = EXCLUDED.clock_in,
+                               clock_out = EXCLUDED.clock_out,
+                               hours_worked = time_entries.hours_worked + EXCLUDED.hours_worked,
+                               overtime_hours = time_entries.overtime_hours + EXCLUDED.overtime_hours`,
+                            [employeeId, entry.work_date, entry.clock_in, entry.clock_out, entry.hours_worked || 0, overtimeHours, entry.notes]
+                        );
+                        
                         summary.entries_inserted++;
                     }
                 } catch (error) {

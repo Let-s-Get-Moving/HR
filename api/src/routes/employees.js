@@ -130,11 +130,42 @@ r.get("/:id", async (req, res) => {
   res.json(rows[0]);
 });
 
-// Get employee time entries
+// Get employee time entries (from BOTH old time_entries AND new timecard_entries)
 r.get("/:id/time-entries", async (req, res) => {
   const { id } = req.params;
   const { rows } = await q(
-    `SELECT * FROM time_entries WHERE employee_id = $1 ORDER BY work_date DESC`,
+    `SELECT 
+       te.id,
+       te.employee_id,
+       te.work_date,
+       te.clock_in,
+       te.clock_out,
+       te.hours_worked,
+       te.overtime_hours,
+       te.was_late,
+       te.notes,
+       'old' as source
+     FROM time_entries te
+     WHERE te.employee_id = $1
+     
+     UNION ALL
+     
+     SELECT 
+       tce.id,
+       tc.employee_id,
+       tce.work_date,
+       tce.clock_in,
+       tce.clock_out,
+       tce.hours_worked,
+       tce.overtime_hours,
+       false as was_late,
+       tce.notes,
+       'timecard' as source
+     FROM timecard_entries tce
+     JOIN timecards tc ON tce.timecard_id = tc.id
+     WHERE tc.employee_id = $1
+     
+     ORDER BY work_date DESC`,
     [id]
   );
   res.json(rows);
