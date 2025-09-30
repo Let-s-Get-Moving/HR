@@ -335,27 +335,41 @@ export function parsePercent(value) {
 }
 
 /**
- * Parse period from sheet name (e.g., "July 2025" -> "2025-07-01")
+ * Parse period from sheet name or filename (e.g., "July 2025" -> "2025-07-01")
  * Returns a string in format "YYYY-MM-01" to avoid timezone issues
  */
 export function parsePeriodFromSheetName(sheetName) {
+    if (!sheetName) {
+        console.log('[parsePeriodFromSheetName] No sheet name provided');
+        return null;
+    }
+    
     const monthNames = ['january', 'february', 'march', 'april', 'may', 'june',
                         'july', 'august', 'september', 'october', 'november', 'december'];
     
     const nameLower = sheetName.toLowerCase().trim();
+    console.log(`[parsePeriodFromSheetName] Input: "${sheetName}" -> Lowercase: "${nameLower}"`);
+    
     const yearMatch = nameLower.match(/20\d{2}/);
     
-    if (!yearMatch) return null;
+    if (!yearMatch) {
+        console.log(`[parsePeriodFromSheetName] No year found in "${nameLower}"`);
+        return null;
+    }
     const year = yearMatch[0];
+    console.log(`[parsePeriodFromSheetName] Year found: ${year}`);
     
     for (let i = 0; i < monthNames.length; i++) {
         if (nameLower.includes(monthNames[i])) {
             const month = String(i + 1).padStart(2, '0');
+            const result = `${year}-${month}-01`;
+            console.log(`[parsePeriodFromSheetName] Month "${monthNames[i]}" found at index ${i}, returning: ${result}`);
             // Return string to avoid timezone conversion issues
-            return `${year}-${month}-01`;
+            return result;
         }
     }
     
+    console.log(`[parsePeriodFromSheetName] No month name found in "${nameLower}"`);
     return null;
 }
 

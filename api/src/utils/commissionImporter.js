@@ -674,15 +674,22 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
             summary.addDebugLog(`Using manual period override: ${manualPeriodMonth}`);
             summary.period_month = manualPeriodMonth;
         } else {
-            // Try to parse from sheet name
+            // Try to parse from sheet name first
             summary.addDebugLog(`Parsing period from sheet name: "${actualSheetName}"`);
-            const periodMonth = parsePeriodFromSheetName(actualSheetName);
-            summary.addDebugLog(`Parsed period result: ${periodMonth}`);
+            let periodMonth = parsePeriodFromSheetName(actualSheetName);
+            summary.addDebugLog(`Parsed period from sheet name result: ${periodMonth}`);
+            
+            // If sheet name parsing failed, try filename
+            if (!periodMonth) {
+                summary.addDebugLog(`Sheet name parsing failed, trying filename: "${filename}"`);
+                periodMonth = parsePeriodFromSheetName(filename);
+                summary.addDebugLog(`Parsed period from filename result: ${periodMonth}`);
+            }
             
             if (!periodMonth) {
-                // Default to July 2025 if parsing fails
+                // Default to July 2025 if both parsing attempts fail
                 const defaultPeriod = '2025-07-01';
-                summary.addDebugLog(`Period parsing failed, using default: ${defaultPeriod}`);
+                summary.addDebugLog(`Period parsing failed for both sheet name and filename, using default: ${defaultPeriod}`);
                 summary.period_month = defaultPeriod;
             } else {
                 // parsePeriodFromSheetName now returns a string in 'YYYY-MM-DD' format
