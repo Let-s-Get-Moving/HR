@@ -17,6 +17,7 @@ class ImportSummary {
         this.timecards_updated = 0;
         this.entries_inserted = 0;
         this.entries_skipped = 0;
+        this.employees_created = 0;
         this.errors = [];
         this.warnings = [];
         this.debug_logs = [];
@@ -98,23 +99,64 @@ function parsePeriod(str) {
     return null;
 }
 
-async function findEmployeeByName(name, client) {
+async function findOrCreateEmployee(name, client, summary) {
     if (!name) return null;
+    
     const nameLower = name.trim().toLowerCase();
     
+    // Try exact match
     let result = await client.query(
         `SELECT id FROM employees WHERE LOWER(CONCAT(first_name, ' ', last_name)) = $1 LIMIT 1`,
         [nameLower]
     );
     if (result.rows.length > 0) return result.rows[0].id;
     
+    // Try fuzzy match
     result = await client.query(
         `SELECT id FROM employees WHERE LOWER(CONCAT(first_name, ' ', last_name)) LIKE $1 LIMIT 1`,
         [`%${nameLower}%`]
     );
     if (result.rows.length > 0) return result.rows[0].id;
     
-    return null;
+    // Employee not found - AUTO-CREATE from timecard data
+    summary.addDebugLog(`🆕 Creating new employee: ${name}`);
+    summary.employees_created++;
+    
+    // Parse name into first and last
+    const nameParts = name.trim().split(/\s+/);
+    const firstName = nameParts[0] || 'Unknown';
+    const lastName = nameParts.slice(1).join(' ') || 'Employee';
+    
+    // Get default department and location
+    const deptResult = await client.query(
+        `SELECT id FROM departments ORDER BY id LIMIT 1`
+    );
+    const defaultDept = deptResult.rows[0]?.id || null;
+    
+    const locResult = await client.query(
+        `SELECT id FROM locations WHERE is_active = true ORDER BY id LIMIT 1`
+    );
+    const defaultLoc = locResult.rows[0]?.id || null;
+    
+    // Create employee with timecard data as source
+    const createResult = await client.query(
+        `INSERT INTO employees 
+         (first_name, last_name, email, hire_date, employment_type, department_id, location_id, role_title, status)
+         VALUES ($1, $2, $3, CURRENT_DATE, 'Full-time', $4, $5, 'Employee', 'Active')
+         RETURNING id`,
+        [
+            firstName,
+            lastName,
+            `${firstName.toLowerCase()}.${lastName.toLowerCase()}@company.com`.replace(/\s+/g, ''),
+            defaultDept,
+            defaultLoc
+        ]
+    );
+    
+    const newEmployeeId = createResult.rows[0].id;
+    summary.addWarning(`✅ Auto-created employee: ${name} (ID: ${newEmployeeId}) from timecard data`);
+    
+    return newEmployeeId;
 }
 
 /**
@@ -304,9 +346,9 @@ export async function importTimecardsFromExcel(fileBuffer, filename, sheetName =
                         continue;
                     }
                     
-                    const employeeId = await findEmployeeByName(timecard.employee_name, client);
+                    const employeeId = await findOrCreateEmployee(timecard.employee_name, client, summary);
                     if (!employeeId) {
-                        summary.addError(timecard.employee_name, 0, 'Employee not found');
+                        summary.addError(timecard.employee_name, 0, 'Could not find or create employee');
                         continue;
                     }
                     
