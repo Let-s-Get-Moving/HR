@@ -81,6 +81,71 @@ r.delete("/employees", async (req, res) => {
 });
 
 /**
+ * DELETE /api/admin-cleanup/all-data
+ * Delete ALL data including employees, commissions, bonuses, hourly payouts
+ */
+r.delete("/all-data", async (req, res) => {
+    console.log('🗑️ [ADMIN] Deleting ALL DATA (nuclear option)...');
+    
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // Delete in correct order to avoid foreign key issues
+        const tables = [
+            'timecard_entries',
+            'timecards',
+            'time_entries',
+            'payroll_calculations',
+            'hourly_payout',
+            'agent_commission',
+            'employee_commission_monthly',
+            'bonuses',
+            'employees'
+        ];
+        
+        const deletedCounts = {};
+        
+        for (const table of tables) {
+            try {
+                const result = await client.query(`DELETE FROM ${table}`);
+                deletedCounts[table] = result.rowCount;
+                console.log(`🔥 [ADMIN] Deleted ${result.rowCount} records from ${table}`);
+            } catch (err) {
+                console.error(`⚠️ [ADMIN] Could not delete from ${table}:`, err.message);
+                deletedCounts[table] = `Error: ${err.message}`;
+            }
+        }
+        
+        // Reset sequences
+        await client.query('ALTER SEQUENCE employees_id_seq RESTART WITH 1');
+        await client.query('ALTER SEQUENCE timecards_id_seq RESTART WITH 1');
+        
+        await client.query('COMMIT');
+        
+        console.log('✅ [ADMIN] All data deleted successfully!');
+        
+        res.json({
+            success: true,
+            message: 'All data deleted successfully (nuclear cleanup)',
+            deleted_records: deletedCounts,
+            note: 'Database is completely clean. Upload timecards to start fresh.'
+        });
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ [ADMIN] Error in nuclear cleanup:', error);
+        res.status(500).json({ 
+            error: 'Failed to delete all data', 
+            details: error.message 
+        });
+    } finally {
+        client.release();
+    }
+});
+
+/**
  * POST /api/admin-cleanup/recreate-admin
  * Recreate or reset the admin user account
  */
@@ -145,4 +210,3 @@ r.post("/recreate-admin", async (req, res) => {
 });
 
 export default r;
-

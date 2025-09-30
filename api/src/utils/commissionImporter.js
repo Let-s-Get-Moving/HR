@@ -322,7 +322,7 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
         for (const name of parkingPassNames) {
             try {
                 // Find employee by normalized name and update their parking_pass_fee_note
-                const employeeId = await findOrCreateEmployee(name, queryFn);
+                const employeeId = await findEmployeeOnly(name, queryFn);
                 
                 await queryFn(`
                     UPDATE employee_commission_monthly
@@ -537,8 +537,16 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
                 continue;
             }
             
-            const employeeId = await findOrCreateEmployee(nameRaw, queryFn);
-            summary.addDebugLog(`✓ Hourly Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
+            let employeeId;
+            try {
+                employeeId = await findEmployeeOnly(nameRaw, queryFn);
+                summary.addDebugLog(`✓ Hourly Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
+            } catch (error) {
+                summary.addWarning(`Hourly: "${nameRaw}" not found - must appear in timecards before receiving hourly payouts`);
+                summary.addError('hourly', rowNum, 'Employee not found in database', { error: error.message });
+                summary.hourly.skipped++;
+                continue;
+            }
             
             // Extract date period data - ALWAYS include all periods to preserve structure
             const periods = [];
