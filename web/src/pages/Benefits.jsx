@@ -423,89 +423,27 @@ export default function Benefits() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-green-400">95%</div>
+          <div className="text-2xl font-bold text-green-400">0%</div>
           <div className="text-sm text-neutral-400">Enrollment Rate</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-blue-400">$2.4M</div>
+          <div className="text-2xl font-bold text-blue-400">$0</div>
           <div className="text-sm text-neutral-400">Total Benefits Cost</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-purple-400">$1.8M</div>
+          <div className="text-2xl font-bold text-purple-400">$0</div>
           <div className="text-sm text-neutral-400">Employer Contribution</div>
         </div>
         <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-indigo-400">$600K</div>
+          <div className="text-2xl font-bold text-indigo-400">$0</div>
           <div className="text-sm text-neutral-400">Employee Contribution</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card p-6">
-          <h4 className="text-lg font-semibold mb-4">Benefits Cost by Category</h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Health Insurance</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-neutral-700 rounded-full h-2">
-                  <div className="bg-green-400 h-2 rounded-full" style={{ width: '60%' }}></div>
-                </div>
-                <span className="text-sm text-neutral-400">60%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Retirement Plans</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-neutral-700 rounded-full h-2">
-                  <div className="bg-blue-400 h-2 rounded-full" style={{ width: '25%' }}></div>
-                </div>
-                <span className="text-sm text-neutral-400">25%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Other Benefits</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-neutral-700 rounded-full h-2">
-                  <div className="bg-purple-400 h-2 rounded-full" style={{ width: '15%' }}></div>
-                </div>
-                <span className="text-sm text-neutral-400">15%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card p-6">
-          <h4 className="text-lg font-semibold mb-4">Enrollment Trends</h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Q1 2024</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-neutral-700 rounded-full h-2">
-                  <div className="bg-indigo-400 h-2 rounded-full" style={{ width: '92%' }}></div>
-                </div>
-                <span className="text-sm text-neutral-400">92%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Q2 2024</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-neutral-700 rounded-full h-2">
-                  <div className="bg-green-400 h-2 rounded-full" style={{ width: '95%' }}></div>
-                </div>
-                <span className="text-sm text-neutral-400">95%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Q3 2024</span>
-              <div className="flex items-center space-x-2">
-                <div className="w-24 bg-neutral-700 rounded-full h-2">
-                  <div className="bg-blue-400 h-2 rounded-full" style={{ width: '93%' }}></div>
-                </div>
-                <span className="text-sm text-neutral-400">93%</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-8 text-center">
+        <div className="text-neutral-400 mb-2">📊</div>
+        <h4 className="text-lg font-semibold mb-2">No Benefits Data</h4>
+        <p className="text-sm text-neutral-500">Add benefits and enrollments to see analytics</p>
       </div>
     </div>
   );

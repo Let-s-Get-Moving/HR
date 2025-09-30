@@ -125,8 +125,8 @@ export default function Dashboard({ onNavigate }) {
   // Calculate additional metrics
   const totalPayroll = analytics?.payrollStats?.totalPayrollAmount ? parseFloat(analytics.payrollStats.totalPayrollAmount) : 0;
   const avgHoursPerEmployee = att?.avg_hours_week || 0;
-  const employeeSatisfaction = 87; // Mock data - would come from surveys
-  const trainingCompletion = 92; // Mock data - would come from training records
+  const employeeSatisfaction = 0; // No survey data yet
+  const trainingCompletion = 0; // No training data yet
 
   return (
     <div className="dashboard-container p-6 max-w-7xl mx-auto">
@@ -183,8 +183,8 @@ export default function Dashboard({ onNavigate }) {
             label="Total Active Employees" 
             value={analytics?.workforceOverview?.total_active_employees ?? wf?.total ?? "..."}
             icon="👥"
-            trend="+2.3%"
-            trendUp={true}
+            trend=""
+            trendUp={false}
             sub={`${wf?.breakdown?.full_time || 0} full-time, ${wf?.breakdown?.part_time || 0} part-time`}
           />
         </motion.div>
@@ -198,8 +198,8 @@ export default function Dashboard({ onNavigate }) {
             label="New Hires (This Month)" 
             value={analytics?.newHiresThisMonth ?? 0}
             icon="🎉"
-            trend="+15%"
-            trendUp={true}
+            trend=""
+            trendUp={false}
             sub={`${getTimeRangeLabel(selectedTimeRange)}`}
           />
         </motion.div>
@@ -213,8 +213,8 @@ export default function Dashboard({ onNavigate }) {
             label="Employee Satisfaction" 
             value={`${employeeSatisfaction}%`}
             icon="😊"
-            trend="+5%"
-            trendUp={true}
+            trend=""
+            trendUp={false}
             sub="Based on recent surveys"
           />
         </motion.div>
@@ -228,8 +228,8 @@ export default function Dashboard({ onNavigate }) {
             label="Training Completion" 
             value={`${trainingCompletion}%`}
             icon="🎓"
-            trend="+8%"
-            trendUp={true}
+            trend=""
+            trendUp={false}
             sub="Required courses completed"
           />
         </motion.div>

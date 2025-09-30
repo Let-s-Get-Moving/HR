@@ -104,11 +104,12 @@ INSERT INTO job_postings (title, department_id, location_id, employment_type, de
 ('Marketing Specialist', 3, 3, 'Full-time', 'Digital marketing role', '2+ years marketing experience', '$50,000 - $70,000', 'Open')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO payroll_submissions (period_name, notes, submission_date, status) VALUES
-('August 2025', 'Monthly payroll for August 2025', '2025-08-31 10:00:00', 'Processed'),
-('September 2025', 'Monthly payroll for September 2025', '2025-09-30 10:00:00', 'Processed'),
-('October 2025', 'Monthly payroll for October 2025', '2025-10-31 10:00:00', 'Processed')
-ON CONFLICT DO NOTHING;
+-- Sample payroll submissions removed - create via Payroll Import
+-- INSERT INTO payroll_submissions (period_name, notes, submission_date, status) VALUES
+-- ('August 2025', 'Monthly payroll for August 2025', '2025-08-31 10:00:00', 'Processed'),
+-- ('September 2025', 'Monthly payroll for September 2025', '2025-09-30 10:00:00', 'Processed'),
+-- ('October 2025', 'Monthly payroll for October 2025', '2025-10-31 10:00:00', 'Processed')
+-- ON CONFLICT DO NOTHING;
 
 -- 12. Update departments with descriptions
 UPDATE departments SET description = 'Software development and engineering' WHERE name = 'Engineering';

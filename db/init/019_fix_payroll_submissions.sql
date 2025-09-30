@@ -19,12 +19,12 @@ ADD COLUMN IF NOT EXISTS submission_id INTEGER REFERENCES payroll_submissions(id
 CREATE INDEX IF NOT EXISTS idx_payroll_submissions_date ON payroll_submissions(submission_date);
 CREATE INDEX IF NOT EXISTS idx_payroll_calculations_submission ON payroll_calculations(submission_id);
 
--- Insert sample data
-INSERT INTO payroll_submissions (period_name, notes, submission_date, status) VALUES
-('August 2025', 'Monthly payroll for August 2025', '2025-08-31 10:00:00', 'Processed'),
-('September 2025', 'Monthly payroll for September 2025', '2025-09-30 10:00:00', 'Processed'),
-('October 2025', 'Monthly payroll for October 2025', '2025-10-31 10:00:00', 'Processed')
-ON CONFLICT DO NOTHING;
+-- Sample payroll submissions removed - create via Payroll Import
+-- INSERT INTO payroll_submissions (period_name, notes, submission_date, status) VALUES
+-- ('August 2025', 'Monthly payroll for August 2025', '2025-08-31 10:00:00', 'Processed'),
+-- ('September 2025', 'Monthly payroll for September 2025', '2025-09-30 10:00:00', 'Processed'),
+-- ('October 2025', 'Monthly payroll for October 2025', '2025-10-31 10:00:00', 'Processed')
+-- ON CONFLICT DO NOTHING;
 
 -- Update existing payroll_calculations to link to a submission
 UPDATE payroll_calculations 
