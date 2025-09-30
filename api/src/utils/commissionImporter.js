@@ -77,7 +77,12 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
         throw new Error('Employee name cannot be empty');
     }
     
-    console.log(`[findOrCreateEmployee] "${nameRaw}" → normalized: "${nameKey}"`);
+    // Split name to preserve important suffixes (I, II, Jr, Sr, etc.)
+    const nameParts = nameRaw.trim().split(/\s+/);
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+    
+    console.log(`[findOrCreateEmployee] "${nameRaw}" → normalized: "${nameKey}" (first: "${firstName}", last: "${lastName}")`);
     
     // First try to find by normalized name
     // SQL applies same normalization: lowercase, trim, collapse spaces, remove special chars
@@ -101,12 +106,7 @@ async function findOrCreateEmployee(nameRaw, queryFn) {
     
     console.log(`[findOrCreateEmployee] ✗ NOT FOUND - creating new employee for "${nameRaw}"`);
     
-    
-    // If not found, create new employee record
-    // Split name into first/last (simple approach)
-    const nameParts = nameRaw.trim().split(/\s+/);
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // If not found, create new employee record (names already split above)
     
     const createResult = await queryFn(`
         INSERT INTO employees (
