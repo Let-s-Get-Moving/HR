@@ -11,8 +11,6 @@ export default function TimeTracking() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState("viewer");
-  const [currentUser, setCurrentUser] = useState(null);
   const [stats, setStats] = useState(null);
   
   // Upload modal
@@ -39,12 +37,6 @@ export default function TimeTracking() {
     try {
       console.log("🔄 [TimeTracking] Loading initial data...");
       setLoading(true);
-      
-      // Load user role
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      console.log("👤 [TimeTracking] User role:", user.role, "| User:", user.email);
-      setUserRole(user.role || "viewer");
-      setCurrentUser(user);
       
       // Load employees
       console.log("📋 [TimeTracking] Loading employees...");
@@ -86,16 +78,8 @@ export default function TimeTracking() {
         `/api/timecards?pay_period_start=${selectedPeriod.pay_period_start}&pay_period_end=${selectedPeriod.pay_period_end}`
       );
       console.log("✅ [TimeTracking] Loaded", data.length, "timecards from API");
-      
-      // Filter based on user role
-      let filteredData = data;
-      if (userRole?.toLowerCase() === "user" && currentUser) {
-        filteredData = data.filter(tc => tc.email === currentUser.email);
-        console.log("🔒 [TimeTracking] Filtered to", filteredData.length, "timecards for user:", currentUser.email);
-      }
-      
-      console.log("✅ [TimeTracking] Setting", filteredData.length, "timecards");
-      setTimecards(filteredData);
+      console.log("✅ [TimeTracking] Setting", data.length, "timecards");
+      setTimecards(data);
     } catch (error) {
       console.error("❌ [TimeTracking] Error loading timecards:", error);
     } finally {
@@ -265,19 +249,17 @@ export default function TimeTracking() {
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">Time Tracking</h1>
           <p className="text-secondary mt-1">Employee timecard management</p>
         </div>
-        {(userRole?.toLowerCase() === "admin" || userRole === "HR") && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowUploadModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            Upload Timecards
-          </motion.button>
-        )}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowUploadModal(true)}
+          className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Upload Timecards
+        </motion.button>
       </div>
 
       {/* View Tabs */}
@@ -408,7 +390,7 @@ export default function TimeTracking() {
       <AnimatePresence mode="wait">
         {view === "main" && <MainTableView timecards={displayedTimecards} onViewIndividual={viewIndividualTimecard} loading={loading} />}
         {view === "dashboard" && <DashboardView stats={stats} selectedPeriod={selectedPeriod} />}
-        {view === "individual" && <IndividualView timecard={selectedEmployee} userRole={userRole} onBack={() => setView("main")} />}
+        {view === "individual" && <IndividualView timecard={selectedEmployee} onBack={() => setView("main")} />}
       </AnimatePresence>
 
       {/* Upload Modal */}
@@ -642,7 +624,7 @@ function DashboardView({ stats, selectedPeriod }) {
 }
 
 // Individual Timecard View Component
-function IndividualView({ timecard, userRole, onBack }) {
+function IndividualView({ timecard, onBack }) {
   if (!timecard) {
     return <div className="text-center py-8 text-secondary">Loading timecard...</div>;
   }
