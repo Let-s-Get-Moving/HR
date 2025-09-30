@@ -459,6 +459,12 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             continue;
         }
         
+        // Skip any column that looks like a total/commission/summary column (but not the main TOTAL)
+        if (colLower.includes('total') || colLower.includes('commission')) {
+            summary.addDebugLog(`⏩ Skipping summary column: "${colName}"`);
+            continue;
+        }
+        
         // Check if this is a "cash paid" column
         if (colLower.includes('cash') && colLower.includes('paid')) {
             summary.addDebugLog(`💵 Skipping cash paid column: "${colName}"`);
@@ -515,16 +521,34 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             // Extract date period data - ALWAYS include all periods to preserve structure
             const periods = [];
             for (const period of datePeriods) {
-                const amount = parseMoney(row[period.label]);
-                const cashPaid = period.cashPaidColumn ? Boolean(row[period.cashPaidColumn]) : false;
+                // CRITICAL: Check BOTH date column AND cash paid column for amounts
+                // Sometimes the amount is in the date column, sometimes in cash paid column
+                let amount = parseMoney(row[period.label]);
+                let cashPaid = false;
                 
-                // CRITICAL: Include ALL periods, even if amount is 0 or null
-                // This preserves the column structure in the frontend
+                // If date column is empty/null, check the cash paid column for the amount
+                if ((amount === null || amount === 0) && period.cashPaidColumn) {
+                    const cashPaidAmount = parseMoney(row[period.cashPaidColumn]);
+                    if (cashPaidAmount !== null && cashPaidAmount !== 0) {
+                        amount = cashPaidAmount;
+                        cashPaid = true; // Mark as cash paid since we got amount from cash column
+                    }
+                } else if (amount !== null && amount !== 0 && period.cashPaidColumn) {
+                    // Amount is in date column, but check if cash paid column has a value/checkmark
+                    const cashPaidValue = row[period.cashPaidColumn];
+                    cashPaid = Boolean(cashPaidValue);
+                }
+                
+                // Include ALL periods, even if amount is 0, to preserve column structure
                 periods.push({
                     label: period.label,
-                    amount: amount || 0,  // Use 0 instead of null for display
+                    amount: amount || 0,
                     cash_paid: cashPaid
                 });
+                
+                if (rowNum <= 3) {
+                    summary.addDebugLog(`  Period "${period.label}": amount=${amount}, cash_paid=${cashPaid}, cashPaidCol="${period.cashPaidColumn}"`);
+                }
             }
             
             // Get total
