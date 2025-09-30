@@ -896,13 +896,23 @@ export default function BonusesCommissions() {
         <div className="bg-neutral-900 rounded-lg p-6">
           <h4 className="font-semibold mb-4 text-indigo-400">Hourly Payouts ({hourlyPayouts.length})</h4>
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {hourlyPayouts.length > 0 ? hourlyPayouts.map((payout, idx) => (
-              <div key={idx} className="bg-neutral-800 p-3 rounded text-sm">
-                <div className="font-medium">{payout.employee_name}</div>
-                <div className="text-neutral-400">Period: {payout.period_label}</div>
-                <div className="text-neutral-400">Amount: {payout.amount}</div>
-              </div>
-            )) : (
+            {hourlyPayouts.length > 0 ? hourlyPayouts.map((payout, idx) => {
+              const periods = payout.date_periods || [];
+              return (
+                <div key={idx} className="bg-neutral-800 p-3 rounded text-sm">
+                  <div className="font-medium">{payout.name_raw || payout.employee_name}</div>
+                  <div className="text-neutral-400">
+                    {periods.map((period, pIdx) => (
+                      <span key={pIdx} className="mr-3">
+                        {period.label}: ${(period.amount || 0).toLocaleString()}
+                        {period.cash_paid && <span className="text-green-400">✓</span>}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="text-blue-400">Total: {payout.total_for_month}</div>
+                </div>
+              );
+            }) : (
               <p className="text-neutral-500 text-sm">No hourly payout data</p>
             )}
           </div>
