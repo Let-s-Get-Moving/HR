@@ -41,7 +41,12 @@ A comprehensive **Human Resources Management System** built with modern web tech
 ### **💰 Payroll & Compensation**
 - Automated payroll calculations across 16 pay periods
 - Hourly rate tracking and compensation history
-- Bonus and commission management
+- **Smart Commission Management**
+  - Commissions only for existing employees (no auto-create)
+  - Upload timecards FIRST (creates employees), then commissions
+  - Employee Matching API compares timecard vs commission employees
+  - Warnings if commissions paid to employees with no timecard
+- Bonus management with approval workflow
 - Deduction tracking and vacation pay
 
 ### **📅 Leave Management**
@@ -81,6 +86,19 @@ A comprehensive **Human Resources Management System** built with modern web tech
   - Individual: Detailed employee timecard with entries
   - Dashboard: Stats, alerts, overtime summary
 - **Smart Filtering** - Pay period dropdown, employee search with autocomplete
+
+### **🔄 Employee Matching & Validation**
+- **Workforce Alignment System** - Ensures data consistency across timecards and commissions
+- **Automatic Comparison** - Compares employees in timecards vs commissions for each pay period
+- **Smart Notifications**
+  - ✅ Employees in both timecards and commissions (normal)
+  - ℹ️ Employees with timecards but no commissions (expected - not all roles earn commissions)
+  - ⚠️ Employees with commissions but no timecards (WARNING - shouldn't be paid if didn't work!)
+- **Workflow Enforcement**
+  1. Upload timecards first (creates all working employees)
+  2. Upload commissions second (only for existing employees)
+  3. System validates alignment and shows warnings
+- **API Endpoint**: `GET /api/employee-matching/compare/:periodStart/:periodEnd`
 
 ## 🏗️ **Architecture**
 
