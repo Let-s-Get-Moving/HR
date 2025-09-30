@@ -512,19 +512,19 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             const employeeId = await findOrCreateEmployee(nameRaw, queryFn);
             summary.addDebugLog(`✓ Hourly Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
             
-            // Extract date period data
+            // Extract date period data - ALWAYS include all periods to preserve structure
             const periods = [];
             for (const period of datePeriods) {
                 const amount = parseMoney(row[period.label]);
                 const cashPaid = period.cashPaidColumn ? Boolean(row[period.cashPaidColumn]) : false;
                 
-                if (amount !== null && amount !== 0) {
-                    periods.push({
-                        label: period.label,
-                        amount: amount,
-                        cash_paid: cashPaid
-                    });
-                }
+                // CRITICAL: Include ALL periods, even if amount is 0 or null
+                // This preserves the column structure in the frontend
+                periods.push({
+                    label: period.label,
+                    amount: amount || 0,  // Use 0 instead of null for display
+                    cash_paid: cashPaid
+                });
             }
             
             // Get total

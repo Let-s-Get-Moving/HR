@@ -25,11 +25,16 @@ export function getWorksheetData(workbook, sheetName) {
     const sheet = workbook.Sheets[sheetName];
     if (!sheet) return [];
     
+    // Get the sheet range to ensure we capture all columns including empty ones
+    const range = XLSX.utils.decode_range(sheet['!ref']);
+    
     return XLSX.utils.sheet_to_json(sheet, {
-        header: 1,
-        defval: null,
-        raw: false,
-        dateNF: 'yyyy-mm-dd'
+        header: 1,           // Return array of arrays
+        defval: null,        // Empty cells return null (not undefined)
+        raw: false,          // Format values as strings
+        dateNF: 'yyyy-mm-dd',
+        range: range,        // CRITICAL: Include full range to preserve empty cells
+        blankrows: true      // Include blank rows (don't skip them)
     });
 }
 
