@@ -106,6 +106,7 @@ export default function BonusesCommissions() {
   const [analyticsMonthly, setAnalyticsMonthly] = useState([]);
   const [analyticsAgents, setAnalyticsAgents] = useState([]);
   const [analyticsHourly, setAnalyticsHourly] = useState([]);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const tabs = [
     { id: "import", name: "Excel Import", icon: "📥" },
@@ -121,6 +122,18 @@ export default function BonusesCommissions() {
       loadAnalyticsData();
     }
   }, [selectedPeriod]);
+
+  // Close calendar when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showCalendar && !event.target.closest('.calendar-dropdown')) {
+        setShowCalendar(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCalendar]);
 
   const loadAvailablePeriods = async () => {
     try {
@@ -1023,66 +1036,116 @@ export default function BonusesCommissions() {
     <div className="space-y-6">
         {/* Period Selector */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Commission Analytics</h3>
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Commission Analytics</h3>
+            <button
+              onClick={loadAnalyticsData}
+              className="bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded text-sm transition-colors"
+            >
+              🔄 Refresh
+            </button>
+          </div>
           
-          {/* Compact calendar-style month selector */}
-          <div className="bg-neutral-800 p-3 rounded-lg border border-neutral-700">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-xs text-neutral-400">Select Period</span>
-              <button
-                onClick={loadAnalyticsData}
-                className="bg-indigo-600 hover:bg-indigo-700 px-2 py-1 rounded text-xs transition-colors"
-              >
-                🔄
-              </button>
-            </div>
-            
-            {/* Group periods by year */}
-            {(() => {
-              const periodsByYear = availablePeriods.reduce((acc, period) => {
-                const year = new Date(period.period_month).getFullYear();
-                if (!acc[year]) acc[year] = [];
-                acc[year].push(period);
-                return acc;
-              }, {});
-              
-              const years = Object.keys(periodsByYear).sort((a, b) => b - a); // Newest first
-              
-              return years.map((year) => (
-                <div key={year} className="mb-3 last:mb-0">
-                  <div className="text-xs font-semibold text-neutral-500 mb-2">{year}</div>
-                  <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-1.5">
-                    {periodsByYear[year].map((period) => {
-                      const isSelected = selectedPeriod === period.period_month;
-                      const date = new Date(period.period_month);
-                      const monthName = date.toLocaleString('default', { month: 'short' });
-                      
-                      return (
-                        <button
-                          key={period.period_month}
-                          onClick={() => setSelectedPeriod(period.period_month)}
-                          className={`
-                            px-2 py-1.5 rounded border transition-all text-center
-                            ${isSelected 
-                              ? 'border-indigo-500 bg-indigo-600 shadow-md' 
-                              : 'border-neutral-700 bg-neutral-900 hover:border-indigo-400'
-                            }
-                          `}
-                          title={`${monthName} ${year} - ${period.employee_count} employees`}
-                        >
-                          <div className={`text-xs font-semibold ${isSelected ? 'text-white' : 'text-neutral-300'}`}>
-                            {monthName}
-                          </div>
-                          <div className={`text-xs ${isSelected ? 'text-indigo-200' : 'text-neutral-600'}`}>
-                            {period.employee_count}
-                          </div>
-                        </button>
-                      );
-                    })}
+          {/* Collapsible calendar dropdown */}
+          <div className="relative calendar-dropdown">
+            {/* Selected period display (collapsed state) */}
+            <button
+              onClick={() => setShowCalendar(!showCalendar)}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 flex justify-between items-center hover:border-indigo-500 transition-colors"
+            >
+              <div className="flex items-center space-x-3">
+                <span className="text-2xl">📅</span>
+                <div className="text-left">
+                  <div className="text-sm text-neutral-400">Selected Period</div>
+                  <div className="text-lg font-semibold">
+                    {(() => {
+                      const selectedPeriodData = availablePeriods.find(p => p.period_month === selectedPeriod);
+                      if (!selectedPeriodData) return 'Select a period';
+                      const date = new Date(selectedPeriod);
+                      const monthName = date.toLocaleString('default', { month: 'long' });
+                      const year = date.getFullYear();
+                      return `${monthName} ${year}`;
+                    })()}
                   </div>
+                  {(() => {
+                    const selectedPeriodData = availablePeriods.find(p => p.period_month === selectedPeriod);
+                    if (selectedPeriodData) {
+                      return (
+                        <div className="text-xs text-neutral-500">
+                          {selectedPeriodData.employee_count} employees
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
-              ));
-            })()}
+              </div>
+              <svg
+                className={`w-5 h-5 text-neutral-400 transition-transform ${showCalendar ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {/* Expanded calendar (visible when showCalendar is true) */}
+            {showCalendar && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-800 border border-neutral-700 rounded-lg p-4 shadow-2xl z-50">
+                <div className="text-xs text-neutral-400 mb-3">Select a month</div>
+                
+                {/* Group periods by year */}
+                {(() => {
+                  const periodsByYear = availablePeriods.reduce((acc, period) => {
+                    const date = new Date(period.period_month);
+                    const year = date.getFullYear();
+                    if (!acc[year]) acc[year] = [];
+                    acc[year].push(period);
+                    return acc;
+                  }, {});
+                  
+                  const years = Object.keys(periodsByYear).sort((a, b) => b - a); // Newest first
+                  
+                  return years.map((year) => (
+                    <div key={year} className="mb-4 last:mb-0">
+                      <div className="text-sm font-semibold text-neutral-300 mb-2">{year}</div>
+                      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                        {periodsByYear[year].map((period) => {
+                          const isSelected = selectedPeriod === period.period_month;
+                          const date = new Date(period.period_month);
+                          const monthName = date.toLocaleString('default', { month: 'short' });
+                          
+                          return (
+                            <button
+                              key={period.period_month}
+                              onClick={() => {
+                                setSelectedPeriod(period.period_month);
+                                setShowCalendar(false);
+                              }}
+                              className={`
+                                px-3 py-2 rounded border transition-all text-center
+                                ${isSelected 
+                                  ? 'border-indigo-500 bg-indigo-600 shadow-md' 
+                                  : 'border-neutral-700 bg-neutral-900 hover:border-indigo-400 hover:bg-neutral-800'
+                                }
+                              `}
+                              title={`${monthName} ${year} - ${period.employee_count} employees`}
+                            >
+                              <div className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-neutral-300'}`}>
+                                {monthName}
+                              </div>
+                              <div className={`text-xs ${isSelected ? 'text-indigo-200' : 'text-neutral-500'}`}>
+                                {period.employee_count}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            )}
           </div>
         </div>
 

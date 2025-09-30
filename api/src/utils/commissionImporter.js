@@ -685,7 +685,8 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
                 summary.addDebugLog(`Period parsing failed, using default: ${defaultPeriod}`);
                 summary.period_month = defaultPeriod;
             } else {
-                summary.period_month = periodMonth.toISOString().split('T')[0]; // YYYY-MM-DD format
+                // parsePeriodFromSheetName now returns a string in 'YYYY-MM-DD' format
+                summary.period_month = periodMonth;
                 summary.addDebugLog(`Using parsed period: ${summary.period_month}`);
             }
         }
