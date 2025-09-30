@@ -97,89 +97,17 @@ export default function Recruiting() {
         setInterviews([]);
       }
       
-      // Mock data for now - in production this would come from API
-      const mockJobPostings = [
-        {
-          id: 1,
-          title: "Senior Software Engineer",
-          department: "Engineering",
-          location: "Toronto",
-          type: "Full-time",
-          salary_range: "$80,000 - $120,000",
-          status: "Open",
-          applications: 12,
-          created_at: "2025-01-15"
-        },
-        {
-          id: 2,
-          title: "HR Coordinator",
-          department: "Human Resources",
-          location: "Vancouver",
-          type: "Full-time",
-          salary_range: "$50,000 - $70,000",
-          status: "Open",
-          applications: 8,
-          created_at: "2025-01-10"
-        },
-        {
-          id: 3,
-          title: "Logistics Manager",
-          department: "Operations",
-          location: "Montreal",
-          type: "Full-time",
-          salary_range: "$70,000 - $90,000",
-          status: "Closed",
-          applications: 15,
-          created_at: "2025-01-05"
-        }
-      ];
-
-      const mockCandidates = [
-        {
-          id: 1,
-          name: "Sarah Johnson",
-          email: "sarah.johnson@email.com",
-          phone: "+1 (416) 555-0123",
-          position: "Senior Software Engineer",
-          status: "Interview Scheduled",
-          experience: "5 years",
-          source: "LinkedIn",
-          applied_date: "2025-01-20"
-        },
-        {
-          id: 2,
-          name: "Michael Chen",
-          email: "michael.chen@email.com",
-          phone: "+1 (604) 555-0456",
-          position: "HR Coordinator",
-          status: "Resume Review",
-          experience: "3 years",
-          source: "Indeed",
-          applied_date: "2025-01-18"
-        }
-      ];
-
-      const mockAnalytics = {
-        total_postings: 3,
-        open_positions: 2,
-        total_applications: 35,
-        avg_time_to_fill: 25,
-        source_breakdown: {
-          "LinkedIn": 40,
-          "Indeed": 35,
-          "Company Website": 15,
-          "Referrals": 10
-        },
-        department_breakdown: {
-          "Engineering": 45,
-          "Human Resources": 30,
-          "Operations": 25
-        }
-      };
-
-      setJobPostings(mockJobPostings);
-      setCandidates(mockCandidates);
-      setAnalytics(mockAnalytics);
+      // Initialize with empty data - populate from API or manual entry
+      setJobPostings([]);
+      setCandidates([]);
+      setAnalytics({
+        total_postings: 0,
+        open_positions: 0,
+        total_applications: 0,
+        avg_time_to_fill: 0,
+        source_breakdown: {},
+        department_breakdown: {}
+      });
     } catch (error) {
       console.error("Error loading recruiting data:", error);
     } finally {
