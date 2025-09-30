@@ -102,7 +102,7 @@ export default function BonusesCommissions() {
   // Analytics data
   const [analyticsData, setAnalyticsData] = useState(null);
   const [availablePeriods, setAvailablePeriods] = useState([]);
-  const [selectedPeriod, setSelectedPeriod] = useState('2025-07-01');
+  const [selectedPeriod, setSelectedPeriod] = useState('');
   const [analyticsMonthly, setAnalyticsMonthly] = useState([]);
   const [analyticsAgents, setAnalyticsAgents] = useState([]);
   const [analyticsHourly, setAnalyticsHourly] = useState([]);
@@ -140,9 +140,24 @@ export default function BonusesCommissions() {
       const periods = await API('/api/commissions/periods');
       setAvailablePeriods(periods);
       
-      // Set first available period as selected
+      // Set closest period to today as selected
       if (periods.length > 0 && !selectedPeriod) {
-        setSelectedPeriod(periods[0].period_month);
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-01`;
+        
+        // Find period closest to today
+        let closestPeriod = periods[0];
+        let minDiff = Math.abs(new Date(todayStr) - new Date(periods[0].period_month));
+        
+        for (const period of periods) {
+          const diff = Math.abs(new Date(todayStr) - new Date(period.period_month));
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestPeriod = period;
+          }
+        }
+        
+        setSelectedPeriod(closestPeriod.period_month);
       }
     } catch (error) {
       console.error("Error loading periods:", error);
