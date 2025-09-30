@@ -212,7 +212,7 @@ export function detectAllBlocks(data) {
     if (mainResult) {
         const endRow = findDataEndRowFlexible(data, mainResult.startRow, mainResult.nameColIdx);
         mainBlock = {
-            type: 'main',
+        type: 'main',
             headerRow: mainResult.headerRow,
             startRow: mainResult.startRow,
             endRow: endRow,
@@ -228,7 +228,7 @@ export function detectAllBlocks(data) {
     if (agentsResult) {
         const endRow = findDataEndRowFlexible(data, agentsResult.startRow, agentsResult.nameColIdx);
         agentsUSBlock = {
-            type: 'agents_us',
+        type: 'agents_us',
             headerRow: agentsResult.headerRow,
             startRow: agentsResult.startRow,
             endRow: endRow,

@@ -141,6 +141,9 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
     summary.addDebugLog(`Starting to process ${blockData.length} rows in main commission data`);
     summary.addDebugLog(`Using period: ${periodMonth}`);
     
+    // Track parking pass fees - collect names who need to be marked
+    const parkingPassNames = new Set();
+    
     for (let i = 0; i < blockData.length; i++) {
         const row = blockData[i];
         const rowNum = i + 1;
@@ -232,10 +235,17 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 amount_paid: parseMoney(getColumnValue(row, 'Amount paid (date included in comment)', ' Amount paid (date included in comment) '), debug ? `${debug}_amount_paid` : null),
                 remaining_amount: parseMoney(getColumnValue(row, 'Remaining amount', ' Remaining amount '), debug ? `${debug}_remaining` : null),
                 corporate_open_jobs_note: cleanCellValue(getColumnValue(row, 'CORPORATE LOCATIONS JOBS STILL OPEN', ' CORPORATE LOCATIONS JOBS STILL OPEN …')),
-                parking_pass_fee_note: cleanCellValue(getColumnValue(row, 'Paid parking pass fee to be deducted from', ' Paid parking pass fee to be deducted from ')),
+                parking_pass_fee_note: null, // Will be set in second pass if this person owes parking fees
                 source_file: filename,
                 sheet_name: sheetName
             };
+            
+            // If this row mentions someone who owes parking fees, collect their name
+            const parkingPassName = cleanCellValue(getColumnValue(row, 'Paid parking pass fee to be deducted from', ' Paid parking pass fee to be deducted from '));
+            if (parkingPassName && parkingPassName.trim()) {
+                parkingPassNames.add(parkingPassName.trim());
+                summary.addDebugLog(`🅿️ Parking fee: ${parkingPassName} owes parking pass fee`);
+            }
             
             // Debug log for first few rows
             if (rowNum <= 3) {
@@ -328,6 +338,29 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             }
             summary.addError('main', rowNum, 'Processing error', { error: error.message });
             summary.main.skipped++;
+        }
+    }
+    
+    // Second pass: Mark employees who owe parking pass fees
+    if (parkingPassNames.size > 0) {
+        summary.addDebugLog(`🅿️ Processing ${parkingPassNames.size} parking pass fee assignments...`);
+        
+        for (const name of parkingPassNames) {
+            try {
+                // Find employee by normalized name and update their parking_pass_fee_note
+                const employeeId = await findOrCreateEmployee(name, queryFn);
+                
+                await queryFn(`
+                    UPDATE employee_commission_monthly
+                    SET parking_pass_fee_note = $1,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE employee_id = $2 AND period_month = $3
+                `, [name, employeeId, periodMonth]);
+                
+                summary.addDebugLog(`🅿️ Marked parking fee for: ${name} (Employee ID ${employeeId})`);
+            } catch (error) {
+                summary.addDebugLog(`⚠️ Failed to mark parking fee for: ${name} - ${error.message}`);
+            }
         }
     }
 }
