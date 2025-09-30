@@ -23,18 +23,18 @@ WHERE hourly_rate = 0;
 CREATE INDEX IF NOT EXISTS idx_employees_hourly_rate ON employees(hourly_rate);
 CREATE INDEX IF NOT EXISTS idx_employees_employment_status ON employees(employment_status);
 
--- Add sample data for testing if no employees exist
-INSERT INTO employees (first_name, last_name, email, phone, hire_date, employment_type, department_id, role_title, hourly_rate, status)
-SELECT 'John', 'Doe', 'john.doe@company.com', '555-0101', '2024-01-15', 'Full-time', 1, 'Software Developer', 25.00, 'Active'
-WHERE NOT EXISTS (SELECT 1 FROM employees LIMIT 1);
+-- Seed employees removed - import from Excel instead
+-- INSERT INTO employees (first_name, last_name, email, phone, hire_date, employment_type, department_id, role_title, hourly_rate, status)
+-- SELECT 'John', 'Doe', 'john.doe@company.com', '555-0101', '2024-01-15', 'Full-time', 1, 'Software Developer', 25.00, 'Active'
+-- WHERE NOT EXISTS (SELECT 1 FROM employees LIMIT 1);
 
-INSERT INTO employees (first_name, last_name, email, phone, hire_date, employment_type, department_id, role_title, hourly_rate, status)
-SELECT 'Jane', 'Smith', 'jane.smith@company.com', '555-0102', '2024-02-01', 'Full-time', 2, 'HR Manager', 35.00, 'Active'
-WHERE NOT EXISTS (SELECT 1 FROM employees WHERE email = 'jane.smith@company.com');
+-- INSERT INTO employees (first_name, last_name, email, phone, hire_date, employment_type, department_id, role_title, hourly_rate, status)
+-- SELECT 'Jane', 'Smith', 'jane.smith@company.com', '555-0102', '2024-02-01', 'Full-time', 2, 'HR Manager', 35.00, 'Active'
+-- WHERE NOT EXISTS (SELECT 1 FROM employees WHERE email = 'jane.smith@company.com');
 
-INSERT INTO employees (first_name, last_name, email, phone, hire_date, employment_type, department_id, role_title, hourly_rate, status)
-SELECT 'Mike', 'Johnson', 'mike.johnson@company.com', '555-0103', '2024-01-20', 'Full-time', 3, 'Operations Coordinator', 22.00, 'Active'
-WHERE NOT EXISTS (SELECT 1 FROM employees WHERE email = 'mike.johnson@company.com');
+-- INSERT INTO employees (first_name, last_name, email, phone, hire_date, employment_type, department_id, role_title, hourly_rate, status)
+-- SELECT 'Mike', 'Johnson', 'mike.johnson@company.com', '555-0103', '2024-01-20', 'Full-time', 3, 'Operations Coordinator', 22.00, 'Active'
+-- WHERE NOT EXISTS (SELECT 1 FROM employees WHERE email = 'mike.johnson@company.com');
 
 -- Ensure we have departments
 INSERT INTO departments (name) VALUES 

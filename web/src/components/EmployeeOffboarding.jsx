@@ -77,6 +77,37 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
     }));
   };
 
+  const validateStep = (step) => {
+    switch (step) {
+      case 1:
+        // Required fields for step 1
+        if (!formData.termination_date) {
+          alert('Please select a termination date');
+          return false;
+        }
+        if (!formData.termination_type) {
+          alert('Please select a termination type');
+          return false;
+        }
+        if (!formData.termination_reason || formData.termination_reason.trim() === '') {
+          alert('Please provide a termination reason');
+          return false;
+        }
+        if (!formData.initiated_by) {
+          alert('Please select who initiated the termination');
+          return false;
+        }
+        return true;
+      case 2:
+      case 3:
+      case 4:
+        // Steps 2-4 have no required fields
+        return true;
+      default:
+        return true;
+    }
+  };
+
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -713,7 +744,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             
             {currentStep < 5 ? (
               <button
-                onClick={() => setCurrentStep(currentStep + 1)}
+                onClick={() => {
+                  if (validateStep(currentStep)) {
+                    setCurrentStep(currentStep + 1);
+                  }
+                }}
                 className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-medium transition-colors"
               >
                 Next →
