@@ -264,7 +264,7 @@ export default function TimeTracking() {
 
       {/* View Tabs */}
       <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700">
-        <button
+                <button
           onClick={() => setView("main")}
           className={`px-4 py-3 font-medium transition-colors border-b-2 ${
             view === "main"
@@ -315,7 +315,7 @@ export default function TimeTracking() {
 
       {/* Filters */}
       {view !== "individual" && (
-        <div className="card p-6 mb-6">
+      <div className="card p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Pay Period Filter */}
             <div>
@@ -340,28 +340,28 @@ export default function TimeTracking() {
             {/* Employee Search */}
             <div>
               <label className="block text-sm font-medium mb-2 text-primary">Search Employee</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <input
-                  type="text"
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
                   placeholder="Search by name or email..."
                   value={employeeSearch}
                   onChange={(e) => setEmployeeSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
                 />
                 {employeeSearch && (
-                  <button
+              <button
                     onClick={() => setEmployeeSearch("")}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-secondary hover:text-primary"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
                 )}
               </div>
               {/* Autocomplete dropdown */}
@@ -611,7 +611,7 @@ function DashboardView({ stats, selectedPeriod }) {
                       'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400'
                     }`}>
                       {emp.status}
-                    </span>
+                        </span>
                   </td>
                 </tr>
               ))}
@@ -644,8 +644,8 @@ function IndividualView({ timecard, onBack }) {
     const totalHours = entries.reduce((sum, e) => sum + parseFloat(e.hours_worked || 0), 0);
     return { date, entries, totalHours };
   }).sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  return (
+                
+                return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -653,7 +653,7 @@ function IndividualView({ timecard, onBack }) {
       className="space-y-6"
     >
       {/* Back Button */}
-      <button
+                  <button
         onClick={onBack}
         className="flex items-center gap-2 text-secondary hover:text-primary transition-colors"
       >
@@ -661,7 +661,7 @@ function IndividualView({ timecard, onBack }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Back to All Timecards
-      </button>
+                  </button>
 
       {/* Employee Info Card */}
       <div className="card p-6">
@@ -679,7 +679,7 @@ function IndividualView({ timecard, onBack }) {
             {parseFloat(timecard.overtime_hours || 0) > 0 && (
               <div className="mt-2 text-amber-600 dark:text-amber-400 font-medium">
                 {parseFloat(timecard.overtime_hours).toFixed(2)} OT
-              </div>
+            </div>
             )}
           </div>
         </div>
@@ -756,25 +756,25 @@ function IndividualView({ timecard, onBack }) {
 function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriodEnd, onFileChange, onUpload, onClose, setManualPeriodStart, setManualPeriodEnd }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
         className="card w-full max-w-2xl"
-      >
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
+          >
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-primary">Upload Timecard Excel</h2>
-            <button
+                <button
               onClick={onClose}
               className="text-secondary hover:text-primary transition-colors"
-            >
+                >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
-          </div>
+                </button>
+              </div>
 
-          <div className="space-y-4">
+              <div className="space-y-4">
             {/* File Input */}
             <div>
               <label className="block text-sm font-medium mb-2 text-primary">Excel File</label>
@@ -800,15 +800,15 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                   className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
                 />
               </div>
-              <div>
+                <div>
                 <label className="block text-sm font-medium mb-2 text-primary">Period End (Optional)</label>
                 <input
                   type="date"
                   value={manualPeriodEnd}
                   onChange={(e) => setManualPeriodEnd(e.target.value)}
                   className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                />
-              </div>
+                  />
+                </div>
             </div>
 
             {/* Status Message */}
@@ -831,27 +831,27 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                 <li>Multiple clock-in/out pairs per day supported</li>
                 <li>System will automatically match employees by name</li>
               </ul>
-            </div>
+                </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 pt-4">
-              <button
+                  <button
                 onClick={onClose}
                 className="px-6 py-2 text-secondary hover:text-primary transition-colors"
-              >
-                Cancel
-              </button>
-              <button
+                  >
+                    Cancel
+                  </button>
+                  <button
                 onClick={onUpload}
                 disabled={!uploadFile || uploadStatus.status === 'processing'}
                 className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-medium transition-colors"
-              >
+                  >
                 {uploadStatus.status === 'processing' ? 'Processing...' : 'Upload'}
-              </button>
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </motion.div>
+          </motion.div>
     </div>
   );
 }

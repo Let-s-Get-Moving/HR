@@ -1,19 +1,11 @@
 /**
- * SMART Timecard Import Service
+ * TRULY SMART Timecard Import Service
  * 
- * Intelligently detects and parses various timecard Excel formats:
- * - Auto-detects pay periods, employee names, and data sections
- * - Flexible column detection (works with any column order)
- * - Handles multiple time formats and date formats
- * - Works with repeating employee sections
+ * Zero assumptions about column positions - scans entire rows to find data
  */
 
 import { q, pool } from '../db.js';
-import {
-    loadExcelWorkbook,
-    getWorksheetData,
-    cleanCellValue
-} from './excelParser.js';
+import { loadExcelWorkbook, getWorksheetData, cleanCellValue } from './excelParser.js';
 
 class ImportSummary {
     constructor(filename, sheetName) {
@@ -44,276 +36,102 @@ class ImportSummary {
     }
 }
 
-/**
- * SMART time parser - handles multiple formats
- */
+// SMART parsers
 function parseTime(timeStr) {
     if (!timeStr) return null;
-    
     const cleaned = String(timeStr).trim().toUpperCase();
-    if (!cleaned || cleaned === '-' || cleaned === 'N/A' || cleaned === '') return null;
+    if (!cleaned || cleaned === '-' || cleaned === '(EMPTY)') return null;
     
-    // Format: "HH:MM AM/PM" or "HH:MM:SS AM/PM"
-    let match = cleaned.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)/i);
+    const match = cleaned.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
     if (match) {
         let hours = parseInt(match[1]);
         const minutes = parseInt(match[2]);
-        const period = match[4].toUpperCase();
-        
+        const period = match[3].toUpperCase();
         if (period === 'PM' && hours !== 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
-        
         return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
     }
-    
-    // Format: "HH:MM" or "HH:MM:SS" (24-hour)
-    match = cleaned.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
-    if (match) {
-        const hours = parseInt(match[1]);
-        const minutes = parseInt(match[2]);
-        
-        if (hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
-        }
-    }
-    
     return null;
 }
 
-/**
- * SMART date parser - handles multiple formats
- */
 function parseDate(dateStr) {
     if (!dateStr) return null;
-    
     const cleaned = String(dateStr).trim();
-    if (!cleaned || cleaned === '-') return null;
+    if (!cleaned || cleaned === '-' || cleaned === '(empty)') return null;
     
-    // Format: YYYY-MM-DD
-    if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
-        return cleaned;
-    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
     
-    // Format: MM/DD/YYYY or M/D/YYYY
-    let match = cleaned.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (match) {
-        const month = String(match[1]).padStart(2, '0');
-        const day = String(match[2]).padStart(2, '0');
-        return `${match[3]}-${month}-${day}`;
-    }
-    
-    // Format: DD/MM/YYYY
-    match = cleaned.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (match && parseInt(match[1]) > 12) { // Day > 12 means it's DD/MM
-        const day = String(match[1]).padStart(2, '0');
-        const month = String(match[2]).padStart(2, '0');
-        return `${match[3]}-${month}-${day}`;
-    }
-    
-    // Try JavaScript Date parsing
     const date = new Date(cleaned);
-    if (!isNaN(date.getTime())) {
+    if (!isNaN(date.getTime()) && date.getFullYear() >= 2000 && date.getFullYear() <= 2100) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        
-        // Sanity check
-        if (year >= 2000 && year <= 2100) {
-            return `${year}-${month}-${day}`;
-        }
+        return `${year}-${month}-${day}`;
     }
-    
     return null;
 }
 
-/**
- * SMART hours parser
- */
 function parseHours(hoursStr) {
     if (!hoursStr) return null;
-    
     const cleaned = String(hoursStr).trim();
-    if (!cleaned || cleaned === '-') return null;
+    if (!cleaned || cleaned === '-' || cleaned === '(empty)') return null;
     
-    // Format: HH:MM
     const match = cleaned.match(/^(\d{1,2}):(\d{2})$/);
     if (match) {
-        const hours = parseInt(match[1]);
-        const minutes = parseInt(match[2]);
-        return parseFloat((hours + (minutes / 60)).toFixed(2));
+        return parseFloat((parseInt(match[1]) + parseInt(match[2]) / 60).toFixed(2));
     }
     
-    // Already decimal
     const decimal = parseFloat(cleaned);
     if (!isNaN(decimal) && decimal >= 0 && decimal <= 24) {
         return parseFloat(decimal.toFixed(2));
     }
-    
     return null;
 }
 
-/**
- * SMART period parser - extracts dates from any format
- */
 function parsePeriod(str) {
     if (!str) return null;
-    
     const cleaned = String(str).trim();
-    
-    // Find all dates in the string (YYYY-MM-DD format)
     const dates = cleaned.match(/\d{4}-\d{2}-\d{2}/g);
     if (dates && dates.length >= 2) {
         return { start: dates[0], end: dates[1] };
     }
-    
-    // Try to find dates in other formats
-    const allMatches = cleaned.match(/\d{1,2}[-/]\d{1,2}[-/]\d{4}/g);
-    if (allMatches && allMatches.length >= 2) {
-        const start = parseDate(allMatches[0]);
-        const end = parseDate(allMatches[1]);
-        if (start && end) {
-            return { start, end };
-        }
-    }
-    
     return null;
 }
 
-/**
- * SMART column detector - identifies what each column contains
- */
-function detectColumns(headerRow) {
-    const columns = {
-        dayOfWeek: -1,
-        date: -1,
-        clockIn: -1,
-        clockOut: -1,
-        workTime: -1,
-        dailyTotal: -1,
-        notes: -1
-    };
-    
-    for (let i = 0; i < headerRow.length; i++) {
-        const cell = String(headerRow[i] || '').toLowerCase().trim();
-        
-        if (cell.includes('date') && columns.date === -1) {
-            columns.date = i;
-        } else if ((cell.includes('in') || cell === 'in') && !cell.includes('out') && columns.clockIn === -1) {
-            columns.clockIn = i;
-        } else if ((cell.includes('out') || cell === 'out') && columns.clockOut === -1) {
-            columns.clockOut = i;
-        } else if ((cell.includes('work') && cell.includes('time')) || cell === 'work time') {
-            columns.workTime = i;
-        } else if ((cell.includes('daily') && cell.includes('total')) || cell.includes('total')) {
-            columns.dailyTotal = i;
-        } else if (cell.includes('note') || cell.includes('comment')) {
-            columns.notes = i;
-        }
-    }
-    
-    // Common pattern: Day of week is column A, Date is column B
-    // Try to detect this pattern
-    if (columns.date === -1) {
-        // Look for a column that might have dates
-        for (let i = 0; i < Math.min(headerRow.length, 5); i++) {
-            const cell = String(headerRow[i] || '').toLowerCase().trim();
-            if (!cell && i === 0) {
-                // Column A might be empty in header (contains day of week in data)
-                columns.dayOfWeek = 0;
-            }
-        }
-        // If column A seems to be day of week, then date is likely column B
-        if (columns.dayOfWeek === 0) {
-            columns.date = 1;
-        }
-    }
-    
-    return columns;
-}
-
-/**
- * SMART data row detector - identifies if a row contains actual data
- */
-function isDataRow(row, columns) {
-    if (!row || row.length === 0) return false;
-    
-    // Check if first column looks like day of week (MON, TUE, etc.)
-    const firstCell = String(row[0] || '').trim().toUpperCase();
-    const dayOfWeekPattern = /^(MON|TUE|WED|THU|FRI|SAT|SUN)$/;
-    if (dayOfWeekPattern.test(firstCell)) {
-        return true;
-    }
-    
-    // Check if row has a date in the detected date column
-    if (columns.date >= 0 && columns.date < row.length) {
-        const date = parseDate(row[columns.date]);
-        if (date) return true;
-    }
-    
-    // Fallback: check first few columns for date
-    for (let i = 0; i < Math.min(row.length, 5); i++) {
-        if (parseDate(row[i])) return true;
-    }
-    
-    return false;
-}
-
-/**
- * Find employee by name
- */
 async function findEmployeeByName(name, client) {
     if (!name) return null;
-    
     const nameLower = name.trim().toLowerCase();
     
-    // Exact match
     let result = await client.query(
-        `SELECT id, first_name, last_name FROM employees 
-         WHERE LOWER(CONCAT(first_name, ' ', last_name)) = $1
-         LIMIT 1`,
+        `SELECT id FROM employees WHERE LOWER(CONCAT(first_name, ' ', last_name)) = $1 LIMIT 1`,
         [nameLower]
     );
-    
     if (result.rows.length > 0) return result.rows[0].id;
     
-    // Fuzzy match (contains)
     result = await client.query(
-        `SELECT id, first_name, last_name FROM employees 
-         WHERE LOWER(CONCAT(first_name, ' ', last_name)) LIKE $1
-         LIMIT 1`,
+        `SELECT id FROM employees WHERE LOWER(CONCAT(first_name, ' ', last_name)) LIKE $1 LIMIT 1`,
         [`%${nameLower}%`]
     );
-    
-    if (result.rows.length > 0) return result.rows[0].id;
-    
-    // Try first name only
-    result = await client.query(
-        `SELECT id, first_name, last_name FROM employees 
-         WHERE LOWER(first_name) = $1
-         LIMIT 1`,
-        [nameLower.split(' ')[0]]
-    );
-    
     if (result.rows.length > 0) return result.rows[0].id;
     
     return null;
 }
 
 /**
- * SMART Excel parser - auto-detects everything
+ * TRULY SMART parser - finds data anywhere in the row
  */
 function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
     const timecards = [];
     
-    summary.addDebugLog(`🔍 Smart parsing ${data.length} rows...`);
-    summary.addDebugLog(`📋 First 15 rows preview:`);
-    for (let i = 0; i < Math.min(15, data.length); i++) {
-        const row = data[i];
-        const preview = row ? row.slice(0, 7).map(c => {
-            const str = String(c || '').substring(0, 20);
-            return str || '(empty)';
-        }).join(' | ') : '(null row)';
-        summary.addDebugLog(`   Row ${i + 1}: ${preview}`);
+    summary.addDebugLog(`🧠 SMART parsing ${data.length} rows (zero assumptions mode)`);
+    summary.addDebugLog(`📋 First 20 rows:`);
+    for (let i = 0; i < Math.min(20, data.length); i++) {
+        const row = data[i] || [];
+        const preview = row.slice(0, 7).map(c => {
+            const s = String(c || '').substring(0, 15);
+            return s || '·';
+        }).join(' │ ');
+        summary.addDebugLog(`  ${String(i + 1).padStart(2)}: ${preview}`);
     }
     
     let currentEmployee = null;
@@ -321,89 +139,73 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
         ? { start: manualPeriodStart, end: manualPeriodEnd }
         : null;
     let currentEntries = [];
-    let detectedColumns = null;
-    
-    if (currentPeriod) {
-        summary.addDebugLog(`📅 Using manual period: ${currentPeriod.start} to ${currentPeriod.end}`);
-    }
+    let headerCols = null;
     
     for (let i = 0; i < data.length; i++) {
         const row = data[i];
         if (!row || row.length === 0) continue;
         
-        // Convert all cells to strings for analysis
-        const rowStr = row.map(c => String(c || '').trim());
-        const firstCell = rowStr[0].toLowerCase();
-        const secondCell = rowStr[1] || '';
+        // Search ENTIRE row for keywords
+        let hasPayPeriod = false;
+        let hasEmployee = false;
+        let hasHeaders = false;
+        let hasTotalHours = false;
         
-        // Log what we're checking
-        if (i < 20) {
-            summary.addDebugLog(`🔍 Row ${i + 1}: "${firstCell}" | "${secondCell}" | Analyzing...`);
-        }
-        
-        // 1. Detect Pay Period
-        if (firstCell.includes('pay') && firstCell.includes('period')) {
-            summary.addDebugLog(`✅ Row ${i + 1}: Detected Pay Period row`);
-
-            // Save previous employee
-            if (currentEmployee && currentEntries.length > 0) {
-                timecards.push({
-                    employee_name: currentEmployee,
-                    pay_period_start: currentPeriod?.start,
-                    pay_period_end: currentPeriod?.end,
-                    entries: [...currentEntries]
-                });
-                summary.addDebugLog(`✅ Saved ${currentEntries.length} entries for ${currentEmployee}`);
-                currentEntries = [];
-            }
+        for (let col = 0; col < row.length; col++) {
+            const cell = String(row[col] || '').toLowerCase().trim();
             
-            // Parse period from anywhere in the row
-            if (!currentPeriod) {
-                const rowText = rowStr.join(' ');
-                currentPeriod = parsePeriod(rowText);
-                if (currentPeriod) {
-                    summary.addDebugLog(`📅 Detected period: ${currentPeriod.start} to ${currentPeriod.end}`);
+            if (cell.includes('pay') && cell.includes('period')) {
+                hasPayPeriod = true;
+                // Find dates ANYWHERE in this row
+                if (!currentPeriod) {
+                    for (let c = 0; c < row.length; c++) {
+                        const parsed = parsePeriod(row[c]);
+                        if (parsed) {
+                            currentPeriod = parsed;
+                            summary.addDebugLog(`✅ Row ${i+1}: Found period ${parsed.start} to ${parsed.end} in column ${String.fromCharCode(65+c)}`);
+                            break;
+                        }
+                    }
                 }
             }
-            continue;
-        }
-        
-        // 2. Detect Employee name
-        if (firstCell === 'employee' || firstCell.includes('employee')) {
-            summary.addDebugLog(`✅ Row ${i + 1}: Detected Employee row`);
             
-            // Save previous employee
-            if (currentEmployee && currentEntries.length > 0) {
-                timecards.push({
-                    employee_name: currentEmployee,
-                    pay_period_start: currentPeriod?.start,
-                    pay_period_end: currentPeriod?.end,
-                    entries: [...currentEntries]
-                });
-                summary.addDebugLog(`💾 Saved ${currentEntries.length} entries for ${currentEmployee}`);
-                currentEntries = [];
+            if (cell === 'employee') {
+                hasEmployee = true;
+                // Find name ANYWHERE in this row (skip the 'Employee' cell itself)
+                for (let c = col + 1; c < row.length; c++) {
+                    const name = String(row[c] || '').trim();
+                    if (name && name !== '(empty)') {
+                        currentEmployee = name.replace(/\(\d+\)/g, '').trim();
+                        summary.addDebugLog(`✅ Row ${i+1}: Found employee "${currentEmployee}" in column ${String.fromCharCode(65+c)}`);
+                        break;
+                    }
+                }
             }
             
-            currentEmployee = secondCell || rowStr[2]; // Name might be in column B or C
-            summary.addDebugLog(`👤 Employee name: "${currentEmployee}"`);
-            detectedColumns = null; // Reset columns for new employee
-            continue;
+            if ((cell === 'date' || cell === 'in' || cell === 'out') && !hasHeaders) {
+                hasHeaders = true;
+                // Map column positions
+                headerCols = {};
+                for (let c = 0; c < row.length; c++) {
+                    const h = String(row[c] || '').toLowerCase().trim();
+                    if (h === 'date') headerCols.date = c;
+                    if (h === 'in') headerCols.in = c;
+                    if (h === 'out') headerCols.out = c;
+                    if (h.includes('daily') && h.includes('total')) headerCols.dailyTotal = c;
+                    if (h === 'note' || h === 'notes') headerCols.note = c;
+                }
+                summary.addDebugLog(`✅ Row ${i+1}: Headers detected - Date:${headerCols.date}, IN:${headerCols.in}, OUT:${headerCols.out}, Total:${headerCols.dailyTotal}`);
+            }
+            
+            if (cell.includes('total') && cell.includes('hour')) {
+                hasTotalHours = true;
+            }
         }
         
-        // 3. Detect column headers
-        if (!detectedColumns && rowStr.some(cell => {
-            const lower = cell.toLowerCase();
-            return lower.includes('date') || lower === 'in' || lower === 'out' || lower.includes('work time');
-        })) {
-            summary.addDebugLog(`✅ Row ${i + 1}: Detected header row`);
-            detectedColumns = detectColumns(rowStr);
-            summary.addDebugLog(`📊 Columns: date=${detectedColumns.date}, in=${detectedColumns.clockIn}, out=${detectedColumns.clockOut}, dailyTotal=${detectedColumns.dailyTotal}`);
-            continue;
-        }
+        // Handle special rows
+        if (hasPayPeriod || hasEmployee || hasHeaders) continue;
         
-        // 4. Detect Total Hours (end of employee section)
-        if (firstCell.includes('total') && (firstCell.includes('hour') || firstCell.includes('hrs'))) {
-            summary.addDebugLog(`✅ Row ${i + 1}: Detected Total Hours (end of employee section)`);
+        if (hasTotalHours) {
             if (currentEmployee && currentEntries.length > 0) {
                 timecards.push({
                     employee_name: currentEmployee,
@@ -415,55 +217,31 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
             }
             currentEmployee = null;
             currentEntries = [];
-            detectedColumns = null;
+            headerCols = null;
             continue;
         }
         
-        // 5. Parse data row (complex structure with day of week, multiple entries per day)
-        const isData = isDataRow(row, detectedColumns || {});
-        if (i < 30 && currentEmployee) {
-            summary.addDebugLog(`   Row ${i + 1}: isDataRow=${isData}, hasEmployee=${!!currentEmployee}, hasPeriod=${!!currentPeriod}`);
-        }
-        
-        if (currentEmployee && isData) {
-            summary.addDebugLog(`📝 Row ${i + 1}: Processing as data row`);
-
-            // Common pattern from your Excel:
-            // Column A: Day of week (MON, TUE, etc.) - might be empty for 2nd+ entry of same day
-            // Column B: Date (2025-09-08)
-            // Column C: Clock IN time
-            // Column D: Clock OUT time  
-            // Column E: Work Time (duration)
-            // Column F: Daily Total (only on last entry for that date)
-            // Column G: Notes
-            
-            // Use detected columns or fallback to common positions
-            let dateIdx = detectedColumns?.date >= 0 ? detectedColumns.date : 1;
-            let inIdx = detectedColumns?.clockIn >= 0 ? detectedColumns.clockIn : 2;
-            let outIdx = detectedColumns?.clockOut >= 0 ? detectedColumns.clockOut : 3;
-            let totalIdx = detectedColumns?.dailyTotal >= 0 ? detectedColumns.dailyTotal : 5;
-            let noteIdx = detectedColumns?.notes >= 0 ? detectedColumns.notes : 6;
-            
-            // If columns not detected, try smart detection based on data
-            if (!detectedColumns) {
-                // Auto-detect based on your Excel structure
-                dateIdx = 1; // Column B
-                inIdx = 2;   // Column C
-                outIdx = 3;  // Column D
-                totalIdx = 5; // Column F
-                noteIdx = 6;  // Column G
+        // Parse DATA row
+        if (currentEmployee && headerCols) {
+            // Find date in the row (usually in detected date column, or scan for it)
+            let date = null;
+            if (headerCols.date !== undefined) {
+                date = parseDate(row[headerCols.date]);
+            }
+            // If not found in expected column, scan for it
+            if (!date) {
+                for (let c = 0; c < Math.min(row.length, 5); c++) {
+                    date = parseDate(row[c]);
+                    if (date) break;
+                }
             }
             
-            const date = parseDate(row[dateIdx]);
-            
             if (date) {
-                const clockIn = parseTime(row[inIdx]);
-                const clockOut = parseTime(row[outIdx]);
-                const dailyTotal = parseHours(row[totalIdx]);
-                const note = cleanCellValue(row[noteIdx]);
+                const clockIn = parseTime(row[headerCols.in]);
+                const clockOut = parseTime(row[headerCols.out]);
+                const dailyTotal = parseHours(row[headerCols.dailyTotal]);
+                const note = cleanCellValue(row[headerCols.note]);
                 
-                // Only add entry if there's actual time data or it's a note
-                // Skip empty weekend rows unless they have a note
                 if (clockIn || clockOut || dailyTotal || note) {
                     currentEntries.push({
                         work_date: date,
@@ -472,8 +250,6 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
                         hours_worked: dailyTotal,
                         notes: note
                     });
-                    
-                    summary.addDebugLog(`   📝 ${date}: ${clockIn || 'N/A'}-${clockOut || 'N/A'} = ${dailyTotal || 0}h`);
                 }
             }
         }
@@ -487,11 +263,10 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
             pay_period_end: currentPeriod?.end,
             entries: [...currentEntries]
         });
-        summary.addDebugLog(`✅ Saved ${currentEntries.length} entries for ${currentEmployee}`);
+        summary.addDebugLog(`💾 Saved ${currentEntries.length} entries for ${currentEmployee}`);
     }
     
-    summary.addDebugLog(`🎉 Parsed ${timecards.length} timecards with ${timecards.reduce((sum, tc) => sum + tc.entries.length, 0)} total entries`);
-    
+    summary.addDebugLog(`🎉 Parsed ${timecards.length} timecards with ${timecards.reduce((s, t) => s + t.entries.length, 0)} total entries`);
     return timecards;
 }
 
@@ -502,24 +277,21 @@ export async function importTimecardsFromExcel(fileBuffer, filename, sheetName =
     const summary = new ImportSummary(filename, sheetName || 'default');
     
     try {
-        // Load Excel
         const workbook = loadExcelWorkbook(fileBuffer);
         const actualSheetName = sheetName || workbook.SheetNames[0];
         summary.sheet = actualSheetName;
         
-        summary.addDebugLog(`📂 Loading sheet: ${actualSheetName}`);
+        summary.addDebugLog(`📂 Sheet: ${actualSheetName}`);
         
         const data = getWorksheetData(workbook, actualSheetName);
-        summary.addDebugLog(`📊 Loaded ${data.length} rows`);
+        summary.addDebugLog(`📊 Total rows: ${data.length}`);
         
-        // Parse with smart detection
         const timecards = parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd);
         
         if (timecards.length === 0) {
-            throw new Error('No timecard data found. Please ensure the file contains employee names, dates, and time entries.');
+            throw new Error('No timecard data found. Please check the file format.');
         }
         
-        // Import to database
         const client = await pool.connect();
         
         try {
@@ -528,29 +300,18 @@ export async function importTimecardsFromExcel(fileBuffer, filename, sheetName =
             for (const timecard of timecards) {
                 try {
                     if (!timecard.pay_period_start || !timecard.pay_period_end) {
-                        summary.addError(timecard.employee_name, 0, 'Missing pay period - please specify dates in upload form');
+                        summary.addError(timecard.employee_name, 0, 'Missing pay period');
                         continue;
                     }
                     
-                    if (!timecard.employee_name) {
-                        summary.addError('Unknown', 0, 'Employee name missing');
-                        continue;
-                    }
-                    
-                    // Find employee
                     const employeeId = await findEmployeeByName(timecard.employee_name, client);
-                    
                     if (!employeeId) {
-                        summary.addError(timecard.employee_name, 0, 'Employee not found in database');
+                        summary.addError(timecard.employee_name, 0, 'Employee not found');
                         continue;
                     }
                     
-                    // Check existing
                     const existingResult = await client.query(
-                        `SELECT id FROM timecards 
-                         WHERE employee_id = $1 
-                           AND pay_period_start = $2 
-                           AND pay_period_end = $3`,
+                        `SELECT id FROM timecards WHERE employee_id = $1 AND pay_period_start = $2 AND pay_period_end = $3`,
                         [employeeId, timecard.pay_period_start, timecard.pay_period_end]
                     );
                     
@@ -575,39 +336,30 @@ export async function importTimecardsFromExcel(fileBuffer, filename, sheetName =
                         summary.timecards_created++;
                     }
                     
-                    // Insert entries
                     for (const entry of timecard.entries) {
                         if (!entry.work_date) continue;
-                        
                         await client.query(
-                            `INSERT INTO timecard_entries 
-                             (timecard_id, employee_id, work_date, clock_in, clock_out, hours_worked, notes)
+                            `INSERT INTO timecard_entries (timecard_id, employee_id, work_date, clock_in, clock_out, hours_worked, notes)
                              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
                             [timecardId, employeeId, entry.work_date, entry.clock_in, entry.clock_out, entry.hours_worked || 0, entry.notes]
                         );
-                        
                         summary.entries_inserted++;
                     }
-                    
                 } catch (error) {
                     summary.addError(timecard.employee_name || 'Unknown', 0, error.message);
-                    console.error('Error processing timecard:', error);
                 }
             }
             
             await client.query('COMMIT');
-            summary.addDebugLog('✅ Database import completed');
-            
+            summary.addDebugLog('✅ Import successful');
         } catch (error) {
             await client.query('ROLLBACK');
             throw error;
         } finally {
             client.release();
         }
-        
     } catch (error) {
         summary.addError('SYSTEM', 0, error.message);
-        console.error('Import failed:', error);
         throw error;
     }
     
