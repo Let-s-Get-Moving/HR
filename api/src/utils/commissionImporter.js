@@ -365,6 +365,7 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
             const data = {
                 employee_id: employeeId,
                 period_month: periodMonth,
+                name_raw: nameRaw,
                 total_us_revenue: parseMoney(getColumnValue(row, 'total US revenue', ' total US revenue ')),
                 commission_pct: parsePercent(getColumnValue(row, 'commission %', ' commission % ', 'Commission %')),
                 commission_earned: parseMoney(getColumnValue(row, 'Commission earned', ' Commission earned ', 'Commission Earned')),
@@ -379,12 +380,13 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
                 
                 const upsertResult = await queryFn(`
                     INSERT INTO agent_commission_us (
-                        employee_id, period_month, total_us_revenue, commission_pct,
+                        employee_id, period_month, name_raw, total_us_revenue, commission_pct,
                         commission_earned, commission_125x, bonus, source_file, sheet_name,
                         created_at, updated_at
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
                     ON CONFLICT (employee_id, period_month)
                     DO UPDATE SET
+                        name_raw = EXCLUDED.name_raw,
                         total_us_revenue = EXCLUDED.total_us_revenue,
                         commission_pct = EXCLUDED.commission_pct,
                         commission_earned = EXCLUDED.commission_earned,
@@ -432,21 +434,34 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
     const datePeriods = [];
     let totalColumnName = null;
     
+    summary.addDebugLog(`📋 All hourly columns: ${columnNames.join(' | ')}`);
+    
+    // Find the name column name
+    let nameColumnName = null;
+    for (const [colName, colIdx] of Object.entries(block.columns)) {
+        if (colIdx === block.nameColIdx) {
+            nameColumnName = colName;
+            break;
+        }
+    }
+    
     for (let i = 0; i < columnNames.length; i++) {
         const colName = columnNames[i];
         const colLower = colName.toLowerCase().trim();
         
         // Skip name column
-        if (i === block.nameColIdx) continue;
+        if (colName === nameColumnName) continue;
         
         // Check if this is the TOTAL column
         if (colLower.includes('total') && colLower.includes('hourly')) {
             totalColumnName = colName;
+            summary.addDebugLog(`💰 Found TOTAL column: "${colName}"`);
             continue;
         }
         
         // Check if this is a "cash paid" column
         if (colLower.includes('cash') && colLower.includes('paid')) {
+            summary.addDebugLog(`💵 Skipping cash paid column: "${colName}"`);
             continue; // Skip, we'll handle this when processing the previous date column
         }
         
@@ -454,6 +469,7 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
         const nextCol = columnNames[i + 1];
         const isCashPaidNext = nextCol && nextCol.toLowerCase().includes('cash') && nextCol.toLowerCase().includes('paid');
         
+        summary.addDebugLog(`📅 Date period: "${colName}" ${isCashPaidNext ? '(has cash paid column)' : ''}`);
         datePeriods.push({
             label: colName,
             cashPaidColumn: isCashPaidNext ? nextCol : null
