@@ -147,7 +147,7 @@ async function findOrCreateEmployee(name, client, summary) {
         [
             firstName,
             lastName,
-            `${firstName.toLowerCase()}.${lastName.toLowerCase()}@company.com`.replace(/\s+/g, ''),
+            `${firstName.toLowerCase()}@letsgetmovinggroup.com`.replace(/\s+/g, ''),
             defaultDept,
             defaultLoc
         ]
