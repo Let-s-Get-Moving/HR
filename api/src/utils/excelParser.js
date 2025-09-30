@@ -337,6 +337,7 @@ export function parsePercent(value) {
 /**
  * Parse period from sheet name or filename (e.g., "July 2025" -> "2025-07-01")
  * Returns a string in format "YYYY-MM-01" to avoid timezone issues
+ * Counts all month occurrences and uses the most frequent one
  */
 export function parsePeriodFromSheetName(sheetName) {
     if (!sheetName) {
@@ -359,18 +360,41 @@ export function parsePeriodFromSheetName(sheetName) {
     const year = yearMatch[0];
     console.log(`[parsePeriodFromSheetName] Year found: ${year}`);
     
+    // Count occurrences of each month name
+    const monthCounts = {};
     for (let i = 0; i < monthNames.length; i++) {
-        if (nameLower.includes(monthNames[i])) {
-            const month = String(i + 1).padStart(2, '0');
-            const result = `${year}-${month}-01`;
-            console.log(`[parsePeriodFromSheetName] Month "${monthNames[i]}" found at index ${i}, returning: ${result}`);
-            // Return string to avoid timezone conversion issues
-            return result;
+        const monthName = monthNames[i];
+        // Count how many times this month appears (case-insensitive, whole word)
+        const regex = new RegExp(monthName, 'gi');
+        const matches = nameLower.match(regex);
+        if (matches) {
+            monthCounts[i] = matches.length;
+            console.log(`[parsePeriodFromSheetName] Month "${monthName}" found ${matches.length} time(s)`);
         }
     }
     
-    console.log(`[parsePeriodFromSheetName] No month name found in "${nameLower}"`);
-    return null;
+    // If no months found, return null
+    if (Object.keys(monthCounts).length === 0) {
+        console.log(`[parsePeriodFromSheetName] No month name found in "${nameLower}"`);
+        return null;
+    }
+    
+    // Find the month with the highest count
+    let maxCount = 0;
+    let selectedMonthIndex = null;
+    for (const [index, count] of Object.entries(monthCounts)) {
+        if (count > maxCount) {
+            maxCount = count;
+            selectedMonthIndex = parseInt(index);
+        }
+    }
+    
+    const month = String(selectedMonthIndex + 1).padStart(2, '0');
+    const result = `${year}-${month}-01`;
+    console.log(`[parsePeriodFromSheetName] Most frequent month: "${monthNames[selectedMonthIndex]}" (${maxCount} occurrences), returning: ${result}`);
+    
+    // Return string to avoid timezone conversion issues
+    return result;
 }
 
 /**
