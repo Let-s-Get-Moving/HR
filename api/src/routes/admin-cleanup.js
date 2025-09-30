@@ -80,5 +80,69 @@ r.delete("/employees", async (req, res) => {
     }
 });
 
+/**
+ * POST /api/admin-cleanup/recreate-admin
+ * Recreate or reset the admin user account
+ */
+r.post("/recreate-admin", async (req, res) => {
+    console.log('🔐 [ADMIN] Recreating admin user...');
+    
+    try {
+        // Default admin credentials
+        const username = 'admin';
+        const email = 'admin@hrsystem.com';
+        const password = 'admin123';
+        const role = 'Admin';
+        
+        // Hash password (simple for now - in production use bcrypt)
+        const crypto = await import('crypto');
+        const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
+        
+        // Check if admin user exists
+        const existingUser = await q(
+            'SELECT id FROM users WHERE username = $1 OR email = $2',
+            [username, email]
+        );
+        
+        if (existingUser.rows.length > 0) {
+            // Update existing user
+            await q(
+                `UPDATE users 
+                 SET password_hash = $1, role = $2, is_active = true, failed_login_attempts = 0, locked_until = NULL
+                 WHERE username = $3 OR email = $4`,
+                [passwordHash, role, username, email]
+            );
+            console.log('✅ [ADMIN] Updated existing admin user');
+        } else {
+            // Create new admin user
+            await q(
+                `INSERT INTO users (username, email, password_hash, role, is_active)
+                 VALUES ($1, $2, $3, $4, true)`,
+                [username, email, passwordHash, role]
+            );
+            console.log('✅ [ADMIN] Created new admin user');
+        }
+        
+        res.json({
+            success: true,
+            message: 'Admin user recreated/reset successfully',
+            credentials: {
+                username: username,
+                email: email,
+                password: password,
+                role: role
+            },
+            note: 'Use these credentials to log in'
+        });
+        
+    } catch (error) {
+        console.error('❌ [ADMIN] Error recreating admin user:', error);
+        res.status(500).json({ 
+            error: 'Failed to recreate admin user', 
+            details: error.message 
+        });
+    }
+});
+
 export default r;
 
