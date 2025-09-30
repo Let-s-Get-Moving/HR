@@ -786,20 +786,18 @@ export default function BonusesCommissions() {
             >
               <option value="">Auto-detect from sheet name</option>
               {(() => {
-                // Generate last 3 months dynamically
+                // Generate last 12 months dynamically
                 const months = ['January', 'February', 'March', 'April', 'May', 'June', 
                                'July', 'August', 'September', 'October', 'November', 'December'];
                 const today = new Date();
                 const options = [];
                 
-                for (let i = 0; i < 3; i++) {
+                for (let i = 0; i < 12; i++) {
                   const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
                   const monthName = months[date.getMonth()];
                   const year = date.getFullYear();
                   const value = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
-                  const label = i === 0 ? `${monthName} ${year} (this month)` : 
-                               i === 1 ? `${monthName} ${year} (last month)` :
-                               `${monthName} ${year}`;
+                  const label = `${monthName} ${year}`;
                   options.push(<option key={value} value={value}>{label}</option>);
                 }
                 
