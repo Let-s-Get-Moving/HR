@@ -471,6 +471,13 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             continue; // Skip, we'll handle this when processing the previous date column
         }
         
+        // Skip purely numeric columns (likely Excel date serial numbers or errors)
+        // Excel date serials like 14255.42361 should not be treated as date periods
+        if (/^\d+\.?\d*$/.test(colName.trim())) {
+            summary.addDebugLog(`⚠️ Skipping numeric column (likely Excel error): "${colName}"`);
+            continue;
+        }
+        
         // This is a date period column
         const nextCol = columnNames[i + 1];
         const isCashPaidNext = nextCol && nextCol.toLowerCase().includes('cash') && nextCol.toLowerCase().includes('paid');
