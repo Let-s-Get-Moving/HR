@@ -184,6 +184,7 @@ function parsePeriod(str) {
  */
 function detectColumns(headerRow) {
     const columns = {
+        dayOfWeek: -1,
         date: -1,
         clockIn: -1,
         clockOut: -1,
@@ -210,6 +211,23 @@ function detectColumns(headerRow) {
         }
     }
     
+    // Common pattern: Day of week is column A, Date is column B
+    // Try to detect this pattern
+    if (columns.date === -1) {
+        // Look for a column that might have dates
+        for (let i = 0; i < Math.min(headerRow.length, 5); i++) {
+            const cell = String(headerRow[i] || '').toLowerCase().trim();
+            if (!cell && i === 0) {
+                // Column A might be empty in header (contains day of week in data)
+                columns.dayOfWeek = 0;
+            }
+        }
+        // If column A seems to be day of week, then date is likely column B
+        if (columns.dayOfWeek === 0) {
+            columns.date = 1;
+        }
+    }
+    
     return columns;
 }
 
@@ -219,13 +237,20 @@ function detectColumns(headerRow) {
 function isDataRow(row, columns) {
     if (!row || row.length === 0) return false;
     
-    // Check if row has a date
+    // Check if first column looks like day of week (MON, TUE, etc.)
+    const firstCell = String(row[0] || '').trim().toUpperCase();
+    const dayOfWeekPattern = /^(MON|TUE|WED|THU|FRI|SAT|SUN)$/;
+    if (dayOfWeekPattern.test(firstCell)) {
+        return true;
+    }
+    
+    // Check if row has a date in the detected date column
     if (columns.date >= 0 && columns.date < row.length) {
         const date = parseDate(row[columns.date]);
         if (date) return true;
     }
     
-    // Fallback: check any column for date
+    // Fallback: check first few columns for date
     for (let i = 0; i < Math.min(row.length, 5); i++) {
         if (parseDate(row[i])) return true;
     }
@@ -281,6 +306,15 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
     const timecards = [];
     
     summary.addDebugLog(`🔍 Smart parsing ${data.length} rows...`);
+    summary.addDebugLog(`📋 First 15 rows preview:`);
+    for (let i = 0; i < Math.min(15, data.length); i++) {
+        const row = data[i];
+        const preview = row ? row.slice(0, 7).map(c => {
+            const str = String(c || '').substring(0, 20);
+            return str || '(empty)';
+        }).join(' | ') : '(null row)';
+        summary.addDebugLog(`   Row ${i + 1}: ${preview}`);
+    }
     
     let currentEmployee = null;
     let currentPeriod = manualPeriodStart && manualPeriodEnd 
@@ -289,6 +323,10 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
     let currentEntries = [];
     let detectedColumns = null;
     
+    if (currentPeriod) {
+        summary.addDebugLog(`📅 Using manual period: ${currentPeriod.start} to ${currentPeriod.end}`);
+    }
+    
     for (let i = 0; i < data.length; i++) {
         const row = data[i];
         if (!row || row.length === 0) continue;
@@ -296,10 +334,17 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
         // Convert all cells to strings for analysis
         const rowStr = row.map(c => String(c || '').trim());
         const firstCell = rowStr[0].toLowerCase();
-        const secondCell = rowStr[1];
+        const secondCell = rowStr[1] || '';
+        
+        // Log what we're checking
+        if (i < 20) {
+            summary.addDebugLog(`🔍 Row ${i + 1}: "${firstCell}" | "${secondCell}" | Analyzing...`);
+        }
         
         // 1. Detect Pay Period
         if (firstCell.includes('pay') && firstCell.includes('period')) {
+            summary.addDebugLog(`✅ Row ${i + 1}: Detected Pay Period row`);
+
             // Save previous employee
             if (currentEmployee && currentEntries.length > 0) {
                 timecards.push({
@@ -325,6 +370,8 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
         
         // 2. Detect Employee name
         if (firstCell === 'employee' || firstCell.includes('employee')) {
+            summary.addDebugLog(`✅ Row ${i + 1}: Detected Employee row`);
+            
             // Save previous employee
             if (currentEmployee && currentEntries.length > 0) {
                 timecards.push({
@@ -333,12 +380,12 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
                     pay_period_end: currentPeriod?.end,
                     entries: [...currentEntries]
                 });
-                summary.addDebugLog(`✅ Saved ${currentEntries.length} entries for ${currentEmployee}`);
+                summary.addDebugLog(`💾 Saved ${currentEntries.length} entries for ${currentEmployee}`);
                 currentEntries = [];
             }
             
             currentEmployee = secondCell || rowStr[2]; // Name might be in column B or C
-            summary.addDebugLog(`👤 Detected employee: ${currentEmployee}`);
+            summary.addDebugLog(`👤 Employee name: "${currentEmployee}"`);
             detectedColumns = null; // Reset columns for new employee
             continue;
         }
@@ -346,15 +393,17 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
         // 3. Detect column headers
         if (!detectedColumns && rowStr.some(cell => {
             const lower = cell.toLowerCase();
-            return lower.includes('date') || lower === 'in' || lower === 'out';
+            return lower.includes('date') || lower === 'in' || lower === 'out' || lower.includes('work time');
         })) {
+            summary.addDebugLog(`✅ Row ${i + 1}: Detected header row`);
             detectedColumns = detectColumns(rowStr);
-            summary.addDebugLog(`📊 Detected columns: date=${detectedColumns.date}, in=${detectedColumns.clockIn}, out=${detectedColumns.clockOut}, total=${detectedColumns.dailyTotal}`);
+            summary.addDebugLog(`📊 Columns: date=${detectedColumns.date}, in=${detectedColumns.clockIn}, out=${detectedColumns.clockOut}, dailyTotal=${detectedColumns.dailyTotal}`);
             continue;
         }
         
         // 4. Detect Total Hours (end of employee section)
-        if (firstCell.includes('total') && firstCell.includes('hour')) {
+        if (firstCell.includes('total') && (firstCell.includes('hour') || firstCell.includes('hrs'))) {
+            summary.addDebugLog(`✅ Row ${i + 1}: Detected Total Hours (end of employee section)`);
             if (currentEmployee && currentEntries.length > 0) {
                 timecards.push({
                     employee_name: currentEmployee,
@@ -362,7 +411,7 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
                     pay_period_end: currentPeriod?.end,
                     entries: [...currentEntries]
                 });
-                summary.addDebugLog(`✅ Saved ${currentEntries.length} entries for ${currentEmployee}`);
+                summary.addDebugLog(`💾 Saved ${currentEntries.length} entries for ${currentEmployee}`);
             }
             currentEmployee = null;
             currentEntries = [];
@@ -370,14 +419,40 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
             continue;
         }
         
-        // 5. Parse data row
-        if (currentEmployee && isDataRow(row, detectedColumns || {})) {
+        // 5. Parse data row (complex structure with day of week, multiple entries per day)
+        const isData = isDataRow(row, detectedColumns || {});
+        if (i < 30 && currentEmployee) {
+            summary.addDebugLog(`   Row ${i + 1}: isDataRow=${isData}, hasEmployee=${!!currentEmployee}, hasPeriod=${!!currentPeriod}`);
+        }
+        
+        if (currentEmployee && isData) {
+            summary.addDebugLog(`📝 Row ${i + 1}: Processing as data row`);
+
+            // Common pattern from your Excel:
+            // Column A: Day of week (MON, TUE, etc.) - might be empty for 2nd+ entry of same day
+            // Column B: Date (2025-09-08)
+            // Column C: Clock IN time
+            // Column D: Clock OUT time  
+            // Column E: Work Time (duration)
+            // Column F: Daily Total (only on last entry for that date)
+            // Column G: Notes
+            
             // Use detected columns or fallback to common positions
-            const dateIdx = detectedColumns?.date >= 0 ? detectedColumns.date : 1;
-            const inIdx = detectedColumns?.clockIn >= 0 ? detectedColumns.clockIn : 2;
-            const outIdx = detectedColumns?.clockOut >= 0 ? detectedColumns.clockOut : 3;
-            const totalIdx = detectedColumns?.dailyTotal >= 0 ? detectedColumns.dailyTotal : 5;
-            const noteIdx = detectedColumns?.notes >= 0 ? detectedColumns.notes : 6;
+            let dateIdx = detectedColumns?.date >= 0 ? detectedColumns.date : 1;
+            let inIdx = detectedColumns?.clockIn >= 0 ? detectedColumns.clockIn : 2;
+            let outIdx = detectedColumns?.clockOut >= 0 ? detectedColumns.clockOut : 3;
+            let totalIdx = detectedColumns?.dailyTotal >= 0 ? detectedColumns.dailyTotal : 5;
+            let noteIdx = detectedColumns?.notes >= 0 ? detectedColumns.notes : 6;
+            
+            // If columns not detected, try smart detection based on data
+            if (!detectedColumns) {
+                // Auto-detect based on your Excel structure
+                dateIdx = 1; // Column B
+                inIdx = 2;   // Column C
+                outIdx = 3;  // Column D
+                totalIdx = 5; // Column F
+                noteIdx = 6;  // Column G
+            }
             
             const date = parseDate(row[dateIdx]);
             
@@ -387,13 +462,19 @@ function parseTimecardData(data, summary, manualPeriodStart, manualPeriodEnd) {
                 const dailyTotal = parseHours(row[totalIdx]);
                 const note = cleanCellValue(row[noteIdx]);
                 
-                currentEntries.push({
-                    work_date: date,
-                    clock_in: clockIn,
-                    clock_out: clockOut,
-                    hours_worked: dailyTotal,
-                    notes: note
-                });
+                // Only add entry if there's actual time data or it's a note
+                // Skip empty weekend rows unless they have a note
+                if (clockIn || clockOut || dailyTotal || note) {
+                    currentEntries.push({
+                        work_date: date,
+                        clock_in: clockIn,
+                        clock_out: clockOut,
+                        hours_worked: dailyTotal,
+                        notes: note
+                    });
+                    
+                    summary.addDebugLog(`   📝 ${date}: ${clockIn || 'N/A'}-${clockOut || 'N/A'} = ${dailyTotal || 0}h`);
+                }
             }
         }
     }
