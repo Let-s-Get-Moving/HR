@@ -89,7 +89,7 @@ export default function TimeTracking() {
       
       // Filter based on user role
       let filteredData = data;
-      if (userRole === "user" && currentUser) {
+      if (userRole?.toLowerCase() === "user" && currentUser) {
         filteredData = data.filter(tc => tc.email === currentUser.email);
         console.log("🔒 [TimeTracking] Filtered to", filteredData.length, "timecards for user:", currentUser.email);
       }
@@ -265,7 +265,7 @@ export default function TimeTracking() {
           <h1 className="text-2xl sm:text-3xl font-bold text-primary">Time Tracking</h1>
           <p className="text-secondary mt-1">Employee timecard management</p>
         </div>
-        {(userRole === "admin" || userRole === "HR") && (
+        {(userRole?.toLowerCase() === "admin" || userRole === "HR") && (
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
