@@ -118,45 +118,12 @@ async function findOrCreateEmployee(name, client, summary) {
     );
     if (result.rows.length > 0) return result.rows[0].id;
     
-    // Employee not found - AUTO-CREATE from timecard data
-    summary.addDebugLog(`🆕 Creating new employee: ${name}`);
-    summary.employees_created++;
+    // Employee not found - DO NOT AUTO-CREATE
+    // Employees must be added manually through the UI first
+    summary.addError(name, 0, `Employee "${name}" not found in database. Add employee manually first.`);
+    summary.employees_skipped++;
     
-    // Parse name into first and last
-    const nameParts = name.trim().split(/\s+/);
-    const firstName = nameParts[0] || 'Unknown';
-    const lastName = nameParts.slice(1).join(' ') || 'Employee';
-    
-    // Get default department and location
-    const deptResult = await client.query(
-        `SELECT id FROM departments ORDER BY id LIMIT 1`
-    );
-    const defaultDept = deptResult.rows[0]?.id || null;
-    
-    const locResult = await client.query(
-        `SELECT id FROM locations WHERE is_active = true ORDER BY id LIMIT 1`
-    );
-    const defaultLoc = locResult.rows[0]?.id || null;
-    
-    // Create employee with timecard data as source
-    const createResult = await client.query(
-        `INSERT INTO employees 
-         (first_name, last_name, email, hire_date, employment_type, department_id, location_id, role_title, status)
-         VALUES ($1, $2, $3, CURRENT_DATE, 'Full-time', $4, $5, 'Employee', 'Active')
-         RETURNING id`,
-        [
-            firstName,
-            lastName,
-            `${firstName.toLowerCase()}@letsgetmovinggroup.com`.replace(/\s+/g, ''),
-            defaultDept,
-            defaultLoc
-        ]
-    );
-    
-    const newEmployeeId = createResult.rows[0].id;
-    summary.addWarning(`✅ Auto-created employee: ${name} (ID: ${newEmployeeId}) from timecard data`);
-    
-    return newEmployeeId;
+    return null; // Return null instead of creating
 }
 
 /**
