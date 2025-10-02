@@ -9,18 +9,16 @@ DELETE FROM users;
 
 -- Insert single admin user
 -- Username: Avneet
--- Email: admin@hrsystem.com
+-- Email: avneet@hr.local
 -- Password: password123 (hashed with bcrypt)
+-- Note: This will be overridden by ensureAdminUser() on server startup
 INSERT INTO users (email, full_name, password_hash, role) 
 VALUES (
-    'admin@hrsystem.com',
+    'avneet@hr.local',
     'Avneet',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/4Qz8K2K',
+    '$2a$10$8cbwAjND6CaSdvs1234567890123456789012345678901234567890',
     'Admin'
-) ON CONFLICT (email) DO UPDATE SET
-    full_name = EXCLUDED.full_name,
-    password_hash = EXCLUDED.password_hash,
-    role = EXCLUDED.role;
+) ON CONFLICT (email) DO NOTHING;
 
 -- Create a simple sessions table for maintaining logged-in state
 CREATE TABLE IF NOT EXISTS user_sessions (
