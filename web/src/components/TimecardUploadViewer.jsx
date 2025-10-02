@@ -263,7 +263,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
                       {entry.hours_worked ? formatHoursAsTime(parseFloat(entry.hours_worked)) : ''}
                     </td>
                     <td className="px-6 py-4 text-sm text-right font-semibold text-indigo-600 dark:text-indigo-400">
-                      {formatHoursAsTime(dayTotal)}
+                      {entry.is_first_row ? formatHoursAsTime(dayTotal) : ''}
                     </td>
                     <td className="px-6 py-4 text-sm text-secondary">
                       {entry.notes ? (
