@@ -145,8 +145,8 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 continue;
             }
             
-            // Find employee (DO NOT CREATE - only timecards create employees)
-            let employeeId;
+            // Try to find employee (optional - commission data stored regardless)
+            let employeeId = null;
             try {
                 if (rowNum <= 5) {
                     summary.addDebugLog(`Row ${rowNum} - Finding employee: "${nameRaw}"`);
@@ -158,13 +158,11 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                     summary.addDebugLog(`Row ${rowNum} - Employee ID: ${employeeId}`);
                 }
             } catch (error) {
+                // Employee not found - that's OK, store commission with name_raw only
                 if (rowNum <= 5) {
-                    summary.addDebugLog(`Row ${rowNum} - SKIPPED: Employee not found (upload timecards first): ${error.message}`);
+                    summary.addDebugLog(`Row ${rowNum} - Employee not found, storing with name only: "${nameRaw}"`);
                 }
-                summary.addWarning(`"${nameRaw}" not found - must appear in timecards before receiving commissions`);
-                summary.addError('main', rowNum, 'Employee not found in database', { error: error.message });
-                summary.main.skipped++;
-                continue;
+                employeeId = null; // Will use name_raw instead
             }
             
             // Parse all numeric fields with flexible column matching
@@ -231,7 +229,13 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             try {
                 await queryFn('SAVEPOINT row_insert');
                 
-                // Upsert data
+                // Delete existing record for this name + period (to handle updates)
+                await queryFn(`
+                    DELETE FROM employee_commission_monthly
+                    WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($1)) AND period_month = $2
+                `, [nameRaw, periodMonth]);
+                
+                // Insert data
                 const upsertResult = await queryFn(`
                     INSERT INTO employee_commission_monthly (
                         employee_id, period_month, name_raw, hourly_rate, rev_sm_all_locations,
@@ -249,57 +253,17 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                         $20, $21, $22, $23, $24, $25, $26, $27, $28,
                         $29, $30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                     )
-                    ON CONFLICT (employee_id, period_month)
-                    DO UPDATE SET
-                        name_raw = EXCLUDED.name_raw,
-                        hourly_rate = EXCLUDED.hourly_rate,
-                        rev_sm_all_locations = EXCLUDED.rev_sm_all_locations,
-                        rev_add_ons = EXCLUDED.rev_add_ons,
-                        rev_deduction = EXCLUDED.rev_deduction,
-                        total_revenue_all = EXCLUDED.total_revenue_all,
-                        booking_pct = EXCLUDED.booking_pct,
-                        commission_pct = EXCLUDED.commission_pct,
-                        commission_earned = EXCLUDED.commission_earned,
-                        spiff_bonus = EXCLUDED.spiff_bonus,
-                        revenue_bonus = EXCLUDED.revenue_bonus,
-                        bonus_us_jobs_125x = EXCLUDED.bonus_us_jobs_125x,
-                        booking_bonus_plus = EXCLUDED.booking_bonus_plus,
-                        booking_bonus_minus = EXCLUDED.booking_bonus_minus,
-                        hourly_paid_out_minus = EXCLUDED.hourly_paid_out_minus,
-                        deduction_sales_manager_minus = EXCLUDED.deduction_sales_manager_minus,
-                        deduction_missing_punch_minus = EXCLUDED.deduction_missing_punch_minus,
-                        deduction_customer_support_minus = EXCLUDED.deduction_customer_support_minus,
-                        deduction_post_commission_collected_minus = EXCLUDED.deduction_post_commission_collected_minus,
-                        deduction_dispatch_minus = EXCLUDED.deduction_dispatch_minus,
-                        deduction_other_minus = EXCLUDED.deduction_other_minus,
-                        total_due = EXCLUDED.total_due,
-                        amount_paid = EXCLUDED.amount_paid,
-                        remaining_amount = EXCLUDED.remaining_amount,
-                        corporate_open_jobs_note = EXCLUDED.corporate_open_jobs_note,
-                        parking_pass_fee_note = EXCLUDED.parking_pass_fee_note,
-                        source_file = EXCLUDED.source_file,
-                        sheet_name = EXCLUDED.sheet_name,
-                        updated_at = CURRENT_TIMESTAMP
-                    RETURNING (xmax = 0) as inserted
+                    RETURNING id
                 `, Object.values(data));
                 
                 await queryFn('RELEASE SAVEPOINT row_insert');
                 
                 if (rowNum <= 5) {
-                    summary.addDebugLog(`Row ${rowNum} - Database result: ${JSON.stringify(upsertResult.rows[0])}`);
+                    summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record created with ID ${upsertResult.rows[0].id}`);
                 }
                 
-                if (upsertResult.rows[0].inserted) {
-                    if (rowNum <= 5) {
-                        summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record inserted`);
-                    }
-                    summary.main.inserted++;
-                } else {
-                    if (rowNum <= 5) {
-                        summary.addDebugLog(`Row ${rowNum} - SUCCESS: Record updated`);
-                    }
-                    summary.main.updated++;
-                }
+                // Record as inserted (we deleted old record if it existed)
+                summary.main.inserted++;
             } catch (insertError) {
                 // Rollback to savepoint to recover transaction
                 await queryFn('ROLLBACK TO SAVEPOINT row_insert');
@@ -367,16 +331,15 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
                 continue;
             }
             
-            // Find employee (DO NOT CREATE - only timecards create employees)
-            let employeeId;
+            // Try to find employee (optional - commission data stored regardless)
+            let employeeId = null;
             try {
                 employeeId = await findEmployeeOnly(nameRaw, queryFn);
                 summary.addDebugLog(`✓ Agent US Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
             } catch (error) {
-                summary.addWarning(`Agent US: "${nameRaw}" not found - must appear in timecards before receiving commissions`);
-                summary.addError('agents_us', rowNum, 'Employee not found in database', { error: error.message });
-                summary.agents_us.skipped++;
-                continue;
+                // Employee not found - that's OK, store commission with name_raw only
+                summary.addDebugLog(`Agent US Row ${rowNum}: Employee not found, storing with name only: "${nameRaw}"`);
+                employeeId = null; // Will use name_raw instead
             }
             
             const data = {
@@ -395,33 +358,26 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
             try {
                 await queryFn('SAVEPOINT agent_row_insert');
                 
+                // Delete existing record for this name + period (to handle updates)
+                await queryFn(`
+                    DELETE FROM agent_commission_us
+                    WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($1)) AND period_month = $2
+                `, [nameRaw, periodMonth]);
+                
+                // Insert data
                 const upsertResult = await queryFn(`
                     INSERT INTO agent_commission_us (
                         employee_id, period_month, name_raw, total_us_revenue, commission_pct,
                         commission_earned, commission_125x, bonus, source_file, sheet_name,
                         created_at, updated_at
                     ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT (employee_id, period_month)
-                    DO UPDATE SET
-                        name_raw = EXCLUDED.name_raw,
-                        total_us_revenue = EXCLUDED.total_us_revenue,
-                        commission_pct = EXCLUDED.commission_pct,
-                        commission_earned = EXCLUDED.commission_earned,
-                        commission_125x = EXCLUDED.commission_125x,
-                        bonus = EXCLUDED.bonus,
-                        source_file = EXCLUDED.source_file,
-                        sheet_name = EXCLUDED.sheet_name,
-                        updated_at = CURRENT_TIMESTAMP
-                    RETURNING (xmax = 0) as inserted
+                    RETURNING id
                 `, Object.values(data));
                 
                 await queryFn('RELEASE SAVEPOINT agent_row_insert');
                 
-                if (upsertResult.rows[0].inserted) {
-                    summary.agents_us.inserted++;
-                } else {
-                    summary.agents_us.updated++;
-                }
+                // Record as inserted (we deleted old record if it existed)
+                summary.agents_us.inserted++;
             } catch (insertError) {
                 await queryFn('ROLLBACK TO SAVEPOINT agent_row_insert');
                 throw insertError;
@@ -608,29 +564,25 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             try {
                 await queryFn('SAVEPOINT hourly_row_insert');
                 
+                // Delete existing record for this name + period (to handle updates)
+                await queryFn(`
+                    DELETE FROM hourly_payout
+                    WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($1)) AND period_month = $2
+                `, [nameRaw, periodMonth]);
+                
+                // Insert data
                 const upsertResult = await queryFn(`
                     INSERT INTO hourly_payout (
                         employee_id, period_month, name_raw, date_periods, total_for_month,
                         source_file, sheet_name, created_at, updated_at
                     ) VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT (employee_id, period_month)
-                    DO UPDATE SET
-                        name_raw = EXCLUDED.name_raw,
-                        date_periods = EXCLUDED.date_periods,
-                        total_for_month = EXCLUDED.total_for_month,
-                        source_file = EXCLUDED.source_file,
-                        sheet_name = EXCLUDED.sheet_name,
-                        updated_at = CURRENT_TIMESTAMP
-                    RETURNING (xmax = 0) as inserted
+                    RETURNING id
                 `, Object.values(data));
                 
                 await queryFn('RELEASE SAVEPOINT hourly_row_insert');
                 
-                if (upsertResult.rows[0].inserted) {
-                    summary.hourly.inserted++;
-                } else {
-                    summary.hourly.updated++;
-                }
+                // Record as inserted (we deleted old record if it existed)
+                summary.hourly.inserted++;
             } catch (insertError) {
                 await queryFn('ROLLBACK TO SAVEPOINT hourly_row_insert');
                 throw insertError;
