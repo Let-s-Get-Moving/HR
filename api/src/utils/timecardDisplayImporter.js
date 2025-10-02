@@ -257,6 +257,8 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         // Process each employee
         for (const emp of employees) {
             // Find or skip employee (must exist after our changes)
+            // Find or create employee
+            let employeeId;
             const empResult = await client.query(`
                 SELECT id FROM employees
                 WHERE LOWER(TRIM(first_name || ' ' || last_name)) = LOWER(TRIM($1))
@@ -264,11 +266,30 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
             `, [emp.name]);
             
             if (empResult.rows.length === 0) {
-                console.log(`⚠️ Skipping ${emp.name} - not found in database`);
-                continue;
+                // Auto-create employee if not found
+                console.log(`➕ Creating new employee: ${emp.name}`);
+                const nameParts = emp.name.trim().split(' ');
+                const firstName = nameParts[0];
+                const lastName = nameParts.slice(1).join(' ') || firstName;
+                
+                const createResult = await client.query(`
+                    INSERT INTO employees (
+                        first_name, last_name, email, hire_date, 
+                        employment_type, status, role_title
+                    )
+                    VALUES ($1, $2, $3, $4, 'Full-time', 'Active', 'Employee')
+                    RETURNING id
+                `, [
+                    firstName, 
+                    lastName, 
+                    `${firstName.toLowerCase()}.${lastName.toLowerCase()}@imported.local`,
+                    payPeriod.start
+                ]);
+                
+                employeeId = createResult.rows[0].id;
+            } else {
+                employeeId = empResult.rows[0].id;
             }
-            
-            const employeeId = empResult.rows[0].id;
             
             // Calculate total hours
             const totalHours = emp.entries.reduce((sum, e) => sum + (e.work_time || 0), 0);

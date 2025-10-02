@@ -209,4 +209,75 @@ r.post("/recreate-admin", async (req, res) => {
     }
 });
 
+/**
+ * DELETE /api/admin-cleanup/time-tracking
+ * Delete ALL time tracking data (timecards, entries, uploads)
+ */
+r.delete("/time-tracking", async (req, res) => {
+    console.log('🗑️ [ADMIN] Deleting ALL time tracking data...');
+    
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // Get counts before deletion
+        const beforeUploads = await client.query('SELECT COUNT(*) FROM timecard_uploads');
+        const beforeTimecards = await client.query('SELECT COUNT(*) FROM timecards');
+        const beforeEntries = await client.query('SELECT COUNT(*) FROM timecard_entries');
+        const beforeTimeEntries = await client.query('SELECT COUNT(*) FROM time_entries');
+        
+        console.log(`📊 [ADMIN] Before deletion:`);
+        console.log(`   - Timecard uploads: ${beforeUploads.rows[0].count}`);
+        console.log(`   - Timecards: ${beforeTimecards.rows[0].count}`);
+        console.log(`   - Timecard entries: ${beforeEntries.rows[0].count}`);
+        console.log(`   - Time entries: ${beforeTimeEntries.rows[0].count}`);
+        
+        // Delete in correct order (child tables first)
+        await client.query('DELETE FROM timecard_entries');
+        console.log('✅ [ADMIN] Deleted all timecard_entries');
+        
+        await client.query('DELETE FROM timecards');
+        console.log('✅ [ADMIN] Deleted all timecards');
+        
+        await client.query('DELETE FROM timecard_uploads');
+        console.log('✅ [ADMIN] Deleted all timecard_uploads');
+        
+        await client.query('DELETE FROM time_entries');
+        console.log('✅ [ADMIN] Deleted all time_entries');
+        
+        // Reset sequences
+        await client.query('ALTER SEQUENCE timecard_uploads_id_seq RESTART WITH 1');
+        await client.query('ALTER SEQUENCE timecards_id_seq RESTART WITH 1');
+        await client.query('ALTER SEQUENCE timecard_entries_id_seq RESTART WITH 1');
+        await client.query('ALTER SEQUENCE time_entries_id_seq RESTART WITH 1');
+        console.log('🔄 [ADMIN] Reset all time tracking sequences');
+        
+        await client.query('COMMIT');
+        
+        res.json({
+            success: true,
+            message: 'All time tracking data deleted successfully',
+            deleted: {
+                timecard_uploads: parseInt(beforeUploads.rows[0].count),
+                timecards: parseInt(beforeTimecards.rows[0].count),
+                timecard_entries: parseInt(beforeEntries.rows[0].count),
+                time_entries: parseInt(beforeTimeEntries.rows[0].count)
+            }
+        });
+        
+        console.log('✅ [ADMIN] Time tracking cleanup completed successfully');
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ [ADMIN] Error deleting time tracking data:', error);
+        res.status(500).json({ 
+            error: 'Failed to delete time tracking data', 
+            details: error.message 
+        });
+    } finally {
+        client.release();
+    }
+});
+
 export default r;
