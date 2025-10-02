@@ -99,6 +99,14 @@ After cleanup, import production data:
 - Bonus and commission management
 - Deduction tracking and vacation pay
 
+### **⏱️ Time Tracking & Timecards**
+- **Excel Timecard Upload**: Upload timecard Excel files and view them in exact format
+- **Multiple Punches Per Day**: Support for split shifts and multiple clock-in/out pairs
+- **Missing Punch Detection**: Automatic highlighting of incomplete entries
+- **Dashboard Statistics**: Total hours, employee counts, top performers, missing punches
+- **Pay Period Management**: Automatic period detection from filename or Excel content
+- See [TIMECARD_UPLOADS.md](docs/TIMECARD_UPLOADS.md) for detailed documentation
+
 ### **📅 Leave Management**
 - Leave request submission and approval workflow
 - Leave balance tracking by type (vacation, sick, personal)
