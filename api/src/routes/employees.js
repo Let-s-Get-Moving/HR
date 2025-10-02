@@ -14,7 +14,7 @@ r.get("/", async (_req, res) => {
      LEFT JOIN departments d ON d.id = e.department_id
      LEFT JOIN locations l ON l.id = e.location_id
      WHERE e.status <> 'Terminated'
-     ORDER BY e.last_name, e.first_name`
+     ORDER BY e.first_name, e.last_name`
   );
   res.json(rows);
 });

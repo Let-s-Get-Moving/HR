@@ -518,28 +518,44 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <th className="text-left py-2">Date</th>
                     <th className="text-left py-2">Clock In</th>
                     <th className="text-left py-2">Clock Out</th>
-                    <th className="text-left py-2">Hours</th>
-                    <th className="text-left py-2">Overtime</th>
-                    <th className="text-left py-2">Status</th>
+                    <th className="text-right py-2">Hours</th>
+                    <th className="text-right py-2">Daily Total</th>
+                    <th className="text-left py-2">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(timeEntries || []).map((entry) => (
-                    <tr key={entry.id} className="border-b border-neutral-700">
-                      <td className="py-2">{new Date(entry.work_date).toLocaleDateString()}</td>
-                      <td className="py-2">{entry.clock_in ? new Date(entry.clock_in).toLocaleTimeString() : '-'}</td>
-                      <td className="py-2">{entry.clock_out ? new Date(entry.clock_out).toLocaleTimeString() : '-'}</td>
-                      <td className="py-2">{entry.hours_worked || 0}</td>
-                      <td className="py-2">{entry.overtime_hours || 0}</td>
-                      <td className="py-2">
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          entry.was_late ? 'bg-red-900 text-red-300' : 'bg-green-900 text-green-300'
-                        }`}>
-                          {entry.was_late ? 'Late' : 'On Time'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {(() => {
+                    // Group entries by date
+                    const entriesByDate = {};
+                    (timeEntries || []).forEach(entry => {
+                      const date = entry.work_date;
+                      if (!entriesByDate[date]) {
+                        entriesByDate[date] = [];
+                      }
+                      entriesByDate[date].push(entry);
+                    });
+
+                    // Render grouped entries
+                    return Object.keys(entriesByDate).sort().reverse().map(date => {
+                      const dayEntries = entriesByDate[date];
+                      const dailyTotal = dayEntries.reduce((sum, e) => sum + parseFloat(e.hours_worked || 0), 0);
+                      
+                      return dayEntries.map((entry, idx) => (
+                        <tr key={entry.id} className="border-b border-neutral-700">
+                          <td className="py-2">
+                            {idx === 0 ? new Date(entry.work_date).toLocaleDateString() : ''}
+                          </td>
+                          <td className="py-2">{entry.clock_in ? new Date(entry.clock_in).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '-'}</td>
+                          <td className="py-2">{entry.clock_out ? new Date(entry.clock_out).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '-'}</td>
+                          <td className="py-2 text-right">{entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : '-'}</td>
+                          <td className="py-2 text-right font-semibold text-indigo-400">
+                            {idx === dayEntries.length - 1 ? dailyTotal.toFixed(2) : ''}
+                          </td>
+                          <td className="py-2 text-sm text-neutral-400">{entry.notes || ''}</td>
+                        </tr>
+                      ));
+                    });
+                  })()}
                 </tbody>
               </table>
             </div>

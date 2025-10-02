@@ -336,6 +336,24 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         });
         console.log('');
         
+        // Delete existing uploads for the same pay period (replace old data)
+        console.log('🗑️  Checking for existing uploads with the same pay period...');
+        const existingUploads = await client.query(`
+            SELECT id FROM timecard_uploads 
+            WHERE pay_period_start = $1 AND pay_period_end = $2
+        `, [payPeriod.start, payPeriod.end]);
+        
+        if (existingUploads.rows.length > 0) {
+            console.log(`   Found ${existingUploads.rows.length} existing upload(s), deleting...`);
+            for (const upload of existingUploads.rows) {
+                // Delete timecard entries first (via CASCADE from timecards)
+                await client.query('DELETE FROM timecards WHERE upload_id = $1', [upload.id]);
+                // Delete the upload record
+                await client.query('DELETE FROM timecard_uploads WHERE id = $1', [upload.id]);
+            }
+            console.log('   ✅ Old uploads deleted, inserting new data...');
+        }
+        
         // Create upload record
         const uploadResult = await client.query(`
             INSERT INTO timecard_uploads (filename, pay_period_start, pay_period_end, employee_count, status)
