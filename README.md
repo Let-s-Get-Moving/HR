@@ -333,14 +333,7 @@ Username: Avneet
 Password: password123
 ```
 
-**Can't log in?** Run:
-```bash
-cd scripts
-export DATABASE_URL="postgresql://hr:bv4mVLhdQz9bRQCriS6RN5AiQjFU4AUn@dpg-d2ngrh75r7bs73fj3uig-a.oregon-postgres.render.com/hrcore_42l4"
-node setup-admin-user.js
-```
-
-📄 **Database Details**: See [RENDER_DATABASE.md](RENDER_DATABASE.md)
+**Can't log in?** Contact system administrator to reset credentials.
 
 ## 📚 **Documentation**
 
