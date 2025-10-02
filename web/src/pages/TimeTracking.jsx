@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API } from '../config/api.js';
+import { 
+  UploadsListView, 
+  UploadDetailView, 
+  EmployeeTimecardView,
+  UploadDashboardView 
+} from '../components/TimecardUploadViewer.jsx';
 
 export default function TimeTracking() {
-  const [view, setView] = useState("main"); // main, individual, dashboard
+  const [view, setView] = useState("uploads"); // uploads, main, individual, dashboard, upload-detail
   const [timecards, setTimecards] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [payPeriods, setPayPeriods] = useState([]);
@@ -12,6 +18,13 @@ export default function TimeTracking() {
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  
+  // Upload viewing
+  const [uploads, setUploads] = useState([]);
+  const [selectedUpload, setSelectedUpload] = useState(null);
+  const [uploadEmployees, setUploadEmployees] = useState([]);
+  const [selectedUploadEmployee, setSelectedUploadEmployee] = useState(null);
+  const [uploadEntries, setUploadEntries] = useState([]);
   
   // Upload modal
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -105,6 +118,65 @@ export default function TimeTracking() {
     }
   };
 
+  const loadUploads = async () => {
+    try {
+      setLoading(true);
+      const data = await API('/api/timecard-uploads/uploads');
+      setUploads(data);
+    } catch (error) {
+      console.error('❌ Error loading uploads:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUploadDetails = async (uploadId) => {
+    try {
+      setLoading(true);
+      const employees = await API(`/api/timecard-uploads/uploads/${uploadId}/employees`);
+      setUploadEmployees(employees);
+      setSelectedUpload(uploads.find(u => u.id === uploadId));
+      setView('upload-detail');
+    } catch (error) {
+      console.error('❌ Error loading upload details:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadEmployeeTimecard = async (uploadId, employeeId) => {
+    try {
+      setLoading(true);
+      const data = await API(`/api/timecard-uploads/uploads/${uploadId}/employees/${employeeId}/entries`);
+      setUploadEntries(data.entries);
+      setSelectedUploadEmployee(uploadEmployees.find(e => e.id === employeeId));
+    } catch (error) {
+      console.error('❌ Error loading employee timecard:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUploadStats = async () => {
+    try {
+      setLoading(true);
+      const data = await API('/api/timecard-uploads/stats');
+      setStats(data);
+    } catch (error) {
+      console.error('❌ Error loading upload stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (view === 'uploads') {
+      loadUploads();
+    } else if (view === 'dashboard') {
+      loadUploadStats();
+    }
+  }, [view]);
+
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     setUploadFile(file);
@@ -118,27 +190,17 @@ export default function TimeTracking() {
     }
 
     console.log("📤 [TimeTracking] Starting upload:", uploadFile.name);
-    console.log("📅 [TimeTracking] Manual period:", manualPeriodStart, "to", manualPeriodEnd);
     setUploadStatus({ status: "processing", message: "Uploading and processing file..." });
 
     try {
       const formData = new FormData();
-      formData.append('excel_file', uploadFile);
-      
-      if (manualPeriodStart) {
-        formData.append('pay_period_start', manualPeriodStart);
-        console.log("📅 [TimeTracking] Added manual start:", manualPeriodStart);
-      }
-      if (manualPeriodEnd) {
-        formData.append('pay_period_end', manualPeriodEnd);
-        console.log("📅 [TimeTracking] Added manual end:", manualPeriodEnd);
-      }
+      formData.append('file', uploadFile);
 
       const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
       const sessionId = localStorage.getItem('sessionId');
 
-      console.log("🌐 [TimeTracking] Uploading to:", `${API_BASE_URL}/api/timecards/import`);
-      const response = await fetch(`${API_BASE_URL}/api/timecards/import`, {
+      console.log("🌐 [TimeTracking] Uploading to:", `${API_BASE_URL}/api/timecard-uploads/upload`);
+      const response = await fetch(`${API_BASE_URL}/api/timecard-uploads/upload`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -155,36 +217,18 @@ export default function TimeTracking() {
         throw new Error(result.details || result.error);
       }
 
-      console.log("✅ [TimeTracking] Import summary:", result.summary);
-      console.log("   - Timecards created:", result.summary.timecards_created);
-      console.log("   - Timecards updated:", result.summary.timecards_updated);
-      console.log("   - Entries inserted:", result.summary.entries_inserted);
-      
-      if (result.summary.errors && result.summary.errors.length > 0) {
-        console.warn("⚠️ [TimeTracking] Import errors:", result.summary.errors);
-      }
-      
-      if (result.summary.warnings && result.summary.warnings.length > 0) {
-        console.warn("⚠️ [TimeTracking] Import warnings:", result.summary.warnings);
-      }
-      
-      if (result.summary.debug_logs) {
-        console.log("🔍 [TimeTracking] Debug logs from server:");
-        result.summary.debug_logs.forEach(log => console.log("   ", log));
-      }
-
       setUploadStatus({
         status: "success",
-        message: `Import completed! Created: ${result.summary.timecards_created}, Updated: ${result.summary.timecards_updated}, Entries: ${result.summary.entries_inserted}`
+        message: `Upload successful! ${result.employeeCount} employees, ${result.totalHours.toFixed(2)} total hours`
       });
 
       // Reload data
-      console.log("🔄 [TimeTracking] Reloading data after successful import...");
+      console.log("🔄 [TimeTracking] Reloading uploads after successful import...");
       setTimeout(() => {
         setShowUploadModal(false);
         setUploadFile(null);
         setUploadStatus({ status: null, message: "" });
-        loadInitialData();
+        loadUploads();
       }, 2000);
 
     } catch (error) {
@@ -263,10 +307,25 @@ export default function TimeTracking() {
       </div>
 
       {/* View Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700">
-                <button
+      <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+        <button
+          onClick={() => setView("uploads")}
+          className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
+            view === "uploads" || view === "upload-detail" || view === "employee-timecard"
+              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+              : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            Timecard Uploads
+          </div>
+        </button>
+        <button
           onClick={() => setView("main")}
-          className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+          className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
             view === "main"
               ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
               : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
@@ -276,28 +335,13 @@ export default function TimeTracking() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            All Timecards
-          </div>
-        </button>
-        <button
-          onClick={() => setView("dashboard")}
-          className={`px-4 py-3 font-medium transition-colors border-b-2 ${
-            view === "dashboard"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Dashboard
+            All Timecards (Old)
           </div>
         </button>
         {view === "individual" && (
           <button
             onClick={() => setView("main")}
-            className="px-4 py-3 font-medium border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 flex items-center gap-2"
+            className="px-4 py-3 font-medium border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 flex items-center gap-2 whitespace-nowrap"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -313,8 +357,8 @@ export default function TimeTracking() {
         )}
       </div>
 
-      {/* Filters */}
-      {view !== "individual" && (
+      {/* Filters (only for old views) */}
+      {(view === "main" || view === "individual") && (
       <div className="card p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Pay Period Filter */}
@@ -388,8 +432,43 @@ export default function TimeTracking() {
 
       {/* Main Content */}
       <AnimatePresence mode="wait">
+        {view === "uploads" && (
+          <UploadsListView 
+            uploads={uploads}
+            onViewUpload={loadUploadDetails}
+            onViewDashboard={() => setView("dashboard")}
+            loading={loading}
+          />
+        )}
+        {view === "upload-detail" && (
+          <UploadDetailView
+            upload={selectedUpload}
+            employees={uploadEmployees}
+            onSelectEmployee={(employeeId) => {
+              loadEmployeeTimecard(selectedUpload.id, employeeId);
+              setView("employee-timecard");
+            }}
+            onBack={() => setView("uploads")}
+            loading={loading}
+          />
+        )}
+        {view === "employee-timecard" && (
+          <EmployeeTimecardView
+            employee={selectedUploadEmployee}
+            entries={uploadEntries}
+            upload={selectedUpload}
+            onBack={() => setView("upload-detail")}
+            loading={loading}
+          />
+        )}
+        {view === "dashboard" && (
+          <UploadDashboardView
+            stats={stats}
+            onBack={() => setView("uploads")}
+            loading={loading}
+          />
+        )}
         {view === "main" && <MainTableView timecards={displayedTimecards} onViewIndividual={viewIndividualTimecard} loading={loading} />}
-        {view === "dashboard" && <DashboardView stats={stats} selectedPeriod={selectedPeriod} />}
         {view === "individual" && <IndividualView timecard={selectedEmployee} onBack={() => setView("main")} />}
       </AnimatePresence>
 

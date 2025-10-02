@@ -23,6 +23,7 @@ import benefits from "./routes/benefits.js";
 import imports from "./routes/imports.js";
 import admin from "./routes/admin.js";
 import timecards from "./routes/timecards.js";
+import timecardUploads from "./routes/timecardUploads.js";
 import employeeMatching from "./routes/employee-matching.js";
 import adminCleanup from "./routes/admin-cleanup.js";
 import logger from "./utils/logger.js";
@@ -87,6 +88,7 @@ app.use("/api/benefits", benefits);
 app.use("/api/imports", imports);
 app.use("/api/admin", admin);
 app.use("/api/timecards", timecards);
+app.use("/api/timecard-uploads", timecardUploads);
 app.use("/api/employee-matching", employeeMatching);
 app.use("/api/admin-cleanup", adminCleanup);
 
