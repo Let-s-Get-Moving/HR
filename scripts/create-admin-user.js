@@ -12,9 +12,15 @@
 import pkg from 'pg';
 const { Pool } = pkg;
 
+if (!process.env.DATABASE_URL) {
+  console.error('❌ DATABASE_URL environment variable is required');
+  console.error('   Set it with: export DATABASE_URL="your-database-url"');
+  process.exit(1);
+}
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || "postgresql://hr:bv4mVLhdQz9bRQCriS6RN5AiQjFU4AUn@dpg-d2ngrh75r7bs73fj3uig-a.oregon-postgres.render.com/hrcore_42l4",
-  ssl: { rejectUnauthorized: false } // Always use SSL for Render
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
 });
 
 async function createAdminUser() {
