@@ -140,6 +140,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             return res.status(400).json({ error: result.error, details: result.details });
         }
         
+        // Invalidate stats cache after successful upload
+        invalidateStatsCache();
+        
         res.json({
             success: true,
             uploadId: result.uploadId,
@@ -154,54 +157,88 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     }
 });
 
-// Get dashboard statistics
+// Cache for stats (refreshed every 30 seconds or on new upload)
+let statsCache = null;
+let statsCacheTime = 0;
+const CACHE_DURATION = 30000; // 30 seconds
+
+// Helper to invalidate cache
+function invalidateStatsCache() {
+    statsCache = null;
+    statsCacheTime = 0;
+    console.log('📊 [Stats] Cache invalidated');
+}
+
+// Get dashboard statistics (optimized with caching)
 router.get('/stats', async (req, res) => {
     try {
-        const stats = await q(`
-            SELECT
-                COUNT(DISTINCT tu.id) as total_uploads,
-                COUNT(DISTINCT t.employee_id) as total_employees,
-                COALESCE(SUM(tu.total_hours), 0) as total_hours,
-                COALESCE(AVG(tu.total_hours / NULLIF(tu.employee_count, 0)), 0) as avg_hours_per_employee
-            FROM timecard_uploads tu
-            LEFT JOIN timecards t ON t.upload_id = tu.id
-        `);
+        // Check cache first
+        const now = Date.now();
+        if (statsCache && (now - statsCacheTime) < CACHE_DURATION) {
+            console.log('📊 [Stats] Returning cached data');
+            return res.json(statsCache);
+        }
         
-        // Get top employees by hours
-        const topEmployees = await q(`
-            SELECT 
-                e.id,
-                e.first_name || ' ' || e.last_name as name,
-                SUM(t.total_hours) as total_hours
-            FROM timecards t
-            JOIN employees e ON t.employee_id = e.id
-            WHERE t.upload_id IS NOT NULL
-            GROUP BY e.id, e.first_name, e.last_name
-            ORDER BY total_hours DESC
-            LIMIT 5
-        `);
+        console.log('📊 [Stats] Fetching fresh data...');
         
-        // Get missing punches count
-        const missingPunches = await q(`
-            SELECT COUNT(*) as count
-            FROM timecard_entries
-            WHERE notes LIKE '%Missing%'
-        `);
+        // Optimized: Run queries in parallel
+        const [stats, topEmployees, missingPunches, latestUpload] = await Promise.all([
+            // Summary stats
+            q(`
+                SELECT
+                    COUNT(DISTINCT tu.id) as total_uploads,
+                    COUNT(DISTINCT t.employee_id) as total_employees,
+                    COALESCE(SUM(tu.total_hours), 0) as total_hours,
+                    COALESCE(AVG(tu.total_hours / NULLIF(tu.employee_count, 0)), 0) as avg_hours_per_employee
+                FROM timecard_uploads tu
+                LEFT JOIN timecards t ON t.upload_id = tu.id
+                WHERE tu.status = 'processed'
+            `),
+            
+            // Top 5 employees (simplified query)
+            q(`
+                SELECT 
+                    e.id,
+                    e.first_name || ' ' || e.last_name as name,
+                    SUM(t.total_hours) as total_hours
+                FROM timecards t
+                JOIN employees e ON t.employee_id = e.id
+                WHERE t.upload_id IS NOT NULL
+                GROUP BY e.id, e.first_name, e.last_name
+                ORDER BY total_hours DESC
+                LIMIT 5
+            `),
+            
+            // Missing punches count (optimized)
+            q(`
+                SELECT COUNT(*) as count
+                FROM timecard_entries
+                WHERE notes ILIKE '%Missing%'
+            `),
+            
+            // Latest upload
+            q(`
+                SELECT upload_date, filename
+                FROM timecard_uploads
+                WHERE status = 'processed'
+                ORDER BY upload_date DESC
+                LIMIT 1
+            `)
+        ]);
         
-        // Get latest upload
-        const latestUpload = await q(`
-            SELECT upload_date, filename
-            FROM timecard_uploads
-            ORDER BY upload_date DESC
-            LIMIT 1
-        `);
-        
-        res.json({
+        const result = {
             summary: stats.rows[0],
             topEmployees: topEmployees.rows,
             missingPunches: missingPunches.rows[0].count,
             latestUpload: latestUpload.rows[0] || null
-        });
+        };
+        
+        // Cache the result
+        statsCache = result;
+        statsCacheTime = now;
+        
+        console.log('📊 [Stats] Fresh data cached');
+        res.json(result);
     } catch (error) {
         console.error('Error fetching stats:', error);
         res.status(500).json({ error: 'Failed to fetch statistics' });
