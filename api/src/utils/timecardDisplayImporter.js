@@ -237,7 +237,9 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                     });
                 }
                 
-                startRow = employeeInfo.headerRow + entries.length + 10;
+                // Move to next row after this employee's header to continue searching
+                // Don't guess the position - just increment by 1 to ensure we scan everything
+                startRow = employeeInfo.headerRow + 1;
             }
         }
         
