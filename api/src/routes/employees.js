@@ -160,10 +160,18 @@ r.get("/:id/time-entries", async (req, res) => {
          tce.id,
          tc.employee_id,
          tce.work_date,
-         tce.clock_in::text::timestamp,
-         tce.clock_out::text::timestamp,
+         CASE 
+           WHEN tce.clock_in IS NOT NULL 
+           THEN (tce.work_date + tce.clock_in)::timestamp
+           ELSE NULL
+         END as clock_in,
+         CASE 
+           WHEN tce.clock_out IS NOT NULL 
+           THEN (tce.work_date + tce.clock_out)::timestamp
+           ELSE NULL
+         END as clock_out,
          tce.hours_worked,
-         tce.overtime_hours,
+         0 as overtime_hours,
          false as was_late,
          tce.notes,
          'timecard' as source
