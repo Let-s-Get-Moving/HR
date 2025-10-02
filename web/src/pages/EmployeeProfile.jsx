@@ -529,7 +529,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <th className="text-left py-2">Clock Out</th>
                     <th className="text-right py-2">Hours</th>
                     <th className="text-right py-2">Daily Total</th>
-                    <th className="text-left py-2">Notes</th>
+                    <th className="text-left py-2 pl-8">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -563,7 +563,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                           <td className="py-2 text-right font-semibold text-indigo-400">
                             {idx === dayEntries.length - 1 ? formatHoursAsTime(dailyTotal) : ''}
                           </td>
-                          <td className="py-2 text-sm text-neutral-400">{entry.notes || ''}</td>
+                          <td className="py-2 pl-8 text-sm text-neutral-400">{entry.notes || ''}</td>
                         </tr>
                       ));
                     });
