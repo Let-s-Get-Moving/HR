@@ -95,8 +95,27 @@ export default function TimeTracking() {
     try {
       console.log("🔄 [TimeTracking] Loading timecards for period:", selectedPeriod.period_label);
       setLoading(true);
+      
+      // Format dates to YYYY-MM-DD strings to ensure proper comparison
+      const formatDate = (date) => {
+        if (typeof date === 'string') {
+          // Already a string, extract YYYY-MM-DD part
+          return date.split('T')[0];
+        }
+        if (date instanceof Date) {
+          // Convert Date object to YYYY-MM-DD
+          return date.toISOString().split('T')[0];
+        }
+        return date;
+      };
+      
+      const startDate = formatDate(selectedPeriod.pay_period_start);
+      const endDate = formatDate(selectedPeriod.pay_period_end);
+      
+      console.log(`📅 [TimeTracking] Querying with dates: ${startDate} to ${endDate}`);
+      
       const data = await API(
-        `/api/timecards?pay_period_start=${selectedPeriod.pay_period_start}&pay_period_end=${selectedPeriod.pay_period_end}`
+        `/api/timecards?pay_period_start=${startDate}&pay_period_end=${endDate}`
       );
       console.log("✅ [TimeTracking] Loaded", data.length, "timecards from API");
       console.log("✅ [TimeTracking] Setting", data.length, "timecards");
@@ -116,8 +135,19 @@ export default function TimeTracking() {
     
     try {
       console.log("📊 [TimeTracking] Loading stats for period:", selectedPeriod.period_label);
+      
+      // Format dates consistently
+      const formatDate = (date) => {
+        if (typeof date === 'string') return date.split('T')[0];
+        if (date instanceof Date) return date.toISOString().split('T')[0];
+        return date;
+      };
+      
+      const startDate = formatDate(selectedPeriod.pay_period_start);
+      const endDate = formatDate(selectedPeriod.pay_period_end);
+      
       const data = await API(
-        `/api/timecards/stats/summary?pay_period_start=${selectedPeriod.pay_period_start}&pay_period_end=${selectedPeriod.pay_period_end}`
+        `/api/timecards/stats/summary?pay_period_start=${startDate}&pay_period_end=${endDate}`
       );
       console.log("✅ [TimeTracking] Loaded stats:", data.summary);
       setStats(data);
@@ -274,8 +304,19 @@ export default function TimeTracking() {
     
     try {
       console.log("👤 [TimeTracking] Loading individual timecard for employee:", employeeId);
+      
+      // Format dates consistently
+      const formatDate = (date) => {
+        if (typeof date === 'string') return date.split('T')[0];
+        if (date instanceof Date) return date.toISOString().split('T')[0];
+        return date;
+      };
+      
+      const startDate = formatDate(selectedPeriod.pay_period_start);
+      const endDate = formatDate(selectedPeriod.pay_period_end);
+      
       const data = await API(
-        `/api/timecards/employee/${employeeId}/period?pay_period_start=${selectedPeriod.pay_period_start}&pay_period_end=${selectedPeriod.pay_period_end}`
+        `/api/timecards/employee/${employeeId}/period?pay_period_start=${startDate}&pay_period_end=${endDate}`
       );
       console.log("✅ [TimeTracking] Loaded timecard for:", data.employee_name);
       console.log("   - Total hours:", data.total_hours);
