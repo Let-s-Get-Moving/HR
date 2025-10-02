@@ -702,6 +702,14 @@ function DashboardView({ stats, selectedPeriod }) {
   );
 }
 
+// Convert decimal hours to HH:MM format
+const formatHoursAsTime = (decimalHours) => {
+  if (!decimalHours || decimalHours === 0) return '0:00';
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60);
+  return `${hours}:${minutes.toString().padStart(2, '0')}`;
+};
+
 // Individual Timecard View Component
 function IndividualView({ timecard, onBack }) {
   if (!timecard) {
@@ -776,7 +784,8 @@ function IndividualView({ timecard, onBack }) {
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary">Date</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary">Clock In</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary">Clock Out</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Hours</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Work Time</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Total Hours</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary">Notes</th>
               </tr>
             </thead>
@@ -789,11 +798,6 @@ function IndividualView({ timecard, onBack }) {
                         <td rowSpan={entries.length} className="px-6 py-4 font-medium text-primary border-r border-slate-200 dark:border-slate-700">
                           <div>{new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}</div>
                           <div className="text-sm">{new Date(date).toLocaleDateString()}</div>
-                          {idx === entries.length - 1 && (
-                            <div className="mt-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-                              Daily: {totalHours.toFixed(2)}h
-                            </div>
-                          )}
                         </td>
                       )}
                       <td className="px-6 py-4 text-sm text-primary">
@@ -803,7 +807,10 @@ function IndividualView({ timecard, onBack }) {
                         {entry.clock_out || <span className="text-red-500">Missing</span>}
                       </td>
                       <td className="px-6 py-4 text-sm text-right text-primary">
-                        {parseFloat(entry.hours_worked || 0).toFixed(2)}
+                        {formatHoursAsTime(parseFloat(entry.hours_worked || 0))}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-right font-semibold text-indigo-600 dark:text-indigo-400">
+                        {formatHoursAsTime(totalHours)}
                       </td>
                       <td className="px-6 py-4 text-sm text-secondary">
                         {entry.notes || '—'}

@@ -174,13 +174,18 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
     return <div className="text-center py-8 text-secondary">Loading timecard...</div>;
   }
 
-  // Group entries by date
+  // Group entries by date and calculate daily totals
   const entriesByDate = {};
+  const dailyTotals = {};
+  
   (entries || []).forEach(entry => {
     if (!entriesByDate[entry.work_date]) {
       entriesByDate[entry.work_date] = [];
+      dailyTotals[entry.work_date] = 0;
     }
     entriesByDate[entry.work_date].push(entry);
+    // Sum up hours_worked for the day
+    dailyTotals[entry.work_date] += parseFloat(entry.hours_worked || 0);
   });
 
   return (
@@ -231,13 +236,15 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary">IN</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary">OUT</th>
                 <th className="px-6 py-3 text-right text-sm font-medium text-primary">Work Time</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Daily Total</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Total Hours</th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-primary">Note</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
               {Object.keys(entriesByDate).sort().map(date => {
                 const dayEntries = entriesByDate[date];
+                const dayTotal = dailyTotals[date];
+                
                 return dayEntries.map((entry, idx) => (
                   <tr key={entry.id} className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 ${entry.notes?.includes('Missing') ? 'bg-red-50 dark:bg-red-900/10' : ''}`}>
                     <td className="px-6 py-4 text-sm font-medium text-primary">
@@ -256,7 +263,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
                       {entry.hours_worked ? formatHoursAsTime(parseFloat(entry.hours_worked)) : ''}
                     </td>
                     <td className="px-6 py-4 text-sm text-right font-semibold text-indigo-600 dark:text-indigo-400">
-                      {entry.daily_total ? formatHoursAsTime(parseFloat(entry.daily_total)) : ''}
+                      {formatHoursAsTime(dayTotal)}
                     </td>
                     <td className="px-6 py-4 text-sm text-secondary">
                       {entry.notes ? (
