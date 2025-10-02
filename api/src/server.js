@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { q } from "./db.js";
 import { sanitizeString, logSecurityEvent } from "./utils/security.js";
 import security from "./middleware/security.js";
+import { ensureAdminUser } from "./utils/ensureAdminUser.js";
 
 import employees from "./routes/employees.js";
 import auth from "./routes/auth.js";
@@ -171,10 +172,17 @@ process.on('SIGINT', () => {
 
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   logger.info(`API server started on port ${PORT}`);
   console.log(`API listening on ${PORT}`);
   console.log("Database connected successfully");
+  
+  // Ensure admin user exists on every startup
+  try {
+    await ensureAdminUser();
+  } catch (error) {
+    console.error('Failed to ensure admin user:', error);
+  }
 });
 
 export default app;

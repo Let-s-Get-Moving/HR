@@ -167,9 +167,16 @@ function parseEmployeeTimecard(data, employeeInfo, payPeriod) {
         const isDayRow = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].includes(dayOfWeek);
         
         if (isDayRow && dateCol >= 0 && row[dateCol]) {
-            // New day
+            // New day - validate the date is actually a date
+            const dateStr = String(row[dateCol]).trim();
+            
+            // Skip if date looks invalid (e.g., "MON", empty, etc.)
+            if (!dateStr || dateStr.length < 8 || ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].includes(dateStr.toUpperCase())) {
+                continue; // Skip rows without valid dates
+            }
+            
             currentDay = dayOfWeek;
-            currentDate = String(row[dateCol]).trim();
+            currentDate = dateStr;
             rowOrder = 0;
             
             // Get daily total if present
