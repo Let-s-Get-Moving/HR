@@ -36,21 +36,13 @@ export default function TimeTracking() {
   // Load initial data on component mount
   useEffect(() => {
     loadInitialData();
-    // Also load uploads list on mount since default view is "uploads"
-    if (view === 'uploads') {
-      loadUploads();
-    } else if (view === 'dashboard') {
-      loadUploadStats();
-    }
   }, []);
 
-  // Reload timecards when period or view changes
+  // Reload timecards when period changes (only for main/individual views)
   useEffect(() => {
-    if (selectedPeriod) {
+    if (selectedPeriod && (view === 'main' || view === 'individual')) {
       loadTimecards();
-      if (view === "dashboard") {
-        loadStats();
-      }
+      loadStats();
     }
   }, [selectedPeriod, view]);
 
