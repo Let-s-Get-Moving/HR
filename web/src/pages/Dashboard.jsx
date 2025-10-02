@@ -24,9 +24,10 @@ export default function Dashboard({ onNavigate }) {
   const loadData = async () => {
     try {
       setRefreshing(true);
-      const [analyticsData, activityData] = await Promise.all([
+      const [analyticsData, activityData, attendanceData] = await Promise.all([
         API(`/api/analytics/dashboard?timeRange=${selectedTimeRange}`).catch(() => null),
-        API("/api/analytics/recent-activity").catch(() => [])
+        API("/api/analytics/recent-activity").catch(() => []),
+        API("/api/metrics/attendance").catch(() => null)
       ]);
       
       setAnalytics(analyticsData);
@@ -43,11 +44,12 @@ export default function Dashboard({ onNavigate }) {
           }
         });
         
-        setAtt({
+        // Use real attendance data from API
+        setAtt(attendanceData || {
           absenteeism_rate: 0,
           avg_hours_week: 0,
-          late_arrivals: 269,
-          early_leaves: 62
+          late_arrivals: 0,
+          early_leaves: 0
         });
         
         setCmp({
