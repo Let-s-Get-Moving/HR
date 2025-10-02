@@ -523,6 +523,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-neutral-700">
+                    <th className="text-left py-2">Day</th>
                     <th className="text-left py-2">Date</th>
                     <th className="text-left py-2">Clock In</th>
                     <th className="text-left py-2">Clock Out</th>
