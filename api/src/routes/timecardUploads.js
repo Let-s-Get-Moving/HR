@@ -195,6 +195,39 @@ router.get('/stats', async (req, res) => {
         
         console.log('📊 [Upload Stats] Cache MISS - fetching fresh data from database...');
         
+        // DIAGNOSTIC: Check timecards table state BEFORE running main queries
+        const diagnosticStart = Date.now();
+        console.log('🔍 [Upload Stats] Running diagnostics...');
+        
+        const [uploadCheck, timecardCheck, linkCheck] = await Promise.all([
+            q(`SELECT COUNT(*) as count, SUM(employee_count) as total_emp FROM timecard_uploads WHERE status = 'processed'`),
+            q(`SELECT COUNT(*) as count, COUNT(DISTINCT employee_id) as unique_emp FROM timecards`),
+            q(`SELECT 
+                tu.id as upload_id, 
+                tu.filename,
+                tu.employee_count as expected_employees,
+                COUNT(t.id) as actual_timecards,
+                COUNT(DISTINCT t.employee_id) as unique_employees
+               FROM timecard_uploads tu
+               LEFT JOIN timecards t ON t.upload_id = tu.id
+               WHERE tu.status = 'processed'
+               GROUP BY tu.id, tu.filename, tu.employee_count`)
+        ]);
+        
+        const diagTime = Date.now() - diagnosticStart;
+        console.log(`🔍 [Upload Stats] Diagnostics completed in ${diagTime}ms:`);
+        console.log(`   - Uploads table: ${uploadCheck.rows[0].count} processed uploads, ${uploadCheck.rows[0].total_emp} total employees expected`);
+        console.log(`   - Timecards table: ${timecardCheck.rows[0].count} total records, ${timecardCheck.rows[0].unique_emp} unique employees`);
+        console.log(`   - Join analysis:`);
+        linkCheck.rows.forEach(row => {
+            console.log(`      Upload #${row.upload_id} (${row.filename})`);
+            console.log(`         Expected: ${row.expected_employees} employees`);
+            console.log(`         Found: ${row.actual_timecards} timecards, ${row.unique_employees} unique employees`);
+            if (row.unique_employees === '0') {
+                console.error(`         ❌ WARNING: No timecards found for this upload!`);
+            }
+        });
+        
         // Optimized: Run queries in parallel
         const queryStart = Date.now();
         const [stats, topEmployees, missingPunches, latestUpload] = await Promise.all([
