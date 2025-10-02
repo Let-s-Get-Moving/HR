@@ -41,10 +41,11 @@ r.get("/", async (req, res) => {
     
     if (pay_period_start && pay_period_end) {
       // Match by upload period (more reliable than timecard period due to timezone issues)
+      // Cast dates to DATE type to ensure proper comparison
       query += ` AND (
-        (tu.pay_period_start = $${paramCount} AND tu.pay_period_end = $${paramCount + 1})
+        (tu.pay_period_start::DATE = $${paramCount}::DATE AND tu.pay_period_end::DATE = $${paramCount + 1}::DATE)
         OR
-        (t.pay_period_start = $${paramCount} AND t.pay_period_end = $${paramCount + 1})
+        (t.pay_period_start::DATE = $${paramCount}::DATE AND t.pay_period_end::DATE = $${paramCount + 1}::DATE)
       )`;
       params.push(pay_period_start);
       params.push(pay_period_end);
@@ -69,6 +70,20 @@ r.get("/", async (req, res) => {
     
     console.log(`📊 [Timecards] Query:`, query);
     console.log(`📊 [Timecards] Params:`, params);
+    
+    // DEBUG: Check if timecards exist at all for this period
+    if (pay_period_start && pay_period_end) {
+      const debugCheck = await q(`
+        SELECT COUNT(*) as count FROM timecards t WHERE t.pay_period_start::DATE = $1::DATE AND t.pay_period_end::DATE = $2::DATE
+      `, [pay_period_start, pay_period_end]);
+      console.log(`📊 [Timecards] DEBUG: Found ${debugCheck.rows[0].count} timecards in timecards table for this period`);
+      
+      const debugUploadCheck = await q(`
+        SELECT id, pay_period_start, pay_period_end, employee_count, status FROM timecard_uploads 
+        WHERE pay_period_start::DATE = $1::DATE AND pay_period_end::DATE = $2::DATE
+      `, [pay_period_start, pay_period_end]);
+      console.log(`📊 [Timecards] DEBUG: Found ${debugUploadCheck.rows.length} uploads:`, debugUploadCheck.rows);
+    }
     
     const { rows } = await q(query, params);
     
