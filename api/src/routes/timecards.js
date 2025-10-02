@@ -213,7 +213,7 @@ r.get("/stats/summary", async (req, res) => {
   }
 });
 
-// Get all pay periods that have timecards
+// Get all pay periods that have timecards (from uploads)
 r.get("/periods/list", async (req, res) => {
   try {
     const { rows } = await q(
@@ -221,9 +221,9 @@ r.get("/periods/list", async (req, res) => {
         pay_period_start,
         pay_period_end,
         TO_CHAR(pay_period_start, 'YYYY-MM-DD') || ' - ' || TO_CHAR(pay_period_end, 'YYYY-MM-DD') as period_label,
-        COUNT(*) as timecard_count
-      FROM timecards
-      GROUP BY pay_period_start, pay_period_end
+        employee_count as timecard_count
+      FROM timecard_uploads
+      WHERE status = 'processed'
       ORDER BY pay_period_start DESC`
     );
     

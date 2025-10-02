@@ -361,9 +361,9 @@ export default function TimeTracking() {
       {(view === "main" || view === "individual") && (
       <div className="card p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Pay Period Filter */}
+            {/* Period Filter */}
             <div>
-              <label className="block text-sm font-medium mb-2 text-primary">Pay Period</label>
+              <label className="block text-sm font-medium mb-2 text-primary">Period</label>
               <select
                 value={selectedPeriod?.pay_period_start || ""}
                 onChange={(e) => {
@@ -757,15 +757,15 @@ function IndividualView({ timecard, onBack }) {
             <h2 className="text-2xl font-bold text-primary">{timecard.employee_name}</h2>
             <p className="text-secondary">{timecard.email}</p>
             <p className="text-sm text-secondary mt-1">
-              Pay Period: {new Date(timecard.pay_period_start).toLocaleDateString()} - {new Date(timecard.pay_period_end).toLocaleDateString()}
+              Period: {new Date(timecard.pay_period_start).toLocaleDateString()} - {new Date(timecard.pay_period_end).toLocaleDateString()}
             </p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold text-primary">{parseFloat(timecard.total_hours || 0).toFixed(2)}</div>
+            <div className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(timecard.total_hours || 0))}</div>
             <div className="text-sm text-secondary">Total Hours</div>
             {parseFloat(timecard.overtime_hours || 0) > 0 && (
               <div className="mt-2 text-amber-600 dark:text-amber-400 font-medium">
-                {parseFloat(timecard.overtime_hours).toFixed(2)} OT
+                {formatHoursAsTime(parseFloat(timecard.overtime_hours))} OT
             </div>
             )}
           </div>
