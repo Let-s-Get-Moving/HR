@@ -81,26 +81,46 @@ function findPayPeriod(data) {
     return null;
 }
 
-// Find employee name in data
-function findEmployee(data, startRow) {
-    for (let i = startRow; i < Math.min(startRow + 10, data.length); i++) {
+// Find ALL employees in the entire sheet (2-pass system)
+function findAllEmployees(data) {
+    const employees = [];
+    
+    console.log(`📋 Scanning entire sheet for employees (${data.length} rows)...`);
+    
+    for (let i = 0; i < data.length; i++) {
         const row = data[i];
         for (let col = 0; col < row.length; col++) {
             const cell = String(row[col] || '').trim().toLowerCase();
-            if (cell === 'employee') {
+            
+            // Look for "Employee" or "Employee:" in any cell
+            if (cell === 'employee' || cell === 'employee:') {
                 // Next cell should have the name
                 for (let c = col + 1; c < row.length; c++) {
                     let name = String(row[c] || '').trim();
-                    if (name && name !== '(empty)') {
-                        // Remove numbers in parentheses like "(1)"
-                        name = name.replace(/\(\d+\)/, '').trim();
-                        return { name, headerRow: i };
+                    if (name && name !== '(empty)' && name.toLowerCase() !== 'employee') {
+                        // Remove numbers in parentheses like "(1)" and clean up
+                        name = name.replace(/\(\d+\)/g, '').trim();
+                        
+                        // Avoid duplicates (sometimes "Employee" appears multiple times)
+                        const isDuplicate = employees.some(e => 
+                            e.name.toLowerCase() === name.toLowerCase() && 
+                            Math.abs(e.headerRow - i) < 5
+                        );
+                        
+                        if (!isDuplicate && name.length > 0) {
+                            employees.push({ name, headerRow: i });
+                            console.log(`   ✓ Found employee #${employees.length}: "${name}" at row ${i}`);
+                        }
+                        break;
                     }
                 }
+                break; // Found "Employee" in this row, move to next row
             }
         }
     }
-    return null;
+    
+    console.log(`📊 Total employees found: ${employees.length}`);
+    return employees;
 }
 
 // Parse time entries for one employee
@@ -222,11 +242,22 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                 throw new Error('Could not determine pay period from filename or Excel data');
             }
             
-            // Find all employees in this sheet
-            let startRow = 0;
-            while (startRow < data.length) {
-                const employeeInfo = findEmployee(data, startRow);
-                if (!employeeInfo) break;
+            console.log(`\n🔍 Processing sheet: "${sheetName}"`);
+            
+            // PASS 1: Find ALL employees in this sheet at once
+            const employeeInfos = findAllEmployees(data);
+            
+            if (employeeInfos.length === 0) {
+                console.log(`⚠️ No employees found in sheet "${sheetName}"`);
+                continue;
+            }
+            
+            console.log(`\n📝 PASS 2: Parsing timecards for ${employeeInfos.length} employees...`);
+            
+            // PASS 2: Parse each employee's data independently
+            for (let i = 0; i < employeeInfos.length; i++) {
+                const employeeInfo = employeeInfos[i];
+                console.log(`   Processing ${i + 1}/${employeeInfos.length}: ${employeeInfo.name}...`);
                 
                 const entries = parseEmployeeTimecard(data, employeeInfo, payPeriod);
                 
@@ -235,17 +266,24 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                         name: employeeInfo.name,
                         entries: entries
                     });
+                    console.log(`   ✅ Parsed ${entries.length} time entries for ${employeeInfo.name}`);
+                } else {
+                    console.log(`   ⚠️ No time entries found for ${employeeInfo.name}`);
                 }
-                
-                // Move to next row after this employee's header to continue searching
-                // Don't guess the position - just increment by 1 to ensure we scan everything
-                startRow = employeeInfo.headerRow + 1;
             }
         }
         
         if (employees.length === 0) {
             throw new Error('No employee timecards found in file');
         }
+        
+        console.log(`\n✅ SCAN COMPLETE: Found ${employees.length} employees total`);
+        console.log(`📊 Employee list:`);
+        employees.forEach((emp, idx) => {
+            const totalHours = emp.entries.reduce((sum, e) => sum + (e.work_time || 0), 0);
+            console.log(`   ${idx + 1}. ${emp.name} - ${emp.entries.length} entries, ${totalHours.toFixed(2)} hours`);
+        });
+        console.log('');
         
         // Create upload record
         const uploadResult = await client.query(`
