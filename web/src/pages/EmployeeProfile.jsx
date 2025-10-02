@@ -550,6 +550,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       
                       return dayEntries.map((entry, idx) => (
                         <tr key={entry.id} className="border-b border-neutral-700">
+                          <td className="py-2 font-medium">
+                            {idx === 0 ? new Date(entry.work_date).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : ''}
+                          </td>
                           <td className="py-2">
                             {idx === 0 ? new Date(entry.work_date).toLocaleDateString() : ''}
                           </td>
