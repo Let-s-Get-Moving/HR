@@ -170,6 +170,23 @@ function parseEmployeeTimecard(data, employeeInfo, payPeriod) {
         }
         if (dateCol >= 0 && inCol >= 0) {
             headerRow = i + 1;
+            
+            // IMPORTANT: If "Date" is in column 0, the actual dates are usually in column 1
+            // because column 0 contains day-of-week (MON/TUE/etc) in data rows
+            // Check the first data row to see where the actual date is
+            if (dateCol === 0 && headerRow < data.length) {
+                const firstDataRow = data[headerRow];
+                const col0Value = String(firstDataRow[0] || '').trim().toUpperCase();
+                const col1Value = String(firstDataRow[1] || '').trim();
+                
+                // If column 0 has day-of-week and column 1 has date format, use column 1
+                if (['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].includes(col0Value) && 
+                    col1Value.match(/\d{4}-\d{2}-\d{2}/)) {
+                    dateCol = 1;
+                }
+            }
+            
+            console.log(`   📍 Header found at row ${i}: Date=col${dateCol}, IN=col${inCol}, OUT=col${outCol}`);
             break;
         }
     }
@@ -188,24 +205,23 @@ function parseEmployeeTimecard(data, employeeInfo, payPeriod) {
         const dayOfWeek = String(row[0] || '').trim().toUpperCase();
         const isDayRow = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].includes(dayOfWeek);
         
+        // If this row has a day-of-week AND has a date, it's a new day
         if (isDayRow && dateCol >= 0 && row[dateCol]) {
-            // New day - validate the date is actually a date
             const dateStr = String(row[dateCol]).trim();
             
-            // Skip if date looks invalid (e.g., "MON", empty, etc.)
-            if (!dateStr || dateStr.length < 8 || ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].includes(dateStr.toUpperCase())) {
-                continue; // Skip rows without valid dates
+            // Validate it's actually a date (not just day-of-week repeated)
+            if (dateStr && dateStr.length >= 8 && !['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].includes(dateStr.toUpperCase())) {
+                // Valid new day
+                currentDay = dayOfWeek;
+                currentDate = dateStr;
+                rowOrder = 0;
+                
+                // Get daily total if present (only on first row of day)
+                dailyTotal = dailyTotalCol >= 0 ? parseFloat(String(row[dailyTotalCol] || '').replace(':', '.')) || null : null;
             }
-            
-            currentDay = dayOfWeek;
-            currentDate = dateStr;
-            rowOrder = 0;
-            
-            // Get daily total if present
-            dailyTotal = dailyTotalCol >= 0 ? parseFloat(String(row[dailyTotalCol] || '').replace(':', '.')) || null : null;
         }
         
-        // Check for clock in/out
+        // Check for clock in/out (on ANY row, including continuation rows)
         const clockIn = inCol >= 0 ? String(row[inCol] || '').trim() : '';
         const clockOut = outCol >= 0 ? String(row[outCol] || '').trim() : '';
         const note = noteCol >= 0 ? String(row[noteCol] || '').trim() : '';
@@ -213,7 +229,7 @@ function parseEmployeeTimecard(data, employeeInfo, payPeriod) {
         if (clockIn) {
             // Skip this entry if we don't have a valid date yet
             if (!currentDate) {
-                console.log(`⚠️ Skipping entry with no date: clock_in=${clockIn}`);
+                console.log(`⚠️ Skipping entry with no date: clock_in=${clockIn} at row ${i}`);
                 continue;
             }
             
