@@ -87,13 +87,31 @@ function findAllEmployees(data) {
     
     console.log(`📋 Scanning entire sheet for employees (${data.length} rows)...`);
     
+    // Debug: Show first 20 rows to understand structure
+    console.log('🔍 DEBUG: First 20 rows of Excel:');
+    for (let i = 0; i < Math.min(20, data.length); i++) {
+        const row = data[i];
+        const rowPreview = row.slice(0, 10).map(cell => {
+            const str = String(cell || '').trim();
+            return str.length > 20 ? str.substring(0, 20) + '...' : str;
+        });
+        console.log(`   Row ${i}: [${rowPreview.join(' | ')}]`);
+    }
+    
     for (let i = 0; i < data.length; i++) {
         const row = data[i];
         for (let col = 0; col < row.length; col++) {
             const cell = String(row[col] || '').trim().toLowerCase();
             
-            // Look for "Employee" or "Employee:" in any cell
-            if (cell === 'employee' || cell === 'employee:') {
+            // Look for "Employee" or "Employee:" in any cell (more flexible matching)
+            if (cell === 'employee' || 
+                cell === 'employee:' || 
+                cell.startsWith('employee:') ||
+                cell === 'employee name' ||
+                (cell.includes('employee') && cell.length < 20)) {
+                
+                console.log(`   🔍 Found "${row[col]}" at row ${i}, col ${col}`);
+                
                 // Next cell should have the name
                 for (let c = col + 1; c < row.length; c++) {
                     let name = String(row[c] || '').trim();
