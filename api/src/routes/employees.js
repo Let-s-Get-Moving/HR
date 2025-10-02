@@ -107,116 +107,141 @@ r.put("/:id", async (req, res) => {
 
 // Get single employee with department and location info
 r.get("/:id", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await q(
-    `SELECT e.*, d.name as department_name, l.name as location_name,
-            COALESCE(e.hourly_rate, comp.regular_rate) AS hourly_rate
-     FROM employees e 
-     LEFT JOIN departments d ON e.department_id = d.id 
-     LEFT JOIN locations l ON e.location_id = l.id 
-     LEFT JOIN LATERAL (
-       SELECT regular_rate
-       FROM employee_compensation ec
-       WHERE ec.employee_id = e.id
-       ORDER BY ec.effective_date DESC, ec.id DESC
-       LIMIT 1
-     ) comp ON TRUE
-     WHERE e.id = $1`,
-    [id]
-  );
-  if (rows.length === 0) {
-    return res.status(404).json({ error: "Employee not found" });
+  try {
+    const { id } = req.params;
+    const { rows } = await q(
+      `SELECT e.*, d.name as department_name, l.name as location_name,
+              COALESCE(e.hourly_rate, comp.regular_rate) AS hourly_rate
+       FROM employees e 
+       LEFT JOIN departments d ON e.department_id = d.id 
+       LEFT JOIN locations l ON e.location_id = l.id 
+       LEFT JOIN LATERAL (
+         SELECT regular_rate
+         FROM employee_compensation ec
+         WHERE ec.employee_id = e.id
+         ORDER BY ec.effective_date DESC, ec.id DESC
+         LIMIT 1
+       ) comp ON TRUE
+       WHERE e.id = $1`,
+      [id]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+    res.json(rows[0]);
+  } catch (error) {
+    console.error('Error fetching employee:', error);
+    res.status(500).json({ error: 'Failed to fetch employee', details: error.message });
   }
-  res.json(rows[0]);
 });
 
 // Get employee time entries (from BOTH old time_entries AND new timecard_entries)
 r.get("/:id/time-entries", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await q(
-    `SELECT 
-       te.id,
-       te.employee_id,
-       te.work_date,
-       te.clock_in,
-       te.clock_out,
-       te.hours_worked,
-       te.overtime_hours,
-       te.was_late,
-       te.notes,
-       'old' as source
-     FROM time_entries te
-     WHERE te.employee_id = $1
-     
-     UNION ALL
-     
-     SELECT 
-       tce.id,
-       tc.employee_id,
-       tce.work_date,
-       tce.clock_in,
-       tce.clock_out,
-       tce.hours_worked,
-       tce.overtime_hours,
-       false as was_late,
-       tce.notes,
-       'timecard' as source
-     FROM timecard_entries tce
-     JOIN timecards tc ON tce.timecard_id = tc.id
-     WHERE tc.employee_id = $1
-     
-     ORDER BY work_date DESC`,
-    [id]
-  );
-  res.json(rows);
+  try {
+    const { id } = req.params;
+    const { rows } = await q(
+      `SELECT 
+         te.id,
+         te.employee_id,
+         te.work_date,
+         te.clock_in,
+         te.clock_out,
+         te.hours_worked,
+         te.overtime_hours,
+         te.was_late,
+         te.notes,
+         'old' as source
+       FROM time_entries te
+       WHERE te.employee_id = $1
+       
+       UNION ALL
+       
+       SELECT 
+         tce.id,
+         tc.employee_id,
+         tce.work_date,
+         tce.clock_in,
+         tce.clock_out,
+         tce.hours_worked,
+         tce.overtime_hours,
+         false as was_late,
+         tce.notes,
+         'timecard' as source
+       FROM timecard_entries tce
+       JOIN timecards tc ON tce.timecard_id = tc.id
+       WHERE tc.employee_id = $1
+       
+       ORDER BY work_date DESC`,
+      [id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching time entries:', error);
+    res.status(500).json({ error: 'Failed to fetch time entries', details: error.message });
+  }
 });
 
 // Get employee documents
 r.get("/:id/documents", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await q(
-    `SELECT * FROM documents WHERE employee_id = $1 ORDER BY uploaded_on DESC`,
-    [id]
-  );
-  res.json(rows);
+  try {
+    const { id } = req.params;
+    const { rows } = await q(
+      `SELECT * FROM documents WHERE employee_id = $1 ORDER BY uploaded_on DESC`,
+      [id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching documents:', error);
+    res.status(500).json({ error: 'Failed to fetch documents', details: error.message });
+  }
 });
 
 // Get employee training records
 r.get("/:id/training-records", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await q(
-    `SELECT tr.*, t.name as training_name, t.validity_months 
-     FROM training_records tr 
-     JOIN trainings t ON tr.training_id = t.id 
-     WHERE tr.employee_id = $1 ORDER BY tr.completed_on DESC`,
-    [id]
-  );
-  res.json(rows);
+  try {
+    const { id } = req.params;
+    const { rows } = await q(
+      `SELECT tr.*, t.name as training_name, t.validity_months 
+       FROM training_records tr 
+       JOIN trainings t ON tr.training_id = t.id 
+       WHERE tr.employee_id = $1 ORDER BY tr.completed_on DESC`,
+      [id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching training records:', error);
+    res.status(500).json({ error: 'Failed to fetch training records', details: error.message });
+  }
 });
 
 // Get employee payroll history (from payroll_calculations + payroll_periods)
 r.get("/:id/payroll-history", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await q(
-    `SELECT 
-       pc.id,
-       pp.start_date AS pay_period_start,
-       pp.end_date AS pay_period_end,
-       pc.base_hours + COALESCE(pc.overtime_hours,0) AS total_hours,
-       pc.regular_rate AS hourly_rate,
-       pc.total_gross AS gross_pay,
-       pc.deductions AS total_deductions,
-       pc.net_pay AS net_pay,
-       pc.commission_amount,
-       pc.bonus_amount,
-       pc.status
-     FROM payroll_calculations pc
-     JOIN payroll_periods pp ON pp.id = pc.period_id
-     WHERE pc.employee_id = $1
-     ORDER BY pp.start_date DESC`,
-    [id]
-  );
-  res.json(rows);
+  try {
+    const { id } = req.params;
+    const { rows } = await q(
+      `SELECT 
+         pc.id,
+         pp.start_date AS pay_period_start,
+         pp.end_date AS pay_period_end,
+         pc.base_hours + COALESCE(pc.overtime_hours,0) AS total_hours,
+         pc.regular_rate AS hourly_rate,
+         pc.total_gross AS gross_pay,
+         pc.deductions AS total_deductions,
+         pc.net_pay AS net_pay,
+         pc.commission_amount,
+         pc.bonus_amount,
+         pc.status
+       FROM payroll_calculations pc
+       JOIN payroll_periods pp ON pp.id = pc.period_id
+       WHERE pc.employee_id = $1
+       ORDER BY pp.start_date DESC`,
+      [id]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching payroll history:', error);
+    res.status(500).json({ error: 'Failed to fetch payroll history', details: error.message });
+  }
 });
 
 // Get extended HR details

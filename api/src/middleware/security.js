@@ -355,17 +355,28 @@ export const sqlInjectionPrevention = (req, res, next) => {
 
 // CORS security enhancement
 export const corsSecurity = (req, res, next) => {
-  // Add security headers for CORS
+  // Allowed origins
+  const allowedOrigins = [
+    'https://hr-web.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:3000'
+  ];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else {
+    res.header('Access-Control-Allow-Origin', 'https://hr-web.onrender.com');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Session-ID, x-session-id, X-CSRF-Token, X-API-Key');
   res.header('Access-Control-Max-Age', '86400'); // 24 hours
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
   
   next();
