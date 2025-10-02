@@ -8,21 +8,33 @@ A comprehensive **Human Resources Management System** built with modern web tech
 
 - ✅ **Web Application**: Running on `http://localhost:5173`
 - ✅ **API Server**: Running on `http://localhost:8080`
-- ✅ **Database**: PostgreSQL with 248 employees, 5,430 payroll records
+- ✅ **Database**: PostgreSQL (clean, ready for production data)
 - ✅ **Adminer**: Available on `http://localhost:8081`
 
-## 📊 **Current Data Status**
+## 📊 **Data Management**
 
-| Data Type | Count | Status |
-|-----------|-------|--------|
-| **Employees** | 248 | ✅ Complete |
-| **Payroll Records** | 5,430 | ✅ 16 pay periods (Dec 2024 - Aug 2025) |
-| **Documents** | 282 | ✅ Contracts, permits, etc. |
-| **Addresses** | 191 | ✅ Employee addresses |
-| **Bank Accounts** | 191 | ✅ Direct deposit info |
-| **Identifiers** | 71 | ✅ SIN numbers, permits |
-| **Compensation** | 1,739 | ✅ Rate history |
-| **Compliance Alerts** | 4 | ✅ Active alerts |
+The system is now clean and ready for real production data. All mock/test data has been removed.
+
+### **Data Cleanup**
+
+To remove all employee data and start fresh:
+
+```bash
+# Set your DATABASE_URL environment variable
+export DATABASE_URL="your_database_url_here"
+
+# Run the cleanup script
+cd scripts && node remove-all-mock-data.js
+```
+
+⚠️ **WARNING**: This will permanently delete ALL employee records and related data!
+
+### **Data Import**
+
+Import real employee data using:
+- Excel timecard upload (automatically creates employees)
+- Commission data upload (for existing employees only)
+- Manual employee entry through the UI
 
 ## 🎯 **Core Features**
 
@@ -155,13 +167,15 @@ cd HR
 docker compose up -d
 ```
 
-### **3. Import Data (First Time)**
+### **3. Import Data (Optional)**
 ```bash
-# Import all LGM data
-docker run --rm --network hr_default \
-  -e HR_BASE_DIR=/work -e DATABASE_URL=postgresql://hr:hrpass@db:5432/hrcore \
-  -v /Users/udishkolnik/HR:/work -w /work \
-  python:3.11-slim bash -lc "pip install -q psycopg2-binary && python scripts/import_lgm.py"
+# To start fresh, clean all existing data:
+export DATABASE_URL="postgresql://hr:hrpass@db:5432/hrcore"
+cd scripts && node remove-all-mock-data.js
+
+# Then import real employee data through the web interface:
+# - Navigate to Timecards and upload Excel files
+# - Add employees manually through the Employees page
 ```
 
 ### **4. Access Applications**
@@ -316,10 +330,10 @@ docker compose -f docker-compose.prod.yml up -d
 - ✅ **Production-ready** deployment
 
 ### **Business Value**
-- **248 employees** managed efficiently
-- **5,430 payroll records** processed
-- **4 compliance alerts** automated
-- **Complete HR lifecycle** management
+- **Unlimited employees** can be managed efficiently
+- **Automated payroll** processing and calculations
+- **Compliance alerts** with automated monitoring
+- **Complete HR lifecycle** management from hire to retire
 
 ---
 

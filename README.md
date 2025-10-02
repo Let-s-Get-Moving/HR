@@ -6,9 +6,10 @@ A comprehensive **Human Resources Management System** built with modern web tech
 
 - ✅ **Web Application**: Running on `http://localhost:5173`
 - ✅ **API Server**: Running on `http://localhost:8080`
-- ✅ **Database**: PostgreSQL with 248 employees, 5,430 payroll records
+- ✅ **Database**: PostgreSQL (clean, ready for production data)
 - ✅ **Adminer**: Available on `http://localhost:8081`
 - ✅ **Commission Import**: FULLY FIXED - transaction recovery + field overflow protection (2025-09-29)
+- 🗑️ **Mock Data**: All test/mock data removed - ready for real data import
 
 ## 📁 **Project Structure**
 
@@ -54,18 +55,35 @@ HR/
     └── 📁 workflows/
 ```
 
-## 📊 **Current Data Status**
+## 📊 **Data Management**
 
-| Data Type | Count | Status |
-|-----------|-------|--------|
-| **Employees** | 248 | ✅ Complete |
-| **Payroll Records** | 5,430 | ✅ 16 pay periods (Dec 2024 - Aug 2025) |
-| **Documents** | 282 | ✅ Contracts, permits, etc. |
-| **Addresses** | 191 | ✅ Employee addresses |
-| **Bank Accounts** | 191 | ✅ Direct deposit info |
-| **Identifiers** | 71 | ✅ SIN numbers, permits |
-| **Compensation** | 1,739 | ✅ Rate history |
-| **Compliance Alerts** | 4 | ✅ Active alerts |
+### **Clean Database - Ready for Production**
+
+All mock/test data has been removed from the system. The database is clean and ready for real employee data.
+
+### **🗑️ Remove All Data (Clean Start)**
+
+To completely clean the database and start fresh:
+
+```bash
+# Set your DATABASE_URL environment variable
+export DATABASE_URL="postgresql://hr:hrpass@localhost:5432/hrcore"
+
+# Run the cleanup script
+cd scripts
+node remove-all-mock-data.js
+```
+
+⚠️ **WARNING**: This permanently deletes ALL employee records and related data!
+
+📖 **Full Documentation**: See [Data Cleanup Guide](docs/DATA_CLEANUP_GUIDE.md)
+
+### **Import Real Data**
+
+After cleanup, import production data:
+- **Excel Timecard Upload**: Automatically creates employees
+- **Commission Upload**: For existing employees only
+- **Manual Entry**: Through the web interface
 
 ## 🎯 **Core Features**
 
@@ -142,13 +160,16 @@ cd HR
 docker compose -f config/docker-compose.yml up -d
 ```
 
-### **3. Import Data (First Time)**
+### **3. Database Management (Optional)**
 ```bash
-# Import all LGM data
-docker run --rm --network hr_default \
-  -e HR_BASE_DIR=/work -e DATABASE_URL=postgresql://hr:hrpass@db:5432/hrcore \
-  -v /Users/udishkolnik/HR:/work -w /work \
-  python:3.11-slim bash -lc "pip install -q psycopg2-binary && python scripts/import_lgm.py"
+# To start with a clean database (removes all employees and related data):
+export DATABASE_URL="postgresql://hr:hrpass@localhost:5432/hrcore"
+cd scripts && node remove-all-mock-data.js
+
+# Then import real employee data through the web interface:
+# - Navigate to Timecards and upload Excel files
+# - Add employees manually through the Employees page
+# - Upload commission data for existing employees
 ```
 
 ### **4. Access Applications**
@@ -230,9 +251,9 @@ curl http://localhost:8080/api/employees
 
 ## 📈 **Performance & Scalability**
 
-### **Current Performance**
-- **248 employees** processed efficiently
-- **5,430 payroll records** with fast queries
+### **System Capabilities**
+- **Unlimited employees** can be managed efficiently
+- **Fast queries** with optimized database indexing
 - **Real-time dashboard** updates
 - **Responsive UI** with smooth interactions
 
@@ -295,17 +316,36 @@ docker compose -f config/docker-compose.prod.yml up -d
 - ✅ **Production-ready** deployment
 
 ### **Business Value**
-- **248 employees** managed efficiently
-- **5,430 payroll records** processed
-- **4 compliance alerts** automated
-- **Complete HR lifecycle** management
+- **Unlimited employees** can be managed
+- **Automated payroll** calculations and processing
+- **Compliance monitoring** with automated alerts
+- **Complete HR lifecycle** from hire to retire
+- **Data integrity** with comprehensive validation
 
 ---
 
 **🎯 The HR Management System is now fully operational and ready for production use!**
 
+## 🔐 **Login Credentials**
+
+```
+Username: Avneet
+Password: password123
+```
+
+**Can't log in?** Run:
+```bash
+cd scripts
+export DATABASE_URL="postgresql://hr:bv4mVLhdQz9bRQCriS6RN5AiQjFU4AUn@dpg-d2ngrh75r7bs73fj3uig-a.oregon-postgres.render.com/hrcore_42l4"
+node setup-admin-user.js
+```
+
+📄 **Database Details**: See [RENDER_DATABASE.md](RENDER_DATABASE.md)
+
 ## 📚 **Documentation**
 
+- [**Authentication**](docs/AUTHENTICATION.md) - Login system and troubleshooting
+- [**Data Cleanup Guide**](docs/DATA_CLEANUP_GUIDE.md) - How to remove all mock data
 - [System Overview](docs/SYSTEM_OVERVIEW.md) - Complete system architecture
 - [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md) - What's been implemented
 - [Backend Integration Analysis](docs/BACKEND_INTEGRATION_ANALYSIS.md) - API status and fixes
