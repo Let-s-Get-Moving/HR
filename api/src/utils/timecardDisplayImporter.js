@@ -355,13 +355,15 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         }
         
         // Create upload record
+        console.log('📝 Creating upload record...');
         const uploadResult = await client.query(`
             INSERT INTO timecard_uploads (filename, pay_period_start, pay_period_end, employee_count, status)
-            VALUES ($1, $2, $3, $4, 'processed')
+            VALUES ($1, $2, $3, $4, 'processing')
             RETURNING id
         `, [filename, payPeriod.start, payPeriod.end, employees.length]);
         
         const uploadId = uploadResult.rows[0].id;
+        console.log(`   ✅ Upload record created with ID: ${uploadId}`);
         
         // Process each employee
         for (const emp of employees) {
@@ -470,6 +472,12 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         }
         
         console.log(`✅ Validation passed: ${timecardCount} timecards, ${entriesCount} entries`);
+        
+        // Update upload status to 'processed'
+        await client.query(
+            `UPDATE timecard_uploads SET status = 'processed' WHERE id = $1`,
+            [uploadId]
+        );
         
         await client.query('COMMIT');
         
