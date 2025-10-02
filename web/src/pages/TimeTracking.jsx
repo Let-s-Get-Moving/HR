@@ -323,21 +323,7 @@ export default function TimeTracking() {
             Timecard Uploads
           </div>
         </button>
-        <button
-          onClick={() => setView("main")}
-          className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
-            view === "main"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            All Timecards (Old)
-          </div>
-        </button>
+        {/* Removed All Timecards (Old) tab - no longer needed */}
         {view === "individual" && (
           <button
             onClick={() => setView("main")}

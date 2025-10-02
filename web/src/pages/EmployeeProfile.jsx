@@ -543,8 +543,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       entriesByDate[date].push(entry);
                     });
 
-                    // Render grouped entries
-                    return Object.keys(entriesByDate).sort().reverse().map(date => {
+                    // Render grouped entries (oldest first, newest last)
+                    return Object.keys(entriesByDate).sort().map(date => {
                       const dayEntries = entriesByDate[date];
                       const dailyTotal = dayEntries.reduce((sum, e) => sum + parseFloat(e.hours_worked || 0), 0);
                       
@@ -553,8 +553,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                           <td className="py-2">
                             {idx === 0 ? new Date(entry.work_date).toLocaleDateString() : ''}
                           </td>
-                          <td className="py-2">{entry.clock_in ? new Date(entry.clock_in).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '-'}</td>
-                          <td className="py-2">{entry.clock_out ? new Date(entry.clock_out).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '-'}</td>
+                          <td className="py-2">{entry.clock_in ? (typeof entry.clock_in === 'string' && entry.clock_in.length <= 8 ? entry.clock_in.slice(0, 5) : new Date(entry.clock_in).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})) : '-'}</td>
+                          <td className="py-2">{entry.clock_out ? (typeof entry.clock_out === 'string' && entry.clock_out.length <= 8 ? entry.clock_out.slice(0, 5) : new Date(entry.clock_out).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})) : '-'}</td>
                           <td className="py-2 text-right">{entry.hours_worked ? formatHoursAsTime(parseFloat(entry.hours_worked)) : '-'}</td>
                           <td className="py-2 text-right font-semibold text-indigo-400">
                             {idx === dayEntries.length - 1 ? formatHoursAsTime(dailyTotal) : ''}

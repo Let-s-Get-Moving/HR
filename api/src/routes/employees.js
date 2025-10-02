@@ -160,16 +160,8 @@ r.get("/:id/time-entries", async (req, res) => {
          tce.id,
          tc.employee_id,
          tce.work_date,
-         CASE 
-           WHEN tce.clock_in IS NOT NULL 
-           THEN (tce.work_date + tce.clock_in)::timestamp
-           ELSE NULL
-         END as clock_in,
-         CASE 
-           WHEN tce.clock_out IS NOT NULL 
-           THEN (tce.work_date + tce.clock_out)::timestamp
-           ELSE NULL
-         END as clock_out,
+         tce.clock_in::text as clock_in,
+         tce.clock_out::text as clock_out,
          tce.hours_worked,
          0 as overtime_hours,
          false as was_late,
@@ -179,7 +171,7 @@ r.get("/:id/time-entries", async (req, res) => {
        JOIN timecards tc ON tce.timecard_id = tc.id
        WHERE tc.employee_id = $1
        
-       ORDER BY work_date DESC`,
+       ORDER BY work_date ASC`,
       [id]
     );
     res.json(rows);
