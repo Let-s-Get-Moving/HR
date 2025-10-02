@@ -226,10 +226,38 @@ r.get("/agents-us", async (req, res) => {
 // Get hourly payout data
 // Returns data with dynamic date periods as JSON
 r.get("/hourly-payouts", async (req, res) => {
+  const startTime = Date.now();
   try {
     const { period_month, employee_id } = req.query;
     
-    console.log(`[Hourly Payouts] Fetching for period_month=${period_month}, employee_id=${employee_id}`);
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log(`💰 [Hourly Payouts GET] Request received at ${new Date().toISOString()}`);
+    console.log(`💰 [Hourly Payouts GET] Filters:`, { period_month, employee_id });
+    
+    // DIAGNOSTICS: Check table state first
+    console.log('🔍 [Hourly Payouts GET] Running diagnostics...');
+    const diagnosticStart = Date.now();
+    
+    const [totalCheck, periodCheck, linkCheck] = await Promise.all([
+      q(`SELECT COUNT(*) as count FROM hourly_payout`),
+      q(`SELECT DISTINCT period_month FROM hourly_payout ORDER BY period_month DESC`),
+      q(`SELECT 
+          COUNT(*) as total_records,
+          COUNT(employee_id) as with_employee_link,
+          COUNT(*) - COUNT(employee_id) as without_employee_link
+        FROM hourly_payout`)
+    ]);
+    
+    const diagTime = Date.now() - diagnosticStart;
+    console.log(`🔍 [Hourly Payouts GET] Diagnostics completed in ${diagTime}ms:`);
+    console.log(`   - Total records in hourly_payout table: ${totalCheck.rows[0].count}`);
+    console.log(`   - Records with employee link: ${linkCheck.rows[0].with_employee_link}`);
+    console.log(`   - Records without employee link: ${linkCheck.rows[0].without_employee_link}`);
+    console.log(`   - Available periods:`, periodCheck.rows.map(r => r.period_month));
+    
+    if (totalCheck.rows[0].count === '0') {
+      console.error('⚠️ [Hourly Payouts GET] TABLE IS EMPTY! Need to re-upload commission spreadsheet.');
+    }
     
     let whereClause = "WHERE 1=1";
     const params = [];
@@ -237,14 +265,19 @@ r.get("/hourly-payouts", async (req, res) => {
     if (period_month) {
       params.push(period_month);
       whereClause += ` AND hp.period_month = $${params.length}`;
+      console.log(`💰 [Hourly Payouts GET] Added period filter: ${period_month}`);
     }
     
     if (employee_id) {
       params.push(employee_id);
       whereClause += ` AND hp.employee_id = $${params.length}`;
+      console.log(`💰 [Hourly Payouts GET] Added employee filter: ${employee_id}`);
     }
     
+    console.log(`💰 [Hourly Payouts GET] Query params:`, params);
+    
     // Query the table
+    const queryStart = Date.now();
     const { rows } = await q(`
       SELECT 
         hp.id,
@@ -264,7 +297,25 @@ r.get("/hourly-payouts", async (req, res) => {
       ORDER BY hp.period_month DESC, COALESCE(e.first_name, hp.name_raw), e.last_name
     `, params);
     
-    console.log(`[Hourly Payouts] Found ${rows.length} records`);
+    const queryTime = Date.now() - queryStart;
+    console.log(`💰 [Hourly Payouts GET] ✅ Query executed in ${queryTime}ms`);
+    console.log(`💰 [Hourly Payouts GET] ✅ Found ${rows.length} records`);
+    
+    if (rows.length > 0) {
+      console.log(`💰 [Hourly Payouts GET] Sample records:`);
+      rows.slice(0, 3).forEach((row, idx) => {
+        console.log(`   ${idx + 1}. ${row.employee_name || row.name_raw}`);
+        console.log(`      - Period: ${row.period_month}`);
+        console.log(`      - Total: $${row.total_for_month}`);
+        console.log(`      - Date periods: ${Array.isArray(row.date_periods) ? row.date_periods.length : 'N/A'} entries`);
+      });
+    } else {
+      console.error(`⚠️ [Hourly Payouts GET] NO RECORDS FOUND!`);
+      if (period_month) {
+        console.error(`   - Requested period: ${period_month}`);
+        console.error(`   - Available periods:`, periodCheck.rows.map(r => r.period_month));
+      }
+    }
     
     // Format the data
     const formattedRows = rows.map(row => {
@@ -282,25 +333,24 @@ r.get("/hourly-payouts", async (req, res) => {
         created_at: row.created_at
       };
       
-      // Log first few records for debugging
-      if (rows.indexOf(row) < 3) {
-        console.log(`[Hourly Payouts] Record ${rows.indexOf(row)}:`, {
-          name: formatted.name_raw,
-          periods: formatted.date_periods?.length || 0,
-          total: formatted.total_for_month
-        });
-      }
-      
       return formatted;
     });
     
-    console.log(`[Hourly Payouts] Returning ${formattedRows.length} formatted records`);
+    const totalTime = Date.now() - startTime;
+    console.log(`💰 [Hourly Payouts GET] ✅ Returning ${formattedRows.length} formatted records`);
+    console.log(`💰 [Hourly Payouts GET] ✅ Total request time: ${totalTime}ms`);
+    console.log('═══════════════════════════════════════════════════════════\n');
     res.json(formattedRows);
     
   } catch (error) {
-    console.error("[Hourly Payouts] Error fetching hourly payouts:", error);
+    const totalTime = Date.now() - startTime;
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error(`❌ [Hourly Payouts GET] ERROR after ${totalTime}ms:`, error.message);
+    console.error(`❌ [Hourly Payouts GET] Stack:`, error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
+    
     if (error.message.includes('does not exist')) {
-      console.log("[Hourly Payouts] Table doesn't exist, returning empty array");
+      console.log("💰 [Hourly Payouts GET] Table doesn't exist, returning empty array");
       res.json([]);
     } else {
       res.status(500).json({ error: "Failed to fetch hourly payouts", details: error.message });

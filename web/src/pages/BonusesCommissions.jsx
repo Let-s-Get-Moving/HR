@@ -176,42 +176,62 @@ export default function BonusesCommissions() {
     
     try {
       setLoading(true);
-      console.log(`📊 [Commissions] Loading analytics for period: ${selectedPeriod}`);
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log(`💰 [Frontend Commissions] LOADING ANALYTICS for period: ${selectedPeriod}`);
+      console.log(`💰 [Frontend Commissions] Time: ${new Date().toISOString()}`);
       
       // Load all analytics data for selected period
       const [summary, monthly, agents, hourly] = await Promise.all([
         API(`/api/commissions/summary?period_month=${selectedPeriod}`).catch((err) => {
-          console.error('❌ [Commissions] Summary failed:', err);
+          console.error('❌ [Frontend Commissions] Summary failed:', err);
           return null;
         }),
         API(`/api/commissions/monthly?period_month=${selectedPeriod}`).catch((err) => {
-          console.error('❌ [Commissions] Monthly failed:', err);
+          console.error('❌ [Frontend Commissions] Monthly failed:', err);
           return [];
         }),
         API(`/api/commissions/agents-us?period_month=${selectedPeriod}`).catch((err) => {
-          console.error('❌ [Commissions] Agents US failed:', err);
+          console.error('❌ [Frontend Commissions] Agents US failed:', err);
           return [];
         }),
         API(`/api/commissions/hourly-payouts?period_month=${selectedPeriod}`).catch((err) => {
-          console.error('❌ [Commissions] Hourly Payouts failed:', err);
+          console.error('❌ [Frontend Commissions] Hourly Payouts failed:', err);
           return [];
         })
       ]);
       
-      console.log('✅ [Commissions] Loaded data:', {
-        summary: summary ? 'OK' : 'null',
-        monthly: `${monthly?.length || 0} records`,
-        agents: `${agents?.length || 0} records`,
-        hourly: `${hourly?.length || 0} records`
-      });
+      console.log('✅ [Frontend Commissions] API responses received:');
+      console.log('   - Summary:', summary ? 'OK' : 'null');
+      console.log('   - Monthly:', `${monthly?.length || 0} records`);
+      console.log('   - Agents US:', `${agents?.length || 0} records`);
+      console.log('   - Hourly Payouts:', `${hourly?.length || 0} records`);
       
+      if (hourly && hourly.length > 0) {
+        console.log('💰 [Frontend Commissions] Hourly payout samples:');
+        hourly.slice(0, 3).forEach((h, idx) => {
+          console.log(`   ${idx + 1}. ${h.employee_name || h.name_raw}`);
+          console.log(`      - Total: $${h.total_for_month}`);
+          console.log(`      - Date periods: ${h.date_periods?.length || 0} entries`);
+        });
+      } else {
+        console.error('⚠️ [Frontend Commissions] NO HOURLY PAYOUTS received!');
+        console.error('   - This means hourly_payout table is empty for this period');
+        console.error(`   - Period requested: ${selectedPeriod}`);
+      }
+      
+      console.log('✅ [Frontend Commissions] Setting state...');
       setAnalyticsData(summary);
       setAnalyticsMonthly(monthly);
       setAnalyticsAgents(agents);
       setAnalyticsHourly(hourly);
+      console.log('✅ [Frontend Commissions] State updated');
+      console.log('═══════════════════════════════════════════════════════════\n');
       
     } catch (error) {
-      console.error("❌ [Commissions] Error loading analytics data:", error);
+      console.error('\n═══════════════════════════════════════════════════════════');
+      console.error("❌ [Frontend Commissions] ERROR loading analytics:", error);
+      console.error("❌ [Frontend Commissions] Error details:", error.message);
+      console.error('═══════════════════════════════════════════════════════════\n');
       setAnalyticsData(null);
       setAnalyticsMonthly([]);
       setAnalyticsAgents([]);
