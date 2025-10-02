@@ -67,7 +67,7 @@ router.get('/uploads/:id/employees', async (req, res) => {
             FROM timecards t
             JOIN employees e ON t.employee_id = e.id
             WHERE t.upload_id = $1
-            ORDER BY e.first_name, e.last_name
+            ORDER BY e.last_name, e.first_name
         `, [id]);
         
         res.json(employees.rows);
