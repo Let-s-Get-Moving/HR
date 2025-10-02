@@ -100,39 +100,43 @@ function findAllEmployees(data) {
     
     for (let i = 0; i < data.length; i++) {
         const row = data[i];
-        for (let col = 0; col < row.length; col++) {
-            const cell = String(row[col] || '').trim().toLowerCase();
+        
+        // Check if this row starts with "Employee" (in first column)
+        const firstCell = String(row[0] || '').trim().toLowerCase();
+        
+        if (firstCell === 'employee' || firstCell === 'employee:') {
+            console.log(`   🔍 Found "Employee" at row ${i}`);
             
-            // Look for "Employee" or "Employee:" in any cell (more flexible matching)
-            if (cell === 'employee' || 
-                cell === 'employee:' || 
-                cell.startsWith('employee:') ||
-                cell === 'employee name' ||
-                (cell.includes('employee') && cell.length < 20)) {
-                
-                console.log(`   🔍 Found "${row[col]}" at row ${i}, col ${col}`);
-                
-                // Next cell should have the name
-                for (let c = col + 1; c < row.length; c++) {
-                    let name = String(row[c] || '').trim();
-                    if (name && name !== '(empty)' && name.toLowerCase() !== 'employee') {
-                        // Remove numbers in parentheses like "(1)" and clean up
-                        name = name.replace(/\(\d+\)/g, '').trim();
-                        
-                        // Avoid duplicates (sometimes "Employee" appears multiple times)
-                        const isDuplicate = employees.some(e => 
-                            e.name.toLowerCase() === name.toLowerCase() && 
-                            Math.abs(e.headerRow - i) < 5
-                        );
-                        
-                        if (!isDuplicate && name.length > 0) {
-                            employees.push({ name, headerRow: i });
-                            console.log(`   ✓ Found employee #${employees.length}: "${name}" at row ${i}`);
-                        }
+            // Name is typically in column 3 (4th column)
+            let name = String(row[3] || '').trim();
+            
+            // If not in column 3, search all columns after "Employee"
+            if (!name || name === '(empty)') {
+                for (let c = 1; c < row.length; c++) {
+                    const cellValue = String(row[c] || '').trim();
+                    if (cellValue && cellValue !== '(empty)' && cellValue.toLowerCase() !== 'employee') {
+                        name = cellValue;
                         break;
                     }
                 }
-                break; // Found "Employee" in this row, move to next row
+            }
+            
+            if (name && name !== '(empty)') {
+                // Clean up name: remove numbers in parentheses like "(1)", remove newlines
+                name = name.replace(/\(\d+\)/g, '').replace(/\n/g, ' ').trim();
+                
+                // Avoid duplicates
+                const isDuplicate = employees.some(e => 
+                    e.name.toLowerCase() === name.toLowerCase() && 
+                    Math.abs(e.headerRow - i) < 5
+                );
+                
+                if (!isDuplicate && name.length > 0) {
+                    employees.push({ name, headerRow: i });
+                    console.log(`   ✓ Found employee #${employees.length}: "${name}" at row ${i}`);
+                }
+            } else {
+                console.log(`   ⚠️ Found "Employee" but no name at row ${i}`);
             }
         }
     }
