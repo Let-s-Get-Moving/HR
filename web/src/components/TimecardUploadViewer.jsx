@@ -128,7 +128,7 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-primary mb-2">{upload?.filename}</h2>
             <p className="text-secondary">
-              Pay Period: {new Date(upload?.pay_period_start).toLocaleDateString()} - {new Date(upload?.pay_period_end).toLocaleDateString()}
+              Period: {new Date(upload?.pay_period_start).toLocaleDateString()} - {new Date(upload?.pay_period_end).toLocaleDateString()}
             </p>
             <p className="text-sm text-secondary mt-1">
               Uploaded {new Date(upload?.upload_date).toLocaleDateString()} at {new Date(upload?.upload_date).toLocaleTimeString()}
@@ -212,7 +212,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
           <div>
             <h2 className="text-2xl font-bold text-primary">{employee?.full_name}</h2>
             <p className="text-secondary">
-              Pay Period: {new Date(upload?.pay_period_start).toLocaleDateString()} - {new Date(upload?.pay_period_end).toLocaleDateString()}
+              Period: {new Date(upload?.pay_period_start).toLocaleDateString()} - {new Date(upload?.pay_period_end).toLocaleDateString()}
             </p>
           </div>
           <div className="text-right">

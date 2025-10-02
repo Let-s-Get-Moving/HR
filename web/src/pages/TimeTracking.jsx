@@ -57,10 +57,10 @@ export default function TimeTracking() {
       console.log("✅ [TimeTracking] Loaded", employeesData.length, "employees");
       setEmployees(employeesData);
       
-      // Load pay periods
-      console.log("📅 [TimeTracking] Loading pay periods...");
+      // Load periods
+      console.log("📅 [TimeTracking] Loading periods...");
       const periodsData = await API("/api/timecards/periods/list");
-      console.log("✅ [TimeTracking] Loaded", periodsData.length, "pay periods:", periodsData);
+      console.log("✅ [TimeTracking] Loaded", periodsData.length, "periods:", periodsData);
       setPayPeriods(periodsData);
       
       // Select most recent period by default
@@ -68,7 +68,7 @@ export default function TimeTracking() {
         console.log("✅ [TimeTracking] Selected default period:", periodsData[0].period_label);
         setSelectedPeriod(periodsData[0]);
       } else {
-        console.warn("⚠️ [TimeTracking] No pay periods available");
+        console.warn("⚠️ [TimeTracking] No periods available");
       }
     } catch (error) {
       console.error("❌ [TimeTracking] Error loading initial data:", error);
@@ -899,7 +899,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
               <h3 className="font-medium mb-2 text-primary">Expected Format:</h3>
               <ul className="text-sm text-secondary space-y-1 list-disc list-inside">
                 <li>Excel file with timecard data</li>
-                <li>Each employee section includes: Pay Period, Employee name, Date, IN, OUT, Work Time, Daily Total, Note</li>
+                <li>Each employee section includes: Period, Employee name, Date, IN, OUT, Work Time, Daily Total, Note</li>
                 <li>Multiple clock-in/out pairs per day supported</li>
                 <li>System will automatically match employees by name</li>
               </ul>
