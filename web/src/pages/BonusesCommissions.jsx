@@ -137,6 +137,7 @@ export default function BonusesCommissions() {
 
   const loadAvailablePeriods = async () => {
     try {
+      setLoading(true);
       const periods = await API('/api/commissions/periods');
       setAvailablePeriods(periods);
       
@@ -158,10 +159,15 @@ export default function BonusesCommissions() {
         }
         
         setSelectedPeriod(closestPeriod.period_month);
+      } else {
+        // No periods available - stop loading
+        console.log('📊 [Commissions] No periods available');
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error loading periods:", error);
       setAvailablePeriods([]);
+      setLoading(false);
     }
   };
 
