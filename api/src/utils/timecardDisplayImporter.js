@@ -189,6 +189,12 @@ function parseEmployeeTimecard(data, employeeInfo, payPeriod) {
         const note = noteCol >= 0 ? String(row[noteCol] || '').trim() : '';
         
         if (clockIn) {
+            // Skip this entry if we don't have a valid date yet
+            if (!currentDate) {
+                console.log(`⚠️ Skipping entry with no date: clock_in=${clockIn}`);
+                continue;
+            }
+            
             // Parse work time (convert HH:MM to decimal hours)
             let workTime = null;
             if (workTimeCol >= 0) {
