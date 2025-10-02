@@ -34,13 +34,19 @@ r.get("/", async (req, res) => {
       paramCount++;
     }
     
-    if (pay_period_start) {
+    if (pay_period_start && pay_period_end) {
+      // Match exact pay period
+      query += ` AND t.pay_period_start = $${paramCount}`;
+      params.push(pay_period_start);
+      paramCount++;
+      query += ` AND t.pay_period_end = $${paramCount}`;
+      params.push(pay_period_end);
+      paramCount++;
+    } else if (pay_period_start) {
       query += ` AND t.pay_period_start >= $${paramCount}`;
       params.push(pay_period_start);
       paramCount++;
-    }
-    
-    if (pay_period_end) {
+    } else if (pay_period_end) {
       query += ` AND t.pay_period_end <= $${paramCount}`;
       params.push(pay_period_end);
       paramCount++;
@@ -52,7 +58,7 @@ r.get("/", async (req, res) => {
       paramCount++;
     }
     
-    query += ` ORDER BY t.pay_period_start DESC, e.last_name, e.first_name`;
+    query += ` ORDER BY t.pay_period_start DESC, e.first_name, e.last_name`;
     
     const { rows } = await q(query, params);
     res.json(rows);
@@ -177,7 +183,7 @@ r.get("/stats/summary", async (req, res) => {
       FROM timecards t
       JOIN employees e ON t.employee_id = e.id
       WHERE t.pay_period_start = $1 AND t.pay_period_end = $2
-      ORDER BY e.last_name, e.first_name`,
+      ORDER BY e.first_name, e.last_name`,
       [pay_period_start, pay_period_end]
     );
     
