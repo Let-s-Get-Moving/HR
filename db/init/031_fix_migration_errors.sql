@@ -138,15 +138,8 @@ END $$;
 -- Make sure all mock data inserts won't fail
 -- by ensuring required reference data exists
 
--- Ensure at least one user exists for created_by references
--- This is handled by ensureAdminUser() on server startup
-DO $$ BEGIN
-    IF NOT EXISTS (SELECT 1 FROM users LIMIT 1) THEN
-        INSERT INTO users (email, full_name, role, password_hash)
-        VALUES ('avneet@hr.local', 'Avneet', 'Admin', '$2a$10$dummy')
-        ON CONFLICT (email) DO NOTHING;
-    END IF;
-END $$;
+-- User creation handled by ensureAdminUser() on server startup
+-- No user insertion in init scripts
 
 -- Ensure at least one location exists
 DO $$ BEGIN

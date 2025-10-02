@@ -4,21 +4,8 @@
 -- The users table is already created in 001_schema.sql with:
 -- id, email, full_name, role, password_hash
 
--- Delete any existing users and create the single admin user
-DELETE FROM users;
-
--- Insert single admin user
--- Username: Avneet
--- Email: avneet@hr.local
--- Password: password123 (hashed with bcrypt)
--- Note: This will be overridden by ensureAdminUser() on server startup
-INSERT INTO users (email, full_name, password_hash, role) 
-VALUES (
-    'avneet@hr.local',
-    'Avneet',
-    '$2a$10$8cbwAjND6CaSdvs1234567890123456789012345678901234567890',
-    'Admin'
-) ON CONFLICT (email) DO NOTHING;
+-- Do NOT create users here - ensureAdminUser() handles it on server startup
+-- DELETE FROM users;
 
 -- Create a simple sessions table for maintaining logged-in state
 CREATE TABLE IF NOT EXISTS user_sessions (
