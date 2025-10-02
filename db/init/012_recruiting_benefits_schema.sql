@@ -99,12 +99,29 @@ CREATE TABLE IF NOT EXISTS retirement_enrollments (
 -- All mock data removed - employees, users, locations, and candidates will be created through the app
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_job_postings_department ON job_postings(department_id);
-CREATE INDEX IF NOT EXISTS idx_job_postings_status ON job_postings(status);
-CREATE INDEX IF NOT EXISTS idx_candidates_position ON candidates(position_id);
-CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates(status);
-CREATE INDEX IF NOT EXISTS idx_job_applications_candidate ON job_applications(candidate_id);
-CREATE INDEX IF NOT EXISTS idx_job_applications_job ON job_applications(job_posting_id);
+DO $$ 
+BEGIN
+    -- Job postings indexes
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'job_postings') THEN
+        CREATE INDEX IF NOT EXISTS idx_job_postings_department ON job_postings(department_id);
+        CREATE INDEX IF NOT EXISTS idx_job_postings_status ON job_postings(status);
+    END IF;
+    
+    -- Candidates indexes (only create if columns exist)
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'candidates') THEN
+        CREATE INDEX IF NOT EXISTS idx_candidates_status ON candidates(status);
+        -- Only create position_id index if that column exists
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'candidates' AND column_name = 'position_id') THEN
+            CREATE INDEX IF NOT EXISTS idx_candidates_position ON candidates(position_id);
+        END IF;
+    END IF;
+    
+    -- Job applications indexes
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'job_applications') THEN
+        CREATE INDEX IF NOT EXISTS idx_job_applications_candidate ON job_applications(candidate_id);
+        CREATE INDEX IF NOT EXISTS idx_job_applications_job ON job_applications(job_posting_id);
+    END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_interviews_candidate ON interviews(candidate_id);
 CREATE INDEX IF NOT EXISTS idx_interviews_date ON interviews(interview_date);
 CREATE INDEX IF NOT EXISTS idx_benefits_enrollments_employee ON benefits_enrollments(employee_id);

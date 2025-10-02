@@ -495,16 +495,15 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
                 continue;
             }
             
-            // Find employee (DO NOT CREATE - only timecards create employees)
-            let employeeId;
+            // Try to find employee (optional - hourly data stored regardless)
+            let employeeId = null;
             try {
                 employeeId = await findEmployeeOnly(nameRaw, queryFn);
                 summary.addDebugLog(`✓ Hourly Row ${rowNum}: "${nameRaw}" → Employee ID ${employeeId}`);
             } catch (error) {
-                summary.addWarning(`Hourly: "${nameRaw}" not found - must appear in timecards before receiving hourly payouts`);
-                summary.addError('hourly', rowNum, 'Employee not found in database', { error: error.message });
-                summary.hourly.skipped++;
-                continue;
+                // Employee not found - that's OK, store hourly data with name_raw only
+                summary.addDebugLog(`Hourly Row ${rowNum}: Employee not found, storing with name only: "${nameRaw}"`);
+                employeeId = null; // Will use name_raw instead
             }
             
             // Extract date period data - ALWAYS include all periods to preserve structure

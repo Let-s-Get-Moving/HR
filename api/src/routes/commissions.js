@@ -137,12 +137,12 @@ r.get("/monthly", async (req, res) => {
     const { rows } = await q(`
       SELECT 
         ecm.*,
-        e.first_name || ' ' || e.last_name as employee_name,
+        COALESCE(e.first_name || ' ' || e.last_name, ecm.name_raw) as employee_name,
         e.role_title
       FROM employee_commission_monthly ecm
-      JOIN employees e ON ecm.employee_id = e.id
+      LEFT JOIN employees e ON ecm.employee_id = e.id
       ${whereClause}
-      ORDER BY ecm.period_month DESC, e.first_name, e.last_name
+      ORDER BY ecm.period_month DESC, COALESCE(e.first_name, ecm.name_raw), e.last_name
     `, params);
     
     const formattedRows = rows.map(row => ({
@@ -195,12 +195,12 @@ r.get("/agents-us", async (req, res) => {
     const { rows } = await q(`
       SELECT 
         acu.*,
-        e.first_name || ' ' || e.last_name as employee_name,
+        COALESCE(e.first_name || ' ' || e.last_name, acu.name_raw) as employee_name,
         e.role_title
       FROM agent_commission_us acu
-      JOIN employees e ON acu.employee_id = e.id
+      LEFT JOIN employees e ON acu.employee_id = e.id
       ${whereClause}
-      ORDER BY acu.period_month DESC, e.first_name, e.last_name
+      ORDER BY acu.period_month DESC, COALESCE(e.first_name, acu.name_raw), e.last_name
     `, params);
     
     const formattedRows = rows.map(row => ({
@@ -256,12 +256,12 @@ r.get("/hourly-payouts", async (req, res) => {
         hp.source_file,
         hp.sheet_name,
         hp.created_at,
-        e.first_name || ' ' || e.last_name as employee_name,
+        COALESCE(e.first_name || ' ' || e.last_name, hp.name_raw) as employee_name,
         e.role_title
       FROM hourly_payout hp
-      JOIN employees e ON hp.employee_id = e.id
+      LEFT JOIN employees e ON hp.employee_id = e.id
       ${whereClause}
-      ORDER BY hp.period_month DESC, e.first_name, e.last_name
+      ORDER BY hp.period_month DESC, COALESCE(e.first_name, hp.name_raw), e.last_name
     `, params);
     
     console.log(`[Hourly Payouts] Found ${rows.length} records`);
