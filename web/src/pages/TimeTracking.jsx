@@ -47,33 +47,54 @@ export default function TimeTracking() {
 
   const loadInitialData = async () => {
     try {
-      console.log("🔄 [TimeTracking] Loading initial data...");
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log("🔄 [Frontend] LOADING INITIAL DATA...");
+      console.log("🔄 [Frontend] Time:", new Date().toISOString());
       setLoading(true);
       
       // Load employees
-      console.log("📋 [TimeTracking] Loading employees...");
+      console.log("📋 [Frontend] Fetching employees from API...");
       const employeesData = await API("/api/employees");
-      console.log("✅ [TimeTracking] Loaded", employeesData.length, "employees");
+      console.log("✅ [Frontend] Employees API response:", employeesData.length, "employees");
       setEmployees(employeesData);
+      console.log("✅ [Frontend] Employees state updated");
       
       // Load periods
-      console.log("📅 [TimeTracking] Loading periods...");
+      console.log("📅 [Frontend] Fetching periods from API...");
       const periodsData = await API("/api/timecards/periods/list");
-      console.log("✅ [TimeTracking] Loaded", periodsData.length, "periods:", periodsData);
-      setPayPeriods(periodsData);
+      console.log("✅ [Frontend] Periods API response:", periodsData.length, "periods");
       
-      // Select most recent period by default
       if (periodsData.length > 0) {
-        console.log("✅ [TimeTracking] Selected default period:", periodsData[0].period_label);
+        console.log("📅 [Frontend] Periods received:");
+        periodsData.forEach((period, idx) => {
+          console.log(`   ${idx + 1}. ${period.period_label}`);
+          console.log(`      - Start: ${period.pay_period_start}`);
+          console.log(`      - End: ${period.pay_period_end}`);
+          console.log(`      - Count: ${period.timecard_count} timecards`);
+        });
+        
+        console.log("✅ [Frontend] Setting payPeriods state...");
+        setPayPeriods(periodsData);
+        console.log("✅ [Frontend] PayPeriods state updated");
+        
+        console.log("✅ [Frontend] Setting default selected period:", periodsData[0].period_label);
         setSelectedPeriod(periodsData[0]);
+        console.log("✅ [Frontend] Default period selected");
       } else {
-        console.warn("⚠️ [TimeTracking] No periods available");
+        console.error("⚠️ [Frontend] NO PERIODS RECEIVED from API!");
+        console.error("⚠️ [Frontend] This means timecard_uploads table is empty or has no 'processed' uploads");
+        setPayPeriods([]);
+        setSelectedPeriod(null);
       }
+      
+      console.log('═══════════════════════════════════════════════════════════\n');
     } catch (error) {
-      console.error("❌ [TimeTracking] Error loading initial data:", error);
+      console.error('\n═══════════════════════════════════════════════════════════');
+      console.error("❌ [Frontend] ERROR loading initial data:", error);
+      console.error("❌ [Frontend] Error details:", error.message);
+      console.error('═══════════════════════════════════════════════════════════\n');
     } finally {
       setLoading(false);
-      console.log("✅ [TimeTracking] Initial data load complete");
     }
   };
 
@@ -120,11 +141,36 @@ export default function TimeTracking() {
 
   const loadUploads = async () => {
     try {
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log('🔄 [Frontend] LOADING UPLOADS LIST...');
+      console.log('🔄 [Frontend] Time:', new Date().toISOString());
       setLoading(true);
+      
       const data = await API('/api/timecard-uploads/uploads');
+      
+      console.log('✅ [Frontend] Uploads API response:', data.length, 'uploads');
+      if (data.length > 0) {
+        console.log('📋 [Frontend] Uploads received:');
+        data.forEach((upload, idx) => {
+          console.log(`   ${idx + 1}. ${upload.filename}`);
+          console.log(`      - Period: ${upload.pay_period_start} to ${upload.pay_period_end}`);
+          console.log(`      - Employees: ${upload.employee_count}`);
+          console.log(`      - Hours: ${upload.total_hours}`);
+          console.log(`      - Status: ${upload.status}`);
+        });
+      } else {
+        console.error('⚠️ [Frontend] NO UPLOADS received from API!');
+      }
+      
+      console.log('✅ [Frontend] Setting uploads state...');
       setUploads(data);
+      console.log('✅ [Frontend] Uploads state updated');
+      console.log('═══════════════════════════════════════════════════════════\n');
     } catch (error) {
-      console.error('❌ Error loading uploads:', error);
+      console.error('\n═══════════════════════════════════════════════════════════');
+      console.error('❌ [Frontend] ERROR loading uploads:', error);
+      console.error('❌ [Frontend] Error details:', error.message);
+      console.error('═══════════════════════════════════════════════════════════\n');
     } finally {
       setLoading(false);
     }
@@ -159,31 +205,87 @@ export default function TimeTracking() {
 
   const loadUploadStats = async () => {
     try {
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log('🔄 [Frontend] LOADING UPLOAD STATS...');
+      console.log('🔄 [Frontend] Time:', new Date().toISOString());
       setLoading(true);
+      
       const data = await API('/api/timecard-uploads/stats');
+      
+      console.log('✅ [Frontend] API RESPONSE received:');
+      console.log('   - Response type:', typeof data);
+      console.log('   - Has summary?', !!data?.summary);
+      console.log('   - Has topEmployees?', !!data?.topEmployees);
+      console.log('   - Has missingPunches?', data?.missingPunches !== undefined);
+      console.log('   - Has latestUpload?', !!data?.latestUpload);
+      
+      if (data?.summary) {
+        console.log('📊 [Frontend] Summary data:');
+        console.log('   - total_uploads:', data.summary.total_uploads);
+        console.log('   - total_employees:', data.summary.total_employees);
+        console.log('   - total_hours:', data.summary.total_hours);
+        console.log('   - avg_hours_per_employee:', data.summary.avg_hours_per_employee);
+      } else {
+        console.error('⚠️ [Frontend] NO SUMMARY DATA in response!');
+      }
+      
+      if (data?.topEmployees) {
+        console.log('👥 [Frontend] Top employees data:');
+        console.log('   - Count:', data.topEmployees.length);
+        data.topEmployees.forEach((emp, idx) => {
+          console.log(`   ${idx + 1}. ${emp.name}: ${emp.total_hours} hours`);
+        });
+      } else {
+        console.error('⚠️ [Frontend] NO TOP EMPLOYEES DATA in response!');
+      }
+      
+      console.log('✅ [Frontend] Setting stats state...');
       setStats(data);
+      console.log('✅ [Frontend] Stats state updated. Current stats value:', data);
+      console.log('═══════════════════════════════════════════════════════════\n');
     } catch (error) {
-      console.error('❌ Error loading upload stats:', error);
+      console.error('\n═══════════════════════════════════════════════════════════');
+      console.error('❌ [Frontend] ERROR loading upload stats:', error);
+      console.error('❌ [Frontend] Error details:', error.message);
+      console.error('═══════════════════════════════════════════════════════════\n');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('🔄 [Frontend] VIEW CHANGE EFFECT triggered');
+    console.log('🔄 [Frontend] Current view:', view);
+    
     if (view === 'uploads') {
+      console.log('🔄 [Frontend] View is "uploads" - calling loadUploads()');
       loadUploads();
     } else if (view === 'dashboard') {
-      console.log('🔄 [TimeTracking] Dashboard view activated - loading stats...');
+      console.log('🔄 [Frontend] View is "dashboard" - calling loadUploadStats()');
       loadUploadStats();
+    } else {
+      console.log('🔄 [Frontend] View is neither "uploads" nor "dashboard" - no action');
     }
+    console.log('═══════════════════════════════════════════════════════════\n');
   }, [view]);
   
   // Also refresh dashboard when uploads change (in case data was added)
   useEffect(() => {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('🔄 [Frontend] UPLOADS LENGTH CHANGE EFFECT triggered');
+    console.log('🔄 [Frontend] Current view:', view);
+    console.log('🔄 [Frontend] Uploads count:', uploads.length);
+    
     if (view === 'dashboard' && uploads.length > 0) {
-      console.log('🔄 [TimeTracking] Uploads changed while on dashboard - refreshing stats...');
+      console.log('🔄 [Frontend] Conditions met - calling loadUploadStats()');
       loadUploadStats();
+    } else {
+      console.log('🔄 [Frontend] Conditions NOT met - no action');
+      console.log(`   - view === 'dashboard': ${view === 'dashboard'}`);
+      console.log(`   - uploads.length > 0: ${uploads.length > 0}`);
     }
+    console.log('═══════════════════════════════════════════════════════════\n');
   }, [uploads.length]);
 
   const handleFileChange = (event) => {

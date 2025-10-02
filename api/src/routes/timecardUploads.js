@@ -171,17 +171,32 @@ function invalidateStatsCache() {
 
 // Get dashboard statistics (optimized with caching)
 router.get('/stats', async (req, res) => {
+    const startTime = Date.now();
     try {
+        console.log('\n═══════════════════════════════════════════════════════════');
+        console.log(`📊 [Upload Stats] Request received at ${new Date().toISOString()}`);
+        
         // Check cache first
         const now = Date.now();
         if (statsCache && (now - statsCacheTime) < CACHE_DURATION) {
-            console.log('📊 [Stats] Returning cached data');
+            const cacheAge = Math.round((now - statsCacheTime) / 1000);
+            console.log(`📊 [Upload Stats] ✅ Returning CACHED data (${cacheAge}s old)`);
+            console.log(`📊 [Upload Stats] Cache contains:`);
+            console.log(`   - Total Uploads: ${statsCache.summary.total_uploads}`);
+            console.log(`   - Total Employees: ${statsCache.summary.total_employees}`);
+            console.log(`   - Total Hours: ${statsCache.summary.total_hours}`);
+            console.log(`   - Avg Hours/Employee: ${statsCache.summary.avg_hours_per_employee}`);
+            console.log(`   - Top Employees: ${statsCache.topEmployees.length} records`);
+            console.log(`   - Missing Punches: ${statsCache.missingPunches}`);
+            console.log(`   - Latest Upload: ${statsCache.latestUpload?.filename || 'None'}`);
+            console.log('═══════════════════════════════════════════════════════════\n');
             return res.json(statsCache);
         }
         
-        console.log('📊 [Stats] Fetching fresh data...');
+        console.log('📊 [Upload Stats] Cache MISS - fetching fresh data from database...');
         
         // Optimized: Run queries in parallel
+        const queryStart = Date.now();
         const [stats, topEmployees, missingPunches, latestUpload] = await Promise.all([
             // Summary stats
             q(`
@@ -226,6 +241,9 @@ router.get('/stats', async (req, res) => {
             `)
         ]);
         
+        const queryTime = Date.now() - queryStart;
+        console.log(`📊 [Upload Stats] ✅ All queries executed in ${queryTime}ms`);
+        
         const result = {
             summary: stats.rows[0],
             topEmployees: topEmployees.rows,
@@ -233,14 +251,39 @@ router.get('/stats', async (req, res) => {
             latestUpload: latestUpload.rows[0] || null
         };
         
+        // Log what we got
+        console.log(`📊 [Upload Stats] ✅ Data fetched:`);
+        console.log(`   - Total Uploads: ${result.summary.total_uploads}`);
+        console.log(`   - Total Employees: ${result.summary.total_employees}`);
+        console.log(`   - Total Hours: ${result.summary.total_hours}`);
+        console.log(`   - Avg Hours/Employee: ${result.summary.avg_hours_per_employee}`);
+        console.log(`   - Top Employees: ${result.topEmployees.length} records`);
+        if (result.topEmployees.length > 0) {
+            result.topEmployees.forEach((emp, idx) => {
+                console.log(`      ${idx + 1}. ${emp.name}: ${emp.total_hours} hours`);
+            });
+        } else {
+            console.log(`      ⚠️ WARNING: No top employees found!`);
+        }
+        console.log(`   - Missing Punches: ${result.missingPunches}`);
+        console.log(`   - Latest Upload: ${result.latestUpload?.filename || 'None'}`);
+        
         // Cache the result
         statsCache = result;
         statsCacheTime = now;
         
-        console.log('📊 [Stats] Fresh data cached');
+        const totalTime = Date.now() - startTime;
+        console.log(`📊 [Upload Stats] ✅ Total request time: ${totalTime}ms`);
+        console.log(`📊 [Upload Stats] ✅ Data cached for 30 seconds`);
+        console.log('═══════════════════════════════════════════════════════════\n');
+        
         res.json(result);
     } catch (error) {
-        console.error('Error fetching stats:', error);
+        const totalTime = Date.now() - startTime;
+        console.error('\n═══════════════════════════════════════════════════════════');
+        console.error(`❌ [Upload Stats] ERROR after ${totalTime}ms:`, error.message);
+        console.error(`❌ [Upload Stats] Stack:`, error.stack);
+        console.error('═══════════════════════════════════════════════════════════\n');
         res.status(500).json({ error: 'Failed to fetch statistics' });
     }
 });

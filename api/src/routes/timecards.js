@@ -9,10 +9,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Get all timecards with filters
 r.get("/", async (req, res) => {
+  const startTime = Date.now();
   try {
     const { employee_id, pay_period_start, pay_period_end, status } = req.query;
     
-    console.log(`📊 [Timecards] Fetching with filters:`, { employee_id, pay_period_start, pay_period_end, status });
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log(`📊 [Timecards GET] Request received at ${new Date().toISOString()}`);
+    console.log(`📊 [Timecards GET] Filters:`, { employee_id, pay_period_start, pay_period_end, status });
     
     // SIMPLIFIED QUERY: No complex OR logic, just match exactly what we need
     let query = `
@@ -34,6 +37,7 @@ r.get("/", async (req, res) => {
     if (employee_id) {
       query += ` AND t.employee_id = $${paramCount}`;
       params.push(employee_id);
+      console.log(`📊 [Timecards GET] Added employee_id filter: ${employee_id}`);
       paramCount++;
     }
     
@@ -42,53 +46,79 @@ r.get("/", async (req, res) => {
       query += ` AND t.pay_period_start = $${paramCount}::DATE AND t.pay_period_end = $${paramCount + 1}::DATE`;
       params.push(pay_period_start);
       params.push(pay_period_end);
+      console.log(`📊 [Timecards GET] Added period filter: ${pay_period_start} to ${pay_period_end}`);
       paramCount += 2;
     } else if (pay_period_start) {
       query += ` AND t.pay_period_start >= $${paramCount}::DATE`;
       params.push(pay_period_start);
+      console.log(`📊 [Timecards GET] Added start date filter: >= ${pay_period_start}`);
       paramCount++;
     } else if (pay_period_end) {
       query += ` AND t.pay_period_end <= $${paramCount}::DATE`;
       params.push(pay_period_end);
+      console.log(`📊 [Timecards GET] Added end date filter: <= ${pay_period_end}`);
       paramCount++;
     }
     
     if (status) {
       query += ` AND t.status = $${paramCount}`;
       params.push(status);
+      console.log(`📊 [Timecards GET] Added status filter: ${status}`);
       paramCount++;
     }
     
     query += ` ORDER BY t.pay_period_start DESC, e.first_name, e.last_name`;
     
-    console.log(`📊 [Timecards] Query:`, query);
-    console.log(`📊 [Timecards] Params:`, params);
+    console.log(`📊 [Timecards GET] Final query params:`, params);
     
+    const queryStart = Date.now();
     const { rows } = await q(query, params);
+    const queryTime = Date.now() - queryStart;
     
-    console.log(`📊 [Timecards] Found ${rows.length} timecards`);
+    console.log(`📊 [Timecards GET] ✅ Query executed in ${queryTime}ms`);
+    console.log(`📊 [Timecards GET] ✅ Found ${rows.length} timecards`);
     
     // DEBUG: If no results but we expected some, check the database
     if (rows.length === 0 && pay_period_start && pay_period_end) {
+      console.log(`⚠️ [Timecards GET] No results found - running diagnostics...`);
+      
       const debugCheck = await q(`
         SELECT COUNT(*) as count, 
                MIN(pay_period_start) as min_start, 
                MAX(pay_period_end) as max_end 
         FROM timecards
       `);
-      console.log(`📊 [Timecards] DEBUG: Total timecards in DB:`, debugCheck.rows[0]);
+      console.log(`🔍 [Timecards GET] Total timecards in DB:`, debugCheck.rows[0]);
       
       const periodCheck = await q(`
         SELECT COUNT(*) as count 
         FROM timecards 
         WHERE pay_period_start::TEXT LIKE $1 AND pay_period_end::TEXT LIKE $2
       `, [`%${pay_period_start}%`, `%${pay_period_end}%`]);
-      console.log(`📊 [Timecards] DEBUG: Fuzzy match count:`, periodCheck.rows[0].count);
+      console.log(`🔍 [Timecards GET] Fuzzy match count:`, periodCheck.rows[0].count);
+      
+      // Check exact date values in DB
+      const sampleCheck = await q(`
+        SELECT DISTINCT 
+          pay_period_start::TEXT as start_text, 
+          pay_period_end::TEXT as end_text
+        FROM timecards
+        LIMIT 5
+      `);
+      console.log(`🔍 [Timecards GET] Sample date formats in DB:`, sampleCheck.rows);
     }
+    
+    const totalTime = Date.now() - startTime;
+    console.log(`📊 [Timecards GET] ✅ Total request time: ${totalTime}ms`);
+    console.log('═══════════════════════════════════════════════════════════\n');
     
     res.json(rows);
   } catch (error) {
-    console.error("❌ [Timecards] Error fetching timecards:", error);
+    const totalTime = Date.now() - startTime;
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error(`❌ [Timecards GET] ERROR after ${totalTime}ms:`, error.message);
+    console.error(`❌ [Timecards GET] Stack:`, error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
     res.status(500).json({ error: error.message });
   }
 });
@@ -240,7 +270,11 @@ r.get("/stats/summary", async (req, res) => {
 
 // Get all pay periods that have timecards (from uploads)
 r.get("/periods/list", async (req, res) => {
+  const startTime = Date.now();
   try {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log(`📅 [Periods LIST] Request received at ${new Date().toISOString()}`);
+    
     const { rows } = await q(
       `SELECT DISTINCT 
         pay_period_start,
@@ -252,9 +286,33 @@ r.get("/periods/list", async (req, res) => {
       ORDER BY pay_period_start DESC`
     );
     
+    const totalTime = Date.now() - startTime;
+    console.log(`📅 [Periods LIST] ✅ Query executed in ${totalTime}ms`);
+    console.log(`📅 [Periods LIST] ✅ Found ${rows.length} periods`);
+    
+    if (rows.length > 0) {
+      console.log(`📅 [Periods LIST] Periods returned:`);
+      rows.forEach((period, idx) => {
+        console.log(`   ${idx + 1}. ${period.period_label} (${period.timecard_count} timecards)`);
+        console.log(`      - Start: ${period.pay_period_start}`);
+        console.log(`      - End: ${period.pay_period_end}`);
+      });
+    } else {
+      console.log(`⚠️ [Periods LIST] WARNING: No periods found in timecard_uploads table`);
+      
+      // Check if there are ANY uploads at all
+      const uploadCheck = await q(`SELECT COUNT(*) as count, status FROM timecard_uploads GROUP BY status`);
+      console.log(`🔍 [Periods LIST] Upload status breakdown:`, uploadCheck.rows);
+    }
+    
+    console.log('═══════════════════════════════════════════════════════════\n');
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching pay periods:", error);
+    const totalTime = Date.now() - startTime;
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error(`❌ [Periods LIST] ERROR after ${totalTime}ms:`, error.message);
+    console.error(`❌ [Periods LIST] Stack:`, error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
     res.status(500).json({ error: error.message });
   }
 });
