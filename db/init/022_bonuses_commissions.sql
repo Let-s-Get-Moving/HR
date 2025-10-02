@@ -27,14 +27,30 @@ CREATE TABLE IF NOT EXISTS commissions (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add indexes for performance
-CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id);
-CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status);
-CREATE INDEX IF NOT EXISTS idx_bonuses_period ON bonuses(period);
+-- Add indexes for performance (only if tables and columns exist)
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='bonuses') THEN
+        CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id);
+        CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status);
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='bonuses' AND column_name='period') THEN
+            CREATE INDEX IF NOT EXISTS idx_bonuses_period ON bonuses(period);
+        END IF;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
-CREATE INDEX IF NOT EXISTS idx_commissions_employee_id ON commissions(employee_id);
-CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
-CREATE INDEX IF NOT EXISTS idx_commissions_period ON commissions(period);
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='commissions') THEN
+        CREATE INDEX IF NOT EXISTS idx_commissions_employee_id ON commissions(employee_id);
+        CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='commissions' AND column_name='period') THEN
+            CREATE INDEX IF NOT EXISTS idx_commissions_period ON commissions(period);
+        END IF;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Insert some sample data (DISABLED - no mock data)
 -- All mock data removed - bonuses and commissions will be created through the app

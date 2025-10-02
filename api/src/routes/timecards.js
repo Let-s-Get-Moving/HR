@@ -12,6 +12,8 @@ r.get("/", async (req, res) => {
   try {
     const { employee_id, pay_period_start, pay_period_end, status } = req.query;
     
+    console.log(`📊 [Timecards] Fetching with filters:`, { employee_id, pay_period_start, pay_period_end, status });
+    
     let query = `
       SELECT 
         t.*,
@@ -19,9 +21,12 @@ r.get("/", async (req, res) => {
         e.last_name,
         e.email,
         e.role_title,
-        CONCAT(e.first_name, ' ', e.last_name) as employee_name
+        CONCAT(e.first_name, ' ', e.last_name) as employee_name,
+        tu.pay_period_start as upload_period_start,
+        tu.pay_period_end as upload_period_end
       FROM timecards t
       JOIN employees e ON t.employee_id = e.id
+      LEFT JOIN timecard_uploads tu ON t.upload_id = tu.id
       WHERE 1=1
     `;
     
@@ -35,19 +40,21 @@ r.get("/", async (req, res) => {
     }
     
     if (pay_period_start && pay_period_end) {
-      // Match exact pay period
-      query += ` AND t.pay_period_start = $${paramCount}`;
+      // Match by upload period (more reliable than timecard period due to timezone issues)
+      query += ` AND (
+        (tu.pay_period_start = $${paramCount} AND tu.pay_period_end = $${paramCount + 1})
+        OR
+        (t.pay_period_start = $${paramCount} AND t.pay_period_end = $${paramCount + 1})
+      )`;
       params.push(pay_period_start);
-      paramCount++;
-      query += ` AND t.pay_period_end = $${paramCount}`;
       params.push(pay_period_end);
-      paramCount++;
+      paramCount += 2;
     } else if (pay_period_start) {
-      query += ` AND t.pay_period_start >= $${paramCount}`;
+      query += ` AND (tu.pay_period_start >= $${paramCount} OR t.pay_period_start >= $${paramCount})`;
       params.push(pay_period_start);
       paramCount++;
     } else if (pay_period_end) {
-      query += ` AND t.pay_period_end <= $${paramCount}`;
+      query += ` AND (tu.pay_period_end <= $${paramCount} OR t.pay_period_end <= $${paramCount})`;
       params.push(pay_period_end);
       paramCount++;
     }
@@ -58,12 +65,18 @@ r.get("/", async (req, res) => {
       paramCount++;
     }
     
-    query += ` ORDER BY t.pay_period_start DESC, e.first_name, e.last_name`;
+    query += ` ORDER BY COALESCE(tu.pay_period_start, t.pay_period_start) DESC, e.first_name, e.last_name`;
+    
+    console.log(`📊 [Timecards] Query:`, query);
+    console.log(`📊 [Timecards] Params:`, params);
     
     const { rows } = await q(query, params);
+    
+    console.log(`📊 [Timecards] Found ${rows.length} timecards`);
+    
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching timecards:", error);
+    console.error("❌ [Timecards] Error fetching timecards:", error);
     res.status(500).json({ error: error.message });
   }
 });

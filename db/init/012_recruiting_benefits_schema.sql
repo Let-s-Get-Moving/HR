@@ -9,22 +9,8 @@ ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS requirements TEXT;
 ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE job_postings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
--- Candidates Table
-CREATE TABLE IF NOT EXISTS candidates (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
-    phone VARCHAR(50),
-    position_id INTEGER REFERENCES job_postings(id),
-    experience_years INTEGER,
-    source VARCHAR(100),
-    resume_url TEXT,
-    cover_letter TEXT,
-    status VARCHAR(50) DEFAULT 'New' CHECK (status IN ('New', 'Interview Scheduled', 'Interviewed', 'Hired', 'Rejected', 'Withdrawn')),
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Candidates Table (already created in 012_recruiting_benefits_bonuses_schema.sql)
+-- CREATE TABLE IF NOT EXISTS candidates (...) - SKIPPED to avoid conflicts
 
 -- Job Applications Table
 CREATE TABLE IF NOT EXISTS job_applications (
