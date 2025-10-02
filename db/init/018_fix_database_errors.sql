@@ -91,18 +91,8 @@ CREATE INDEX IF NOT EXISTS idx_employees_search ON employees USING gin(
     )
 );
 
--- 11. Insert sample data for testing
-INSERT INTO candidates (first_name, last_name, email, phone, status) VALUES
-('John', 'Doe', 'john.doe@example.com', '+1-555-0123', 'Applied'),
-('Jane', 'Smith', 'jane.smith@example.com', '+1-555-0124', 'Interviewed'),
-('Bob', 'Johnson', 'bob.johnson@example.com', '+1-555-0125', 'Applied')
-ON CONFLICT (email) DO NOTHING;
-
-INSERT INTO job_postings (title, department_id, location_id, employment_type, description, requirements, salary_range, status) VALUES
-('Software Engineer', 1, 1, 'Full-time', 'Full-stack developer position', '3+ years experience', '$80,000 - $120,000', 'Open'),
-('HR Manager', 2, 2, 'Full-time', 'Manage HR operations', '5+ years HR experience', '$70,000 - $90,000', 'Open'),
-('Marketing Specialist', 3, 3, 'Full-time', 'Digital marketing role', '2+ years marketing experience', '$50,000 - $70,000', 'Open')
-ON CONFLICT DO NOTHING;
+-- 11. Insert sample data for testing (DISABLED - no mock data)
+-- All mock data removed - candidates and job postings will be created through the app
 
 -- Sample payroll submissions removed - create via Payroll Import
 -- INSERT INTO payroll_submissions (period_name, notes, submission_date, status) VALUES

@@ -36,15 +36,5 @@ CREATE INDEX IF NOT EXISTS idx_commissions_employee_id ON commissions(employee_i
 CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
 CREATE INDEX IF NOT EXISTS idx_commissions_period ON commissions(period);
 
--- Insert some sample data
-INSERT INTO bonuses (employee_id, bonus_type, amount, period, criteria, status) VALUES
-(75, 'Performance Bonus', 2500.00, 'Q3 2025', 'Exceeded quarterly targets by 15%', 'Approved'),
-(76, 'Sales Bonus', 5000.00, 'Q3 2025', 'Achieved 120% of sales quota', 'Paid'),
-(78, 'Project Completion Bonus', 1500.00, 'September 2025', 'Successfully delivered major client project', 'Approved')
-ON CONFLICT DO NOTHING;
-
-INSERT INTO commissions (employee_id, commission_rate, threshold_amount, deal_amount, commission_amount, period, status) VALUES
-(76, 8.5, 0, 50000.00, 4250.00, 'Q3 2025', 'Paid'),
-(78, 6.0, 10000.00, 75000.00, 4500.00, 'Q3 2025', 'Approved'),
-(80, 5.5, 5000.00, 25000.00, 1375.00, 'September 2025', 'Pending')
-ON CONFLICT DO NOTHING;
+-- Insert some sample data (DISABLED - no mock data)
+-- All mock data removed - bonuses and commissions will be created through the app

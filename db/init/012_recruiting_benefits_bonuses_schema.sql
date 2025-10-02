@@ -223,57 +223,7 @@ CREATE INDEX IF NOT EXISTS idx_commissions_employee ON commissions(employee_id);
 CREATE INDEX IF NOT EXISTS idx_commissions_status ON commissions(status);
 
 -- =============================================
--- SAMPLE DATA
+-- SAMPLE DATA (DISABLED - no mock data)
 -- =============================================
 
--- Insert sample job postings (assuming departments and locations exist)
-INSERT INTO job_postings (title, department_id, location_id, employment_type, salary_range, description, requirements, created_by) VALUES
-('Senior Software Engineer', 1, 1, 'Full-time', '$120,000 - $150,000', 'We are looking for a senior software engineer to join our team...', '5+ years experience, React, Node.js, PostgreSQL', 1),
-('HR Manager', 2, 2, 'Full-time', '$80,000 - $100,000', 'Lead our HR team and manage employee relations...', 'Bachelor degree, 3+ years HR experience', 1),
-('Sales Representative', 3, 3, 'Full-time', '$60,000 - $80,000 + Commission', 'Drive sales growth and build client relationships...', '2+ years sales experience, excellent communication', 1);
-
--- Insert sample candidates
-INSERT INTO candidates (first_name, last_name, email, phone, status, source, experience_years, current_position, current_company) VALUES
-('John', 'Doe', 'john.doe@email.com', '+1-555-0123', 'Applied', 'LinkedIn', 5, 'Software Engineer', 'Tech Corp'),
-('Jane', 'Smith', 'jane.smith@email.com', '+1-555-0124', 'Screening', 'Indeed', 3, 'HR Specialist', 'HR Solutions Inc'),
-('Mike', 'Johnson', 'mike.johnson@email.com', '+1-555-0125', 'Interview', 'Referral', 2, 'Sales Associate', 'Sales Pro LLC');
-
--- Insert sample job applications
-INSERT INTO job_applications (candidate_id, job_posting_id, status, cover_letter) VALUES
-(1, 1, 'Under Review', 'I am excited to apply for the Senior Software Engineer position...'),
-(2, 2, 'Shortlisted', 'With my 3 years of HR experience, I believe I would be a great fit...'),
-(3, 3, 'Applied', 'I am passionate about sales and building relationships...');
-
--- Insert sample insurance plans
-INSERT INTO insurance_plans (name, type, provider, coverage_level, monthly_premium, employer_contribution, employee_contribution, deductible, co_pay, effective_date) VALUES
-('Premium Health Plan', 'Health', 'Blue Cross Blue Shield', 'Family', 800.00, 600.00, 200.00, 1000.00, 25.00, '2024-01-01'),
-('Basic Health Plan', 'Health', 'Aetna', 'Individual', 300.00, 200.00, 100.00, 2000.00, 50.00, '2024-01-01'),
-('Dental Plan', 'Dental', 'Delta Dental', 'Family', 50.00, 30.00, 20.00, 100.00, 15.00, '2024-01-01');
-
--- Insert sample retirement plans
-INSERT INTO retirement_plans (name, type, provider, employer_match_percentage, employer_match_limit, vesting_schedule, contribution_limit, effective_date) VALUES
-('401k Plan', '401k', 'Fidelity', 4.00, 6000.00, '4 year graded vesting', 23000.00, '2024-01-01'),
-('Roth 401k', '401k', 'Fidelity', 0.00, 0.00, 'Immediate vesting', 23000.00, '2024-01-01'),
-('Pension Plan', 'Pension', 'Vanguard', 0.00, 0.00, '5 year cliff vesting', 0.00, '2024-01-01');
-
--- Insert sample bonus structures
-INSERT INTO bonus_structures (name, description, type, calculation_method, base_amount, percentage, criteria, effective_date) VALUES
-('Annual Performance Bonus', 'Year-end performance based bonus', 'Annual', 'Percentage', 0.00, 10.00, '{"min_rating": 3.0, "target_met": true}', '2024-01-01'),
-('Quarterly Sales Bonus', 'Quarterly sales achievement bonus', 'Quarterly', 'Fixed', 2500.00, 0.00, '{"sales_target": 100000}', '2024-01-01'),
-('Project Completion Bonus', 'Bonus for completing major projects', 'Project-based', 'Fixed', 1000.00, 0.00, '{"project_delivered": true, "on_time": true}', '2024-01-01');
-
--- Insert sample commission structures
-INSERT INTO commission_structures (name, description, type, calculation_method, percentage, tiers, effective_date) VALUES
-('Sales Commission', 'Standard sales commission structure', 'Sales', 'Percentage', 5.00, '{"tiers": [{"min": 0, "max": 50000, "rate": 3.0}, {"min": 50000, "max": 100000, "rate": 5.0}, {"min": 100000, "max": null, "rate": 7.0}]}', '2024-01-01'),
-('Revenue Commission', 'Revenue-based commission', 'Revenue', 'Percentage', 2.00, '{"tiers": [{"min": 0, "max": 100000, "rate": 1.5}, {"min": 100000, "max": 500000, "rate": 2.0}, {"min": 500000, "max": null, "rate": 2.5}]}', '2024-01-01');
-
--- Insert sample bonuses
-INSERT INTO bonuses (employee_id, bonus_structure_id, amount, bonus_period, performance_rating, status, notes) VALUES
-(1, 1, 5000.00, 'Annual 2024', 4.2, 'Approved', 'Excellent performance throughout the year'),
-(2, 1, 3000.00, 'Annual 2024', 3.8, 'Pending', 'Good performance, awaiting final review'),
-(3, 2, 2500.00, 'Q4 2024', 0.00, 'Approved', 'Exceeded quarterly sales target');
-
--- Insert sample commissions
-INSERT INTO commissions (employee_id, commission_structure_id, amount, sales_amount, commission_percentage, commission_period, status, notes) VALUES
-(3, 1, 2500.00, 50000.00, 5.00, 'December 2024', 'Approved', 'Monthly sales commission'),
-(3, 1, 3500.00, 70000.00, 5.00, 'January 2025', 'Pending', 'Outstanding sales performance');
+-- All mock data removed - employees, users, locations, and candidates will be created through the app

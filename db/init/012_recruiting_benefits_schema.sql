@@ -109,39 +109,8 @@ CREATE TABLE IF NOT EXISTS retirement_enrollments (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample data for testing
-INSERT INTO job_postings (title, department_id, location_id, employment_type, salary_range, description, requirements, status) VALUES
-('Senior Software Engineer', 1, 1, 'Full-time', '$80,000 - $120,000', 'We are looking for a senior software engineer to join our team.', '5+ years experience, React, Node.js', 'Open'),
-('HR Coordinator', 2, 2, 'Full-time', '$50,000 - $70,000', 'Join our HR team as a coordinator.', '2+ years HR experience, communication skills', 'Open'),
-('Logistics Manager', 3, 3, 'Full-time', '$70,000 - $90,000', 'Manage our logistics operations.', '3+ years logistics experience, leadership skills', 'Closed');
-
-INSERT INTO candidates (name, email, phone, position_id, experience_years, source, status) VALUES
-('Sarah Johnson', 'sarah.johnson@email.com', '+1 (416) 555-0123', 1, 5, 'LinkedIn', 'Interview Scheduled'),
-('Michael Chen', 'michael.chen@email.com', '+1 (604) 555-0456', 2, 3, 'Indeed', 'New'),
-('Lisa Rodriguez', 'lisa.rodriguez@email.com', '+1 (514) 555-0789', 3, 4, 'Company Website', 'Interviewed');
-
-INSERT INTO job_applications (candidate_id, job_posting_id, status) VALUES
-(1, 1, 'Interview Scheduled'),
-(2, 2, 'Under Review'),
-(3, 3, 'Interviewed');
-
-INSERT INTO benefits_plans (plan_name, provider, type, employee_cost, employer_cost, coverage_details, department_id) VALUES
-('Health Plus Plan', 'BlueCross', 'Health', 150.00, 300.00, 'Comprehensive health coverage', NULL),
-('Dental Care', 'DentalCorp', 'Dental', 25.00, 75.00, 'Basic dental coverage', NULL),
-('Vision Plan', 'VisionCare', 'Vision', 10.00, 20.00, 'Annual eye exams and glasses', NULL);
-
-INSERT INTO retirement_plans (plan_name, provider, plan_type, employer_match_percentage, vesting_schedule, contribution_limit, department_id) VALUES
-('401k Plan', 'Fidelity', '401k', 3.00, '3 year vesting', 19500.00, NULL),
-('Pension Plan', 'PensionCorp', 'Pension', 0.00, '5 year vesting', 0.00, NULL);
-
-INSERT INTO benefits_enrollments (employee_id, plan_id, enrollment_date, coverage_start_date, status) VALUES
-(1, 1, '2025-01-01', '2025-01-01', 'Active'),
-(1, 2, '2025-01-01', '2025-01-01', 'Active'),
-(2, 1, '2025-01-01', '2025-01-01', 'Active');
-
-INSERT INTO retirement_enrollments (employee_id, plan_id, enrollment_date, contribution_percentage, employer_match_amount, status) VALUES
-(1, 1, '2025-01-01', 5.00, 150.00, 'Active'),
-(2, 1, '2025-01-01', 3.00, 90.00, 'Active');
+-- Insert sample data for testing (DISABLED - no mock data)
+-- All mock data removed - employees, users, locations, and candidates will be created through the app
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_job_postings_department ON job_postings(department_id);

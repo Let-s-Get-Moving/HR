@@ -37,10 +37,17 @@ ALTER TABLE agent_commission_us
     ALTER COLUMN commission_125x TYPE NUMERIC(18,2),
     ALTER COLUMN bonus TYPE NUMERIC(18,2);
 
--- Increase fields in hourly_payout
-ALTER TABLE hourly_payout
-    ALTER COLUMN amount TYPE NUMERIC(18,2),
-    ALTER COLUMN total_for_month TYPE NUMERIC(18,2);
+-- Increase fields in hourly_payout (only if columns exist)
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='hourly_payout' AND column_name='amount') THEN
+        ALTER TABLE hourly_payout ALTER COLUMN amount TYPE NUMERIC(18,2);
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='hourly_payout' AND column_name='total_for_month') THEN
+        ALTER TABLE hourly_payout ALTER COLUMN total_for_month TYPE NUMERIC(18,2);
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
 
 -- Add comment for documentation
 COMMENT ON TABLE employee_commission_monthly IS 'Commission data with NUMERIC(18,2) fields to handle values up to 999 trillion';

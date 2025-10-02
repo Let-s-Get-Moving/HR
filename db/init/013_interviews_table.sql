@@ -46,19 +46,5 @@ CREATE INDEX IF NOT EXISTS idx_interviews_interviewer_id ON interviews(interview
 CREATE INDEX IF NOT EXISTS idx_interviews_date ON interviews(interview_date);
 CREATE INDEX IF NOT EXISTS idx_interviews_status ON interviews(status);
 
--- Insert sample data only if candidates and job_postings exist
-DO $$ 
-BEGIN
-  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'candidates') 
-     AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'job_postings')
-     AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'employees') THEN
-    
-    INSERT INTO interviews (candidate_id, job_posting_id, interview_date, interview_time, interview_type, interviewer_id, location, notes)
-    VALUES 
-      (1, 1, '2025-01-25', '14:00', 'Video', 1, 'Virtual', 'Initial screening interview'),
-      (2, 1, '2025-01-26', '10:00', 'In-person', 2, 'Office Conference Room A', 'Technical interview'),
-      (3, 2, '2025-01-27', '15:30', 'Phone', 3, 'Phone Call', 'HR screening'),
-      (1, 2, '2025-01-28', '09:00', 'Video', 1, 'Virtual', 'Final interview')
-    ON CONFLICT DO NOTHING;
-  END IF;
-END $$;
+-- Insert sample data (DISABLED - no mock data)
+-- All mock data removed - candidates, job postings, and employees will be created through the app

@@ -185,8 +185,8 @@ WHERE e.status = 'Active'
   AND e.probation_end BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '30 days'
 ORDER BY e.probation_end;
 
--- Insert sample employee events
-INSERT INTO employee_events (employee_id, event_type, event_date, details) VALUES
-(1, 'Hired', '2025-01-05', '{"position": "Dispatcher", "salary": 45000}'),
-(2, 'Hired', '2024-11-12', '{"position": "HR Coordinator", "salary": 42000}')
-ON CONFLICT DO NOTHING;
+-- Insert sample employee events (DISABLED - no employees exist)
+-- INSERT INTO employee_events (employee_id, event_type, event_date, details) VALUES
+-- (1, 'Hired', '2025-01-05', '{"position": "Dispatcher", "salary": 45000}'),
+-- (2, 'Hired', '2024-11-12', '{"position": "HR Coordinator", "salary": 42000}')
+-- ON CONFLICT DO NOTHING;

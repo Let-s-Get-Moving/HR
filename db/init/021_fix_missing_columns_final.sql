@@ -129,20 +129,7 @@ CREATE INDEX IF NOT EXISTS idx_interviews_job_posting ON interviews(job_posting_
 CREATE INDEX IF NOT EXISTS idx_interviews_interviewer ON interviews(interviewer_id);
 CREATE INDEX IF NOT EXISTS idx_interviews_date ON interviews(interview_date);
 
--- Insert some sample data to test the tables
-INSERT INTO departments (name, description) VALUES
-('Human Resources', 'Handles employee relations and HR processes'),
-('Engineering', 'Software development and technical operations'),
-('Marketing', 'Brand management and customer acquisition'),
-('Sales', 'Customer acquisition and revenue generation'),
-('Finance', 'Financial planning and accounting')
-ON CONFLICT (name) DO NOTHING;
-
--- Insert sample job postings
-INSERT INTO job_postings (title, description, requirements, location_id, department_id, status) VALUES
-('Senior Software Engineer', 'Develop and maintain web applications', '5+ years experience, Node.js, React', 5, 2, 'Open'),
-('HR Manager', 'Manage HR operations and employee relations', '3+ years HR experience, degree preferred', 1, 1, 'Open'),
-('Marketing Specialist', 'Create and execute marketing campaigns', '2+ years marketing experience', 2, 3, 'Open')
-ON CONFLICT DO NOTHING;
+-- Insert some sample data to test the tables (DISABLED - no mock data)
+-- All mock data removed - departments, locations, and job postings will be created through the app
 
 COMMIT;

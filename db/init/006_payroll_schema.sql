@@ -240,26 +240,26 @@ INSERT INTO payroll_periods (period_name, start_date, end_date, pay_date, status
 ('2025-25', '2025-12-01', '2025-12-14', '2025-12-19', 'Closed'),
 ('2025-26', '2025-12-15', '2025-12-28', '2026-01-02', 'Open');
 
--- Insert sample payroll calculations for recent bi-weekly periods
-INSERT INTO payroll_calculations (employee_id, period_id, base_hours, overtime_hours, regular_rate, commission_amount, bonus_amount, deductions, status) VALUES
--- Recent 2025 bi-weekly periods (period_id 39 = 2025-02, period_id 40 = 2025-03, etc.)
-(1, 39, 80.0, 4.0, 25.00, 250.00, 100.00, 75.00, 'Calculated'),
-(2, 39, 80.0, 2.0, 22.00, 150.00, 75.00, 60.00, 'Calculated'),
-(3, 39, 80.0, 6.0, 28.00, 400.00, 150.00, 90.00, 'Calculated'),
-(4, 39, 80.0, 3.0, 24.00, 200.00, 50.00, 70.00, 'Calculated'),
-(5, 39, 80.0, 5.0, 26.00, 300.00, 125.00, 80.00, 'Calculated'),
--- Previous period (period_id 38 = 2025-01)
-(1, 38, 80.0, 3.0, 25.00, 225.00, 90.00, 72.50, 'Calculated'),
-(2, 38, 80.0, 4.0, 22.00, 175.00, 60.00, 57.50, 'Calculated'),
-(3, 38, 80.0, 2.0, 28.00, 350.00, 140.00, 87.50, 'Calculated'),
-(4, 38, 80.0, 6.0, 24.00, 190.00, 45.00, 67.50, 'Calculated'),
-(5, 38, 80.0, 1.0, 26.00, 275.00, 110.00, 77.50, 'Calculated'),
--- More recent periods for testing
-(1, 40, 80.0, 5.0, 25.00, 275.00, 110.00, 77.50, 'Calculated'),
-(2, 40, 80.0, 3.0, 22.00, 175.00, 65.00, 62.50, 'Calculated'),
-(3, 40, 80.0, 7.0, 28.00, 450.00, 170.00, 97.50, 'Calculated'),
-(4, 40, 80.0, 2.0, 24.00, 210.00, 55.00, 72.50, 'Calculated'),
-(5, 40, 80.0, 6.0, 26.00, 325.00, 135.00, 87.50, 'Calculated');
+-- Insert sample payroll calculations for recent bi-weekly periods (DISABLED - no employees exist)
+-- INSERT INTO payroll_calculations (employee_id, period_id, base_hours, overtime_hours, regular_rate, commission_amount, bonus_amount, deductions, status) VALUES
+-- -- Recent 2025 bi-weekly periods (period_id 39 = 2025-02, period_id 40 = 2025-03, etc.)
+-- (1, 39, 80.0, 4.0, 25.00, 250.00, 100.00, 75.00, 'Calculated'),
+-- (2, 39, 80.0, 2.0, 22.00, 150.00, 75.00, 60.00, 'Calculated'),
+-- (3, 39, 80.0, 6.0, 28.00, 400.00, 150.00, 90.00, 'Calculated'),
+-- (4, 39, 80.0, 3.0, 24.00, 200.00, 50.00, 70.00, 'Calculated'),
+-- (5, 39, 80.0, 5.0, 26.00, 300.00, 125.00, 80.00, 'Calculated'),
+-- -- Previous period (period_id 38 = 2025-01)
+-- (1, 38, 80.0, 3.0, 25.00, 225.00, 90.00, 72.50, 'Calculated'),
+-- (2, 38, 80.0, 4.0, 22.00, 175.00, 60.00, 57.50, 'Calculated'),
+-- (3, 38, 80.0, 2.0, 28.00, 350.00, 140.00, 87.50, 'Calculated'),
+-- (4, 38, 80.0, 6.0, 24.00, 190.00, 45.00, 67.50, 'Calculated'),
+-- (5, 38, 80.0, 1.0, 26.00, 275.00, 110.00, 77.50, 'Calculated'),
+-- -- More recent periods for testing
+-- (1, 40, 80.0, 5.0, 25.00, 275.00, 110.00, 77.50, 'Calculated'),
+-- (2, 40, 80.0, 3.0, 22.00, 175.00, 65.00, 62.50, 'Calculated'),
+-- (3, 40, 80.0, 7.0, 28.00, 450.00, 170.00, 97.50, 'Calculated'),
+-- (4, 40, 80.0, 2.0, 24.00, 210.00, 55.00, 72.50, 'Calculated'),
+-- (5, 40, 80.0, 6.0, 26.00, 325.00, 135.00, 87.50, 'Calculated');
 
 -- Create view for commission calculations
 CREATE OR REPLACE VIEW v_commission_calculations AS
