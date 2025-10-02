@@ -167,3 +167,4 @@ r.get("/session", async (req, res) => {
 });
 
 export default r;
+// Trigger redeploy - simplified auth
