@@ -166,5 +166,27 @@ r.get("/session", async (req, res) => {
   }
 });
 
+// Manual admin fix endpoint (for when auto-fix fails)
+r.post("/fix-admin", async (req, res) => {
+  const { ensureAdminUser } = await import("../utils/ensureAdminUser.js");
+  
+  try {
+    await ensureAdminUser();
+    res.json({ 
+      success: true, 
+      message: "Admin user fixed successfully",
+      credentials: {
+        username: "Avneet",
+        password: "password123"
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: "Failed to fix admin user", 
+      details: error.message 
+    });
+  }
+});
+
 export default r;
 // Trigger redeploy - simplified auth
