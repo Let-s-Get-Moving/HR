@@ -42,7 +42,6 @@ export default function TimeTracking() {
   useEffect(() => {
     if (selectedPeriod && (view === 'main' || view === 'individual')) {
       loadTimecards();
-      loadStats();
     }
   }, [selectedPeriod, view]);
 
@@ -116,35 +115,6 @@ export default function TimeTracking() {
       console.error("❌ [TimeTracking] Error loading timecards:", error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadStats = async () => {
-    if (!selectedPeriod) {
-      console.warn("⚠️ [TimeTracking] No period selected, skipping stats load");
-      return;
-    }
-    
-    try {
-      console.log("📊 [TimeTracking] Loading stats for period:", selectedPeriod.period_label);
-      
-      // Format dates consistently
-      const formatDate = (date) => {
-        if (typeof date === 'string') return date.split('T')[0];
-        if (date instanceof Date) return date.toISOString().split('T')[0];
-        return date;
-      };
-      
-      const startDate = formatDate(selectedPeriod.pay_period_start);
-      const endDate = formatDate(selectedPeriod.pay_period_end);
-      
-      const data = await API(
-        `/api/timecards/stats/summary?pay_period_start=${startDate}&pay_period_end=${endDate}`
-      );
-      console.log("✅ [TimeTracking] Loaded stats:", data.summary);
-      setStats(data);
-    } catch (error) {
-      console.error("❌ [TimeTracking] Error loading stats:", error);
     }
   };
 
