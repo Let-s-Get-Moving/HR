@@ -173,9 +173,18 @@ export default function TimeTracking() {
     if (view === 'uploads') {
       loadUploads();
     } else if (view === 'dashboard') {
+      console.log('🔄 [TimeTracking] Dashboard view activated - loading stats...');
       loadUploadStats();
     }
   }, [view]);
+  
+  // Also refresh dashboard when uploads change (in case data was added)
+  useEffect(() => {
+    if (view === 'dashboard' && uploads.length > 0) {
+      console.log('🔄 [TimeTracking] Uploads changed while on dashboard - refreshing stats...');
+      loadUploadStats();
+    }
+  }, [uploads.length]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -222,12 +231,21 @@ export default function TimeTracking() {
         message: `Upload successful! ${result.employeeCount} employees, ${result.totalHours.toFixed(2)} total hours`
       });
 
-      // Reload data
-      console.log("🔄 [TimeTracking] Reloading uploads after successful import...");
+      // Reload data based on current view
+      console.log("🔄 [TimeTracking] Reloading data after successful import...");
       setTimeout(() => {
         setShowUploadModal(false);
         setUploadFile(null);
         setUploadStatus({ status: null, message: "" });
+        
+        // Refresh the appropriate view
+        if (view === 'uploads') {
+          loadUploads();
+        } else if (view === 'dashboard') {
+          loadUploadStats();
+        }
+        
+        // Also refresh uploads list in case user navigates back
         loadUploads();
       }, 2000);
 
