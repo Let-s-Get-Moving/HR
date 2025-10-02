@@ -438,19 +438,58 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
             }
         }
         
+        // VALIDATION: Verify data was actually created before committing
+        console.log('🔍 Validating upload data integrity...');
+        
+        // Check timecards were created
+        const timecardCheck = await client.query(
+            'SELECT COUNT(*) as count FROM timecards WHERE upload_id = $1',
+            [uploadId]
+        );
+        const timecardCount = parseInt(timecardCheck.rows[0].count);
+        
+        if (timecardCount === 0) {
+            throw new Error(`CRITICAL: No timecards created for upload ${uploadId}. Expected ${employees.length} timecards.`);
+        }
+        
+        if (timecardCount !== employees.length) {
+            console.warn(`⚠️ Timecard count mismatch: Created ${timecardCount}, expected ${employees.length}`);
+        }
+        
+        // Check timecard entries were created
+        const entriesCheck = await client.query(
+            `SELECT COUNT(*) as count FROM timecard_entries tce
+             JOIN timecards tc ON tce.timecard_id = tc.id
+             WHERE tc.upload_id = $1`,
+            [uploadId]
+        );
+        const entriesCount = parseInt(entriesCheck.rows[0].count);
+        
+        if (entriesCount === 0) {
+            throw new Error(`CRITICAL: No timecard entries created for upload ${uploadId}.`);
+        }
+        
+        console.log(`✅ Validation passed: ${timecardCount} timecards, ${entriesCount} entries`);
+        
         await client.query('COMMIT');
+        
+        console.log(`✅ Upload ${uploadId} committed successfully`);
         
         return {
             success: true,
             uploadId: uploadId,
             employeeCount: employees.length,
+            timecardCount: timecardCount,
+            entriesCount: entriesCount,
             totalHours: employees.reduce((sum, e) => sum + e.entries.reduce((s, entry) => s + (entry.work_time || 0), 0), 0)
         };
         
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Import error:', error);
+        console.error('❌ Import error - transaction rolled back:', error);
+        console.error('Stack trace:', error.stack);
         return {
+            success: false,
             error: error.message,
             details: error.stack
         };
