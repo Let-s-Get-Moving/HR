@@ -163,7 +163,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           employee_id: employee.id,
-          termination_detail_id: terminationResponse.id,
+          termination_detail_id: terminationResponse.terminationId,
           checklist_items: checklistItems
         })
       });
@@ -178,15 +178,15 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
       ].filter(doc => doc.file);
 
       for (const doc of documents) {
-        const formData = new FormData();
-        formData.append('file', doc.file);
-        formData.append('document_type', doc.type);
-        formData.append('employee_id', employee.id);
-        formData.append('termination_detail_id', terminationResponse.id);
+        const docFormData = new FormData();
+        docFormData.append('file', doc.file);
+        docFormData.append('document_type', doc.type);
+        docFormData.append('employee_id', employee.id);
+        docFormData.append('termination_detail_id', terminationResponse.terminationId);
 
         await API("/api/termination/documents", {
           method: "POST",
-          body: formData
+          body: docFormData
         });
       }
 
