@@ -1,6 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+// Convert decimal hours to HH:MM format
+const formatHoursAsTime = (decimalHours) => {
+  if (!decimalHours || decimalHours === 0) return '0:00';
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60);
+  return `${hours}:${minutes.toString().padStart(2, '0')}`;
+};
+
 // Uploads List View
 export function UploadsListView({ uploads, onViewUpload, onViewDashboard, loading }) {
   if (loading) {
@@ -130,7 +138,7 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
             <div className="text-3xl font-bold text-primary">{upload?.employee_count}</div>
             <div className="text-sm text-secondary">Employees</div>
             <div className="mt-2 text-xl font-semibold text-indigo-600 dark:text-indigo-400">
-              {parseFloat(upload?.total_hours || 0).toFixed(2)}h
+              {formatHoursAsTime(parseFloat(upload?.total_hours || 0))}
             </div>
           </div>
         </div>
@@ -151,7 +159,7 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
               className="card p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             >
               <div className="font-medium text-primary">{emp.full_name}</div>
-              <div className="text-sm text-secondary mt-1">{parseFloat(emp.total_hours || 0).toFixed(2)} hours</div>
+              <div className="text-sm text-secondary mt-1">{formatHoursAsTime(parseFloat(emp.total_hours || 0))}</div>
             </motion.button>
           ))}
         </div>
@@ -203,7 +211,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
             </p>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-bold text-primary">{parseFloat(employee?.total_hours || 0).toFixed(2)}</div>
+            <div className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(employee?.total_hours || 0))}</div>
             <div className="text-sm text-secondary">Total Hours</div>
           </div>
         </div>
@@ -245,10 +253,10 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
                       {entry.clock_out || (entry.notes?.includes('Missing') ? <span className="text-red-500">—</span> : '')}
                     </td>
                     <td className="px-6 py-4 text-sm text-right text-primary">
-                      {entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : ''}
+                      {entry.hours_worked ? formatHoursAsTime(parseFloat(entry.hours_worked)) : ''}
                     </td>
                     <td className="px-6 py-4 text-sm text-right font-semibold text-indigo-600 dark:text-indigo-400">
-                      {entry.daily_total ? parseFloat(entry.daily_total).toFixed(2) : ''}
+                      {entry.daily_total ? formatHoursAsTime(parseFloat(entry.daily_total)) : ''}
                     </td>
                     <td className="px-6 py-4 text-sm text-secondary">
                       {entry.notes ? (
@@ -303,7 +311,7 @@ export function UploadDashboardView({ stats, onBack, loading }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-3xl font-bold text-primary">{parseFloat(stats?.summary?.total_hours || 0).toFixed(2)}</p>
+          <p className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(stats?.summary?.total_hours || 0))}</p>
         </div>
 
         <div className="card p-6">
@@ -323,7 +331,7 @@ export function UploadDashboardView({ stats, onBack, loading }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
             </svg>
           </div>
-          <p className="text-3xl font-bold text-primary">{parseFloat(stats?.summary?.avg_hours_per_employee || 0).toFixed(2)}</p>
+          <p className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(stats?.summary?.avg_hours_per_employee || 0))}</p>
         </div>
 
         <div className="card p-6">
@@ -361,7 +369,7 @@ export function UploadDashboardView({ stats, onBack, loading }) {
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-primary">{emp.name}</td>
                   <td className="px-6 py-4 text-sm text-right font-semibold text-indigo-600 dark:text-indigo-400">
-                    {parseFloat(emp.total_hours).toFixed(2)}
+                    {formatHoursAsTime(parseFloat(emp.total_hours))}
                   </td>
                 </tr>
               ))}

@@ -62,6 +62,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
     }
   };
 
+  // Convert decimal hours to HH:MM format
+  const formatHoursAsTime = (decimalHours) => {
+    if (!decimalHours || decimalHours === 0) return '0:00';
+    const hours = Math.floor(decimalHours);
+    const minutes = Math.round((decimalHours - hours) * 60);
+    return `${hours}:${minutes.toString().padStart(2, '0')}`;
+  };
+
   const calculateTotalHours = () => {
     if (!timeEntries || !Array.isArray(timeEntries) || timeEntries.length === 0) return 0;
     const total = timeEntries.reduce((total, entry) => {
@@ -377,7 +385,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>Total Hours Worked</span>
-                  <span className="font-bold">{(calculateTotalHours() || 0).toFixed(1)} hrs</span>
+                  <span className="font-bold">{formatHoursAsTime(calculateTotalHours())}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Total Earnings</span>
@@ -400,7 +408,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {(timeEntries || []).slice(0, 5).map((entry) => (
                   <div key={entry.id} className="flex justify-between text-sm">
                     <span>{new Date(entry.work_date).toLocaleDateString()}</span>
-                    <span>{entry.hours_worked || 0} hrs</span>
+                    <span>{formatHoursAsTime(entry.hours_worked)}</span>
                   </div>
                 ))}
               </div>
@@ -547,9 +555,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                           </td>
                           <td className="py-2">{entry.clock_in ? new Date(entry.clock_in).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '-'}</td>
                           <td className="py-2">{entry.clock_out ? new Date(entry.clock_out).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) : '-'}</td>
-                          <td className="py-2 text-right">{entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : '-'}</td>
+                          <td className="py-2 text-right">{entry.hours_worked ? formatHoursAsTime(parseFloat(entry.hours_worked)) : '-'}</td>
                           <td className="py-2 text-right font-semibold text-indigo-400">
-                            {idx === dayEntries.length - 1 ? dailyTotal.toFixed(2) : ''}
+                            {idx === dayEntries.length - 1 ? formatHoursAsTime(dailyTotal) : ''}
                           </td>
                           <td className="py-2 text-sm text-neutral-400">{entry.notes || ''}</td>
                         </tr>
