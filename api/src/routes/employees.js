@@ -149,7 +149,7 @@ r.get("/:id/time-entries", async (req, res) => {
          te.hours_worked,
          te.overtime_hours,
          te.was_late,
-         te.notes,
+         NULL as notes,
          'old' as source
        FROM time_entries te
        WHERE te.employee_id = $1
@@ -160,8 +160,8 @@ r.get("/:id/time-entries", async (req, res) => {
          tce.id,
          tc.employee_id,
          tce.work_date,
-         tce.clock_in,
-         tce.clock_out,
+         tce.clock_in::text::timestamp,
+         tce.clock_out::text::timestamp,
          tce.hours_worked,
          tce.overtime_hours,
          false as was_late,
