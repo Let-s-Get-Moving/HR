@@ -122,9 +122,28 @@ BEGIN
         CREATE INDEX IF NOT EXISTS idx_job_applications_job ON job_applications(job_posting_id);
     END IF;
 END $$;
-CREATE INDEX IF NOT EXISTS idx_interviews_candidate ON interviews(candidate_id);
-CREATE INDEX IF NOT EXISTS idx_interviews_date ON interviews(interview_date);
-CREATE INDEX IF NOT EXISTS idx_benefits_enrollments_employee ON benefits_enrollments(employee_id);
-CREATE INDEX IF NOT EXISTS idx_benefits_enrollments_plan ON benefits_enrollments(plan_id);
-CREATE INDEX IF NOT EXISTS idx_retirement_enrollments_employee ON retirement_enrollments(employee_id);
-CREATE INDEX IF NOT EXISTS idx_retirement_enrollments_plan ON retirement_enrollments(plan_id);
+-- Create remaining indexes with existence checks
+DO $$ 
+BEGIN
+    -- Interviews indexes
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'interviews') THEN
+        CREATE INDEX IF NOT EXISTS idx_interviews_candidate ON interviews(candidate_id);
+        CREATE INDEX IF NOT EXISTS idx_interviews_date ON interviews(interview_date);
+    END IF;
+    
+    -- Benefits enrollments indexes (check columns exist)
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'benefits_enrollments') THEN
+        CREATE INDEX IF NOT EXISTS idx_benefits_enrollments_employee ON benefits_enrollments(employee_id);
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'benefits_enrollments' AND column_name = 'plan_id') THEN
+            CREATE INDEX IF NOT EXISTS idx_benefits_enrollments_plan ON benefits_enrollments(plan_id);
+        END IF;
+    END IF;
+    
+    -- Retirement enrollments indexes (check columns exist)
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'retirement_enrollments') THEN
+        CREATE INDEX IF NOT EXISTS idx_retirement_enrollments_employee ON retirement_enrollments(employee_id);
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'retirement_enrollments' AND column_name = 'plan_id') THEN
+            CREATE INDEX IF NOT EXISTS idx_retirement_enrollments_plan ON retirement_enrollments(plan_id);
+        END IF;
+    END IF;
+END $$;

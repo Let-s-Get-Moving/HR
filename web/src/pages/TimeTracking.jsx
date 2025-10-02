@@ -33,10 +33,18 @@ export default function TimeTracking() {
   const [manualPeriodStart, setManualPeriodStart] = useState("");
   const [manualPeriodEnd, setManualPeriodEnd] = useState("");
 
+  // Load initial data on component mount
   useEffect(() => {
     loadInitialData();
+    // Also load uploads list on mount since default view is "uploads"
+    if (view === 'uploads') {
+      loadUploads();
+    } else if (view === 'dashboard') {
+      loadUploadStats();
+    }
   }, []);
 
+  // Reload timecards when period or view changes
   useEffect(() => {
     if (selectedPeriod) {
       loadTimecards();

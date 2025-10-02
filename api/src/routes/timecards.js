@@ -14,6 +14,7 @@ r.get("/", async (req, res) => {
     
     console.log(`📊 [Timecards] Fetching with filters:`, { employee_id, pay_period_start, pay_period_end, status });
     
+    // SIMPLIFIED QUERY: No complex OR logic, just match exactly what we need
     let query = `
       SELECT 
         t.*,
@@ -21,12 +22,9 @@ r.get("/", async (req, res) => {
         e.last_name,
         e.email,
         e.role_title,
-        CONCAT(e.first_name, ' ', e.last_name) as employee_name,
-        tu.pay_period_start as upload_period_start,
-        tu.pay_period_end as upload_period_end
+        CONCAT(e.first_name, ' ', e.last_name) as employee_name
       FROM timecards t
       JOIN employees e ON t.employee_id = e.id
-      LEFT JOIN timecard_uploads tu ON t.upload_id = tu.id
       WHERE 1=1
     `;
     
@@ -40,22 +38,17 @@ r.get("/", async (req, res) => {
     }
     
     if (pay_period_start && pay_period_end) {
-      // Match by upload period (more reliable than timecard period due to timezone issues)
-      // Cast dates to DATE type to ensure proper comparison
-      query += ` AND (
-        (tu.pay_period_start::DATE = $${paramCount}::DATE AND tu.pay_period_end::DATE = $${paramCount + 1}::DATE)
-        OR
-        (t.pay_period_start::DATE = $${paramCount}::DATE AND t.pay_period_end::DATE = $${paramCount + 1}::DATE)
-      )`;
+      // Simple exact match on timecard dates
+      query += ` AND t.pay_period_start = $${paramCount}::DATE AND t.pay_period_end = $${paramCount + 1}::DATE`;
       params.push(pay_period_start);
       params.push(pay_period_end);
       paramCount += 2;
     } else if (pay_period_start) {
-      query += ` AND (tu.pay_period_start >= $${paramCount} OR t.pay_period_start >= $${paramCount})`;
+      query += ` AND t.pay_period_start >= $${paramCount}::DATE`;
       params.push(pay_period_start);
       paramCount++;
     } else if (pay_period_end) {
-      query += ` AND (tu.pay_period_end <= $${paramCount} OR t.pay_period_end <= $${paramCount})`;
+      query += ` AND t.pay_period_end <= $${paramCount}::DATE`;
       params.push(pay_period_end);
       paramCount++;
     }
@@ -66,28 +59,32 @@ r.get("/", async (req, res) => {
       paramCount++;
     }
     
-    query += ` ORDER BY COALESCE(tu.pay_period_start, t.pay_period_start) DESC, e.first_name, e.last_name`;
+    query += ` ORDER BY t.pay_period_start DESC, e.first_name, e.last_name`;
     
     console.log(`📊 [Timecards] Query:`, query);
     console.log(`📊 [Timecards] Params:`, params);
     
-    // DEBUG: Check if timecards exist at all for this period
-    if (pay_period_start && pay_period_end) {
-      const debugCheck = await q(`
-        SELECT COUNT(*) as count FROM timecards t WHERE t.pay_period_start::DATE = $1::DATE AND t.pay_period_end::DATE = $2::DATE
-      `, [pay_period_start, pay_period_end]);
-      console.log(`📊 [Timecards] DEBUG: Found ${debugCheck.rows[0].count} timecards in timecards table for this period`);
-      
-      const debugUploadCheck = await q(`
-        SELECT id, pay_period_start, pay_period_end, employee_count, status FROM timecard_uploads 
-        WHERE pay_period_start::DATE = $1::DATE AND pay_period_end::DATE = $2::DATE
-      `, [pay_period_start, pay_period_end]);
-      console.log(`📊 [Timecards] DEBUG: Found ${debugUploadCheck.rows.length} uploads:`, debugUploadCheck.rows);
-    }
-    
     const { rows } = await q(query, params);
     
     console.log(`📊 [Timecards] Found ${rows.length} timecards`);
+    
+    // DEBUG: If no results but we expected some, check the database
+    if (rows.length === 0 && pay_period_start && pay_period_end) {
+      const debugCheck = await q(`
+        SELECT COUNT(*) as count, 
+               MIN(pay_period_start) as min_start, 
+               MAX(pay_period_end) as max_end 
+        FROM timecards
+      `);
+      console.log(`📊 [Timecards] DEBUG: Total timecards in DB:`, debugCheck.rows[0]);
+      
+      const periodCheck = await q(`
+        SELECT COUNT(*) as count 
+        FROM timecards 
+        WHERE pay_period_start::TEXT LIKE $1 AND pay_period_end::TEXT LIKE $2
+      `, [`%${pay_period_start}%`, `%${pay_period_end}%`]);
+      console.log(`📊 [Timecards] DEBUG: Fuzzy match count:`, periodCheck.rows[0].count);
+    }
     
     res.json(rows);
   } catch (error) {
