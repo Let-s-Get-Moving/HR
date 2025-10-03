@@ -393,7 +393,7 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                 `, [
                     firstName, 
                     lastName, 
-                    `${firstName.toLowerCase()}.${lastName.toLowerCase()}@imported.local`,
+                    `${firstName.toLowerCase()}@letsgetmovinggroup.com`,
                     payPeriod.start
                 ]);
                 

@@ -45,8 +45,8 @@ const employeeSchema = z.object({
   birth_date: z.string().nullable().optional(),
   hire_date: z.string(),
   employment_type: z.enum(["Full-time","Part-time","Contract"]),
-  department_id: z.number().int(),
-  location_id: z.number().int(),
+  department_id: z.number().int().nullable().optional(),
+  location_id: z.number().int().nullable().optional(),
   role_title: z.string().optional(),
   probation_end: z.string().nullable().optional(),
   hourly_rate: z.number().min(0).optional()

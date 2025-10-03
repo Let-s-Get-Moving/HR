@@ -294,23 +294,21 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Department *</label>
+                <label className="block text-sm font-medium mb-2">Department (HR will assign)</label>
                 <select
-                  required
                   value={formData.department_id}
                   onChange={(e) => setFormData({...formData, department_id: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Select Department</option>
+                  <option value="">None - To be assigned by HR</option>
                   {departments.map(dept => (
                     <option key={dept.id} value={dept.id}>{dept.name}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Location *</label>
+                <label className="block text-sm font-medium mb-2">Location (HR will assign)</label>
                 <select
-                  required
                   value={formData.location_id}
                   onChange={(e) => setFormData({...formData, location_id: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
