@@ -650,72 +650,94 @@ export default function Recruiting() {
     </div>
   );
 
-  const renderPipeline = () => (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Hiring Pipeline</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-blue-400">35</div>
-          <div className="text-sm text-tertiary">Applications</div>
-        </div>
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-yellow-400">12</div>
-          <div className="text-sm text-tertiary">In Review</div>
-        </div>
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-purple-400">8</div>
-          <div className="text-sm text-tertiary">Interviews</div>
-        </div>
-        <div className="card p-4 text-center">
-          <div className="text-2xl font-bold text-green-400">3</div>
-          <div className="text-sm text-tertiary">Offers</div>
-        </div>
-      </div>
+  const renderPipeline = () => {
+    // Calculate pipeline stats from actual candidates
+    const totalApplications = candidates.length;
+    const inReview = candidates.filter(c => c.status === 'Resume Review').length;
+    const inInterview = candidates.filter(c => c.status === 'Interview Scheduled' || c.status === 'Interview').length;
+    const offers = candidates.filter(c => c.status === 'Offer Extended').length;
+    
+    // Calculate percentages for progress bars (relative to total applications)
+    const reviewPercentage = totalApplications > 0 ? Math.round((inReview / totalApplications) * 100) : 0;
+    const interviewPercentage = totalApplications > 0 ? Math.round((inInterview / totalApplications) * 100) : 0;
+    const offerPercentage = totalApplications > 0 ? Math.round((offers / totalApplications) * 100) : 0;
+    
+    return (
+      <div className="space-y-6">
+        <h3 className="text-lg font-semibold">Hiring Pipeline</h3>
+        
+        {totalApplications === 0 ? (
+          <div className="card p-8 text-center">
+            <p className="text-tertiary">No candidates in pipeline yet.</p>
+            <p className="text-sm text-tertiary mt-2">Add candidates from the Candidates tab to track hiring progress.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="card p-4 text-center">
+                <div className="text-2xl font-bold text-blue-400">{totalApplications}</div>
+                <div className="text-sm text-tertiary">Applications</div>
+              </div>
+              <div className="card p-4 text-center">
+                <div className="text-2xl font-bold text-yellow-400">{inReview}</div>
+                <div className="text-sm text-tertiary">In Review</div>
+              </div>
+              <div className="card p-4 text-center">
+                <div className="text-2xl font-bold text-purple-400">{inInterview}</div>
+                <div className="text-sm text-tertiary">Interviews</div>
+              </div>
+              <div className="card p-4 text-center">
+                <div className="text-2xl font-bold text-green-400">{offers}</div>
+                <div className="text-sm text-tertiary">Offers</div>
+              </div>
+            </div>
 
-      <div className="card p-6">
-        <h4 className="text-lg font-semibold mb-4">Pipeline Stages</h4>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span>Applications Received</span>
-            <div className="flex items-center space-x-2">
-              <div className="w-32 bg-neutral-700 rounded-full h-2">
-                <div className="bg-blue-400 h-2 rounded-full" style={{ width: '100%' }}></div>
+            <div className="card p-6">
+              <h4 className="text-lg font-semibold mb-4">Pipeline Stages</h4>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span>Applications Received</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-32 bg-neutral-700 rounded-full h-2">
+                      <div className="bg-blue-400 h-2 rounded-full" style={{ width: '100%' }}></div>
+                    </div>
+                    <span className="text-sm text-tertiary">{totalApplications}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Resume Review</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-32 bg-neutral-700 rounded-full h-2">
+                      <div className="bg-yellow-400 h-2 rounded-full" style={{ width: `${reviewPercentage}%` }}></div>
+                    </div>
+                    <span className="text-sm text-tertiary">{inReview}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Interview Process</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-32 bg-neutral-700 rounded-full h-2">
+                      <div className="bg-purple-400 h-2 rounded-full" style={{ width: `${interviewPercentage}%` }}></div>
+                    </div>
+                    <span className="text-sm text-tertiary">{inInterview}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Offers Extended</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-32 bg-neutral-700 rounded-full h-2">
+                      <div className="bg-green-400 h-2 rounded-full" style={{ width: `${offerPercentage}%` }}></div>
+                    </div>
+                    <span className="text-sm text-tertiary">{offers}</span>
+                  </div>
+                </div>
               </div>
-              <span className="text-sm text-tertiary">35</span>
             </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Resume Review</span>
-            <div className="flex items-center space-x-2">
-              <div className="w-32 bg-neutral-700 rounded-full h-2">
-                <div className="bg-yellow-400 h-2 rounded-full" style={{ width: '34%' }}></div>
-              </div>
-              <span className="text-sm text-tertiary">12</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Interview Process</span>
-            <div className="flex items-center space-x-2">
-              <div className="w-32 bg-neutral-700 rounded-full h-2">
-                <div className="bg-purple-400 h-2 rounded-full" style={{ width: '23%' }}></div>
-              </div>
-              <span className="text-sm text-tertiary">8</span>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span>Offers Extended</span>
-            <div className="flex items-center space-x-2">
-              <div className="w-32 bg-neutral-700 rounded-full h-2">
-                <div className="bg-green-400 h-2 rounded-full" style={{ width: '9%' }}></div>
-              </div>
-              <span className="text-sm text-tertiary">3</span>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderAnalytics = () => (
     <div className="space-y-6">
