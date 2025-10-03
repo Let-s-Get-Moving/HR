@@ -110,8 +110,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       hourly_rate: employee.hourly_rate || 25,
       employment_type: employee.employment_type,
       department_id: employee.department_id,
-      location_id: employee.location_id,
+      location: employee.location || '',
       hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : '',
+      probation_end: employee.probation_end ? employee.probation_end.split('T')[0] : '',
       status: employee.status
     });
     setIsEditing(true);
@@ -278,18 +279,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Location</div>
             {isEditing ? (
-              <select
-                value={editData.location_id || ''}
-                onChange={(e) => setEditData({...editData, location_id: parseInt(e.target.value) || null})}
+              <input
+                type="text"
+                value={editData.location || ''}
+                onChange={(e) => setEditData({...editData, location: e.target.value})}
+                placeholder="Enter location"
                 className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
-              >
-                <option value="">None</option>
-                {locations.map(loc => (
-                  <option key={loc.id} value={loc.id}>{loc.name}</option>
-                ))}
-              </select>
+              />
             ) : (
-              <div className="font-medium">{employee.location_name || 'Not assigned'}</div>
+              <div className="font-medium">{employee.location || 'Not assigned'}</div>
             )}
           </div>
         </div>
@@ -436,23 +434,29 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Location:</span>
                   {isEditing ? (
-                    <select
-                      value={editData.location_id || ''}
-                      onChange={(e) => setEditData({...editData, location_id: parseInt(e.target.value) || null})}
+                    <input
+                      type="text"
+                      value={editData.location || ''}
+                      onChange={(e) => setEditData({...editData, location: e.target.value})}
+                      placeholder="Enter location"
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
-                    >
-                      <option value="">None - To be assigned</option>
-                      {locations.map(loc => (
-                        <option key={loc.id} value={loc.id}>{loc.name}</option>
-                      ))}
-                    </select>
+                    />
                   ) : (
-                    <span>{employee.location_name || 'Not assigned'}</span>
+                    <span>{employee.location || 'Not assigned'}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Probation End:</span>
-                  <span>{employee.probation_end ? new Date(employee.probation_end).toLocaleDateString() : 'Not set'}</span>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editData.probation_end || ''}
+                      onChange={(e) => setEditData({...editData, probation_end: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    />
+                  ) : (
+                    <span>{employee.probation_end ? new Date(employee.probation_end).toLocaleDateString() : 'Not set'}</span>
+                  )}
                 </div>
               </div>
             </div>

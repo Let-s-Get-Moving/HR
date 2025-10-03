@@ -84,15 +84,15 @@ r.put("/:id", async (req, res) => {
       `UPDATE employees 
        SET first_name = $1, last_name = $2, email = $3, phone = $4, 
            role_title = $5, hourly_rate = $6, employment_type = $7,
-           department_id = $8, location_id = $9, hire_date = $10,
-           gender = $11, birth_date = $12, status = $13
-       WHERE id = $14
+           department_id = $8, location = $9, hire_date = $10,
+           gender = $11, birth_date = $12, status = $13, probation_end = $14
+       WHERE id = $15
        RETURNING *`,
       [
         data.first_name, data.last_name, data.email, data.phone,
         data.role_title, data.hourly_rate, data.employment_type,
-        data.department_id, data.location_id, data.hire_date,
-        data.gender, data.birth_date, data.status, id
+        data.department_id, data.location, data.hire_date,
+        data.gender, data.birth_date, data.status, data.probation_end, id
       ]
     );
     
@@ -103,7 +103,8 @@ r.put("/:id", async (req, res) => {
     res.json(rows[0]);
   } catch (error) {
     console.error("Error updating employee:", error);
-    res.status(500).json({ error: "Failed to update employee" });
+    console.error("Error details:", error.message);
+    res.status(500).json({ error: "Failed to update employee", details: error.message });
   }
 });
 
