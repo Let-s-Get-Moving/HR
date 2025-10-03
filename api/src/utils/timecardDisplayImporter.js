@@ -336,22 +336,25 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         });
         console.log('');
         
-        // Delete existing uploads for the same pay period (replace old data)
-        console.log('🗑️  Checking for existing uploads with the same pay period...');
+        // Only delete if EXACT SAME FILE (filename + period match)
+        // Different files for same period should NOT delete each other
+        console.log('🗑️  Checking for existing upload of this exact file...');
         const existingUploads = await client.query(`
             SELECT id FROM timecard_uploads 
-            WHERE pay_period_start = $1 AND pay_period_end = $2
-        `, [payPeriod.start, payPeriod.end]);
+            WHERE pay_period_start = $1 AND pay_period_end = $2 AND filename = $3
+        `, [payPeriod.start, payPeriod.end, filename]);
         
         if (existingUploads.rows.length > 0) {
-            console.log(`   Found ${existingUploads.rows.length} existing upload(s), deleting...`);
+            console.log(`   Found existing upload of SAME FILE, replacing...`);
             for (const upload of existingUploads.rows) {
                 // Delete timecard entries first (via CASCADE from timecards)
                 await client.query('DELETE FROM timecards WHERE upload_id = $1', [upload.id]);
                 // Delete the upload record
                 await client.query('DELETE FROM timecard_uploads WHERE id = $1', [upload.id]);
             }
-            console.log('   ✅ Old uploads deleted, inserting new data...');
+            console.log('   ✅ Old data from same file deleted, inserting fresh data...');
+        } else {
+            console.log('   ℹ️  This is a new file or first upload');
         }
         
         // Create upload record
@@ -405,11 +408,8 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
             // Calculate total hours
             const totalHours = emp.entries.reduce((sum, e) => sum + (e.work_time || 0), 0);
             
-            // Delete existing timecard for this period (replace old data)
-            await client.query(`
-                DELETE FROM timecards
-                WHERE employee_id = $1 AND pay_period_start = $2 AND pay_period_end = $3
-            `, [employeeId, payPeriod.start, payPeriod.end]);
+            // No DELETE here - we already deleted entire upload if it's a re-upload
+            // If it's a new file for same period, we keep both
             
             // Create timecard
             const timecardResult = await client.query(`
