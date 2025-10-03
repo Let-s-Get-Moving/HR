@@ -27,8 +27,7 @@ export default function LeaveManagement() {
     reason: "",
     notes: "",
     status: "Pending",
-    request_method: "",
-    approved_by: ""
+    request_method: ""
   });
 
   useEffect(() => {
@@ -128,8 +127,7 @@ export default function LeaveManagement() {
         employee_id: parseInt(newRequest.employee_id),
         leave_type_id: parseInt(newRequest.leave_type_id),
         total_days: totalDays,
-        status: approveImmediately ? "Approved" : newRequest.status,
-        approved_by: approveImmediately && newRequest.approved_by ? parseInt(newRequest.approved_by) : undefined
+        status: approveImmediately ? "Approved" : newRequest.status
       };
 
       await API("/api/leave/requests", {
@@ -145,8 +143,7 @@ export default function LeaveManagement() {
         reason: "",
         notes: "",
         status: "Pending",
-        request_method: "",
-        approved_by: ""
+        request_method: ""
       });
       setSelectedEmployeeBalance(null);
       loadData();
@@ -281,24 +278,32 @@ export default function LeaveManagement() {
               <p className="text-sm text-neutral-400 mb-6">HR records employee leave communicated via email, phone, or in-person</p>
               
               <form onSubmit={(e) => handleSubmitRequest(e, false)} className="space-y-4">
-                {/* Employee Selection */}
+                {/* Employee Selection with Search */}
                 <div className="form-group">
                   <label className="text-sm font-medium text-neutral-300 mb-2 block">
                     Employee <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    value={newRequest.employee_id}
-                    onChange={(e) => setNewRequest({...newRequest, employee_id: e.target.value})}
+                  <input
+                    type="text"
+                    list="employee-list"
+                    value={employees.find(e => e.id === parseInt(newRequest.employee_id))?.name || ''}
+                    onChange={(e) => {
+                      const selectedEmp = employees.find(emp => 
+                        `${emp.first_name} ${emp.last_name}` === e.target.value
+                      );
+                      setNewRequest({...newRequest, employee_id: selectedEmp ? selectedEmp.id.toString() : ''});
+                    }}
+                    placeholder="Type to search employee..."
                     required
                     className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="">Select employee...</option>
+                  />
+                  <datalist id="employee-list">
                     {employees.map(emp => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.first_name} {emp.last_name} - {emp.department || 'No Dept'}
+                      <option key={emp.id} value={`${emp.first_name} ${emp.last_name}`}>
+                        {emp.department || 'No Dept'}
                       </option>
                     ))}
-                  </select>
+                  </datalist>
                 </div>
 
                 {/* Leave Type */}
@@ -436,25 +441,6 @@ export default function LeaveManagement() {
                     placeholder="Optional: Internal notes for HR records..."
                     className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
-                </div>
-
-                {/* Approved By (for future use) */}
-                <div className="form-group">
-                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                    Approved By (Optional)
-                  </label>
-                  <select
-                    value={newRequest.approved_by}
-                    onChange={(e) => setNewRequest({...newRequest, approved_by: e.target.value})}
-                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="">Select approver...</option>
-                    {employees.filter(e => e.role_title && e.role_title.toLowerCase().includes('hr')).map(emp => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.first_name} {emp.last_name}
-                      </option>
-                    ))}
-                  </select>
                 </div>
 
                 {/* Action Buttons */}

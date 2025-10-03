@@ -126,16 +126,31 @@ r.post("/requests", async (req, res) => {
         DO UPDATE SET used_days = leave_balances.used_days + $4
       `, [data.employee_id, data.leave_type_id, year, data.total_days]);
       
+      // Map leave type names to match leaves table constraint
+      const leaveTypeMap = {
+        'Vacation': 'Vacation',
+        'Sick Leave': 'Sick',
+        'Personal Leave': 'Other',
+        'Bereavement': 'Bereavement',
+        'Parental Leave': 'Parental',
+        'Jury Duty': 'Other',
+        'Military Leave': 'Other'
+      };
+      
+      // Get leave type name and map it
+      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [data.leave_type_id])).rows[0]?.name || 'Other';
+      const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
+      
       // Also create record in leaves table for backwards compatibility
       await q(`
         INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
-        VALUES ($1, (SELECT name FROM leave_types WHERE id = $2), $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6)
       `, [
         data.employee_id, 
-        data.leave_type_id, 
+        mappedLeaveType,
         data.start_date, 
         data.end_date, 
-        data.approved_by ? (await q('SELECT first_name || \' \' || last_name FROM employees WHERE id = $1', [data.approved_by])).rows[0]?.concat || 'HR' : 'HR',
+        'HR',
         data.notes || null
       ]);
     }
@@ -191,17 +206,32 @@ r.put("/requests/:id/status", async (req, res) => {
         DO UPDATE SET used_days = leave_balances.used_days + $4
       `, [lr.employee_id, lr.leave_type_id, year, lr.total_days]);
       
+      // Map leave type names to match leaves table constraint
+      const leaveTypeMap = {
+        'Vacation': 'Vacation',
+        'Sick Leave': 'Sick',
+        'Personal Leave': 'Other',
+        'Bereavement': 'Bereavement',
+        'Parental Leave': 'Parental',
+        'Jury Duty': 'Other',
+        'Military Leave': 'Other'
+      };
+      
+      // Get leave type name and map it
+      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [lr.leave_type_id])).rows[0]?.name || 'Other';
+      const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
+      
       // Create leave record
       await q(`
         INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
-        VALUES ($1, (SELECT name FROM leave_types WHERE id = $2), $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT DO NOTHING
       `, [
         lr.employee_id, 
-        lr.leave_type_id, 
+        mappedLeaveType,
         lr.start_date, 
         lr.end_date,
-        approved_by ? (await q('SELECT first_name || \' \' || last_name FROM employees WHERE id = $1', [approved_by])).rows[0]?.concat || 'HR' : 'HR',
+        'HR',
         lr.notes
       ]);
     } else if (status !== 'Approved' && oldStatus === 'Approved') {
