@@ -77,20 +77,75 @@ const leaveRequestSchema = z.object({
   end_date: z.string(),
   total_days: z.number().positive(),
   reason: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  status: z.enum(['Pending', 'Approved', 'Rejected', 'Cancelled']).default('Pending'),
+  request_method: z.enum(['Email', 'Phone', 'In-Person', 'Slack', 'Written', 'Other']).optional(),
+  approved_by: z.number().int().optional()
 });
 
 r.post("/requests", async (req, res) => {
   try {
     const data = leaveRequestSchema.parse(req.body);
+    
+    // Start transaction
+    await q('BEGIN');
+    
+    // Insert leave request
     const { rows } = await q(`
       INSERT INTO leave_requests 
-      (employee_id, leave_type_id, start_date, end_date, total_days, reason, notes, status, requested_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Pending', CURRENT_TIMESTAMP)
+      (employee_id, leave_type_id, start_date, end_date, total_days, reason, notes, status, request_method, approved_by, requested_at, approved_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, 
+              CASE WHEN $8 = 'Approved' THEN CURRENT_TIMESTAMP ELSE NULL END)
       RETURNING *
-    `, [data.employee_id, data.leave_type_id, data.start_date, data.end_date, data.total_days, data.reason, data.notes]);
-    res.status(201).json(rows[0]);
+    `, [
+      data.employee_id, 
+      data.leave_type_id, 
+      data.start_date, 
+      data.end_date, 
+      data.total_days, 
+      data.reason || null, 
+      data.notes || null, 
+      data.status,
+      data.request_method || null,
+      data.approved_by || null
+    ]);
+    
+    const leaveRequest = rows[0];
+    
+    // If approved, update leave balances automatically
+    if (data.status === 'Approved') {
+      const year = new Date(data.start_date).getFullYear();
+      
+      // Create or update leave balance
+      await q(`
+        INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
+        VALUES ($1, $2, $3, 
+                (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
+                $4, 0)
+        ON CONFLICT (employee_id, leave_type_id, year)
+        DO UPDATE SET used_days = leave_balances.used_days + $4
+      `, [data.employee_id, data.leave_type_id, year, data.total_days]);
+      
+      // Also create record in leaves table for backwards compatibility
+      await q(`
+        INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
+        VALUES ($1, (SELECT name FROM leave_types WHERE id = $2), $3, $4, $5, $6)
+      `, [
+        data.employee_id, 
+        data.leave_type_id, 
+        data.start_date, 
+        data.end_date, 
+        data.approved_by ? (await q('SELECT first_name || \' \' || last_name FROM employees WHERE id = $1', [data.approved_by])).rows[0]?.concat || 'HR' : 'HR',
+        data.notes || null
+      ]);
+    }
+    
+    await q('COMMIT');
+    
+    res.status(201).json(leaveRequest);
   } catch (error) {
+    await q('ROLLBACK');
+    console.error('Error creating leave request:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -101,28 +156,74 @@ r.put("/requests/:id/status", async (req, res) => {
   const { status, approved_by, notes } = req.body;
   
   try {
+    await q('BEGIN');
+    
+    // Get the leave request details first
+    const { rows: lrRows } = await q('SELECT * FROM leave_requests WHERE id = $1', [id]);
+    if (lrRows.length === 0) {
+      await q('ROLLBACK');
+      return res.status(404).json({ error: "Leave request not found" });
+    }
+    
+    const oldStatus = lrRows[0].status;
+    
+    // Update leave request status
     const { rows } = await q(`
       UPDATE leave_requests 
-      SET status = $1, approved_by = $2, approved_at = CURRENT_TIMESTAMP, notes = COALESCE($3, notes)
+      SET status = $1, approved_by = $2, approved_at = CASE WHEN $1 = 'Approved' THEN CURRENT_TIMESTAMP ELSE approved_at END, 
+          notes = COALESCE($3, notes)
       WHERE id = $4
       RETURNING *
     `, [status, approved_by, notes, id]);
     
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Leave request not found" });
-    }
+    const lr = rows[0];
+    const year = new Date(lr.start_date).getFullYear();
     
-    // If approved, create leave record
-    if (status === 'Approved') {
-      const lr = rows[0];
+    // Handle status changes and update leave balances accordingly
+    if (status === 'Approved' && oldStatus !== 'Approved') {
+      // Add to used days when approving
+      await q(`
+        INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
+        VALUES ($1, $2, $3, 
+                (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
+                $4, 0)
+        ON CONFLICT (employee_id, leave_type_id, year)
+        DO UPDATE SET used_days = leave_balances.used_days + $4
+      `, [lr.employee_id, lr.leave_type_id, year, lr.total_days]);
+      
+      // Create leave record
       await q(`
         INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
         VALUES ($1, (SELECT name FROM leave_types WHERE id = $2), $3, $4, $5, $6)
-      `, [lr.employee_id, lr.leave_type_id, lr.start_date, lr.end_date, approved_by, lr.notes]);
+        ON CONFLICT DO NOTHING
+      `, [
+        lr.employee_id, 
+        lr.leave_type_id, 
+        lr.start_date, 
+        lr.end_date,
+        approved_by ? (await q('SELECT first_name || \' \' || last_name FROM employees WHERE id = $1', [approved_by])).rows[0]?.concat || 'HR' : 'HR',
+        lr.notes
+      ]);
+    } else if (status !== 'Approved' && oldStatus === 'Approved') {
+      // Subtract from used days when un-approving (rejecting or cancelling previously approved leave)
+      await q(`
+        UPDATE leave_balances
+        SET used_days = GREATEST(0, used_days - $1)
+        WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
+      `, [lr.total_days, lr.employee_id, lr.leave_type_id, year]);
+      
+      // Delete leave record
+      await q(`
+        DELETE FROM leaves 
+        WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
+      `, [lr.employee_id, lr.start_date, lr.end_date]);
     }
     
+    await q('COMMIT');
     res.json(rows[0]);
   } catch (error) {
+    await q('ROLLBACK');
+    console.error('Error updating leave request status:', error);
     res.status(500).json({ error: error.message });
   }
 });

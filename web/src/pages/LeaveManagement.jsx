@@ -16,12 +16,19 @@ export default function LeaveManagement() {
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
   const [historyRecordsPerPage] = useState(20);
   const [showManagePolicies, setShowManagePolicies] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [selectedEmployeeBalance, setSelectedEmployeeBalance] = useState(null);
   const [newRequest, setNewRequest] = useState({
     employee_id: "",
     leave_type_id: "",
     start_date: "",
     end_date: "",
-    reason: ""
+    reason: "",
+    notes: "",
+    status: "Pending",
+    request_method: "",
+    approved_by: ""
   });
 
   useEffect(() => {
@@ -31,11 +38,12 @@ export default function LeaveManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [requestsData, balancesData, calendarData, analyticsData] = await Promise.all([
+      const [requestsData, balancesData, calendarData, analyticsData, employeesData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),
         API("/api/leave/calendar"),
-        API("/api/leave/analytics")
+        API("/api/leave/analytics"),
+        API("/api/employees")
       ]);
       
       setRequests(requestsData);
@@ -43,6 +51,18 @@ export default function LeaveManagement() {
       setBalances(balancesData);
       setCalendar(calendarData);
       setAnalytics(analyticsData);
+      setEmployees(employeesData);
+      
+      // Set leave types from first request or default
+      setLeaveTypes([
+        { id: 1, name: 'Vacation' },
+        { id: 2, name: 'Sick Leave' },
+        { id: 3, name: 'Personal Leave' },
+        { id: 4, name: 'Bereavement' },
+        { id: 5, name: 'Parental Leave' },
+        { id: 6, name: 'Jury Duty' },
+        { id: 7, name: 'Military Leave' }
+      ]);
     } catch (error) {
       console.error("Error loading leave data:", error);
       // Set empty arrays on error to prevent UI issues
@@ -50,6 +70,7 @@ export default function LeaveManagement() {
       setBalances([]);
       setCalendar([]);
       setAnalytics({});
+      setEmployees([]);
     } finally {
       setLoading(false);
     }
@@ -60,23 +81,78 @@ export default function LeaveManagement() {
     setFilteredRequests(requests);
   }, [requests]);
 
-  const handleSubmitRequest = async (e) => {
+  // Calculate total days between two dates (excluding weekends)
+  const calculateTotalDays = (startDate, endDate) => {
+    if (!startDate || !endDate) return 0;
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    let totalDays = 0;
+    
+    // Simple calculation: count all days including weekends
+    // You can enhance this to exclude weekends if needed
+    const diffTime = Math.abs(end - start);
+    totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both start and end dates
+    
+    return totalDays;
+  };
+
+  // Watch for date changes and calculate total_days
+  useEffect(() => {
+    if (newRequest.start_date && newRequest.end_date) {
+      const totalDays = calculateTotalDays(newRequest.start_date, newRequest.end_date);
+      setNewRequest(prev => ({ ...prev, total_days: totalDays }));
+    }
+  }, [newRequest.start_date, newRequest.end_date]);
+
+  // Load employee balance when employee is selected
+  useEffect(() => {
+    if (newRequest.employee_id && newRequest.leave_type_id) {
+      const balance = balances.find(
+        b => b.employee_id === parseInt(newRequest.employee_id) && 
+             b.leave_type_id === parseInt(newRequest.leave_type_id)
+      );
+      setSelectedEmployeeBalance(balance);
+    } else {
+      setSelectedEmployeeBalance(null);
+    }
+  }, [newRequest.employee_id, newRequest.leave_type_id, balances]);
+
+  const handleSubmitRequest = async (e, approveImmediately = false) => {
     e.preventDefault();
     try {
+      const totalDays = calculateTotalDays(newRequest.start_date, newRequest.end_date);
+      
+      const requestData = {
+        ...newRequest,
+        employee_id: parseInt(newRequest.employee_id),
+        leave_type_id: parseInt(newRequest.leave_type_id),
+        total_days: totalDays,
+        status: approveImmediately ? "Approved" : newRequest.status,
+        approved_by: approveImmediately && newRequest.approved_by ? parseInt(newRequest.approved_by) : undefined
+      };
+
       await API("/api/leave/requests", {
         method: "POST",
-        body: JSON.stringify(newRequest)
+        body: JSON.stringify(requestData)
       });
+      
       setNewRequest({
         employee_id: "",
         leave_type_id: "",
         start_date: "",
         end_date: "",
-        reason: ""
+        reason: "",
+        notes: "",
+        status: "Pending",
+        request_method: "",
+        approved_by: ""
       });
+      setSelectedEmployeeBalance(null);
       loadData();
     } catch (error) {
       console.error("Error submitting request:", error);
+      alert("Error creating leave entry: " + (error.message || "Unknown error"));
     }
   };
 
@@ -146,7 +222,7 @@ export default function LeaveManagement() {
   };
 
   const tabs = [
-    { id: "requests", name: "Leave Requests", icon: "📋" },
+    { id: "requests", name: "Record Leave", icon: "📝" },
     { id: "balances", name: "Leave Balances", icon: "💰" },
     { id: "calendar", name: "Leave Calendar", icon: "📅" },
     { id: "analytics", name: "Analytics", icon: "📊" }
@@ -196,76 +272,209 @@ export default function LeaveManagement() {
       {activeTab === "requests" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* New Request Form */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4">New Leave Request</h3>
-              <form onSubmit={handleSubmitRequest} className="space-y-6">
+            {/* Record Leave Entry Form */}
+            <div className="card p-6 bg-neutral-800">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <span className="text-2xl mr-2">📝</span>
+                Record Leave Entry
+              </h3>
+              <p className="text-sm text-neutral-400 mb-6">HR records employee leave communicated via email, phone, or in-person</p>
+              
+              <form onSubmit={(e) => handleSubmitRequest(e, false)} className="space-y-4">
+                {/* Employee Selection */}
                 <div className="form-group">
-                  <label>
-                    Employee ID
+                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    Employee <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={newRequest.employee_id}
                     onChange={(e) => setNewRequest({...newRequest, employee_id: e.target.value})}
                     required
-                  />
+                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Select employee...</option>
+                    {employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.first_name} {emp.last_name} - {emp.department || 'No Dept'}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
+                {/* Leave Type */}
                 <div className="form-group">
-                  <label>
-                    Leave Type
+                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    Leave Type <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={newRequest.leave_type_id}
                     onChange={(e) => setNewRequest({...newRequest, leave_type_id: e.target.value})}
                     required
+                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   >
-                    <option value="">Select leave type</option>
-                    <option value="1">Vacation</option>
-                    <option value="2">Sick Leave</option>
-                    <option value="3">Personal Leave</option>
+                    <option value="">Select leave type...</option>
+                    {leaveTypes.map(type => (
+                      <option key={type.id} value={type.id}>{type.name}</option>
+                    ))}
                   </select>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
+
+                {/* Show leave balance if available */}
+                {selectedEmployeeBalance && (
+                  <div className="bg-neutral-700 border border-neutral-600 rounded p-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">Available Days:</span>
+                      <span className="text-green-400 font-semibold">
+                        {(selectedEmployeeBalance.entitled_days + selectedEmployeeBalance.carried_over_days - selectedEmployeeBalance.used_days).toFixed(1)} days
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label>
-                      Start Date
+                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                      Start Date <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
                       value={newRequest.start_date}
                       onChange={(e) => setNewRequest({...newRequest, start_date: e.target.value})}
                       required
+                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                   <div className="form-group">
-                    <label>
-                      End Date
+                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                      End Date <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
                       value={newRequest.end_date}
                       onChange={(e) => setNewRequest({...newRequest, end_date: e.target.value})}
                       required
+                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
                 </div>
+
+                {/* Show calculated days */}
+                {newRequest.start_date && newRequest.end_date && (
+                  <div className="bg-indigo-900/30 border border-indigo-500/30 rounded p-3 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-neutral-300">Total Days:</span>
+                      <span className="text-indigo-400 font-semibold text-lg">
+                        {calculateTotalDays(newRequest.start_date, newRequest.end_date)} days
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Request Method and Status */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                      Request Method <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={newRequest.request_method}
+                      onChange={(e) => setNewRequest({...newRequest, request_method: e.target.value})}
+                      required
+                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="">How was it requested?</option>
+                      <option value="Email">📧 Email</option>
+                      <option value="Phone">📞 Phone</option>
+                      <option value="In-Person">🤝 In-Person</option>
+                      <option value="Slack">💬 Slack</option>
+                      <option value="Written">📝 Written</option>
+                      <option value="Other">❓ Other</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                      Status <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={newRequest.status}
+                      onChange={(e) => setNewRequest({...newRequest, status: e.target.value})}
+                      required
+                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="Pending">⏳ Pending Review</option>
+                      <option value="Approved">✅ Approved</option>
+                      <option value="Rejected">❌ Rejected</option>
+                      <option value="Cancelled">🚫 Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Reason */}
                 <div className="form-group">
-                  <label>
+                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
                     Reason
                   </label>
                   <textarea
                     value={newRequest.reason}
                     onChange={(e) => setNewRequest({...newRequest, reason: e.target.value})}
-                    rows="3"
+                    rows="2"
+                    placeholder="Optional: Why is the employee taking leave?"
+                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="w-full btn-primary btn-lg"
-                >
-                  Submit Request
-                </button>
+
+                {/* Notes */}
+                <div className="form-group">
+                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    HR Notes (Internal)
+                  </label>
+                  <textarea
+                    value={newRequest.notes}
+                    onChange={(e) => setNewRequest({...newRequest, notes: e.target.value})}
+                    rows="2"
+                    placeholder="Optional: Internal notes for HR records..."
+                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+
+                {/* Approved By (for future use) */}
+                <div className="form-group">
+                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    Approved By (Optional)
+                  </label>
+                  <select
+                    value={newRequest.approved_by}
+                    onChange={(e) => setNewRequest({...newRequest, approved_by: e.target.value})}
+                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">Select approver...</option>
+                    {employees.filter(e => e.role_title && e.role_title.toLowerCase().includes('hr')).map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.first_name} {emp.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="grid grid-cols-2 gap-3 pt-4">
+                  <button
+                    type="submit"
+                    className="bg-neutral-600 hover:bg-neutral-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
+                  >
+                    <span className="mr-2">💾</span>
+                    Save as {newRequest.status}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSubmitRequest(e, true)}
+                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
+                  >
+                    <span className="mr-2">✅</span>
+                    Save & Approve
+                  </button>
+                </div>
               </form>
             </div>
 
