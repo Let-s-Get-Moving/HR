@@ -14,6 +14,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
+  const [departments, setDepartments] = useState([]);
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
     if (employeeId) {
@@ -239,7 +241,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Hire Date</div>
-            <div className="font-medium">{new Date(employee.hire_date).toLocaleDateString()}</div>
+            {isEditing ? (
+              <input
+                type="date"
+                value={editData.hire_date || ''}
+                onChange={(e) => setEditData({...editData, hire_date: e.target.value})}
+                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
+              />
+            ) : (
+              <div className="font-medium">{new Date(employee.hire_date).toLocaleDateString()}</div>
+            )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Hourly Rate</div>
@@ -262,7 +273,20 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Location</div>
-            <div className="font-medium">{employee.location_name}</div>
+            {isEditing ? (
+              <select
+                value={editData.location_id || ''}
+                onChange={(e) => setEditData({...editData, location_id: parseInt(e.target.value) || null})}
+                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
+              >
+                <option value="">None</option>
+                {locations.map(loc => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="font-medium">{employee.location_name || 'Not assigned'}</div>
+            )}
           </div>
         </div>
       </div>
@@ -360,16 +384,67 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <h3 className="text-lg font-semibold mb-4">Employment Details</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
+                  <span className="text-neutral-400">Hire Date:</span>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editData.hire_date || ''}
+                      onChange={(e) => setEditData({...editData, hire_date: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    />
+                  ) : (
+                    <span>{employee.hire_date ? new Date(employee.hire_date).toLocaleDateString() : 'Not set'}</span>
+                  )}
+                </div>
+                <div className="flex justify-between">
                   <span className="text-neutral-400">Employment Type:</span>
-                  <span>{employee.employment_type}</span>
+                  {isEditing ? (
+                    <select
+                      value={editData.employment_type || ''}
+                      onChange={(e) => setEditData({...editData, employment_type: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    >
+                      <option value="Full-time">Full-time</option>
+                      <option value="Part-time">Part-time</option>
+                      <option value="Contract">Contract</option>
+                    </select>
+                  ) : (
+                    <span>{employee.employment_type}</span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Department:</span>
-                  <span>{employee.department_name}</span>
+                  {isEditing ? (
+                    <select
+                      value={editData.department_id || ''}
+                      onChange={(e) => setEditData({...editData, department_id: parseInt(e.target.value) || null})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    >
+                      <option value="">None - To be assigned</option>
+                      {departments.map(dept => (
+                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span>{employee.department_name || 'Not assigned'}</span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Location:</span>
-                  <span>{employee.location_name}</span>
+                  {isEditing ? (
+                    <select
+                      value={editData.location_id || ''}
+                      onChange={(e) => setEditData({...editData, location_id: parseInt(e.target.value) || null})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    >
+                      <option value="">None - To be assigned</option>
+                      {locations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span>{employee.location_name || 'Not assigned'}</span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Probation End:</span>
