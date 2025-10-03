@@ -160,7 +160,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 // Cache for stats (refreshed every 30 seconds or on new upload)
 let statsCache = null;
 let statsCacheTime = 0;
-const CACHE_DURATION = 5000; // 5 seconds - short cache to avoid stale data issues
+const CACHE_DURATION = 0; // DISABLED - Query database fresh every time (no performance optimization)
 
 // Helper to invalidate cache
 function invalidateStatsCache() {
