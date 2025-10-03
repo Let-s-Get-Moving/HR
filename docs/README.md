@@ -305,13 +305,65 @@ curl http://localhost:8080/api/employees
 docker compose -f docker-compose.prod.yml up -d
 ```
 
+## 🔍 **Debug & Performance Tools**
+
+The system includes comprehensive debugging and performance tools specifically designed for Render Postgres deployments:
+
+### **Features**
+- ✅ **DB Passport** - Verify which database you're connected to (primary vs replica)
+- ✅ **Admin Probe** - One-shot insert+read test to confirm data visibility
+- ✅ **SQL Count Verification** - Confirm upload data appears in queries
+- ✅ **Safe EXPLAIN** - Analyze query performance without SQL injection risk
+- ✅ **Query Timing** - Automatic performance logging for all database queries
+- ✅ **Text Normalization** - Fix Unicode dash/quote/space mismatches in filters
+- ✅ **Performance Indexes** - Optimized indexes for common query patterns
+
+### **Debug Endpoints** (Token-Guarded)
+```bash
+GET  /debug/db-passport        # Database connection identity
+POST /admin/probe              # Insert 5 rows and verify visibility
+GET  /debug/sql-count?upload_id=X  # Count rows by upload ID
+GET  /debug/explain/:key       # Query execution plans
+GET  /debug/query-registry     # List available explain queries
+```
+
+### **Environment Variables**
+```bash
+DEBUG_DATA_DRIFT=true              # Enable debug endpoints
+DEBUG_TOKEN=<random_32_char_token> # Protect debug endpoints
+FORCE_PRIMARY_READS=true           # Eliminate replica lag
+```
+
+### **Common Issues Solved**
+1. **"Data disappeared after upload"** → Transaction not committed properly
+2. **"Sometimes shows, sometimes doesn't"** → Replica lag (use `FORCE_PRIMARY_READS=true`)
+3. **"Filter returns no results"** → Unicode mismatch (use `app_norm()` function)
+4. **"Slow queries"** → Missing indexes (check with `/debug/explain/...`)
+5. **"Wrong database"** → Verify with `/debug/db-passport`
+
+### **Testing on Render**
+```bash
+export SERVICE_URL="https://your-app.onrender.com"
+export DEBUG_TOKEN="your_debug_token"
+export AUTH="Authorization: Bearer $DEBUG_TOKEN"
+
+# Verify database connection
+curl -H "$AUTH" "$SERVICE_URL/debug/db-passport" | jq
+
+# Run probe test (should return sql_count: 5)
+curl -X POST -H "$AUTH" "$SERVICE_URL/admin/probe" | jq
+```
+
+📖 **Complete Guide**: See [README_DEBUG.md](../README_DEBUG.md) for comprehensive documentation, troubleshooting, and best practices.
+
 ## 📞 **Support & Maintenance**
 
 ### **Monitoring**
-- **Application logs** via Docker
-- **Database performance** monitoring
+- **Application logs** via Docker or Render dashboard
+- **Database performance** monitoring with query timing
 - **API endpoint** health checks
 - **Error tracking** and alerting
+- **SQL query performance** logs (when `DEBUG_DATA_DRIFT=true`)
 
 ### **Backup & Recovery**
 - **Automated database** backups
