@@ -1,34 +1,16 @@
--- Drop and recreate hourly_payout table with proper structure
--- One row per employee per month with dynamic date period columns
+-- SAFE MIGRATION: Create hourly_payout table if not exists
+-- This migration is superseded by 038 but kept for compatibility
+-- This migration will NOT drop existing data on redeployment
+-- Fixed: 2025-10-03 to prevent data loss during Render deployments
 
-DROP TABLE IF EXISTS hourly_payout CASCADE;
+-- Note: Migration 038 is the authoritative schema for hourly_payout
+-- This file now does nothing to avoid conflicts (038 runs later alphabetically)
 
-CREATE TABLE hourly_payout (
-    id SERIAL PRIMARY KEY,
-    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
-    period_month DATE NOT NULL,
-    name_raw TEXT NOT NULL,
-    
-    -- Store date period data as JSON for flexibility
-    -- Format: [
-    --   {"label": "June 16-June 29", "amount": 1600, "cash_paid": false},
-    --   {"label": "June 30-July 13", "amount": 1565, "cash_paid": true}
-    -- ]
-    date_periods JSONB,
-    
-    total_for_month NUMERIC(18,2),
-    
-    source_file TEXT,
-    sheet_name TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    UNIQUE(employee_id, period_month)
-);
-
-CREATE INDEX idx_hourly_payout_employee ON hourly_payout(employee_id);
-CREATE INDEX idx_hourly_payout_period ON hourly_payout(period_month);
-CREATE INDEX idx_hourly_payout_date_periods ON hourly_payout USING GIN (date_periods);
-
-COMMENT ON TABLE hourly_payout IS 'Hourly payout data with dynamic date period columns stored as JSON';
-COMMENT ON COLUMN hourly_payout.date_periods IS 'Array of date period objects with label, amount, and cash_paid flag';
+-- The table is created by 038_rebuild_hourly_payout_table.sql
+-- Keeping this file for migration history but making it safe
+DO $$
+BEGIN
+    -- This migration is now a no-op to prevent conflicts with 038
+    -- Table will be created by 038 if it doesn't exist
+    NULL;
+END $$;
