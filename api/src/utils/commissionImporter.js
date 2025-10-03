@@ -229,32 +229,51 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
             try {
                 await queryFn('SAVEPOINT row_insert');
                 
-                // Delete existing record for this name + period (to handle updates)
-                await queryFn(`
-                    DELETE FROM employee_commission_monthly
+                // Check if record exists for this name + period
+                const existing = await queryFn(`
+                    SELECT id FROM employee_commission_monthly
                     WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($1)) AND period_month = $2
                 `, [nameRaw, periodMonth]);
                 
-                // Insert data
-                const upsertResult = await queryFn(`
-                    INSERT INTO employee_commission_monthly (
-                        employee_id, period_month, name_raw, hourly_rate, rev_sm_all_locations,
-                        rev_add_ons, rev_deduction, total_revenue_all, booking_pct, commission_pct,
-                        commission_earned, spiff_bonus, revenue_bonus, bonus_us_jobs_125x,
-                        booking_bonus_plus, booking_bonus_minus, hourly_paid_out_minus,
-                        deduction_sales_manager_minus, deduction_missing_punch_minus,
-                        deduction_customer_support_minus, deduction_post_commission_collected_minus,
-                        deduction_dispatch_minus, deduction_other_minus, total_due, amount_paid,
-                        remaining_amount, corporate_open_jobs_note, parking_pass_fee_note,
-                        source_file, sheet_name, created_at, updated_at
-                    ) VALUES (
-                        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-                        $11, $12, $13, $14, $15, $16, $17, $18, $19,
-                        $20, $21, $22, $23, $24, $25, $26, $27, $28,
-                        $29, $30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-                    )
-                    RETURNING id
-                `, Object.values(data));
+                let upsertResult;
+                if (existing.rows.length > 0) {
+                    // UPDATE existing record
+                    upsertResult = await queryFn(`
+                        UPDATE employee_commission_monthly
+                        SET employee_id = $1, name_raw = $3, hourly_rate = $4, rev_sm_all_locations = $5,
+                            rev_add_ons = $6, rev_deduction = $7, total_revenue_all = $8, booking_pct = $9, commission_pct = $10,
+                            commission_earned = $11, spiff_bonus = $12, revenue_bonus = $13, bonus_us_jobs_125x = $14,
+                            booking_bonus_plus = $15, booking_bonus_minus = $16, hourly_paid_out_minus = $17,
+                            deduction_sales_manager_minus = $18, deduction_missing_punch_minus = $19,
+                            deduction_customer_support_minus = $20, deduction_post_commission_collected_minus = $21,
+                            deduction_dispatch_minus = $22, deduction_other_minus = $23, total_due = $24, amount_paid = $25,
+                            remaining_amount = $26, corporate_open_jobs_note = $27, parking_pass_fee_note = $28,
+                            source_file = $29, sheet_name = $30, updated_at = CURRENT_TIMESTAMP
+                        WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($3)) AND period_month = $2
+                        RETURNING id
+                    `, Object.values(data));
+                } else {
+                    // INSERT new record
+                    upsertResult = await queryFn(`
+                        INSERT INTO employee_commission_monthly (
+                            employee_id, period_month, name_raw, hourly_rate, rev_sm_all_locations,
+                            rev_add_ons, rev_deduction, total_revenue_all, booking_pct, commission_pct,
+                            commission_earned, spiff_bonus, revenue_bonus, bonus_us_jobs_125x,
+                            booking_bonus_plus, booking_bonus_minus, hourly_paid_out_minus,
+                            deduction_sales_manager_minus, deduction_missing_punch_minus,
+                            deduction_customer_support_minus, deduction_post_commission_collected_minus,
+                            deduction_dispatch_minus, deduction_other_minus, total_due, amount_paid,
+                            remaining_amount, corporate_open_jobs_note, parking_pass_fee_note,
+                            source_file, sheet_name, created_at, updated_at
+                        ) VALUES (
+                            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                            $11, $12, $13, $14, $15, $16, $17, $18, $19,
+                            $20, $21, $22, $23, $24, $25, $26, $27, $28,
+                            $29, $30, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                        )
+                        RETURNING id
+                    `, Object.values(data));
+                }
                 
                 await queryFn('RELEASE SAVEPOINT row_insert');
                 
@@ -358,21 +377,34 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
             try {
                 await queryFn('SAVEPOINT agent_row_insert');
                 
-                // Delete existing record for this name + period (to handle updates)
-                await queryFn(`
-                    DELETE FROM agent_commission_us
+                // Check if record exists for this name + period
+                const existing = await queryFn(`
+                    SELECT id FROM agent_commission_us
                     WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($1)) AND period_month = $2
                 `, [nameRaw, periodMonth]);
                 
-                // Insert data
-                const upsertResult = await queryFn(`
-                    INSERT INTO agent_commission_us (
-                        employee_id, period_month, name_raw, total_us_revenue, commission_pct,
-                        commission_earned, commission_125x, bonus, source_file, sheet_name,
-                        created_at, updated_at
-                    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    RETURNING id
-                `, Object.values(data));
+                let upsertResult;
+                if (existing.rows.length > 0) {
+                    // UPDATE existing record
+                    upsertResult = await queryFn(`
+                        UPDATE agent_commission_us
+                        SET employee_id = $1, name_raw = $3, total_us_revenue = $4, commission_pct = $5,
+                            commission_earned = $6, commission_125x = $7, bonus = $8, source_file = $9, sheet_name = $10,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($3)) AND period_month = $2
+                        RETURNING id
+                    `, Object.values(data));
+                } else {
+                    // INSERT new record
+                    upsertResult = await queryFn(`
+                        INSERT INTO agent_commission_us (
+                            employee_id, period_month, name_raw, total_us_revenue, commission_pct,
+                            commission_earned, commission_125x, bonus, source_file, sheet_name,
+                            created_at, updated_at
+                        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        RETURNING id
+                    `, Object.values(data));
+                }
                 
                 await queryFn('RELEASE SAVEPOINT agent_row_insert');
                 
@@ -563,20 +595,32 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
             try {
                 await queryFn('SAVEPOINT hourly_row_insert');
                 
-                // Delete existing record for this name + period (to handle updates)
-                await queryFn(`
-                    DELETE FROM hourly_payout
+                // Check if record exists for this name + period
+                const existing = await queryFn(`
+                    SELECT id FROM hourly_payout
                     WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($1)) AND period_month = $2
                 `, [nameRaw, periodMonth]);
                 
-                // Insert data
-                const upsertResult = await queryFn(`
-                    INSERT INTO hourly_payout (
-                        employee_id, period_month, name_raw, date_periods, total_for_month,
-                        source_file, sheet_name, created_at, updated_at
-                    ) VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    RETURNING id
-                `, Object.values(data));
+                let upsertResult;
+                if (existing.rows.length > 0) {
+                    // UPDATE existing record
+                    upsertResult = await queryFn(`
+                        UPDATE hourly_payout
+                        SET employee_id = $1, name_raw = $3, date_periods = $4::jsonb, 
+                            total_for_month = $5, source_file = $6, sheet_name = $7, updated_at = CURRENT_TIMESTAMP
+                        WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($3)) AND period_month = $2
+                        RETURNING id
+                    `, Object.values(data));
+                } else {
+                    // INSERT new record
+                    upsertResult = await queryFn(`
+                        INSERT INTO hourly_payout (
+                            employee_id, period_month, name_raw, date_periods, total_for_month,
+                            source_file, sheet_name, created_at, updated_at
+                        ) VALUES ($1, $2, $3, $4::jsonb, $5, $6, $7, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                        RETURNING id
+                    `, Object.values(data));
+                }
                 
                 await queryFn('RELEASE SAVEPOINT hourly_row_insert');
                 

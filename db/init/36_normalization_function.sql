@@ -5,8 +5,8 @@ CREATE OR REPLACE FUNCTION app_norm(text) RETURNS text AS $$
     TRIM(
       TRANSLATE(
         COALESCE($1, ''),
-        '–—-'"" ',   -- en dash (U+2013), em dash (U+2014), hyphen, curly quotes, NBSP
-        '---''" '    -- normalize to ASCII forms
+        E'–—-\u2018\u2019\u201C\u201D\u00A0',
+        E'---\'\'\"\" '
       )
     )
   );
