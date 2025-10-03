@@ -10,9 +10,19 @@ const r = Router();
 
 /**
  * DELETE /api/admin-cleanup/employees
+ * DISABLED - This endpoint was causing accidental data loss
  * Delete ALL employees from the database (cascade deletes all related data)
  */
 r.delete("/employees", async (req, res) => {
+    // DISABLED to prevent accidental data loss
+    return res.status(403).json({
+        error: 'This endpoint has been disabled to prevent accidental data loss',
+        message: 'Use terminal scripts for data cleanup if absolutely necessary',
+        disabled_at: '2025-10-03'
+    });
+    
+    /* ORIGINAL CODE - DISABLED
+    */
     console.log('🗑️ [ADMIN] Deleting ALL employees...');
     
     const client = await pool.connect();
@@ -82,9 +92,19 @@ r.delete("/employees", async (req, res) => {
 
 /**
  * DELETE /api/admin-cleanup/all-data
+ * DISABLED - This endpoint was causing accidental data loss
  * Delete ALL data including employees, commissions, bonuses, hourly payouts
  */
 r.delete("/all-data", async (req, res) => {
+    // DISABLED to prevent accidental data loss
+    return res.status(403).json({
+        error: 'This endpoint has been disabled to prevent accidental data loss',
+        message: 'Use terminal scripts for data cleanup if absolutely necessary',
+        disabled_at: '2025-10-03'
+    });
+    
+    /* ORIGINAL CODE - DISABLED
+    */
     console.log('🗑️ [ADMIN] Deleting ALL DATA (nuclear option)...');
     
     const client = await pool.connect();
@@ -179,9 +199,19 @@ r.post("/recreate-admin", async (req, res) => {
 
 /**
  * DELETE /api/admin-cleanup/time-tracking
+ * DISABLED - This endpoint was causing accidental data loss
  * Delete ALL time tracking data (timecards, entries, uploads)
  */
 r.delete("/time-tracking", async (req, res) => {
+    // DISABLED to prevent accidental data loss
+    return res.status(403).json({
+        error: 'This endpoint has been disabled to prevent accidental data loss',
+        message: 'Use terminal scripts for data cleanup if absolutely necessary',
+        disabled_at: '2025-10-03'
+    });
+    
+    /* ORIGINAL CODE - DISABLED
+    */
     console.log('🗑️ [ADMIN] Deleting ALL time tracking data...');
     
     const client = await pool.connect();
