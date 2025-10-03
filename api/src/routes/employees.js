@@ -79,7 +79,18 @@ r.put("/:id", async (req, res) => {
   const { id } = req.params;
   const data = req.body;
   
+  // Helper function to convert empty strings to null
+  const nullIfEmpty = (value) => (value === '' || value === undefined) ? null : value;
+  
   try {
+    // Validate required fields
+    if (!data.first_name || !data.last_name || !data.email || !data.hire_date || !data.employment_type || !data.status) {
+      return res.status(400).json({ 
+        error: "Missing required fields", 
+        details: "first_name, last_name, email, hire_date, employment_type, and status are required" 
+      });
+    }
+    
     const { rows } = await q(
       `UPDATE employees 
        SET first_name = $1, last_name = $2, email = $3, phone = $4, 
@@ -89,10 +100,21 @@ r.put("/:id", async (req, res) => {
        WHERE id = $15
        RETURNING *`,
       [
-        data.first_name, data.last_name, data.email, data.phone,
-        data.role_title, data.hourly_rate, data.employment_type,
-        data.department_id, data.location_id || null, data.hire_date,
-        data.gender, data.birth_date, data.status, data.probation_end, id
+        data.first_name,
+        data.last_name,
+        data.email,
+        nullIfEmpty(data.phone),
+        nullIfEmpty(data.role_title),
+        data.hourly_rate || 25,
+        data.employment_type,
+        nullIfEmpty(data.department_id),
+        nullIfEmpty(data.location_id),
+        data.hire_date, // Required field - don't null it
+        nullIfEmpty(data.gender),
+        nullIfEmpty(data.birth_date),
+        data.status, // Required field - don't null it
+        nullIfEmpty(data.probation_end),
+        id
       ]
     );
     
