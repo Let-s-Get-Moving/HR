@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { API } from '../config/api.js';
 
 export default function BonusesCommissions() {
-  const [activeTab, setActiveTab] = useState("import");
+  const [activeTab, setActiveTab] = useState("analytics");
   const [employees, setEmployees] = useState([]);
   const [bonuses, setBonuses] = useState([]);
   const [commissions, setCommissions] = useState([]);
@@ -1436,9 +1436,23 @@ export default function BonusesCommissions() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Bonuses & Commissions</h1>
-        <p className="text-tertiary mt-1">Manage performance-based compensation and sales commissions</p>
+      {/* Header with Upload Button */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Bonuses & Commissions</h1>
+          <p className="text-tertiary mt-1">Manage performance-based compensation and sales commissions</p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setActiveTab("import")}
+          className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Upload Commission Data
+        </motion.button>
       </div>
 
       {/* Tab Navigation */}
