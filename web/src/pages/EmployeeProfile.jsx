@@ -26,13 +26,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const loadEmployeeData = async () => {
     console.log(`🔄 [EmployeeProfile] Loading data for employee ${employeeId}...`);
     try {
-      const [empData, timeData, docData, trainingData, payrollData, hrData] = await Promise.all([
+      const [empData, timeData, docData, trainingData, payrollData, hrData, deptsData, locsData] = await Promise.all([
         API(`/api/employees/${employeeId}`),
         API(`/api/employees/${employeeId}/time-entries`),
         API(`/api/employees/${employeeId}/documents`),
         API(`/api/employees/${employeeId}/training-records`),
         API(`/api/employees/${employeeId}/payroll-history`),
-        API(`/api/employees/${employeeId}/hr-details`)
+        API(`/api/employees/${employeeId}/hr-details`),
+        API(`/api/employees/departments`).catch(() => []),
+        API(`/api/employees/locations`).catch(() => [])
       ]);
       
       console.log(`✅ [EmployeeProfile] Employee data loaded:`, {
@@ -57,6 +59,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       setTrainingRecords(trainingData);
       setPayrollHistory(payrollData);
       setHrDetails(hrData);
+      setDepartments(deptsData || []);
+      setLocations(locsData || []);
     } catch (error) {
       console.error("❌ [EmployeeProfile] Error loading employee data:", error);
     } finally {
