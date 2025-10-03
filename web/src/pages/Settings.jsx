@@ -658,9 +658,15 @@ export default function Settings() {
             
             {/* Admin Cleanup Buttons */}
             <div className="card p-6">
-              <h3 className="text-lg font-semibold text-primary mb-4">⚠️ Danger Zone - Admin Cleanup</h3>
-              <p className="text-secondary mb-6">These actions are IRREVERSIBLE. Use with extreme caution.</p>
+              <h3 className="text-lg font-semibold text-primary mb-4">⚠️ Danger Zone - Admin Cleanup (DISABLED)</h3>
+              <p className="text-red-400 mb-6">
+                ⛔ These dangerous buttons have been DISABLED to prevent accidental data loss.
+              </p>
+              <p className="text-secondary mb-6 text-sm">
+                If you absolutely need to clean data, contact your administrator or run cleanup scripts manually via terminal.
+              </p>
               
+              {/* DISABLED - These buttons were causing accidental data deletion
               <div className="space-y-4">
                 <CleanupButton
                   label="Delete All Employees"
@@ -678,6 +684,7 @@ export default function Settings() {
                   confirmText="DELETE ALL TIME TRACKING"
                 />
               </div>
+              */}
             </div>
           </>
         )}
