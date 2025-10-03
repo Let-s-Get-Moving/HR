@@ -47,6 +47,11 @@ Import real employee data using:
   - 📄 **Documents** - Uploaded contracts, permits, certificates with signing status
   - ✅ **Training** - Training records with validity tracking
 - **All tabs load real data** from database with comprehensive logging
+- **Full Profile Editing** - All employee fields are editable:
+  - Personal info: name, email, phone, gender, birth date
+  - Employment details: status, hire date, employment type, department, location
+  - Compensation: role title, hourly rate, probation end date
+  - Changes are saved to database immediately with proper schema validation
 - Employment history and status tracking
 - Emergency contact information
 

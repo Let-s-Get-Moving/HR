@@ -84,14 +84,14 @@ r.put("/:id", async (req, res) => {
       `UPDATE employees 
        SET first_name = $1, last_name = $2, email = $3, phone = $4, 
            role_title = $5, hourly_rate = $6, employment_type = $7,
-           department_id = $8, location = $9, hire_date = $10,
+           department_id = $8, location_id = $9, hire_date = $10,
            gender = $11, birth_date = $12, status = $13, probation_end = $14
        WHERE id = $15
        RETURNING *`,
       [
         data.first_name, data.last_name, data.email, data.phone,
         data.role_title, data.hourly_rate, data.employment_type,
-        data.department_id, data.location, data.hire_date,
+        data.department_id, data.location_id || null, data.hire_date,
         data.gender, data.birth_date, data.status, data.probation_end, id
       ]
     );

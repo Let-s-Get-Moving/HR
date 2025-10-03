@@ -110,7 +110,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       hourly_rate: employee.hourly_rate || 25,
       employment_type: employee.employment_type,
       department_id: employee.department_id,
-      location: employee.location || '',
+      location_id: employee.location_id || null,
       hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : '',
       probation_end: employee.probation_end ? employee.probation_end.split('T')[0] : '',
       status: employee.status
@@ -242,7 +242,19 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Status</div>
-            <div className="font-medium">{employee.status}</div>
+            {isEditing ? (
+              <select
+                value={editData.status || ''}
+                onChange={(e) => setEditData({...editData, status: e.target.value})}
+                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
+              >
+                <option value="Active">Active</option>
+                <option value="On Leave">On Leave</option>
+                <option value="Terminated">Terminated</option>
+              </select>
+            ) : (
+              <div className="font-medium">{employee.status}</div>
+            )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Hire Date</div>
@@ -267,7 +279,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   step="0.01"
                   min="0"
                   value={editData.hourly_rate || ''}
-                  onChange={(e) => setEditData({...editData, hourly_rate: e.target.value})}
+                  onChange={(e) => setEditData({...editData, hourly_rate: parseFloat(e.target.value) || 0})}
                   className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-20 text-center"
                 />
                 <span className="ml-1">/hr</span>
@@ -277,18 +289,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">Location</div>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editData.location || ''}
-                onChange={(e) => setEditData({...editData, location: e.target.value})}
-                placeholder="Enter location"
-                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
-              />
-            ) : (
-              <div className="font-medium">{employee.location || 'Not assigned'}</div>
-            )}
+            <div className="text-sm text-neutral-400">Department</div>
+            <div className="font-medium">{employee.department_name || 'Not assigned'}</div>
           </div>
         </div>
       </div>
@@ -434,15 +436,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Location:</span>
                   {isEditing ? (
-                    <input
-                      type="text"
-                      value={editData.location || ''}
-                      onChange={(e) => setEditData({...editData, location: e.target.value})}
-                      placeholder="Enter location"
+                    <select
+                      value={editData.location_id || ''}
+                      onChange={(e) => setEditData({...editData, location_id: parseInt(e.target.value) || null})}
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
-                    />
+                    >
+                      <option value="">None - To be assigned</option>
+                      {locations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                    </select>
                   ) : (
-                    <span>{employee.location || 'Not assigned'}</span>
+                    <span>{employee.location_name || 'Not assigned'}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
