@@ -45,6 +45,14 @@ export default function LeaveManagement() {
         API("/api/employees")
       ]);
       
+      console.log('📊 Leave data loaded:', {
+        requests: requestsData.length,
+        balances: balancesData.length,
+        calendar: calendarData.length,
+        analytics: analyticsData,
+        employees: employeesData.length
+      });
+      
       setRequests(requestsData);
       setFilteredRequests(requestsData);
       setBalances(balancesData);
@@ -195,9 +203,15 @@ export default function LeaveManagement() {
     if (!calendar || !date) return [];
     
     return calendar.filter(leave => {
+      // Normalize dates to midnight for proper comparison
       const startDate = new Date(leave.start_date);
+      startDate.setHours(0, 0, 0, 0);
+      
       const endDate = new Date(leave.end_date);
+      endDate.setHours(23, 59, 59, 999);
+      
       const checkDate = new Date(date);
+      checkDate.setHours(12, 0, 0, 0); // Noon to avoid timezone issues
       
       return checkDate >= startDate && checkDate <= endDate;
     });

@@ -57,15 +57,25 @@ r.get("/balances/:id", async (req, res) => {
 // Get leave calendar
 r.get("/calendar", async (req, res) => {
   const { start_date, end_date } = req.query;
+  
+  // Use current year if no dates provided
+  const currentYear = new Date().getFullYear();
+  const defaultStart = `${currentYear}-01-01`;
+  const defaultEnd = `${currentYear}-12-31`;
+  
   const { rows } = await q(`
-    SELECT lr.*, e.first_name, e.last_name, lt.name as leave_type_name
+    SELECT lr.*, e.first_name, e.last_name, lt.name as leave_type_name, lt.color
     FROM leave_requests lr
     JOIN employees e ON lr.employee_id = e.id
     JOIN leave_types lt ON lr.leave_type_id = lt.id
     WHERE lr.status = 'Approved'
-    AND lr.start_date >= $1 AND lr.end_date <= $2
+    AND (
+      -- Leave overlaps with the requested period
+      (lr.start_date <= $2 AND lr.end_date >= $1)
+    )
     ORDER BY lr.start_date
-  `, [start_date || '2025-01-01', end_date || '2025-12-31']);
+  `, [start_date || defaultStart, end_date || defaultEnd]);
+  
   res.json(rows);
 });
 
