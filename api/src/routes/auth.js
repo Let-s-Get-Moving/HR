@@ -19,11 +19,14 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     
     console.log('Login attempt:', username);
     
-    // Check if user exists (lookup by full_name or email)
+    // Check if user exists (lookup by username or email)
     const userResult = await q(`
-      SELECT id, email, full_name, password_hash, role
-      FROM users 
-      WHERE full_name = $1 OR email = $1
+      SELECT u.id, u.email, u.username, u.password_hash, u.is_active,
+             COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
+             COALESCE(r.role_name, 'user') as role
+      FROM users u
+      LEFT JOIN hr_roles r ON u.role_id = r.id
+      WHERE (u.username = $1 OR u.email = $1) AND u.is_active = true
       LIMIT 1
     `, [username]);
     
@@ -33,7 +36,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     }
     
     const user = userResult.rows[0];
-    console.log('Found user:', user.full_name);
+    console.log('Found user:', user.username);
     
     // Verify password
     const isValidPassword = await comparePassword(password, user.password_hash);
@@ -75,7 +78,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     }
     
     // Store in memory
-    SessionManager.createSession(user.id, user.full_name);
+    SessionManager.createSession(user.id, user.username);
     
     // Set cookie
     res.cookie('sessionId', sessionId, {
@@ -93,13 +96,14 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     // Generate CSRF token for this session
     const csrfToken = CSRFProtection.generateToken(sessionId);
     
-    console.log('✅ Login successful:', user.full_name);
+    console.log('✅ Login successful:', user.username);
     
     res.json({
       message: "Login successful",
       user: { 
         id: user.id, 
-        username: user.full_name,
+        username: user.username,
+        full_name: user.full_name,
         email: user.email,
         role: user.role 
       },
@@ -138,7 +142,10 @@ r.post("/logout", async (req, res) => {
 
 // Check session endpoint
 r.get("/session", async (req, res) => {
-  const sessionId = req.cookies?.sessionId || req.headers.authorization?.replace('Bearer ', '');
+  const sessionId = req.headers['x-session-id'] || 
+                    req.headers['X-Session-ID'] ||
+                    req.cookies?.sessionId || 
+                    req.headers.authorization?.replace('Bearer ', '');
   
   if (!sessionId) {
     return res.status(401).json({ error: "No session" });
@@ -147,9 +154,12 @@ r.get("/session", async (req, res) => {
   try {
     // Check database
     const sessionResult = await q(`
-      SELECT s.id, s.user_id, s.expires_at, u.email, u.full_name, u.role
+      SELECT s.id, s.user_id, s.expires_at, u.email, u.username,
+             COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
+             COALESCE(r.role_name, 'user') as role
       FROM user_sessions s
       JOIN users u ON s.user_id = u.id
+      LEFT JOIN hr_roles r ON u.role_id = r.id
       WHERE s.id = $1 AND s.expires_at > NOW()
     `, [sessionId]);
     
@@ -169,7 +179,8 @@ r.get("/session", async (req, res) => {
     res.json({
       user: {
         id: session.user_id,
-        username: session.full_name,
+        username: session.username,
+        full_name: session.full_name,
         email: session.email,
         role: session.role
       }

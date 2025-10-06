@@ -425,7 +425,10 @@ r.post("/logout", async (req, res) => {
 });
 
 r.get("/session", async (req, res) => {
-  const sessionId = req.cookies?.sessionId || req.headers.authorization?.replace('Bearer ', '');
+  const sessionId = req.headers['x-session-id'] || 
+                    req.headers['X-Session-ID'] ||
+                    req.cookies?.sessionId || 
+                    req.headers.authorization?.replace('Bearer ', '');
   
   if (!sessionId) {
     return res.status(401).json({ error: "No session" });
