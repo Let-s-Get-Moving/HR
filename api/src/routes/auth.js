@@ -77,8 +77,9 @@ r.post("/login", checkAccountLockout, async (req, res) => {
       console.log('Session table error (might not exist):', err.message);
     }
     
-    // Store in memory
-    SessionManager.createSession(user.id, user.username);
+    // Store in memory with session fingerprint
+    const fingerprint = SessionManager.generateSessionFingerprint(req);
+    SessionManager.createSession(user.id, user.username, fingerprint);
     
     // Set cookie
     res.cookie('sessionId', sessionId, {

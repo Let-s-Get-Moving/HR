@@ -7,7 +7,7 @@ const sessions = new Map();
 const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
 
 export class SessionManager {
-  static createSession(userId, username) {
+  static createSession(userId, username, fingerprint = null) {
     const sessionId = this.generateSessionId();
     const expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
     
@@ -15,6 +15,7 @@ export class SessionManager {
       id: sessionId,
       userId,
       username,
+      fingerprint, // Store session fingerprint for security
       createdAt: new Date(),
       expiresAt,
       lastActivity: new Date()
@@ -28,7 +29,7 @@ export class SessionManager {
     return sessionId;
   }
   
-  static getSession(sessionId) {
+  static getSession(sessionId, fingerprint = null) {
     const session = sessions.get(sessionId);
     
     if (!session) {
@@ -37,6 +38,13 @@ export class SessionManager {
     
     // Check if session has expired
     if (new Date() > session.expiresAt) {
+      sessions.delete(sessionId);
+      return null;
+    }
+    
+    // Verify session fingerprint if provided
+    if (fingerprint && session.fingerprint && session.fingerprint !== fingerprint) {
+      console.warn('Session fingerprint mismatch - potential session hijacking attempt');
       sessions.delete(sessionId);
       return null;
     }
@@ -63,8 +71,23 @@ export class SessionManager {
   }
   
   static generateSessionId() {
-    return Math.random().toString(36).substring(2, 15) + 
-           Math.random().toString(36).substring(2, 15);
+    // CRYPTOGRAPHICALLY SECURE SESSION ID GENERATION
+    // Using crypto.randomBytes for maximum security
+    const crypto = require('crypto');
+    return crypto.randomBytes(32).toString('hex');
+  }
+  
+  static generateSessionFingerprint(req) {
+    // Generate session fingerprint based on IP and User-Agent
+    // This helps detect session hijacking attempts
+    const crypto = require('crypto');
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    
+    return crypto
+      .createHash('sha256')
+      .update(ip + userAgent)
+      .digest('hex');
   }
   
   static cleanupExpiredSessions() {
@@ -160,8 +183,9 @@ export const requireAuth = async (req, res, next) => {
     
     console.log('⚠️ [AUTH] No session found in database, checking memory...');
     
-    // Fall back to memory session
-    const memorySession = SessionManager.getSession(sessionId);
+    // Fall back to memory session with fingerprint verification
+    const fingerprint = SessionManager.generateSessionFingerprint(req);
+    const memorySession = SessionManager.getSession(sessionId, fingerprint);
     if (memorySession) {
       console.log('✅ [AUTH] Session found in memory');
       req.session = memorySession;
