@@ -6,10 +6,14 @@ The HR system uses a **simplified single-user authentication** approach. There i
 
 ## Login Credentials
 
+**⚠️ UPDATED FOR SECURITY (MLGA)**
+
 ```
 Username: Avneet
-Password: password123
+Password: mHwK3G0D1fA6gZUPthjBOQL8YPBN
 ```
+
+**Note:** The weak password "password123" has been replaced with a strong password as part of the MLGA (Make Login Great Again) security enhancement.
 
 ## How It Works
 

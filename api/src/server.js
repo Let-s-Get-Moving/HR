@@ -8,6 +8,7 @@ import { ensureAdminUser } from "./utils/ensureAdminUser.js";
 import { primaryPool, readerPool, timedQuery } from "./db/pools.js";
 import { dbPassport } from "./db/passport.js";
 import { queryRegistry, listQueryKeys } from "./debug/queryRegistry.js";
+import { requireAuth } from "./session.js";
 
 import employees from "./routes/employees.js";
 import auth from "./routes/auth.js";
@@ -65,12 +66,12 @@ function requireDebugToken(req, res, next) {
 // Apply basic security middleware
 app.use(security.securityHeaders);
 app.use(security.corsSecurity);
-// Disable problematic middleware for now
-// app.use(security.sqlInjectionPrevention);
-// app.use(security.sanitizeInput);
-// app.use(security.requestSizeLimit('10mb'));
-// app.use(security.auditLog);
-// app.use(security.sessionSecurity);
+// MLGA: Enable all security middleware for production
+app.use(security.sqlInjectionPrevention);
+app.use(security.sanitizeInput);
+app.use(security.requestSizeLimit('10mb'));
+app.use(security.auditLog);
+app.use(security.sessionSecurity);
 
 // Apply rate limiting
 app.use(security.apiRateLimit);
@@ -259,27 +260,27 @@ app.use('/api/admin', security.adminRateLimit);
 // Apply upload rate limiting to import endpoints
 app.use('/api/imports', security.uploadRateLimit);
 
-// Routes
-app.use("/api/employees", employees);
-app.use("/api/auth", auth);
-app.use("/api/payroll", payroll);
-app.use("/api/compliance", compliance);
-app.use("/api/leave", leave);
-app.use("/api/performance", performance);
-app.use("/api/analytics", analytics);
-app.use("/api/metrics", metrics);
-app.use("/api/settings", settings);
-app.use("/api/termination", termination);
-app.use("/api/bonuses", bonuses);
-app.use("/api/commissions", commissions);
-app.use("/api/recruiting", recruiting);
-app.use("/api/benefits", benefits);
-app.use("/api/imports", imports);
-app.use("/api/admin", admin);
-app.use("/api/timecards", timecards);
-app.use("/api/timecard-uploads", timecardUploads);
-app.use("/api/employee-matching", employeeMatching);
-app.use("/api/admin-cleanup", adminCleanup);
+// Routes - MLGA: All routes now require authentication except auth endpoints
+app.use("/api/employees", requireAuth, employees);
+app.use("/api/auth", auth); // Auth endpoints don't require auth (login, etc)
+app.use("/api/payroll", requireAuth, payroll);
+app.use("/api/compliance", requireAuth, compliance);
+app.use("/api/leave", requireAuth, leave);
+app.use("/api/performance", requireAuth, performance);
+app.use("/api/analytics", requireAuth, analytics);
+app.use("/api/metrics", requireAuth, metrics);
+app.use("/api/settings", requireAuth, settings);
+app.use("/api/termination", requireAuth, termination);
+app.use("/api/bonuses", requireAuth, bonuses);
+app.use("/api/commissions", requireAuth, commissions);
+app.use("/api/recruiting", requireAuth, recruiting);
+app.use("/api/benefits", requireAuth, benefits);
+app.use("/api/imports", requireAuth, imports);
+app.use("/api/admin", requireAuth, admin);
+app.use("/api/timecards", requireAuth, timecards);
+app.use("/api/timecard-uploads", requireAuth, timecardUploads);
+app.use("/api/employee-matching", requireAuth, employeeMatching);
+app.use("/api/admin-cleanup", requireAuth, adminCleanup);
 
 // Emergency database migration endpoint
 app.post("/api/migrate-db", async (req, res) => {

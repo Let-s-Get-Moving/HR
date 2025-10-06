@@ -1,5 +1,19 @@
 # 🏢 HR Management System
 
+## ⚠️ SECURITY ALERT
+
+**Current Security Score: 4.1/10** ❌
+
+The system has critical security vulnerabilities that need immediate attention:
+- 🚨 **0 out of 28 API routes have authentication** - Anyone can access employee data
+- 🚨 **SQL injection prevention is disabled** - Database can be compromised
+- 🚨 **Input sanitization is disabled** - XSS attacks possible
+- 🚨 **Audit logging is disabled** - No tracking of who accessed what
+
+**👉 See [SECURITY_AUDIT_RESULTS.md](./SECURITY_AUDIT_RESULTS.md) for full report and fixes**
+
+---
+
 A comprehensive **Human Resources Management System** built with modern web technologies, featuring complete data integration, automated workflows, and a professional metal-themed UI.
 
 **🎯 Optimized for HR Department Usage** - Designed for HR professionals to manage employees, payroll, timecards, compliance, and workforce analytics.
