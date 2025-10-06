@@ -43,10 +43,16 @@ export default function Login({ onLogin }) {
     setMfaError("");
 
     try {
+      // Generate device fingerprint for trust device feature
+      const deviceFingerprint = `${navigator.userAgent}_${navigator.language}_${screen.width}x${screen.height}_${navigator.platform}`;
+      
       const response = await API("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({
+          ...credentials,
+          deviceFingerprint: deviceFingerprint  // Send fingerprint to check if device is already trusted
+        }),
         credentials: "include" // Include cookies
       });
 
@@ -109,11 +115,11 @@ export default function Login({ onLogin }) {
     setMfaError("");
 
     try {
-      // Generate device fingerprint for trust feature
+      // Generate device fingerprint for trust feature (must match fingerprint sent during login)
       const deviceFingerprint = trustDevice ? 
-        `${navigator.userAgent}_${navigator.language}_${screen.width}x${screen.height}` : null;
+        `${navigator.userAgent}_${navigator.language}_${screen.width}x${screen.height}_${navigator.platform}` : null;
       const deviceName = trustDevice ? 
-        `${navigator.platform} ${navigator.userAgent.match(/\(([^)]+)\)/)?.[1] || 'Unknown'}` : null;
+        `${navigator.platform} - ${navigator.userAgent.match(/(Chrome|Firefox|Safari|Edge|Opera)\/[\d.]+/)?.[0] || 'Browser'}` : null;
       
       const response = await API("/api/auth/verify-mfa", {
         method: "POST",

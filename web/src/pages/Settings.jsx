@@ -162,18 +162,34 @@ export default function Settings() {
       // Try to load user-specific settings with authentication
       const sessionData = await sessionManager.checkSession(API);
       if (sessionData && sessionData.user) {
+        console.log('✅ [Settings] User authenticated, loading security settings...');
         const [preferences, notifs, sec, maint] = await Promise.all([
-          API("/api/settings/preferences").catch(() => defaultPreferences),
-          API("/api/settings/notifications").catch(() => defaultNotifications),
-          API("/api/settings/security").catch(() => defaultSecurity),
-          API("/api/settings/maintenance").catch(() => defaultMaintenance)
+          API("/api/settings/preferences").catch((err) => {
+            console.error('❌ Failed to load preferences:', err);
+            return defaultPreferences;
+          }),
+          API("/api/settings/notifications").catch((err) => {
+            console.error('❌ Failed to load notifications:', err);
+            return defaultNotifications;
+          }),
+          API("/api/settings/security").catch((err) => {
+            console.error('❌ Failed to load security settings:', err);
+            return defaultSecurity;
+          }),
+          API("/api/settings/maintenance").catch((err) => {
+            console.error('❌ Failed to load maintenance:', err);
+            return defaultMaintenance;
+          })
         ]);
+        
+        console.log('🔐 [Settings] Security settings loaded:', sec);
         
         setUserPreferences(preferences || defaultPreferences);
         setNotifications(notifs || defaultNotifications);
         setSecurity(sec || defaultSecurity);
         setMaintenance(maint || defaultMaintenance);
       } else {
+        console.log('⚠️ [Settings] Not authenticated, using defaults');
         // Use default settings when not authenticated
         setUserPreferences(defaultPreferences);
         setNotifications(defaultNotifications);
