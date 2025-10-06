@@ -24,6 +24,13 @@ export default function Settings() {
   const [maintenance, setMaintenance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
+  
+  // MFA Setup Modal State
+  const [showMFAModal, setShowMFAModal] = useState(false);
+  const [mfaData, setMfaData] = useState(null);
+  const [mfaVerificationCode, setMfaVerificationCode] = useState('');
+  const [mfaVerifying, setMfaVerifying] = useState(false);
+  const [mfaError, setMfaError] = useState(null);
 
   const tabs = [
     { id: "system", name: "System Settings", icon: "⚙️" },
@@ -248,12 +255,23 @@ export default function Settings() {
     try {
       const sessionId = localStorage.getItem('sessionId');
       if (sessionId) {
-        await API(`/api/settings/${category}/${key}`, {
+        const response = await API(`/api/settings/${category}/${key}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value })
         });
         console.log(`Setting ${key} updated successfully on server`);
+        
+        // Special handling for MFA setup
+        if (key === 'two_factor_auth' && response.status === 'setup_required') {
+          console.log('MFA setup required, initiating setup flow...');
+          await initiateMFASetup();
+          // Revert the toggle until setup is complete
+          updateState(security, setSecurity);
+          setSecurity(prev => prev.map(setting => 
+            setting.key === 'two_factor_auth' ? { ...setting, value: 'false' } : setting
+          ));
+        }
       }
     } catch (error) {
       console.warn("Failed to sync setting with server:", error);
@@ -261,6 +279,74 @@ export default function Settings() {
     } finally {
       setSaving(prev => ({ ...prev, [key]: false }));
     }
+  };
+  
+  // Initiate MFA Setup - Get QR Code
+  const initiateMFASetup = async () => {
+    try {
+      const response = await API('/api/settings/security/mfa/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      console.log('MFA setup response:', response);
+      setMfaData(response);
+      setShowMFAModal(true);
+      setMfaError(null);
+    } catch (error) {
+      console.error('MFA setup failed:', error);
+      alert('Failed to initiate MFA setup: ' + error.message);
+    }
+  };
+  
+  // Verify MFA Code
+  const verifyMFACode = async () => {
+    if (!mfaVerificationCode || mfaVerificationCode.length !== 6) {
+      setMfaError('Please enter a 6-digit code');
+      return;
+    }
+    
+    setMfaVerifying(true);
+    setMfaError(null);
+    
+    try {
+      const response = await API('/api/settings/security/mfa/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: mfaVerificationCode })
+      });
+      
+      if (response.success) {
+        // MFA enabled successfully!
+        setShowMFAModal(false);
+        setMfaVerificationCode('');
+        setMfaData(null);
+        
+        // Update the security settings
+        setSecurity(prev => prev.map(setting => 
+          setting.key === 'two_factor_auth' ? { ...setting, value: 'true' } : setting
+        ));
+        
+        alert('✅ Two-Factor Authentication enabled successfully!');
+        loadSettings(); // Reload to get updated status
+      }
+    } catch (error) {
+      console.error('MFA verification failed:', error);
+      setMfaError(error.message || 'Invalid code. Please try again.');
+    } finally {
+      setMfaVerifying(false);
+    }
+  };
+  
+  // Close MFA Modal
+  const closeMFAModal = () => {
+    setShowMFAModal(false);
+    setMfaVerificationCode('');
+    setMfaError(null);
+    // Revert toggle
+    setSecurity(prev => prev.map(setting => 
+      setting.key === 'two_factor_auth' ? { ...setting, value: 'false' } : setting
+    ));
   };
 
   const renderSettingField = (setting, category) => {
@@ -527,6 +613,93 @@ export default function Settings() {
           </>
         )}
       </div>
+      
+      {/* MFA Setup Modal */}
+      {showMFAModal && mfaData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
+          >
+            <h2 className="text-2xl font-bold mb-4">🔐 Enable Two-Factor Authentication</h2>
+            
+            <div className="space-y-4">
+              {/* Step 1: Scan QR Code */}
+              <div>
+                <h3 className="font-semibold mb-2">Step 1: Scan QR Code</h3>
+                <p className="text-sm text-secondary mb-3">
+                  Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan this QR code:
+                </p>
+                <div className="bg-white p-4 rounded-lg flex justify-center">
+                  <img src={mfaData.qrCode} alt="MFA QR Code" className="w-48 h-48" />
+                </div>
+              </div>
+              
+              {/* Manual Entry */}
+              <div>
+                <p className="text-sm text-secondary mb-1">Or enter this secret key manually:</p>
+                <div className="bg-neutral-900 p-3 rounded font-mono text-sm break-all">
+                  {mfaData.secret}
+                </div>
+              </div>
+              
+              {/* Step 2: Enter Code */}
+              <div>
+                <h3 className="font-semibold mb-2">Step 2: Enter Verification Code</h3>
+                <p className="text-sm text-secondary mb-3">
+                  Enter the 6-digit code from your authenticator app:
+                </p>
+                <input
+                  type="text"
+                  maxLength="6"
+                  value={mfaVerificationCode}
+                  onChange={(e) => setMfaVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  placeholder="000000"
+                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-center text-2xl tracking-widest font-mono focus:outline-none focus:border-indigo-500"
+                  autoFocus
+                />
+                {mfaError && (
+                  <p className="text-red-500 text-sm mt-2">{mfaError}</p>
+                )}
+              </div>
+              
+              {/* Backup Codes */}
+              {mfaData.backupCodes && mfaData.backupCodes.length > 0 && (
+                <div className="border border-yellow-600 bg-yellow-900 bg-opacity-20 p-3 rounded">
+                  <h3 className="font-semibold text-yellow-500 mb-2">⚠️ Save These Backup Codes</h3>
+                  <p className="text-sm text-secondary mb-2">
+                    Store these codes in a safe place. You can use them to access your account if you lose your authenticator:
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 bg-neutral-900 p-3 rounded font-mono text-sm">
+                    {mfaData.backupCodes.map((code, index) => (
+                      <div key={index} className="text-center">{code}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Action Buttons */}
+              <div className="flex space-x-3 mt-6">
+                <button
+                  onClick={closeMFAModal}
+                  disabled={mfaVerifying}
+                  className="flex-1 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={verifyMFACode}
+                  disabled={mfaVerifying || mfaVerificationCode.length !== 6}
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {mfaVerifying ? 'Verifying...' : 'Enable MFA'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
