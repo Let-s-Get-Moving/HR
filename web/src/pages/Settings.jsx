@@ -49,14 +49,20 @@ export default function Settings() {
     { id: "maintenance", name: "Maintenance", icon: "🛠️" }
   ];
 
+  // Track if component is mounted (avoid double-loading on first render)
+  const isInitialMount = React.useRef(true);
+
   useEffect(() => {
     loadSettings();
+    isInitialMount.current = false; // Mark that initial load is complete
   }, []);
 
-  // Reload settings when user navigates back to settings
+  // Reload settings when user navigates back to settings (but not on initial mount)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
+      // Only reload if document was hidden and is now visible AND not initial mount
+      if (!document.hidden && !isInitialMount.current) {
+        console.log('👁️ [Settings] Tab became visible, reloading settings...');
         loadSettings();
       }
     };
@@ -122,7 +128,14 @@ export default function Settings() {
   };
 
   const loadSettings = async () => {
+    // Prevent concurrent loads
+    if (loading) {
+      console.log('⏳ [Settings] Already loading, skipping duplicate request...');
+      return;
+    }
+    
     try {
+      setLoading(true);
       console.log('🔄 [Settings] Loading settings...');
       
       // Clean up any MFA status from localStorage (it should ONLY come from server)
