@@ -125,8 +125,8 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     // Set cookie
     res.cookie('sessionId', sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true, // Required for sameSite: 'none'
+      sameSite: 'none', // Allow cross-origin cookies
       maxAge: 8 * 60 * 60 * 1000,
       path: '/'
     });
@@ -238,8 +238,8 @@ r.post("/verify-mfa", async (req, res) => {
     // Set cookie
     res.cookie('sessionId', sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true, // Required for sameSite: 'none'
+      sameSite: 'none', // Allow cross-origin cookies
       maxAge: 8 * 60 * 60 * 1000,
       path: '/'
     });

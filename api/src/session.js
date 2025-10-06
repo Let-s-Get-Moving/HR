@@ -95,10 +95,11 @@ export const requireAuth = async (req, res, next) => {
     cookie: req.headers.cookie ? 'present' : 'missing'
   }, null, 2));
   
-  const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
-                   req.cookies?.sessionId ||
+  // Check cookies FIRST (standard for web apps), then headers (for API clients)
+  const sessionId = req.cookies?.sessionId ||
                    req.headers['x-session-id'] ||
-                   req.headers['X-Session-ID'];
+                   req.headers['X-Session-ID'] ||
+                   req.headers.authorization?.replace('Bearer ', '');
   
   console.log('🔍 [AUTH] Extracted session ID:', sessionId ? sessionId.substring(0, 15) + '...' : 'NONE');
   
@@ -190,10 +191,11 @@ export const requireAuth = async (req, res, next) => {
 
 // Optional auth middleware
 export const optionalAuth = (req, res, next) => {
-  const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
-                   req.cookies?.sessionId ||
+  // Check cookies FIRST (standard for web apps), then headers (for API clients)
+  const sessionId = req.cookies?.sessionId ||
                    req.headers['x-session-id'] ||
-                   req.headers['X-Session-ID'];
+                   req.headers['X-Session-ID'] ||
+                   req.headers.authorization?.replace('Bearer ', '');
   
   if (sessionId) {
     const session = SessionManager.getSession(sessionId);
