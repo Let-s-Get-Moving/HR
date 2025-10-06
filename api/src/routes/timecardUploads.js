@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import { q } from '../db.js';
 import { importTimecardsForDisplay } from '../utils/timecardDisplayImporter.js';
+import { validateFileContent } from '../utils/fileValidation.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -121,7 +122,7 @@ router.get('/uploads/:uploadId/employees/:employeeId/entries', async (req, res) 
     }
 });
 
-// Upload new timecard file
+// Upload new timecard file with comprehensive validation
 router.post('/upload', upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
@@ -131,7 +132,27 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         const filename = req.file.originalname;
         const fileBuffer = req.file.buffer;
         
-        console.log(`📤 Uploading timecard file: ${filename}`);
+        console.log(`🔍 [TIMECARD] Starting file validation for: ${filename}`);
+        
+        // 1. COMPREHENSIVE FILE CONTENT VALIDATION
+        // Determine file type based on extension
+        let fileType = 'csv'; // Default to CSV
+        if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+            fileType = 'excel';
+        }
+        
+        const fileValidation = validateFileContent(req.file, fileType);
+        if (!fileValidation.valid) {
+            console.log(`❌ [TIMECARD] File validation failed:`, fileValidation);
+            return res.status(400).json({
+                error: "File validation failed",
+                details: fileValidation.message,
+                validationDetails: fileValidation.details
+            });
+        }
+        
+        console.log(`✅ [TIMECARD] File validation passed:`, fileValidation.details);
+        console.log(`📤 [TIMECARD] Uploading validated timecard file: ${filename}`);
         
         // Import and save for display
         const result = await importTimecardsForDisplay(fileBuffer, filename);
@@ -148,11 +169,16 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             uploadId: result.uploadId,
             employeeCount: result.employeeCount,
             totalHours: result.totalHours,
-            message: `Successfully uploaded timecard for ${result.employeeCount} employees`
+            message: `Successfully uploaded timecard for ${result.employeeCount} employees`,
+            fileValidation: {
+                validated: true,
+                fileSize: req.file.size,
+                fileType: fileValidation.details?.type || fileType
+            }
         });
         
     } catch (error) {
-        console.error('Error uploading timecard:', error);
+        console.error('❌ [TIMECARD] Error uploading timecard:', error);
         res.status(500).json({ error: 'Failed to upload timecard', details: error.message });
     }
 });

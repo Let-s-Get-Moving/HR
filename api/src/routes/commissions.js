@@ -20,6 +20,9 @@ const upload = multer({
   }
 });
 
+// Import file validation utilities
+import { validateFileContent } from '../utils/fileValidation.js';
+
 // Debug endpoint to test header detection
 r.post("/debug-headers", upload.single('excel_file'), async (req, res) => {
   try {
@@ -79,18 +82,33 @@ r.post("/debug-headers", upload.single('excel_file'), async (req, res) => {
   }
 });
 
-// Excel import endpoint
+// Excel import endpoint with comprehensive file validation
 r.post("/import", upload.single('excel_file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No Excel file uploaded" });
     }
 
+    console.log(`🔍 [COMMISSIONS] Starting file validation for: ${req.file.originalname}`);
+    
+    // 1. COMPREHENSIVE FILE CONTENT VALIDATION
+    const fileValidation = validateFileContent(req.file, 'excel');
+    if (!fileValidation.valid) {
+      console.log(`❌ [COMMISSIONS] File validation failed:`, fileValidation);
+      return res.status(400).json({
+        error: "File validation failed",
+        details: fileValidation.message,
+        validationDetails: fileValidation.details
+      });
+    }
+    
+    console.log(`✅ [COMMISSIONS] File validation passed:`, fileValidation.details);
+
     const { sheet_name, period_month } = req.body;
     
-    console.log(`Starting commission import for file: ${req.file.originalname}`);
+    console.log(`📊 [COMMISSIONS] Starting commission import for validated file: ${req.file.originalname}`);
     if (period_month) {
-      console.log(`Using manual period override: ${period_month}`);
+      console.log(`📅 [COMMISSIONS] Using manual period override: ${period_month}`);
     }
     
     const summary = await importCommissionsFromExcel(
@@ -100,15 +118,20 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
       period_month // Pass optional manual period
     );
     
-    console.log(`Commission import completed:`, summary);
+    console.log(`✅ [COMMISSIONS] Commission import completed:`, summary);
     
     res.json({
       message: "Commission import completed successfully",
-      summary: summary
+      summary: summary,
+      fileValidation: {
+        validated: true,
+        fileSize: req.file.size,
+        fileType: fileValidation.details?.type || 'excel'
+      }
     });
     
   } catch (error) {
-    console.error("Commission import failed:", error);
+    console.error("❌ [COMMISSIONS] Commission import failed:", error);
     res.status(500).json({ 
       error: "Commission import failed", 
       details: error.message 
