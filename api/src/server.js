@@ -39,29 +39,33 @@ const app = express();
 // Trust proxy for rate limiting (required for Render)
 app.set('trust proxy', 1);
 
-// Debug configuration
-const DEBUG_DATA_DRIFT = (process.env.DEBUG_DATA_DRIFT || 'false').toLowerCase() === 'true';
-const DEBUG_TOKEN = process.env.DEBUG_TOKEN || '';
+// Debug configuration - DISABLED IN PRODUCTION FOR SECURITY
+const DEBUG_DATA_DRIFT = false; // FORCE DISABLED - was: (process.env.DEBUG_DATA_DRIFT || 'false').toLowerCase() === 'true';
+const DEBUG_TOKEN = ''; // FORCE EMPTY - was: process.env.DEBUG_TOKEN || '';
 
-// Token guard middleware for debug/admin endpoints
+// Token guard middleware for debug/admin endpoints - SECURITY HARDENED
 function requireDebugToken(req, res, next) {
-  if (!DEBUG_DATA_DRIFT) {
-    return res.status(404).json({ error: 'Debug mode disabled' });
-  }
-  if (!DEBUG_TOKEN) {
-    return res.status(500).json({ error: 'DEBUG_TOKEN not configured' });
-  }
-  const hdr = req.headers.authorization || '';
-  const token = hdr.startsWith('Bearer ') ? hdr.slice(7).trim() : '';
-  if (token !== DEBUG_TOKEN) {
-    logSecurityEvent('debug_auth_fail', 'medium', {
-      path: req.originalUrl,
-      ip: req.ip,
-      userAgent: req.get('User-Agent')
-    });
-    return res.status(403).json({ error: 'Invalid debug token' });
-  }
-  next();
+  // ALWAYS DISABLED IN PRODUCTION
+  return res.status(404).json({ error: 'Debug mode disabled for security' });
+  
+  // Original code commented out for security:
+  // if (!DEBUG_DATA_DRIFT) {
+  //   return res.status(404).json({ error: 'Debug mode disabled' });
+  // }
+  // if (!DEBUG_TOKEN) {
+  //   return res.status(500).json({ error: 'DEBUG_TOKEN not configured' });
+  // }
+  // const hdr = req.headers.authorization || '';
+  // const token = hdr.startsWith('Bearer ') ? hdr.slice(7).trim() : '';
+  // if (token !== DEBUG_TOKEN) {
+  //   logSecurityEvent('debug_auth_fail', 'medium', {
+  //     path: req.originalUrl,
+  //     ip: req.ip,
+  //     userAgent: req.get('User-Agent')
+  //   });
+  //   return res.status(403).json({ error: 'Invalid debug token' });
+  // }
+  // next();
 }
 
 // Apply basic security middleware
@@ -266,9 +270,9 @@ app.use("/api/employees", requireAuth, employees);
 app.use("/api/auth", auth); // Auth endpoints don't require auth (login, etc)
 app.use("/api/users", users); // User management (has own auth middleware)
 
-// Test routes (NO AUTH REQUIRED - FOR TESTING ONLY)
-import testFileValidation from "./routes/test-file-validation.js";
-app.use("/api/test", testFileValidation);
+// Test routes REMOVED FOR SECURITY - NO UNAUTHENTICATED ENDPOINTS IN PRODUCTION
+// import testFileValidation from "./routes/test-file-validation.js";
+// app.use("/api/test", testFileValidation);
 app.use("/api/payroll", requireAuth, payroll);
 app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);
