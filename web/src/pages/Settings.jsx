@@ -65,11 +65,18 @@ export default function Settings() {
 
   const loadLocalSettings = () => {
     // Load settings from localStorage and update state
-    const updateSettingFromStorage = (settings, setSettings, category) => {
+    // IMPORTANT: Some settings (like MFA) should NEVER come from localStorage
+    const updateSettingFromStorage = (settings, setSettings, category, excludeKeys = []) => {
       setSettings(prev => {
         if (!Array.isArray(prev)) return prev;
         return prev.map(setting => {
           if (!setting || !setting.key) return setting;
+          
+          // Skip excluded keys (e.g., two_factor_auth must come from server)
+          if (excludeKeys.includes(setting.key)) {
+            return setting;
+          }
+          
           const storedValue = localStorage.getItem(`${category}_${setting.key}`);
           return storedValue !== null ? { ...setting, value: storedValue } : setting;
         });
@@ -79,7 +86,7 @@ export default function Settings() {
     updateSettingFromStorage(systemSettings, setSystemSettings, 'system');
     updateSettingFromStorage(userPreferences, setUserPreferences, 'preferences');
     updateSettingFromStorage(notifications, setNotifications, 'notifications');
-    updateSettingFromStorage(security, setSecurity, 'security');
+    updateSettingFromStorage(security, setSecurity, 'security', ['two_factor_auth']); // MFA MUST come from server!
     updateSettingFromStorage(maintenance, setMaintenance, 'maintenance');
 
     // Apply theme immediately and update theme setting to reflect current state
@@ -125,6 +132,9 @@ export default function Settings() {
 
   const loadSettings = async () => {
     try {
+      // Clean up any MFA status from localStorage (it should ONLY come from server)
+      localStorage.removeItem('security_two_factor_auth');
+      
       // Always try to load system settings (no auth required)
       const system = await API("/api/settings/system").catch(() => []);
       setSystemSettings(system || []);
@@ -220,9 +230,11 @@ export default function Settings() {
       ));
     };
     
-    // Store in localStorage for persistence
-    const settingKey = `${category}_${key}`;
-    localStorage.setItem(settingKey, value);
+    // Store in localStorage for persistence (EXCEPT MFA - that must come from server!)
+    if (key !== 'two_factor_auth') {
+      const settingKey = `${category}_${key}`;
+      localStorage.setItem(settingKey, value);
+    }
     
     // Update local state
     switch (category) {
@@ -322,13 +334,13 @@ export default function Settings() {
         setMfaVerificationCode('');
         setMfaData(null);
         
-        // Update the security settings locally (don't reload to avoid race condition)
+        // Update the security settings locally (will be verified from server on next load)
         setSecurity(prev => prev.map(setting => 
           setting.key === 'two_factor_auth' ? { ...setting, value: 'true' } : setting
         ));
         
-        // Also update localStorage to persist the change
-        localStorage.setItem('security_two_factor_auth', 'true');
+        // DON'T save MFA status to localStorage - it must always come from server!
+        // localStorage.setItem('security_two_factor_auth', 'true'); // REMOVED!
         
         alert('✅ Two-Factor Authentication enabled successfully! Your account is now protected.');
         

@@ -165,9 +165,13 @@ r.put("/notifications/:key", async (req, res) => {
   }
 });
 
-// Get security settings
-r.get("/security", optionalAuth, async (req, res) => {
+// Get security settings (requires auth to see MFA status)
+r.get("/security", requireAuth, async (req, res) => {
   try {
+    console.log('🔍 [SETTINGS] GET /security called');
+    console.log('🔍 [SETTINGS] User ID:', req.user?.id);
+    console.log('🔍 [SETTINGS] Username:', req.user?.username);
+    
     // Get static settings
     const { rows } = await q(`
       SELECT 
@@ -185,21 +189,22 @@ r.get("/security", optionalAuth, async (req, res) => {
       ORDER BY key
     `);
     
-    // If authenticated, check actual MFA status
-    if (req.user?.id) {
-      try {
-        const { MFAService } = await import('../services/mfa.js');
-        const mfaEnabled = await MFAService.isMFAEnabled(req.user.id);
-        
-        // Update the two_factor_auth value with actual status
-        const mfaSetting = rows.find(r => r.key === 'two_factor_auth');
-        if (mfaSetting) {
-          mfaSetting.value = mfaEnabled ? 'true' : 'false';
-        }
-      } catch (error) {
-        console.error('Error checking MFA status:', error);
-        // Continue with default value if check fails
+    // ALWAYS check actual MFA status from database (user is authenticated via requireAuth)
+    try {
+      const { MFAService } = await import('../services/mfa.js');
+      const mfaEnabled = await MFAService.isMFAEnabled(req.user.id);
+      
+      console.log('🔍 [SETTINGS] MFA Status from database:', mfaEnabled);
+      
+      // Update the two_factor_auth value with actual status
+      const mfaSetting = rows.find(r => r.key === 'two_factor_auth');
+      if (mfaSetting) {
+        mfaSetting.value = mfaEnabled ? 'true' : 'false';
+        console.log('✅ [SETTINGS] Updated MFA toggle to:', mfaSetting.value);
       }
+    } catch (error) {
+      console.error('❌ [SETTINGS] Error checking MFA status:', error);
+      // Continue with default value if check fails
     }
     
     res.json(rows);
