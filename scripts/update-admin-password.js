@@ -19,8 +19,8 @@ async function updateAdminPassword() {
   try {
     console.log('🔐 MLGA: Updating admin password to strong credentials...\n');
 
-    // New strong password
-    const newPassword = 'mHwK3G0D1fA6gZUPthjBOQL8YPBN';
+    // Revert to original password as requested
+    const newPassword = 'password123';
     
     // Hash the new password with bcrypt (cost factor 12)
     console.log('⚙️  Hashing password with bcrypt (cost factor 12)...');

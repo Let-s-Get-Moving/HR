@@ -11,7 +11,8 @@ import { queryRegistry, listQueryKeys } from "./debug/queryRegistry.js";
 import { requireAuth } from "./session.js";
 
 import employees from "./routes/employees.js";
-import auth from "./routes/auth.js";
+import auth from "./routes/auth-mfa.js"; // Updated to MFA-enabled auth
+import users from "./routes/users.js"; // New user management
 import payroll from "./routes/payroll.js";
 import compliance from "./routes/compliance.js";
 import leave from "./routes/leave.js";
@@ -263,6 +264,7 @@ app.use('/api/imports', security.uploadRateLimit);
 // Routes - MLGA: All routes now require authentication except auth endpoints
 app.use("/api/employees", requireAuth, employees);
 app.use("/api/auth", auth); // Auth endpoints don't require auth (login, etc)
+app.use("/api/users", users); // User management (has own auth middleware)
 app.use("/api/payroll", requireAuth, payroll);
 app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);

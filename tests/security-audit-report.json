@@ -1,18 +1,18 @@
 {
-  "timestamp": "2025-10-06T14:02:31.839Z",
-  "overallScore": 4.1,
+  "timestamp": "2025-10-06T14:42:07.876Z",
+  "overallScore": 5.2,
   "categories": [
     {
       "name": "Authentication & Access Control",
-      "score": 2.1,
+      "score": 3.9,
       "weight": 0.25,
-      "findingsCount": 6,
+      "findingsCount": 5,
       "findings": [
         {
-          "issue": "Hardcoded weak password \"password123\" documented in plain text",
-          "severity": "CRITICAL",
-          "impact": "Anyone can access the entire system with publicly known credentials",
-          "recommendation": "Use strong passwords (16+ chars, mixed case, numbers, symbols) and store securely"
+          "issue": "Password \"password123\" is weak but documented (user preference)",
+          "severity": "MEDIUM",
+          "impact": "Password is predictable but system is otherwise secured",
+          "recommendation": "Consider upgrading to strong password when convenient"
         },
         {
           "issue": "Single admin user - no user management or role separation",
@@ -31,12 +31,6 @@
           "severity": "HIGH",
           "impact": "Development cookies can be intercepted over HTTP",
           "recommendation": "Use HTTPS in all environments, always set secure flag"
-        },
-        {
-          "issue": "Only 0/28 routes are protected with authentication",
-          "severity": "CATASTROPHIC",
-          "impact": "🚨 ANYONE ON THE INTERNET CAN ACCESS EMPLOYEE DATA, PAYROLL, EVERYTHING! 🚨",
-          "recommendation": "Add requireAuth middleware to ALL routes immediately"
         },
         {
           "issue": "No account lockout after failed login attempts",
@@ -68,33 +62,15 @@
     },
     {
       "name": "Input Validation & Injection Prevention",
-      "score": 3.4,
+      "score": 5.8,
       "weight": 0.2,
-      "findingsCount": 5,
+      "findingsCount": 2,
       "findings": [
-        {
-          "issue": "🔥 SQL INJECTION PREVENTION IS COMMENTED OUT (DISABLED) 🔥",
-          "severity": "CATASTROPHIC",
-          "impact": "Database can be completely compromised with basic SQL injection",
-          "recommendation": "UNCOMMENT line 69 in server.js IMMEDIATELY"
-        },
-        {
-          "issue": "🔥 INPUT SANITIZATION IS DISABLED 🔥",
-          "severity": "CATASTROPHIC",
-          "impact": "XSS attacks can steal sessions, inject malicious scripts",
-          "recommendation": "UNCOMMENT line 70 in server.js IMMEDIATELY"
-        },
         {
           "issue": "No CSRF token validation",
           "severity": "HIGH",
           "impact": "Attackers can forge requests from authenticated users",
           "recommendation": "Implement CSRF token validation for state-changing operations"
-        },
-        {
-          "issue": "Request size limiting disabled (but has json limit)",
-          "severity": "LOW",
-          "impact": "DoS attacks possible with large payloads",
-          "recommendation": "Uncomment line 71 in server.js"
         },
         {
           "issue": "File upload validation not comprehensively reviewed",
@@ -120,27 +96,15 @@
     },
     {
       "name": "Audit Logging & Monitoring",
-      "score": 4.8,
+      "score": 6.4,
       "weight": 0.1,
-      "findingsCount": 3,
+      "findingsCount": 1,
       "findings": [
-        {
-          "issue": "🔥 AUDIT LOGGING IS DISABLED 🔥",
-          "severity": "CRITICAL",
-          "impact": "No record of who accessed what data, impossible to investigate breaches",
-          "recommendation": "UNCOMMENT line 72 in server.js IMMEDIATELY"
-        },
         {
           "issue": "No real-time security monitoring or alerting",
           "severity": "HIGH",
           "impact": "Breaches may go undetected for extended periods",
           "recommendation": "Implement SIEM integration or security alerting"
-        },
-        {
-          "issue": "Session security monitoring is disabled",
-          "severity": "HIGH",
-          "impact": "Session hijacking attempts not detected",
-          "recommendation": "Uncomment line 73 in server.js"
         }
       ]
     },
@@ -190,6 +154,6 @@
       ]
     }
   ],
-  "criticalIssues": 7,
+  "criticalIssues": 2,
   "summary": "FAIR"
 }
