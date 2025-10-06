@@ -25,8 +25,8 @@ export const API = (path, options = {}) => {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(sessionId && { 'x-session-id': sessionId }),
-      ...options.headers,
+      ...options.headers, // Spread user headers first
+      ...(sessionId && { 'x-session-id': sessionId }), // Then add session ID (won't be overwritten)
     },
     ...options,
   }).then(async (response) => {
