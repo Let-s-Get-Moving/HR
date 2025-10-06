@@ -97,9 +97,17 @@ export const requireAuth = async (req, res, next) => {
   try {
     // First check database for persistent sessions
     const sessionResult = await q(`
-      SELECT s.id, s.user_id, s.expires_at, u.email, u.full_name, u.role
+      SELECT 
+        s.id, 
+        s.user_id, 
+        s.expires_at, 
+        u.email, 
+        u.username,
+        COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
+        COALESCE(r.role_name, 'user') as role
       FROM user_sessions s
       JOIN users u ON s.user_id = u.id
+      LEFT JOIN hr_roles r ON u.role_id = r.id
       WHERE s.id = $1 AND s.expires_at > NOW()
     `, [sessionId]);
     
@@ -116,11 +124,12 @@ export const requireAuth = async (req, res, next) => {
       req.session = {
         id: dbSession.id,
         userId: dbSession.user_id,
-        username: dbSession.full_name
+        username: dbSession.username || dbSession.full_name
       };
       req.user = { 
         id: dbSession.user_id, 
-        username: dbSession.full_name,
+        username: dbSession.username,
+        full_name: dbSession.full_name,
         email: dbSession.email,
         role: dbSession.role
       };
