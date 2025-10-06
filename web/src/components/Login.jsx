@@ -75,10 +75,17 @@ export default function Login({ onLogin }) {
         localStorage.setItem("sessionId", response.sessionId);
         localStorage.setItem("user", JSON.stringify(response.user));
         
+        // Store password warning if present
+        if (response.passwordWarning) {
+          localStorage.setItem("passwordWarning", JSON.stringify(response.passwordWarning));
+        } else {
+          localStorage.removeItem("passwordWarning");
+        }
+        
         // Set up session extension timer
         setupSessionExtension();
         
-        onLogin(response.user);
+        onLogin(response.user, response.passwordWarning || null);
       } else {
         setError("Login failed - no user data received");
       }
@@ -126,6 +133,13 @@ export default function Login({ onLogin }) {
         localStorage.setItem("sessionId", response.sessionId);
         localStorage.setItem("user", JSON.stringify(response.user));
         
+        // Store password warning if present
+        if (response.passwordWarning) {
+          localStorage.setItem("passwordWarning", JSON.stringify(response.passwordWarning));
+        } else {
+          localStorage.removeItem("passwordWarning");
+        }
+        
         // Set up session extension timer
         setupSessionExtension();
         
@@ -134,7 +148,7 @@ export default function Login({ onLogin }) {
         setMfaCode("");
         setTempToken("");
         
-        onLogin(response.user);
+        onLogin(response.user, response.passwordWarning || null);
       } else {
         setMfaError("MFA verification failed");
       }

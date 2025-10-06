@@ -106,6 +106,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [passwordWarning, setPasswordWarning] = useState(null);
 
   useEffect(() => {
     // Apply theme on app load
@@ -143,9 +144,24 @@ export default function App() {
     checkSession();
   }, []);
 
-  const handleLogin = (userData) => {
+  const handleLogin = (userData, passwordWarningData = null) => {
     setUser(userData);
     setCurrentPage("dashboard");
+    
+    // Check for password warning
+    if (passwordWarningData) {
+      setPasswordWarning(passwordWarningData);
+    }
+    
+    // Also check localStorage for password warning (set by Login component)
+    const storedWarning = localStorage.getItem('passwordWarning');
+    if (storedWarning) {
+      try {
+        setPasswordWarning(JSON.parse(storedWarning));
+      } catch (e) {
+        console.error('Failed to parse password warning:', e);
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -209,6 +225,49 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      {/* Password Expiry Warning Banner */}
+      {passwordWarning && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-yellow-500 dark:bg-yellow-600 text-black dark:text-white shadow-md"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⚠️</span>
+                <div>
+                  <p className="font-semibold">{passwordWarning.message}</p>
+                  <p className="text-sm opacity-90">
+                    Please change your password soon to avoid being locked out.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setCurrentPage('settings')}
+                  className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-90 transition-opacity"
+                >
+                  Change Password
+                </button>
+                <button
+                  onClick={() => {
+                    setPasswordWarning(null);
+                    localStorage.removeItem('passwordWarning');
+                  }}
+                  className="p-2 hover:bg-black hover:bg-opacity-10 rounded-lg transition-colors"
+                  title="Dismiss"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar Navigation */}
