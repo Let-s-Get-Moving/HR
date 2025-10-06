@@ -28,7 +28,8 @@ export const API = (path, options = {}) => {
   console.log('🔍 [API] Final headers being sent:', finalHeaders);
   
   return fetch(url, {
-    credentials: 'include',
+    // Don't use credentials: 'include' - it blocks custom headers in CORS
+    // credentials: 'include',
     headers: finalHeaders,
     ...options,
   }).then(async (response) => {
