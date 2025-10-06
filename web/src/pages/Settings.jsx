@@ -31,6 +31,16 @@ export default function Settings() {
   const [mfaVerificationCode, setMfaVerificationCode] = useState('');
   const [mfaVerifying, setMfaVerifying] = useState(false);
   const [mfaError, setMfaError] = useState(null);
+  
+  // Change Password Modal State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   const tabs = [
     { id: "system", name: "System Settings", icon: "⚙️" },
@@ -203,9 +213,28 @@ export default function Settings() {
   };
 
   const handleSettingUpdate = async (category, key, value) => {
+    // 🔐 SPECIAL HANDLING FOR MFA TOGGLE
+    // Don't update state immediately - show modal first, update only after verification
+    if (key === 'two_factor_auth') {
+      if (value === 'true' || value === true) {
+        // User wants to ENABLE MFA - show setup modal immediately
+        console.log('🔐 User clicked to enable MFA - showing setup modal');
+        setSaving(prev => ({ ...prev, [key]: true }));
+        await initiateMFASetup();
+        setSaving(prev => ({ ...prev, [key]: false }));
+        // Don't change toggle state - it will update after successful verification
+        return;
+      } else {
+        // User wants to DISABLE MFA - ask for confirmation
+        if (!confirm('Are you sure you want to disable Two-Factor Authentication? This will make your account less secure.')) {
+          return; // User cancelled
+        }
+      }
+    }
+    
     setSaving(prev => ({ ...prev, [key]: true }));
     
-    // Update local state immediately for better UX
+    // Update local state immediately for better UX (except MFA - handled above)
     const updateState = (settings, setSettings) => {
       setSettings(prev => prev.map(setting => 
         setting.key === key ? { ...setting, value } : setting
@@ -255,18 +284,7 @@ export default function Settings() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value })
         });
-        console.log(`Setting ${key} updated successfully on server`);
-        
-        // Special handling for MFA setup
-        if (key === 'two_factor_auth' && response.status === 'setup_required') {
-          console.log('MFA setup required, initiating setup flow...');
-          await initiateMFASetup();
-          // Revert the toggle until setup is complete
-          updateState(security, setSecurity);
-          setSecurity(prev => prev.map(setting => 
-            setting.key === 'two_factor_auth' ? { ...setting, value: 'false' } : setting
-          ));
-        }
+        console.log(`✅ Setting ${key} updated successfully on server`);
       }
     } catch (error) {
       console.warn("Failed to sync setting with server:", error);
@@ -347,6 +365,73 @@ export default function Settings() {
     setSecurity(prev => prev.map(setting => 
       setting.key === 'two_factor_auth' ? { ...setting, value: 'false' } : setting
     ));
+  };
+  
+  // Open Change Password Modal
+  const openPasswordModal = () => {
+    setShowPasswordModal(true);
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setPasswordError('');
+    setPasswordSuccess(false);
+  };
+  
+  // Handle Password Change
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess(false);
+    
+    // Validation
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError('All fields are required');
+      return;
+    }
+    
+    if (passwordData.newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters long');
+      return;
+    }
+    
+    if (passwordData.newPassword === passwordData.currentPassword) {
+      setPasswordError('New password must be different from current password');
+      return;
+    }
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+    
+    try {
+      const response = await API('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+      
+      setPasswordSuccess(true);
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess(false);
+      }, 2000);
+      
+    } catch (error) {
+      console.error('Password change error:', error);
+      setPasswordError(error.message || 'Failed to change password');
+    }
+  };
+  
+  // Close Password Modal
+  const closePasswordModal = () => {
+    setShowPasswordModal(false);
+    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setPasswordError('');
+    setPasswordSuccess(false);
   };
 
   const renderSettingField = (setting, category) => {
@@ -600,9 +685,30 @@ export default function Settings() {
         )}
         
         {activeTab === "security" && (
-          <div className="card">
-            {renderSettingsSection(security, "security", "Security Settings")}
-          </div>
+          <>
+            <div className="card">
+              {renderSettingsSection(security, "security", "Security Settings")}
+            </div>
+            
+            {/* Change Password Section */}
+            <div className="card">
+              <div className="card-header">
+                <h2 className="text-xl font-semibold">🔐 Change Password</h2>
+                <p className="text-sm text-secondary mt-1">Update your password to keep your account secure</p>
+              </div>
+              <div className="card-content">
+                <button
+                  onClick={openPasswordModal}
+                  className="btn-primary px-6 py-2 rounded-lg hover:opacity-90 transition-all"
+                >
+                  Change Password
+                </button>
+                <p className="text-xs text-tertiary mt-2">
+                  Your password expires every 90 days. Choose a strong password you haven't used before.
+                </p>
+              </div>
+            </div>
+          </>
         )}
         
         {activeTab === "maintenance" && (
@@ -697,6 +803,97 @@ export default function Settings() {
                 </button>
               </div>
             </div>
+          </motion.div>
+        </div>
+      )}
+      
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
+          >
+            <h2 className="text-2xl font-bold mb-4">🔐 Change Password</h2>
+            
+            <form onSubmit={handlePasswordChange} className="space-y-4">
+              {/* Current Password */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Current Password</label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                  className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  placeholder="Enter your current password"
+                  required
+                />
+              </div>
+              
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-medium mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  placeholder="Enter your new password (min 8 characters)"
+                  required
+                  minLength="8"
+                />
+                <p className="text-xs text-tertiary mt-1">
+                  Must be at least 8 characters. Cannot reuse your last 5 passwords.
+                </p>
+              </div>
+              
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  placeholder="Re-enter your new password"
+                  required
+                />
+              </div>
+              
+              {/* Error Message */}
+              {passwordError && (
+                <div className="bg-red-900 bg-opacity-20 border border-red-600 p-3 rounded">
+                  <p className="text-red-500 text-sm">{passwordError}</p>
+                </div>
+              )}
+              
+              {/* Success Message */}
+              {passwordSuccess && (
+                <div className="bg-green-900 bg-opacity-20 border border-green-600 p-3 rounded">
+                  <p className="text-green-500 text-sm">✅ Password changed successfully!</p>
+                </div>
+              )}
+              
+              {/* Action Buttons */}
+              <div className="flex space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={closePasswordModal}
+                  className="flex-1 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors"
+                  disabled={passwordSuccess}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={passwordSuccess}
+                >
+                  Change Password
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}

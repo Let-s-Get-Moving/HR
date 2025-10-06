@@ -13,6 +13,16 @@ export default function Login({ onLogin }) {
   const [mfaCode, setMfaCode] = useState("");
   const [tempToken, setTempToken] = useState("");
   const [mfaError, setMfaError] = useState("");
+  const [trustDevice, setTrustDevice] = useState(false);
+  
+  // Password Change State
+  const [showPasswordChange, setShowPasswordChange] = useState(false);
+  const [passwordChangeData, setPasswordChangeData] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordChangeReason, setPasswordChangeReason] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
     // Check for existing session on component mount
@@ -40,6 +50,16 @@ export default function Login({ onLogin }) {
         credentials: "include" // Include cookies
       });
 
+      // Check if password change is required
+      if (response.requiresPasswordChange) {
+        console.log('🔐 Password change required');
+        setTempToken(response.tempToken);
+        setPasswordChangeReason(response.reason || 'Your password has expired');
+        setShowPasswordChange(true);
+        setLoading(false);
+        return;
+      }
+      
       // Check if MFA is required
       if (response.requiresMFA) {
         console.log('🔐 MFA required for login');
@@ -82,12 +102,21 @@ export default function Login({ onLogin }) {
     setMfaError("");
 
     try {
+      // Generate device fingerprint for trust feature
+      const deviceFingerprint = trustDevice ? 
+        `${navigator.userAgent}_${navigator.language}_${screen.width}x${screen.height}` : null;
+      const deviceName = trustDevice ? 
+        `${navigator.platform} ${navigator.userAgent.match(/\(([^)]+)\)/)?.[1] || 'Unknown'}` : null;
+      
       const response = await API("/api/auth/verify-mfa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tempToken: tempToken,
-          code: mfaCode
+          code: mfaCode,
+          trustDevice: trustDevice,
+          deviceFingerprint: deviceFingerprint,
+          deviceName: deviceName
         }),
         credentials: "include"
       });
@@ -112,6 +141,55 @@ export default function Login({ onLogin }) {
     } catch (error) {
       console.error("MFA verification error:", error);
       setMfaError(error.message || "Invalid code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePasswordChangeSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    
+    // Validation
+    if (!passwordChangeData.newPassword || !passwordChangeData.confirmPassword) {
+      setPasswordError('Please fill in all fields');
+      return;
+    }
+    
+    if (passwordChangeData.newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters long');
+      return;
+    }
+    
+    if (passwordChangeData.newPassword !== passwordChangeData.confirmPassword) {
+      setPasswordError('Passwords do not match');
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const response = await API("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tempToken: tempToken,
+          newPassword: passwordChangeData.newPassword
+        })
+      });
+      
+      // Password changed successfully - now need to log in again
+      setShowPasswordChange(false);
+      setPasswordChangeData({ newPassword: '', confirmPassword: '' });
+      setTempToken('');
+      alert('✅ Password changed successfully! Please log in with your new password.');
+      
+      // Reset form
+      setCredentials({ username: credentials.username, password: '' });
+      
+    } catch (error) {
+      console.error('Password change error:', error);
+      setPasswordError(error.message || 'Failed to change password');
     } finally {
       setLoading(false);
     }
@@ -173,8 +251,64 @@ export default function Login({ onLogin }) {
             <p className="text-sm text-tertiary mt-2">Developed by Udi Shkolnik</p>
           </div>
 
-          {/* MFA Input Screen */}
-          {showMFAInput ? (
+          {/* Password Change Screen */}
+          {showPasswordChange ? (
+            <form onSubmit={handlePasswordChangeSubmit} className="space-y-6">
+              <div className="text-center mb-6">
+                <div className="text-5xl mb-4">🔒</div>
+                <h2 className="text-xl font-bold mb-2">Password Change Required</h2>
+                <p className="text-sm text-secondary">{passwordChangeReason}</p>
+              </div>
+
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-2 text-primary">New Password</label>
+                <input
+                  type="password"
+                  value={passwordChangeData.newPassword}
+                  onChange={(e) => setPasswordChangeData({...passwordChangeData, newPassword: e.target.value})}
+                  className="w-full px-3 py-2 input-md"
+                  placeholder="Enter new password (min 8 characters)"
+                  required
+                  minLength="8"
+                  autoFocus
+                />
+                <p className="text-xs text-tertiary mt-1">
+                  Must be at least 8 characters. Cannot reuse your last 5 passwords.
+                </p>
+              </div>
+
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-2 text-primary">Confirm Password</label>
+                <input
+                  type="password"
+                  value={passwordChangeData.confirmPassword}
+                  onChange={(e) => setPasswordChangeData({...passwordChangeData, confirmPassword: e.target.value})}
+                  className="w-full px-3 py-2 input-md"
+                  placeholder="Re-enter new password"
+                  required
+                />
+              </div>
+
+              {passwordError && (
+                <div className="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 p-3 rounded-lg text-sm">
+                  {passwordError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+              >
+                {loading ? "Changing Password..." : "Change Password"}
+              </button>
+
+              <div className="mt-4 text-center text-xs text-tertiary">
+                <p>💡 After changing, you'll need to log in with your new password</p>
+              </div>
+            </form>
+          ) : /* MFA Input Screen */
+          showMFAInput ? (
             <form onSubmit={handleMFAVerify} className="space-y-6">
               <div className="text-center mb-6">
                 <div className="text-5xl mb-4">🔐</div>
@@ -206,6 +340,23 @@ export default function Login({ onLogin }) {
                   {mfaError}
                 </motion.div>
               )}
+
+              {/* Trust This Device Checkbox */}
+              <div className="flex items-start space-x-3 p-3 bg-neutral-900 bg-opacity-30 rounded-lg border border-neutral-700">
+                <input
+                  type="checkbox"
+                  id="trustDevice"
+                  checked={trustDevice}
+                  onChange={(e) => setTrustDevice(e.target.checked)}
+                  className="mt-1 w-4 h-4 rounded border-neutral-600 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-neutral-900"
+                />
+                <label htmlFor="trustDevice" className="flex-1 text-sm">
+                  <div className="font-medium text-primary">Trust this device for 30 days</div>
+                  <div className="text-xs text-tertiary mt-1">
+                    ⚠️ Only enable on devices you personally own and control. Never use on public or shared computers.
+                  </div>
+                </label>
+              </div>
 
               <button
                 type="submit"
