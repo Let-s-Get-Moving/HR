@@ -2,11 +2,13 @@ import express from "express";
 import { q } from "../db.js";
 import { SessionManager } from "../session.js";
 import { comparePassword, generateSecureSessionId } from "../utils/security.js";
+import { AccountLockout, checkAccountLockout } from "../middleware/account-lockout.js";
+import { CSRFProtection } from "../middleware/csrf.js";
 
 const r = express.Router();
 
 // Simple login endpoint for single admin user
-r.post("/login", async (req, res) => {
+r.post("/login", checkAccountLockout, async (req, res) => {
   try {
     const { username, password } = req.body;
     
@@ -38,7 +40,24 @@ r.post("/login", async (req, res) => {
     
     if (!isValidPassword) {
       console.log('Login failed: Invalid password');
-      return res.status(401).json({ error: "Invalid credentials" });
+      
+      // Record failed attempt and check for lockout
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      const userAgent = req.headers['user-agent'];
+      const lockoutResult = AccountLockout.recordFailedAttempt(username, ipAddress, userAgent);
+      
+      if (lockoutResult.locked) {
+        return res.status(429).json({ 
+          error: "Account locked",
+          message: `Too many failed attempts. Account locked until ${lockoutResult.lockoutEndsAt.toISOString()}`,
+          lockedUntil: lockoutResult.lockoutEndsAt
+        });
+      }
+      
+      return res.status(401).json({ 
+        error: "Invalid credentials",
+        attemptsRemaining: lockoutResult.attemptsRemaining
+      });
     }
     
     // Create session
@@ -67,6 +86,13 @@ r.post("/login", async (req, res) => {
       path: '/'
     });
     
+    // Clear any failed attempts on successful login
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    AccountLockout.clearFailedAttempts(username, ipAddress);
+    
+    // Generate CSRF token for this session
+    const csrfToken = CSRFProtection.generateToken(sessionId);
+    
     console.log('✅ Login successful:', user.full_name);
     
     res.json({
@@ -77,7 +103,8 @@ r.post("/login", async (req, res) => {
         email: user.email,
         role: user.role 
       },
-      sessionId
+      sessionId,
+      csrfToken // CSRF token for secure state-changing operations
     });
   } catch (error) {
     console.error('❌ Login error:', error);
