@@ -84,7 +84,7 @@ export class SessionManager {
 }
 
 // Middleware for session authentication
-export const requireAuth = (req, res, next) => {
+export const requireAuth = async (req, res, next) => {
   const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
                    req.cookies?.sessionId ||
                    req.headers['x-session-id'] ||
@@ -94,15 +94,62 @@ export const requireAuth = (req, res, next) => {
     return res.status(401).json({ error: 'Authentication required' });
   }
   
-  const session = SessionManager.getSession(sessionId);
-  
-  if (!session) {
+  try {
+    // First check database for persistent sessions
+    const sessionResult = await q(`
+      SELECT s.id, s.user_id, s.expires_at, u.email, u.full_name, u.role
+      FROM user_sessions s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.id = $1 AND s.expires_at > NOW()
+    `, [sessionId]);
+    
+    if (sessionResult.rows.length > 0) {
+      const dbSession = sessionResult.rows[0];
+      
+      // Update last activity
+      await q(`
+        UPDATE user_sessions 
+        SET last_activity = NOW() 
+        WHERE id = $1
+      `, [sessionId]);
+      
+      req.session = {
+        id: dbSession.id,
+        userId: dbSession.user_id,
+        username: dbSession.full_name
+      };
+      req.user = { 
+        id: dbSession.user_id, 
+        username: dbSession.full_name,
+        email: dbSession.email,
+        role: dbSession.role
+      };
+      return next();
+    }
+    
+    // Fall back to memory session
+    const memorySession = SessionManager.getSession(sessionId);
+    if (memorySession) {
+      req.session = memorySession;
+      req.user = { id: memorySession.userId, username: memorySession.username };
+      return next();
+    }
+    
+    // No valid session found
     return res.status(401).json({ error: 'Invalid or expired session' });
+  } catch (error) {
+    console.error('Session validation error:', error);
+    
+    // Try memory session as fallback
+    const memorySession = SessionManager.getSession(sessionId);
+    if (memorySession) {
+      req.session = memorySession;
+      req.user = { id: memorySession.userId, username: memorySession.username };
+      return next();
+    }
+    
+    return res.status(401).json({ error: 'Session validation failed' });
   }
-  
-  req.session = session;
-  req.user = { id: session.userId, username: session.username };
-  next();
 };
 
 // Optional auth middleware
