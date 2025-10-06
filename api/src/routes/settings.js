@@ -168,6 +168,7 @@ r.put("/notifications/:key", async (req, res) => {
 // Get security settings
 r.get("/security", optionalAuth, async (req, res) => {
   try {
+    // Get static settings
     const { rows } = await q(`
       SELECT 
         'session_timeout_minutes' as key, '30' as value, 'number' as type, 'Session timeout in minutes' as description
@@ -184,6 +185,23 @@ r.get("/security", optionalAuth, async (req, res) => {
       ORDER BY key
     `);
     
+    // If authenticated, check actual MFA status
+    if (req.user?.id) {
+      try {
+        const { MFAService } = await import('../services/mfa.js');
+        const mfaEnabled = await MFAService.isMFAEnabled(req.user.id);
+        
+        // Update the two_factor_auth value with actual status
+        const mfaSetting = rows.find(r => r.key === 'two_factor_auth');
+        if (mfaSetting) {
+          mfaSetting.value = mfaEnabled ? 'true' : 'false';
+        }
+      } catch (error) {
+        console.error('Error checking MFA status:', error);
+        // Continue with default value if check fails
+      }
+    }
+    
     res.json(rows);
   } catch (error) {
     console.error("Error fetching security settings:", error);
@@ -197,6 +215,45 @@ r.put("/security/:key", requireAuth, async (req, res) => {
   const { value } = req.body;
   
   try {
+    // Special handling for two_factor_auth
+    if (key === 'two_factor_auth') {
+      // Import MFAService at the top if not already imported
+      const { MFAService } = await import('../services/mfa.js');
+      
+      if (value === 'true' || value === true) {
+        // Enable MFA - check if already set up
+        const isEnabled = await MFAService.isMFAEnabled(req.user.id);
+        
+        if (isEnabled) {
+          return res.json({ 
+            message: "MFA already enabled",
+            key,
+            value: true,
+            status: 'already_enabled'
+          });
+        }
+        
+        // Return setup instructions
+        return res.json({
+          message: "MFA setup required. Please visit the MFA setup page.",
+          key,
+          value: false,
+          status: 'setup_required',
+          setupEndpoint: '/api/auth/mfa/setup'
+        });
+      } else {
+        // Disable MFA
+        await MFAService.disableMFA(req.user.id);
+        return res.json({ 
+          message: "MFA disabled successfully",
+          key,
+          value: false,
+          status: 'disabled'
+        });
+      }
+    }
+    
+    // Generic handler for other security settings
     res.json({ 
       message: "Security setting updated successfully",
       key,
@@ -248,6 +305,95 @@ r.put("/maintenance/:key", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Error updating maintenance setting:", error);
     res.status(500).json({ error: "Failed to update maintenance setting" });
+  }
+});
+
+// MFA Setup - Generate QR Code
+r.post("/security/mfa/setup", requireAuth, async (req, res) => {
+  try {
+    const { MFAService } = await import('../services/mfa.js');
+    const { UserManagementService } = await import('../services/user-management.js');
+    
+    const userId = req.user.id;
+    const user = await UserManagementService.getUserById(userId);
+    
+    const mfaData = await MFAService.setupMFA(userId, user.email);
+    
+    res.json({
+      success: true,
+      message: "MFA setup initiated. Scan the QR code with your authenticator app.",
+      qrCode: mfaData.qrCode,
+      secret: mfaData.secret,
+      backupCodes: mfaData.backupCodes
+    });
+  } catch (error) {
+    console.error('MFA setup error:', error);
+    res.status(500).json({ error: "MFA setup failed: " + error.message });
+  }
+});
+
+// MFA Verify - Enable MFA
+r.post("/security/mfa/verify", requireAuth, async (req, res) => {
+  try {
+    const { MFAService } = await import('../services/mfa.js');
+    const { code } = req.body;
+    const userId = req.user.id;
+    
+    if (!code) {
+      return res.status(400).json({ error: "Verification code required" });
+    }
+    
+    const verified = await MFAService.verifyAndEnableMFA(userId, code);
+    
+    if (!verified) {
+      return res.status(401).json({ error: "Invalid verification code" });
+    }
+    
+    res.json({
+      success: true,
+      message: "MFA enabled successfully",
+      enabled: true
+    });
+  } catch (error) {
+    console.error('MFA verify error:', error);
+    res.status(500).json({ error: "MFA verification failed: " + error.message });
+  }
+});
+
+// MFA Disable
+r.post("/security/mfa/disable", requireAuth, async (req, res) => {
+  try {
+    const { MFAService } = await import('../services/mfa.js');
+    const userId = req.user.id;
+    
+    await MFAService.disableMFA(userId);
+    
+    res.json({
+      success: true,
+      message: "MFA disabled successfully",
+      enabled: false
+    });
+  } catch (error) {
+    console.error('MFA disable error:', error);
+    res.status(500).json({ error: "MFA disable failed: " + error.message });
+  }
+});
+
+// MFA Status
+r.get("/security/mfa/status", requireAuth, async (req, res) => {
+  try {
+    const { MFAService } = await import('../services/mfa.js');
+    const userId = req.user.id;
+    
+    const enabled = await MFAService.isMFAEnabled(userId);
+    
+    res.json({
+      enabled,
+      message: enabled ? "MFA is enabled" : "MFA is not enabled"
+    });
+  } catch (error) {
+    console.error('MFA status check error:', error);
+    res.status(500).json({ error: "Failed to check MFA status" });
   }
 });
 
