@@ -74,6 +74,66 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     const ipAddress = req.ip || req.connection.remoteAddress;
     AccountLockout.clearFailedAttempts(username, ipAddress);
     
+    // ============================================================
+    // CHECK PASSWORD EXPIRY
+    // ============================================================
+    const passwordCheckResult = await q(`
+      SELECT 
+        password_changed_at,
+        password_expires_at,
+        must_change_password,
+        CASE 
+          WHEN must_change_password THEN 'MUST_CHANGE'
+          WHEN password_expires_at < NOW() THEN 'EXPIRED'
+          WHEN password_expires_at < NOW() + INTERVAL '10 days' THEN 'EXPIRING_SOON'
+          ELSE 'VALID'
+        END as password_status,
+        EXTRACT(DAY FROM (password_expires_at - NOW())) as days_until_expiry
+      FROM users
+      WHERE id = $1
+    `, [user.id]);
+    
+    const passwordInfo = passwordCheckResult.rows[0];
+    
+    // If password expired or must change, require password change
+    if (passwordInfo.password_status === 'EXPIRED' || passwordInfo.password_status === 'MUST_CHANGE') {
+      console.log(`🔐 Password ${passwordInfo.password_status} for user ${user.id}`);
+      
+      // Create temporary token for password change
+      const tempToken = generateSecureSessionId();
+      
+      await q(`
+        INSERT INTO user_sessions (id, user_id, expires_at, metadata)
+        VALUES ($1, $2, $3, $4)
+      `, [
+        tempToken, 
+        user.id, 
+        new Date(Date.now() + 30 * 60 * 1000), // 30 minutes to change password
+        JSON.stringify({ password_change_required: true })
+      ]);
+      
+      return res.json({
+        requiresPasswordChange: true,
+        tempToken: tempToken,
+        reason: passwordInfo.password_status === 'MUST_CHANGE' 
+          ? 'Administrator has required you to change your password'
+          : 'Your password has expired',
+        passwordStatus: passwordInfo.password_status
+      });
+    }
+    
+    // Store password warning for expiring soon
+    let passwordWarning = null;
+    if (passwordInfo.password_status === 'EXPIRING_SOON') {
+      const daysLeft = Math.ceil(passwordInfo.days_until_expiry);
+      passwordWarning = {
+        message: `Your password expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+        daysRemaining: daysLeft,
+        expiresAt: passwordInfo.password_expires_at
+      };
+      console.log(`⚠️ Password expiring soon for user ${user.id}: ${daysLeft} days left`);
+    }
+    
     // Check if MFA is enabled
     const mfaEnabled = await MFAService.isMFAEnabled(user.id);
     
@@ -133,7 +193,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     
     console.log('✅ Login successful (no MFA):', user.full_name);
     
-    res.json({
+    const response = {
       message: "Login successful",
       user: { 
         id: user.id, 
@@ -144,7 +204,14 @@ r.post("/login", checkAccountLockout, async (req, res) => {
       },
       sessionId,
       csrfToken
-    });
+    };
+    
+    // Add password warning if expiring soon
+    if (passwordWarning) {
+      response.passwordWarning = passwordWarning;
+    }
+    
+    res.json(response);
     
   } catch (error) {
     console.error('❌ Login error:', error);
@@ -232,6 +299,36 @@ r.post("/verify-mfa", async (req, res) => {
     // Get user details
     const user = await UserManagementService.getUserById(userId);
     
+    // Check password expiry status
+    const passwordCheckResult = await q(`
+      SELECT 
+        password_changed_at,
+        password_expires_at,
+        must_change_password,
+        CASE 
+          WHEN must_change_password THEN 'MUST_CHANGE'
+          WHEN password_expires_at < NOW() THEN 'EXPIRED'
+          WHEN password_expires_at < NOW() + INTERVAL '10 days' THEN 'EXPIRING_SOON'
+          ELSE 'VALID'
+        END as password_status,
+        EXTRACT(DAY FROM (password_expires_at - NOW())) as days_until_expiry
+      FROM users
+      WHERE id = $1
+    `, [userId]);
+    
+    const passwordInfo = passwordCheckResult.rows[0];
+    let passwordWarning = null;
+    
+    if (passwordInfo.password_status === 'EXPIRING_SOON') {
+      const daysLeft = Math.ceil(passwordInfo.days_until_expiry);
+      passwordWarning = {
+        message: `Your password expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`,
+        daysRemaining: daysLeft,
+        expiresAt: passwordInfo.password_expires_at
+      };
+      console.log(`⚠️ Password expiring soon for user ${userId}: ${daysLeft} days left`);
+    }
+    
     // Generate CSRF token
     const csrfToken = CSRFProtection.generateToken(sessionId);
     
@@ -246,7 +343,7 @@ r.post("/verify-mfa", async (req, res) => {
     
     console.log('✅ MFA verified successfully for user:', user.full_name);
     
-    res.json({
+    const response = {
       message: "Login successful",
       user: { 
         id: user.id, 
@@ -257,7 +354,14 @@ r.post("/verify-mfa", async (req, res) => {
       },
       sessionId,
       csrfToken
-    });
+    };
+    
+    // Add password warning if expiring soon
+    if (passwordWarning) {
+      response.passwordWarning = passwordWarning;
+    }
+    
+    res.json(response);
     
   } catch (error) {
     console.error('❌ MFA verification error:', error);
@@ -403,6 +507,131 @@ r.delete("/mfa/trusted-devices/:deviceId", requireAuth, async (req, res) => {
   } catch (error) {
     console.error('❌ Remove trusted device error:', error);
     res.status(500).json({ error: "Failed to remove device: " + error.message });
+  }
+});
+
+/**
+ * Change Password
+ * Can be used with tempToken (for forced password change) or with authenticated session
+ */
+r.post("/change-password", async (req, res) => {
+  try {
+    const { tempToken, currentPassword, newPassword } = req.body;
+    
+    if (!newPassword) {
+      return res.status(400).json({ error: "New password is required" });
+    }
+    
+    // Validate new password strength
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters long" });
+    }
+    
+    let userId;
+    let requireCurrentPassword = true;
+    
+    // Check if using tempToken (forced password change)
+    if (tempToken) {
+      const tempSession = await q(`
+        SELECT user_id, metadata FROM user_sessions
+        WHERE id = $1 AND expires_at > NOW()
+      `, [tempToken]);
+      
+      if (tempSession.rows.length === 0) {
+        return res.status(401).json({ error: "Invalid or expired token" });
+      }
+      
+      const metadata = tempSession.rows[0].metadata;
+      if (!metadata?.password_change_required) {
+        return res.status(400).json({ error: "Invalid token for password change" });
+      }
+      
+      userId = tempSession.rows[0].user_id;
+      requireCurrentPassword = false; // Don't require current password for forced change
+      
+    } else if (req.user) {
+      // Authenticated user changing their own password
+      userId = req.user.id;
+    } else {
+      return res.status(401).json({ error: "Authentication required" });
+    }
+    
+    // Get user
+    const userResult = await q(`
+      SELECT id, password_hash, password_history
+      FROM users
+      WHERE id = $1
+    `, [userId]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    const user = userResult.rows[0];
+    
+    // If current password required, verify it
+    if (requireCurrentPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({ error: "Current password is required" });
+      }
+      
+      const isValid = await comparePassword(currentPassword, user.password_hash);
+      if (!isValid) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+    }
+    
+    // Check if new password is same as current
+    const isSameAsCurrent = await comparePassword(newPassword, user.password_hash);
+    if (isSameAsCurrent) {
+      return res.status(400).json({ error: "New password must be different from current password" });
+    }
+    
+    // Check password history (prevent reuse of last 5 passwords)
+    const passwordHistory = user.password_history || [];
+    for (const oldPassword of passwordHistory) {
+      if (oldPassword.hash) {
+        const isReused = await comparePassword(newPassword, oldPassword.hash);
+        if (isReused) {
+          return res.status(400).json({ 
+            error: "Password has been used recently. Please choose a different password." 
+          });
+        }
+      }
+    }
+    
+    // Hash new password
+    const bcrypt = await import('bcrypt');
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+    
+    // Update password (trigger will automatically handle expiry and history)
+    await q(`
+      UPDATE users 
+      SET password_hash = $1
+      WHERE id = $2
+    `, [newPasswordHash, userId]);
+    
+    // Delete temp session if it exists
+    if (tempToken) {
+      await q(`DELETE FROM user_sessions WHERE id = $1`, [tempToken]);
+    }
+    
+    // Log activity
+    await q(`
+      INSERT INTO user_activity_log (user_id, action, resource_type, details)
+      VALUES ($1, 'password_changed', 'auth', $2)
+    `, [userId, JSON.stringify({ self_initiated: !tempToken })]);
+    
+    console.log(`✅ Password changed successfully for user ${userId}`);
+    
+    res.json({ 
+      message: "Password changed successfully",
+      requiresLogin: !!tempToken // If was forced change, need to login again
+    });
+    
+  } catch (error) {
+    console.error('❌ Change password error:', error);
+    res.status(500).json({ error: "Failed to change password: " + error.message });
   }
 });
 

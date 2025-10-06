@@ -64,39 +64,21 @@ export default function Settings() {
   }, [userPreferences.length]);
 
   const loadLocalSettings = () => {
-    // Load settings from localStorage and update state
-    // IMPORTANT: Some settings (like MFA) should NEVER come from localStorage
-    const updateSettingFromStorage = (settings, setSettings, category, excludeKeys = []) => {
-      setSettings(prev => {
-        if (!Array.isArray(prev)) return prev;
-        return prev.map(setting => {
-          if (!setting || !setting.key) return setting;
-          
-          // Skip excluded keys (e.g., two_factor_auth must come from server)
-          if (excludeKeys.includes(setting.key)) {
-            return setting;
-          }
-          
-          const storedValue = localStorage.getItem(`${category}_${setting.key}`);
-          return storedValue !== null ? { ...setting, value: storedValue } : setting;
-        });
-      });
-    };
-
-    updateSettingFromStorage(systemSettings, setSystemSettings, 'system');
-    updateSettingFromStorage(userPreferences, setUserPreferences, 'preferences');
-    updateSettingFromStorage(notifications, setNotifications, 'notifications');
-    updateSettingFromStorage(security, setSecurity, 'security', ['two_factor_auth']); // MFA MUST come from server!
-    updateSettingFromStorage(maintenance, setMaintenance, 'maintenance');
-
-    // Apply theme immediately and update theme setting to reflect current state
-    const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
-    localStorage.setItem('preferences_theme', currentTheme);
+    // ⚠️ CRITICAL CHANGE: NO MORE LOCALSTORAGE CACHING FOR SERVER SETTINGS!
+    // All settings (system, security, notifications, maintenance) now come from database
+    // Only cache theme preference for instant UI rendering before server response
+    
+    // Apply theme immediately from localStorage (for instant UI rendering)
+    const cachedTheme = localStorage.getItem('preferences_theme');
+    const currentTheme = cachedTheme || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
     
     // Update the theme setting in state to reflect the actual current theme
     setUserPreferences(prev => prev.map(setting => 
       setting.key === 'theme' ? { ...setting, value: currentTheme } : setting
     ));
+    
+    console.log('✅ [Settings] Theme loaded from localStorage:', currentTheme);
+    console.log('✅ [Settings] All other settings will load from database');
   };
 
   const applyTheme = (themeValue = null) => {
@@ -230,10 +212,11 @@ export default function Settings() {
       ));
     };
     
-    // Store in localStorage for persistence (EXCEPT MFA - that must come from server!)
-    if (key !== 'two_factor_auth') {
-      const settingKey = `${category}_${key}`;
-      localStorage.setItem(settingKey, value);
+    // ⚠️ ONLY cache theme in localStorage (for instant UI rendering)
+    // ALL other settings are stored in database!
+    if (key === 'theme' && category === 'preferences') {
+      localStorage.setItem('preferences_theme', value);
+      console.log('✅ [Settings] Theme cached to localStorage:', value);
     }
     
     // Update local state

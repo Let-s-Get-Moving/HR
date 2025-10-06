@@ -5,39 +5,14 @@ import { requireAuth, optionalAuth } from "../session.js";
 
 const r = express.Router();
 
-// Get all system settings (with optional auth for testing)
+// Get all system settings (from database)
 r.get("/system", async (req, res) => {
   try {
     const { rows } = await q(`
-      SELECT 
-        'company_name' as key, 'C&C Logistics' as value, 'text' as type, 'Company Information' as category
-      UNION ALL
-      SELECT 'company_address', '123 Business St, Toronto, ON', 'text', 'Company Information'
-      UNION ALL
-      SELECT 'company_phone', '+1 (416) 555-0123', 'text', 'Company Information'
-      UNION ALL
-      SELECT 'company_email', 'hr@cc-logistics.com', 'email', 'Company Information'
-      UNION ALL
-      SELECT 'default_probation_months', '3', 'number', 'HR Settings'
-      UNION ALL
-      SELECT 'default_work_hours', '40', 'number', 'HR Settings'
-      UNION ALL
-      SELECT 'overtime_threshold', '40', 'number', 'HR Settings'
-      UNION ALL
-      SELECT 'session_timeout_minutes', '30', 'number', 'Security Settings'
-      UNION ALL
-      SELECT 'password_expiry_days', '90', 'number', 'Security Settings'
-      UNION ALL
-      SELECT 'backup_frequency_days', '7', 'number', 'System Settings'
-      UNION ALL
-      SELECT 'data_retention_years', '7', 'number', 'System Settings'
-      UNION ALL
-      SELECT 'email_notifications', 'true', 'boolean', 'Notification Settings'
-      UNION ALL
-      SELECT 'sms_notifications', 'false', 'boolean', 'Notification Settings'
-      UNION ALL
-      SELECT 'dashboard_refresh_interval', '300', 'number', 'UI Settings'
-      ORDER BY category, key
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'system'
+      ORDER BY key
     `);
     
     res.json(rows);
@@ -47,18 +22,31 @@ r.get("/system", async (req, res) => {
   }
 });
 
-// Update system setting (public for preferences)
+// Update system setting (saves to database)
 r.put("/system/:key", async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
   try {
-    // In a real application, you would store these in a settings table
-    // For now, we'll just return success
+    console.log(`💾 Updating setting ${key} = ${value}`);
+    
+    // Update setting in database
+    const result = await q(`
+      UPDATE application_settings 
+      SET value = $1, updated_at = NOW()
+      WHERE key = $2 AND category = 'system'
+      RETURNING *
+    `, [value, key]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Setting not found" });
+    }
+    
+    console.log(`✅ Setting ${key} updated successfully`);
+    
     res.json({ 
       message: "Setting updated successfully",
-      key,
-      value
+      setting: result.rows[0]
     });
   } catch (error) {
     console.error("Error updating system setting:", error);
@@ -66,31 +54,14 @@ r.put("/system/:key", async (req, res) => {
   }
 });
 
-// Get user preferences
+// Get user preferences (from database)
 r.get("/preferences", optionalAuth, async (req, res) => {
   try {
     const { rows } = await q(`
-      SELECT 
-        'theme' as key, 'dark' as value, 'select' as type, 'dark,light' as options, 'Appearance' as category
-      UNION ALL
-      SELECT 'language', 'en', 'select', 'en,fr,es', 'Localization'
-      UNION ALL
-      SELECT 'timezone', 'America/Toronto', 'select', 'America/Toronto,America/Vancouver,UTC', 'Localization'
-      UNION ALL
-      SELECT 'date_format', 'MM/DD/YYYY', 'select', 'MM/DD/YYYY,DD/MM/YYYY,YYYY-MM-DD', 'Localization'
-      UNION ALL
-      SELECT 'currency', 'CAD', 'select', 'CAD,USD,EUR', 'Localization'
-      UNION ALL
-      SELECT 'notifications_enabled', 'true', 'boolean', '', 'Notifications'
-      UNION ALL
-      SELECT 'email_notifications', 'true', 'boolean', '', 'Notifications'
-      UNION ALL
-      SELECT 'dashboard_layout', 'default', 'select', 'default,compact,detailed', 'Dashboard'
-      UNION ALL
-      SELECT 'auto_refresh', 'true', 'boolean', '', 'Dashboard'
-      UNION ALL
-      SELECT 'show_analytics', 'true', 'boolean', '', 'Dashboard'
-      ORDER BY category, key
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'preferences'
+      ORDER BY key
     `);
     
     res.json(rows);
@@ -100,17 +71,30 @@ r.get("/preferences", optionalAuth, async (req, res) => {
   }
 });
 
-// Update user preference (public for preferences)
+// Update user preference (saves to database)
 r.put("/preferences/:key", async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
   try {
-    // In a real application, you would store these in a user_preferences table
+    console.log(`💾 Updating preference ${key} = ${value}`);
+    
+    const result = await q(`
+      UPDATE application_settings 
+      SET value = $1, updated_at = NOW()
+      WHERE key = $2 AND category = 'preferences'
+      RETURNING *
+    `, [value, key]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Preference not found" });
+    }
+    
+    console.log(`✅ Preference ${key} updated successfully`);
+    
     res.json({ 
       message: "Preference updated successfully",
-      key,
-      value
+      setting: result.rows[0]
     });
   } catch (error) {
     console.error("Error updating user preference:", error);
@@ -118,26 +102,13 @@ r.put("/preferences/:key", async (req, res) => {
   }
 });
 
-// Get notification settings
+// Get notification settings (from database)
 r.get("/notifications", optionalAuth, async (req, res) => {
   try {
     const { rows } = await q(`
-      SELECT 
-        'new_employee_notification' as key, 'true' as value, 'boolean' as type, 'New employee onboarding' as description
-      UNION ALL
-      SELECT 'termination_notification', 'true', 'boolean', 'Employee termination'
-      UNION ALL
-      SELECT 'probation_reminder', 'true', 'boolean', 'Probation period reminders'
-      UNION ALL
-      SELECT 'contract_expiry', 'true', 'boolean', 'Contract expiration alerts'
-      UNION ALL
-      SELECT 'leave_request', 'true', 'boolean', 'Leave request notifications'
-      UNION ALL
-      SELECT 'payroll_reminder', 'true', 'boolean', 'Payroll processing reminders'
-      UNION ALL
-      SELECT 'training_expiry', 'true', 'boolean', 'Training certification expiry'
-      UNION ALL
-      SELECT 'system_maintenance', 'false', 'boolean', 'System maintenance alerts'
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'notifications'
       ORDER BY key
     `);
     
@@ -148,16 +119,30 @@ r.get("/notifications", optionalAuth, async (req, res) => {
   }
 });
 
-// Update notification setting (public for preferences)
+// Update notification setting (saves to database)
 r.put("/notifications/:key", async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
   try {
+    console.log(`💾 Updating notification ${key} = ${value}`);
+    
+    const result = await q(`
+      UPDATE application_settings 
+      SET value = $1, updated_at = NOW()
+      WHERE key = $2 AND category = 'notifications'
+      RETURNING *
+    `, [value, key]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Notification setting not found" });
+    }
+    
+    console.log(`✅ Notification ${key} updated successfully`);
+    
     res.json({ 
       message: "Notification setting updated successfully",
-      key,
-      value
+      setting: result.rows[0]
     });
   } catch (error) {
     console.error("Error updating notification setting:", error);
@@ -165,27 +150,18 @@ r.put("/notifications/:key", async (req, res) => {
   }
 });
 
-// Get security settings (requires auth to see MFA status)
+// Get security settings (from database, requires auth to see MFA status)
 r.get("/security", requireAuth, async (req, res) => {
   try {
     console.log('🔍 [SETTINGS] GET /security called');
     console.log('🔍 [SETTINGS] User ID:', req.user?.id);
     console.log('🔍 [SETTINGS] Username:', req.user?.username);
     
-    // Get static settings
+    // Get settings from database
     const { rows } = await q(`
-      SELECT 
-        'session_timeout_minutes' as key, '30' as value, 'number' as type, 'Session timeout in minutes' as description
-      UNION ALL
-      SELECT 'password_expiry_days', '90', 'number', 'Password expiry in days'
-      UNION ALL
-      SELECT 'max_login_attempts', '5', 'number', 'Maximum login attempts'
-      UNION ALL
-      SELECT 'two_factor_auth', 'false', 'boolean', 'Enable two-factor authentication'
-      UNION ALL
-      SELECT 'ip_whitelist', '', 'text', 'Allowed IP addresses (comma-separated)'
-      UNION ALL
-      SELECT 'audit_log_enabled', 'true', 'boolean', 'Enable audit logging'
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'security'
       ORDER BY key
     `);
     
@@ -267,11 +243,25 @@ r.put("/security/:key", requireAuth, async (req, res) => {
       }
     }
     
-    // Generic handler for other security settings
+    // Generic handler for other security settings - save to database
+    console.log(`💾 Updating security setting ${key} = ${value}`);
+    
+    const result = await q(`
+      UPDATE application_settings 
+      SET value = $1, updated_at = NOW()
+      WHERE key = $2 AND category = 'security'
+      RETURNING *
+    `, [value, key]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Security setting not found" });
+    }
+    
+    console.log(`✅ Security setting ${key} updated successfully`);
+    
     res.json({ 
       message: "Security setting updated successfully",
-      key,
-      value
+      setting: result.rows[0]
     });
   } catch (error) {
     console.error("Error updating security setting:", error);
@@ -279,22 +269,13 @@ r.put("/security/:key", requireAuth, async (req, res) => {
   }
 });
 
-// Get backup and maintenance settings
+// Get backup and maintenance settings (from database)
 r.get("/maintenance", optionalAuth, async (req, res) => {
   try {
     const { rows } = await q(`
-      SELECT 
-        'backup_frequency_days' as key, '7' as value, 'number' as type, 'Backup frequency in days' as description
-      UNION ALL
-      SELECT 'backup_retention_days', '30', 'number', 'Backup retention in days'
-      UNION ALL
-      SELECT 'auto_backup', 'true', 'boolean', 'Enable automatic backups'
-      UNION ALL
-      SELECT 'maintenance_window', '02:00-04:00', 'text', 'Maintenance window (24h format)'
-      UNION ALL
-      SELECT 'data_retention_years', '7', 'number', 'Data retention in years'
-      UNION ALL
-      SELECT 'log_retention_days', '90', 'number', 'Log retention in days'
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'maintenance'
       ORDER BY key
     `);
     
@@ -305,16 +286,30 @@ r.get("/maintenance", optionalAuth, async (req, res) => {
   }
 });
 
-// Update maintenance setting
+// Update maintenance setting (saves to database)
 r.put("/maintenance/:key", requireAuth, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
   try {
+    console.log(`💾 Updating maintenance setting ${key} = ${value}`);
+    
+    const result = await q(`
+      UPDATE application_settings 
+      SET value = $1, updated_at = NOW()
+      WHERE key = $2 AND category = 'maintenance'
+      RETURNING *
+    `, [value, key]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Maintenance setting not found" });
+    }
+    
+    console.log(`✅ Maintenance setting ${key} updated successfully`);
+    
     res.json({ 
       message: "Maintenance setting updated successfully",
-      key,
-      value
+      setting: result.rows[0]
     });
   } catch (error) {
     console.error("Error updating maintenance setting:", error);
