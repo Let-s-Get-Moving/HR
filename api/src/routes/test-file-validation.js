@@ -19,10 +19,20 @@ const upload = multer({
 // Test file validation endpoint (NO AUTH REQUIRED)
 r.post("/test-validation", upload.single('file'), async (req, res) => {
   try {
+    console.log('🔍 [TEST] Received request:', {
+      hasFile: !!req.file,
+      body: req.body,
+      files: req.files
+    });
+    
     if (!req.file) {
       return res.status(400).json({ 
         error: 'No file uploaded',
-        test: 'file-validation'
+        test: 'file-validation',
+        received: {
+          body: req.body,
+          files: req.files
+        }
       });
     }
 

@@ -92,7 +92,7 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
     console.log(`🔍 [COMMISSIONS] Starting file validation for: ${req.file.originalname}`);
     
     // 1. COMPREHENSIVE FILE CONTENT VALIDATION
-    const fileValidation = validateFileContent(req.file, 'excel');
+    const fileValidation = await validateFileContent(req.file, 'excel');
     if (!fileValidation.valid) {
       console.log(`❌ [COMMISSIONS] File validation failed:`, fileValidation);
       return res.status(400).json({

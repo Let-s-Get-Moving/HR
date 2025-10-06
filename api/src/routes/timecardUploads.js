@@ -141,7 +141,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
             fileType = 'excel';
         }
         
-        const fileValidation = validateFileContent(req.file, fileType);
+        const fileValidation = await validateFileContent(req.file, fileType);
         if (!fileValidation.valid) {
             console.log(`❌ [TIMECARD] File validation failed:`, fileValidation);
             return res.status(400).json({

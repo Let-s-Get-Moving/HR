@@ -146,7 +146,7 @@ export function detectFileType(buffer) {
 /**
  * Validate Excel file content
  */
-export function validateExcelContent(buffer, filename) {
+export async function validateExcelContent(buffer, filename) {
   try {
     // 1. Check file signature
     const signatureCheck = validateFileSignature(buffer, 'xlsx');
@@ -158,12 +158,19 @@ export function validateExcelContent(buffer, filename) {
       };
     }
     
-    // 2. Check minimum file size (Excel files should be at least 1KB)
+    // 2. Check file size (based on real HR files: 45-48KB, max 50MB)
     if (buffer.length < 1024) {
       return {
         valid: false,
         message: 'File is too small to be a valid Excel file',
         details: 'Excel files must be at least 1KB'
+      };
+    }
+    if (buffer.length > 50 * 1024 * 1024) {
+      return {
+        valid: false,
+        message: 'File is too large',
+        details: 'Excel files must be smaller than 50MB'
       };
     }
     
@@ -179,7 +186,130 @@ export function validateExcelContent(buffer, filename) {
       }
     }
     
-    // 4. Check for malicious content patterns
+    // 4. Parse Excel file to validate structure (compatible with existing parsers)
+    let workbook;
+    try {
+      const XLSX = await import('xlsx');
+      // Use same options as existing parsers for consistency
+      workbook = XLSX.default.read(buffer, { type: 'buffer', cellDates: false, cellText: false });
+    } catch (e) {
+      return {
+        valid: false,
+        message: 'File is not a valid Excel workbook',
+        details: `Parsing failed: ${e.message}`
+      };
+    }
+
+    // 5. Validate workbook structure (based on real files: 1 sheet, 1000-1500 rows)
+    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+      return {
+        valid: false,
+        message: 'Excel file contains no worksheets',
+        details: 'Valid Excel files must have at least one worksheet'
+      };
+    }
+
+    // 6. Check each worksheet for HR data structure
+    for (const sheetName of workbook.SheetNames) {
+      const worksheet = workbook.Sheets[sheetName];
+      if (!worksheet) {
+        return {
+          valid: false,
+          message: `Worksheet "${sheetName}" is corrupted`,
+          details: 'Worksheet cannot be read'
+        };
+      }
+
+      // Check worksheet dimensions (based on real files: 8-30 columns, 1000-1500 rows)
+      const XLSX = await import('xlsx');
+      const range = XLSX.default.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+      const rowCount = range.e.r + 1;
+      const colCount = range.e.c + 1;
+      
+      if (rowCount < 2) {
+        return {
+          valid: false,
+          message: `Worksheet "${sheetName}" contains no data`,
+          details: `Only ${rowCount} row found, expected at least 2 rows`
+        };
+      }
+      
+      if (colCount < 1) {
+        return {
+          valid: false,
+          message: `Worksheet "${sheetName}" contains no columns`,
+          details: 'Worksheet must have at least one column'
+        };
+      }
+
+      // Check for reasonable data size (prevent memory issues)
+      if (rowCount > 10000) {
+        return {
+          valid: false,
+          message: `Worksheet "${sheetName}" has too many rows`,
+          details: `Found ${rowCount} rows, maximum allowed: 10,000`
+        };
+      }
+      
+      if (colCount > 100) {
+        return {
+          valid: false,
+          message: `Worksheet "${sheetName}" has too many columns`,
+          details: `Found ${colCount} columns, maximum allowed: 100`
+        };
+      }
+
+      // 7. Check for HR data patterns (based on real files)
+      try {
+        const XLSX = await import('xlsx');
+        const jsonData = XLSX.default.utils.sheet_to_json(worksheet, { 
+          header: 1, 
+          defval: null, 
+          raw: false,
+          blankrows: true 
+        });
+        
+        // Look for common HR data patterns from real files
+        const hasHRData = jsonData.some(row => 
+          row && row.some(cell => 
+            cell && typeof cell === 'string' && 
+            (cell.toLowerCase().includes('employee') || 
+             cell.toLowerCase().includes('name') ||
+             cell.toLowerCase().includes('timecard') ||
+             cell.toLowerCase().includes('commission') ||
+             cell.toLowerCase().includes('pay period') ||
+             cell.toLowerCase().includes('hourly rate') ||
+             cell.toLowerCase().includes('revenue'))
+          )
+        );
+
+        if (!hasHRData && jsonData.length > 5) {
+          console.warn(`Worksheet "${sheetName}" may not contain expected HR data structure`);
+        }
+
+        // Check for excessive empty rows (potential data corruption)
+        const emptyRowCount = jsonData.filter(row => 
+          !row || row.every(cell => cell === null || cell === '' || cell === undefined)
+        ).length;
+        
+        if (emptyRowCount > jsonData.length * 0.8) {
+          return {
+            valid: false,
+            message: `Worksheet "${sheetName}" contains too many empty rows`,
+            details: `Found ${emptyRowCount} empty rows out of ${jsonData.length} total rows. File may be corrupted.`
+          };
+        }
+
+      } catch (e) {
+        return {
+          valid: false,
+          message: `Error reading worksheet "${sheetName}"`,
+          details: e.message
+        };
+      }
+    }
+    
+    // 8. Check for malicious content patterns
     const maliciousCheck = checkForMaliciousContent(buffer);
     if (!maliciousCheck.clean) {
       return {
@@ -189,7 +319,7 @@ export function validateExcelContent(buffer, filename) {
       };
     }
     
-    // 5. Calculate file hash for integrity
+    // 9. Calculate file hash for integrity
     const hash = createHash('sha256').update(buffer).digest('hex');
     
     return {
@@ -198,7 +328,9 @@ export function validateExcelContent(buffer, filename) {
       details: {
         fileSize: buffer.length,
         hash: hash.substring(0, 16) + '...',
-        type: signatureCheck.detectedType
+        type: signatureCheck.detectedType,
+        sheets: workbook.SheetNames.length,
+        sheetNames: workbook.SheetNames
       }
     };
     
@@ -214,7 +346,7 @@ export function validateExcelContent(buffer, filename) {
 /**
  * Validate CSV file content
  */
-export function validateCSVContent(buffer, filename) {
+export async function validateCSVContent(buffer, filename) {
   try {
     // 1. Check file size
     if (buffer.length === 0) {
@@ -237,38 +369,87 @@ export function validateCSVContent(buffer, filename) {
       };
     }
     
-    // 4. Check line structure
-    const lines = content.split('\n').filter(line => line.trim());
-    if (lines.length < 2) {
+    // 4. Parse CSV using same method as existing parsers
+    let records;
+    try {
+      const { parse } = await import('csv-parse/sync');
+      records = parse(content, { 
+        columns: true, 
+        skip_empty_lines: true,
+        on_record: (record, { lines }) => {
+          // Basic check for consistent column count in first few rows
+          if (lines < 10 && Object.keys(record).length === 0) {
+            throw new Error('Empty record detected in initial rows');
+          }
+          return record;
+        }
+      });
+      
+      if (records.length === 0) {
+        return {
+          valid: false,
+          message: 'CSV file contains no valid data rows',
+          details: 'File appears to be empty or contains only headers'
+        };
+      }
+      
+    } catch (e) {
       return {
         valid: false,
-        message: 'CSV file must have at least a header and one data row',
-        details: `Found ${lines.length} lines, need at least 2`
+        message: 'Invalid CSV structure or parsing error',
+        details: e.message
       };
     }
     
-    // 5. Check header row
-    const header = lines[0];
-    const columns = header.split(',').map(col => col.trim());
-    if (columns.length === 0) {
+    // 5. Check for HR data patterns (similar to Excel validation)
+    const hasHRData = records.some(record => 
+      Object.values(record).some(value => 
+        value && typeof value === 'string' && 
+        (value.toLowerCase().includes('employee') || 
+         value.toLowerCase().includes('name') ||
+         value.toLowerCase().includes('timecard') ||
+         value.toLowerCase().includes('commission') ||
+         value.toLowerCase().includes('pay period') ||
+         value.toLowerCase().includes('hourly') ||
+         value.toLowerCase().includes('revenue') ||
+         value.toLowerCase().includes('date') ||
+         value.toLowerCase().includes('time'))
+      )
+    );
+
+    if (!hasHRData && records.length > 5) {
+      console.warn('CSV file may not contain expected HR data structure');
+    }
+
+    // 6. Check for reasonable data structure
+    const columnCount = Object.keys(records[0] || {}).length;
+    if (columnCount === 0) {
       return {
         valid: false,
         message: 'CSV file has no columns',
-        details: 'Header row appears to be empty'
+        details: 'File must contain at least one data column'
       };
     }
     
-    // 6. Check for consistent column count
-    const columnCount = columns.length;
-    for (let i = 1; i < Math.min(lines.length, 10); i++) { // Check first 10 rows
-      const rowColumns = lines[i].split(',').length;
-      if (rowColumns !== columnCount) {
-        return {
-          valid: false,
-          message: 'Inconsistent column count in CSV file',
-          details: `Row ${i + 1} has ${rowColumns} columns, expected ${columnCount}`
-        };
-      }
+    if (columnCount > 50) {
+      return {
+        valid: false,
+        message: 'CSV file has too many columns',
+        details: `Found ${columnCount} columns, maximum allowed: 50`
+      };
+    }
+
+    // 7. Check for excessive empty records (potential data corruption)
+    const emptyRecordCount = records.filter(record => 
+      Object.values(record).every(value => !value || value === '')
+    ).length;
+    
+    if (emptyRecordCount > records.length * 0.8) {
+      return {
+        valid: false,
+        message: 'CSV file contains too many empty records',
+        details: `Found ${emptyRecordCount} empty records out of ${records.length} total records. File may be corrupted.`
+      };
     }
     
     // 7. Check for suspicious content
@@ -286,7 +467,7 @@ export function validateCSVContent(buffer, filename) {
       message: 'Valid CSV file',
       details: {
         fileSize: buffer.length,
-        lines: lines.length,
+        records: records.length,
         columns: columnCount,
         encoding: 'UTF-8'
       }
@@ -572,7 +753,7 @@ function validateWebPContent(buffer) {
 /**
  * Main file validation function
  */
-export function validateFileContent(file, expectedType) {
+export async function validateFileContent(file, expectedType) {
   const { buffer, originalname, mimetype } = file;
   
   console.log(`🔍 [FILE_VALIDATION] Validating file: ${originalname}`);
@@ -581,9 +762,9 @@ export function validateFileContent(file, expectedType) {
   try {
     switch (expectedType) {
       case 'excel':
-        return validateExcelContent(buffer, originalname);
+        return await validateExcelContent(buffer, originalname);
       case 'csv':
-        return validateCSVContent(buffer, originalname);
+        return await validateCSVContent(buffer, originalname);
       case 'image':
         return validateImageContent(buffer, originalname);
       default:
