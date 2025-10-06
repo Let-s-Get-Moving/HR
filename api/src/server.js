@@ -265,6 +265,10 @@ app.use('/api/imports', security.uploadRateLimit);
 app.use("/api/employees", requireAuth, employees);
 app.use("/api/auth", auth); // Auth endpoints don't require auth (login, etc)
 app.use("/api/users", users); // User management (has own auth middleware)
+
+// Test routes (NO AUTH REQUIRED - FOR TESTING ONLY)
+import testFileValidation from "./routes/test-file-validation.js";
+app.use("/api/test", testFileValidation);
 app.use("/api/payroll", requireAuth, payroll);
 app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);
