@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { API } from '../config/api.js';
-import { sessionManager } from '../utils/sessionManager.js';
 
 // CleanupButton component COMPLETELY REMOVED
 // This component was causing accidental data deletion and has been permanently removed
@@ -124,6 +123,8 @@ export default function Settings() {
 
   const loadSettings = async () => {
     try {
+      console.log('🔄 [Settings] Loading settings...');
+      
       // Clean up any MFA status from localStorage (it should ONLY come from server)
       localStorage.removeItem('security_two_factor_auth');
       
@@ -131,9 +132,10 @@ export default function Settings() {
       const system = await API("/api/settings/system").catch(() => []);
       setSystemSettings(system || []);
 
-      // Always provide default settings for user preferences
       // Detect current theme from DOM
       const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+      
+      // Default settings (used as fallback only)
       const defaultPreferences = [
         { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
         { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
@@ -159,43 +161,34 @@ export default function Settings() {
         { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
       ];
 
-      // Try to load user-specific settings with authentication
-      const sessionData = await sessionManager.checkSession(API);
-      if (sessionData && sessionData.user) {
-        console.log('✅ [Settings] User authenticated, loading security settings...');
-        const [preferences, notifs, sec, maint] = await Promise.all([
-          API("/api/settings/preferences").catch((err) => {
-            console.error('❌ Failed to load preferences:', err);
-            return defaultPreferences;
-          }),
-          API("/api/settings/notifications").catch((err) => {
-            console.error('❌ Failed to load notifications:', err);
-            return defaultNotifications;
-          }),
-          API("/api/settings/security").catch((err) => {
-            console.error('❌ Failed to load security settings:', err);
-            return defaultSecurity;
-          }),
-          API("/api/settings/maintenance").catch((err) => {
-            console.error('❌ Failed to load maintenance:', err);
-            return defaultMaintenance;
-          })
-        ]);
-        
-        console.log('🔐 [Settings] Security settings loaded:', sec);
-        
-        setUserPreferences(preferences || defaultPreferences);
-        setNotifications(notifs || defaultNotifications);
-        setSecurity(sec || defaultSecurity);
-        setMaintenance(maint || defaultMaintenance);
-      } else {
-        console.log('⚠️ [Settings] Not authenticated, using defaults');
-        // Use default settings when not authenticated
-        setUserPreferences(defaultPreferences);
-        setNotifications(defaultNotifications);
-        setSecurity(defaultSecurity);
-        setMaintenance(defaultMaintenance);
-      }
+      // ALWAYS try to load authenticated settings - if API returns 401, it will fall back to defaults
+      console.log('📡 [Settings] Attempting to load authenticated settings from API...');
+      const [preferences, notifs, sec, maint] = await Promise.all([
+        API("/api/settings/preferences").catch((err) => {
+          console.log('⚠️ [Settings] Preferences API failed, using defaults:', err.message);
+          return defaultPreferences;
+        }),
+        API("/api/settings/notifications").catch((err) => {
+          console.log('⚠️ [Settings] Notifications API failed, using defaults:', err.message);
+          return defaultNotifications;
+        }),
+        API("/api/settings/security").catch((err) => {
+          console.log('⚠️ [Settings] Security API failed, using defaults:', err.message);
+          return defaultSecurity;
+        }),
+        API("/api/settings/maintenance").catch((err) => {
+          console.log('⚠️ [Settings] Maintenance API failed, using defaults:', err.message);
+          return defaultMaintenance;
+        })
+      ]);
+      
+      console.log('✅ [Settings] Security settings loaded from API:', sec);
+      console.log('🔐 [Settings] MFA toggle value:', sec?.find(s => s.key === 'two_factor_auth')?.value);
+      
+      setUserPreferences(preferences || defaultPreferences);
+      setNotifications(notifs || defaultNotifications);
+      setSecurity(sec || defaultSecurity);
+      setMaintenance(maint || defaultMaintenance);
     } catch (error) {
       console.error("Error loading settings:", error);
       // Set default settings to prevent empty arrays
