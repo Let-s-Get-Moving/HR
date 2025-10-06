@@ -10,24 +10,26 @@ if (import.meta.env.DEV) {
 export const API = (path, options = {}) => {
   const url = `${API_BASE_URL}${path}`;
   
-  // Debug logging (only in development)
-  if (import.meta.env.DEV) {
-    console.log('Making API request to:', url);
-  }
-  
   // Get session ID from localStorage
   const sessionId = localStorage.getItem('sessionId');
-  if (import.meta.env.DEV) {
-    console.log('Session ID from localStorage:', sessionId);
-  }
+  
+  // ALWAYS log for debugging 401 errors
+  console.log('🔍 [API] Making request to:', url);
+  console.log('🔍 [API] Method:', options.method || 'GET');
+  console.log('🔍 [API] Session ID from localStorage:', sessionId ? sessionId.substring(0, 15) + '...' : 'NONE');
+  console.log('🔍 [API] Options headers:', options.headers);
+  
+  const finalHeaders = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+    ...(sessionId && { 'x-session-id': sessionId }),
+  };
+  
+  console.log('🔍 [API] Final headers being sent:', finalHeaders);
   
   return fetch(url, {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers, // Spread user headers first
-      ...(sessionId && { 'x-session-id': sessionId }), // Then add session ID (won't be overwritten)
-    },
+    headers: finalHeaders,
     ...options,
   }).then(async (response) => {
     if (import.meta.env.DEV) {
