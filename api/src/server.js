@@ -271,7 +271,7 @@ app.use("/api/leave", requireAuth, leave);
 app.use("/api/performance", requireAuth, performance);
 app.use("/api/analytics", requireAuth, analytics);
 app.use("/api/metrics", requireAuth, metrics);
-app.use("/api/settings", requireAuth, settings);
+app.use("/api/settings", settings); // Auth handled per-route
 app.use("/api/termination", requireAuth, termination);
 app.use("/api/bonuses", requireAuth, bonuses);
 app.use("/api/commissions", requireAuth, commissions);

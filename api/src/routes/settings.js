@@ -214,6 +214,8 @@ r.put("/security/:key", requireAuth, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
+  console.log(`Security setting update request: ${key} = ${value}, User ID: ${req.user?.id}`);
+  
   try {
     // Special handling for two_factor_auth
     if (key === 'two_factor_auth') {
