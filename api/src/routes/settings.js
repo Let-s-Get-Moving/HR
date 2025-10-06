@@ -214,7 +214,14 @@ r.put("/security/:key", requireAuth, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
   
-  console.log(`Security setting update request: ${key} = ${value}, User ID: ${req.user?.id}`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('🔧 [SETTINGS] PUT /security/:key called');
+  console.log(`🔧 [SETTINGS] Key: ${key}`);
+  console.log(`🔧 [SETTINGS] Value: ${value}`);
+  console.log(`🔧 [SETTINGS] User ID: ${req.user?.id}`);
+  console.log(`🔧 [SETTINGS] Username: ${req.user?.username}`);
+  console.log(`🔧 [SETTINGS] Session ID: ${req.session?.id?.substring(0, 15)}...`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   
   try {
     // Special handling for two_factor_auth

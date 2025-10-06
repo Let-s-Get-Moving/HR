@@ -85,16 +85,30 @@ export class SessionManager {
 
 // Middleware for session authentication
 export const requireAuth = async (req, res, next) => {
+  console.log('🔍 [AUTH] requireAuth middleware triggered');
+  console.log('🔍 [AUTH] Request path:', req.path);
+  console.log('🔍 [AUTH] Request method:', req.method);
+  console.log('🔍 [AUTH] Headers:', JSON.stringify({
+    authorization: req.headers.authorization ? 'present' : 'missing',
+    'x-session-id': req.headers['x-session-id'] ? req.headers['x-session-id'].substring(0, 10) + '...' : 'missing',
+    'X-Session-ID': req.headers['X-Session-ID'] ? req.headers['X-Session-ID'].substring(0, 10) + '...' : 'missing',
+    cookie: req.headers.cookie ? 'present' : 'missing'
+  }, null, 2));
+  
   const sessionId = req.headers.authorization?.replace('Bearer ', '') || 
                    req.cookies?.sessionId ||
                    req.headers['x-session-id'] ||
                    req.headers['X-Session-ID'];
   
+  console.log('🔍 [AUTH] Extracted session ID:', sessionId ? sessionId.substring(0, 15) + '...' : 'NONE');
+  
   if (!sessionId) {
+    console.log('❌ [AUTH] No session ID found - returning 401');
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   try {
+    console.log('🔍 [AUTH] Checking database for session...');
     // First check database for persistent sessions
     const sessionResult = await q(`
       SELECT 
@@ -111,8 +125,14 @@ export const requireAuth = async (req, res, next) => {
       WHERE s.id = $1 AND s.expires_at > NOW()
     `, [sessionId]);
     
+    console.log('🔍 [AUTH] Database query result:', sessionResult.rows.length, 'sessions found');
+    
     if (sessionResult.rows.length > 0) {
       const dbSession = sessionResult.rows[0];
+      console.log('✅ [AUTH] Session found in database');
+      console.log('🔍 [AUTH] User ID:', dbSession.user_id);
+      console.log('🔍 [AUTH] Username:', dbSession.username);
+      console.log('🔍 [AUTH] Role:', dbSession.role);
       
       // Update last activity
       await q(`
@@ -133,30 +153,37 @@ export const requireAuth = async (req, res, next) => {
         email: dbSession.email,
         role: dbSession.role
       };
+      console.log('✅ [AUTH] Session validated, calling next()');
       return next();
     }
+    
+    console.log('⚠️ [AUTH] No session found in database, checking memory...');
     
     // Fall back to memory session
     const memorySession = SessionManager.getSession(sessionId);
     if (memorySession) {
+      console.log('✅ [AUTH] Session found in memory');
       req.session = memorySession;
       req.user = { id: memorySession.userId, username: memorySession.username };
       return next();
     }
     
     // No valid session found
+    console.log('❌ [AUTH] No valid session found - returning 401');
     return res.status(401).json({ error: 'Invalid or expired session' });
   } catch (error) {
-    console.error('Session validation error:', error);
+    console.error('❌ [AUTH] Session validation error:', error);
     
     // Try memory session as fallback
     const memorySession = SessionManager.getSession(sessionId);
     if (memorySession) {
+      console.log('✅ [AUTH] Session found in memory (fallback)');
       req.session = memorySession;
       req.user = { id: memorySession.userId, username: memorySession.username };
       return next();
     }
     
+    console.log('❌ [AUTH] Session validation failed - returning 401');
     return res.status(401).json({ error: 'Session validation failed' });
   }
 };
