@@ -288,11 +288,12 @@ export async function validateExcelContent(buffer, filename) {
         }
 
         // Check for excessive empty rows (potential data corruption)
+        // Allow up to 90% empty rows for commission files which often have many empty cells
         const emptyRowCount = jsonData.filter(row => 
           !row || row.every(cell => cell === null || cell === '' || cell === undefined)
         ).length;
         
-        if (emptyRowCount > jsonData.length * 0.8) {
+        if (emptyRowCount > jsonData.length * 0.95) {
           return {
             valid: false,
             message: `Worksheet "${sheetName}" contains too many empty rows`,
