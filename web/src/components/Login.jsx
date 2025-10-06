@@ -7,6 +7,12 @@ export default function Login({ onLogin }) {
   const [credentials, setCredentials] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // MFA State
+  const [showMFAInput, setShowMFAInput] = useState(false);
+  const [mfaCode, setMfaCode] = useState("");
+  const [tempToken, setTempToken] = useState("");
+  const [mfaError, setMfaError] = useState("");
 
   useEffect(() => {
     // Check for existing session on component mount
@@ -24,6 +30,7 @@ export default function Login({ onLogin }) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setMfaError("");
 
     try {
       const response = await API("/api/auth/login", {
@@ -33,6 +40,16 @@ export default function Login({ onLogin }) {
         credentials: "include" // Include cookies
       });
 
+      // Check if MFA is required
+      if (response.requiresMFA) {
+        console.log('🔐 MFA required for login');
+        setTempToken(response.tempToken);
+        setShowMFAInput(true);
+        setLoading(false);
+        return;
+      }
+
+      // Normal login (no MFA or trusted device)
       if (response.user) {
         // Store session info in localStorage for persistence
         localStorage.setItem("sessionId", response.sessionId);
@@ -47,7 +64,54 @@ export default function Login({ onLogin }) {
       }
     } catch (error) {
       console.error("Login error:", error);
-      setError("Invalid username or password");
+      setError(error.message || "Invalid username or password");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMFAVerify = async (e) => {
+    e.preventDefault();
+    
+    if (mfaCode.length !== 6) {
+      setMfaError("Please enter a 6-digit code");
+      return;
+    }
+
+    setLoading(true);
+    setMfaError("");
+
+    try {
+      const response = await API("/api/auth/verify-mfa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tempToken: tempToken,
+          code: mfaCode
+        }),
+        credentials: "include"
+      });
+
+      if (response.user) {
+        // Store session info
+        localStorage.setItem("sessionId", response.sessionId);
+        localStorage.setItem("user", JSON.stringify(response.user));
+        
+        // Set up session extension timer
+        setupSessionExtension();
+        
+        // Reset MFA state
+        setShowMFAInput(false);
+        setMfaCode("");
+        setTempToken("");
+        
+        onLogin(response.user);
+      } else {
+        setMfaError("MFA verification failed");
+      }
+    } catch (error) {
+      console.error("MFA verification error:", error);
+      setMfaError(error.message || "Invalid code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -100,7 +164,6 @@ export default function Login({ onLogin }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-
         className="w-full max-w-md rounded-2xl"
       >
         <div className="card-lg backdrop-blur-md border border-primary/20 shadow-2xl">
@@ -110,60 +173,126 @@ export default function Login({ onLogin }) {
             <p className="text-sm text-tertiary mt-2">Developed by Udi Shkolnik</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="form-group">
-              <label className="block text-sm font-medium mb-2 text-primary">Username</label>
-              <input
-                type="text"
-                value={credentials.username}
-                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                className="w-full px-3 py-2 input-md"
-                placeholder="Enter username"
-                required
-              />
-            </div>
+          {/* MFA Input Screen */}
+          {showMFAInput ? (
+            <form onSubmit={handleMFAVerify} className="space-y-6">
+              <div className="text-center mb-6">
+                <div className="text-5xl mb-4">🔐</div>
+                <h2 className="text-xl font-bold mb-2">Two-Factor Authentication</h2>
+                <p className="text-sm text-secondary">
+                  Enter the 6-digit code from your authenticator app
+                </p>
+              </div>
 
-            <div className="form-group">
-              <label className="block text-sm font-medium mb-2 text-primary">Password</label>
-              <input
-                type="password"
-                value={credentials.password}
-                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                className="w-full px-3 py-2 input-md"
-                placeholder="Enter password"
-                required
-              />
-            </div>
+              <div className="form-group">
+                <input
+                  type="text"
+                  maxLength="6"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+                  className="w-full px-4 py-4 text-center text-3xl tracking-widest font-mono input-md"
+                  placeholder="000000"
+                  required
+                  autoFocus
+                />
+              </div>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-error text-sm text-center"
+              {mfaError && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-error text-sm text-center"
+                >
+                  {mfaError}
+                </motion.div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || mfaCode.length !== 6}
+                className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
               >
-                {error}
-              </motion.div>
-            )}
+                {loading ? "Verifying..." : "Verify Code"}
+              </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
-            >
-              {loading ? "Signing in..." : "Sign In"}
-            </button>
-          </form>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMFAInput(false);
+                  setMfaCode("");
+                  setTempToken("");
+                  setMfaError("");
+                }}
+                className="w-full text-secondary hover:text-primary text-sm"
+              >
+                ← Back to login
+              </button>
 
-          <div className="mt-6 text-center text-sm text-secondary">
-            <p>Demo Credentials:</p>
-            <p>Username: <span className="text-primary font-medium">Avneet</span></p>
-            <p>Password: <span className="text-primary font-medium">password123</span></p>
-          </div>
+              <div className="mt-4 text-center text-xs text-tertiary">
+                <p>💡 Tip: The code changes every 30 seconds</p>
+              </div>
+            </form>
+          ) : (
+            /* Regular Login Form */
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-2 text-primary">Username</label>
+                <input
+                  type="text"
+                  value={credentials.username}
+                  onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                  className="w-full px-3 py-2 input-md"
+                  placeholder="Enter username"
+                  required
+                />
+              </div>
 
-          <div className="mt-4 text-center text-xs text-tertiary">
-            <p>Session timeout: 30 minutes</p>
-            <p>Auto-logout on inactivity</p>
-          </div>
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-2 text-primary">Password</label>
+                <input
+                  type="password"
+                  value={credentials.password}
+                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  className="w-full px-3 py-2 input-md"
+                  placeholder="Enter password"
+                  required
+                />
+              </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-error text-sm text-center"
+                >
+                  {error}
+                </motion.div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+              >
+                {loading ? "Signing in..." : "Sign In"}
+              </button>
+            </form>
+          )}
+
+          {!showMFAInput && (
+            <>
+              <div className="mt-6 text-center text-sm text-secondary">
+                <p>Demo Credentials:</p>
+                <p>Username: <span className="text-primary font-medium">Avneet</span></p>
+                <p>Password: <span className="text-primary font-medium">password123</span></p>
+              </div>
+
+              <div className="mt-4 text-center text-xs text-tertiary">
+                <p>Session timeout: 30 minutes</p>
+                <p>Auto-logout on inactivity</p>
+              </div>
+            </>
+          )}
         </div>
       </motion.div>
     </div>

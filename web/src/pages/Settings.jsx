@@ -322,13 +322,18 @@ export default function Settings() {
         setMfaVerificationCode('');
         setMfaData(null);
         
-        // Update the security settings
+        // Update the security settings locally (don't reload to avoid race condition)
         setSecurity(prev => prev.map(setting => 
           setting.key === 'two_factor_auth' ? { ...setting, value: 'true' } : setting
         ));
         
-        alert('✅ Two-Factor Authentication enabled successfully!');
-        loadSettings(); // Reload to get updated status
+        // Also update localStorage to persist the change
+        localStorage.setItem('security_two_factor_auth', 'true');
+        
+        alert('✅ Two-Factor Authentication enabled successfully! Your account is now protected.');
+        
+        // Don't call loadSettings() here - it causes a race condition
+        // The local state is already updated correctly
       }
     } catch (error) {
       console.error('MFA verification failed:', error);

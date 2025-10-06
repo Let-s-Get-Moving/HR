@@ -32,10 +32,10 @@ export const createRateLimit = (windowMs = 15 * 60 * 1000, max = 100, message = 
   });
 };
 
-// Strict rate limiting for auth endpoints
+// Rate limiting for auth endpoints (increased for MFA workflow)
 export const authRateLimit = createRateLimit(
   15 * 60 * 1000, // 15 minutes
-  5, // 5 attempts
+  30, // 30 attempts (allows multiple MFA tries without lockout)
   'Too many authentication attempts. Please try again later.'
 );
 
