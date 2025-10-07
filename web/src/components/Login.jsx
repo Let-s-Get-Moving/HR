@@ -371,7 +371,7 @@ export default function Login({ onLogin }) {
                   className="mt-1 w-4 h-4 rounded border-neutral-600 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-neutral-900"
                 />
                 <label htmlFor="trustDevice" className="flex-1 text-sm">
-                  <div className="font-medium text-primary">Trust this device for 30 days</div>
+                  <div className="font-medium text-primary">Trust this device for 7 days</div>
                   <div className="text-xs text-tertiary mt-1">
                     ⚠️ Only enable on devices you personally own and control. Never use on public or shared computers.
                   </div>

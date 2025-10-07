@@ -11,6 +11,7 @@ import { AccountLockout, checkAccountLockout } from "../middleware/account-locko
 import { CSRFProtection } from "../middleware/csrf.js";
 import { MFAService } from "../services/mfa.js";
 import { UserManagementService } from "../services/user-management.js";
+import { TrustedDeviceService } from "../services/trusted-devices.js";
 import { requireAuth } from "../session.js";
 
 const r = express.Router();
@@ -137,10 +138,41 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     // Check if MFA is enabled
     const mfaEnabled = await MFAService.isMFAEnabled(user.id);
     
-    // Check if device is trusted
-    const deviceTrusted = deviceFingerprint 
-      ? await MFAService.isDeviceTrusted(user.id, deviceFingerprint)
-      : false;
+    // Check if device is trusted (via secure cookie)
+    const trustedDeviceCookie = req.cookies[TrustedDeviceService.CONFIG.COOKIE_NAME];
+    const userAgent = req.headers['user-agent'];
+    let deviceTrusted = false;
+    let trustedDeviceId = null;
+    
+    if (mfaEnabled && trustedDeviceCookie) {
+      console.log('🔍 [TrustedDevice] Checking trusted device cookie');
+      const verifyResult = await TrustedDeviceService.verifyTrustedDevice(
+        trustedDeviceCookie,
+        ipAddress,
+        userAgent
+      );
+      
+      if (verifyResult && verifyResult.userId === user.id) {
+        deviceTrusted = true;
+        trustedDeviceId = verifyResult.deviceId;
+        
+        // If token was rotated, set new cookie
+        if (verifyResult.newSecret) {
+          const expiresAt = new Date(Date.now() + TrustedDeviceService.CONFIG.DEFAULT_DURATION_DAYS * 24 * 60 * 60 * 1000);
+          res.cookie(TrustedDeviceService.CONFIG.COOKIE_NAME, verifyResult.newSecret, {
+            ...TrustedDeviceService.CONFIG.COOKIE_OPTIONS,
+            expires: expiresAt
+          });
+          console.log('🔄 [TrustedDevice] Rotated device token');
+        }
+        
+        console.log(`✅ [TrustedDevice] Device ${trustedDeviceId} trusted, bypassing MFA`);
+      } else {
+        console.log('❌ [TrustedDevice] Cookie invalid or expired');
+        // Clear invalid cookie
+        res.clearCookie(TrustedDeviceService.CONFIG.COOKIE_NAME);
+      }
+    }
     
     if (mfaEnabled && !deviceTrusted) {
       // MFA required - don't create full session yet
@@ -282,8 +314,31 @@ r.post("/verify-mfa", async (req, res) => {
       VALUES ($1, $2, $3)
     `, [sessionId, userId, expiresAt]);
     
-    // Trust device if requested
-    if (trustDevice && deviceFingerprint) {
+    // Create trusted device if requested
+    if (trustDevice) {
+      try {
+        const deviceResult = await TrustedDeviceService.createTrustedDevice(
+          userId,
+          ipAddress,
+          userAgent,
+          TrustedDeviceService.CONFIG.DEFAULT_DURATION_DAYS
+        );
+        
+        // Set secure HttpOnly cookie with device secret
+        res.cookie(TrustedDeviceService.CONFIG.COOKIE_NAME, deviceResult.deviceSecret, {
+          ...TrustedDeviceService.CONFIG.COOKIE_OPTIONS,
+          expires: deviceResult.expiresAt
+        });
+        
+        console.log(`✅ [TrustedDevice] Created trusted device ${deviceResult.deviceId} for user ${userId}`);
+      } catch (error) {
+        console.error('❌ [TrustedDevice] Failed to create trusted device:', error);
+        // Don't fail login if device trust fails
+      }
+    }
+    
+    // Old device trust code (deprecated, kept for backwards compatibility)
+    if (false && trustDevice && deviceFingerprint) {
       await MFAService.trustDevice(
         userId, 
         deviceFingerprint, 

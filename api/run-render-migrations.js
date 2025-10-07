@@ -54,9 +54,6 @@ async function runRenderMigrations() {
 
       -- Notification settings
       ('email_notifications', 'true', 'boolean', 'Enable email notifications', 'notifications'),
-      ('new_employee_notification', 'true', 'boolean', 'Notify when new employee is added', 'notifications'),
-      ('payroll_notification', 'true', 'boolean', 'Notify when payroll is processed', 'notifications'),
-      ('leave_request_notification', 'true', 'boolean', 'Notify when leave is requested', 'notifications'),
 
       -- Maintenance settings
       ('backup_frequency_days', '7', 'number', 'Backup frequency in days', 'maintenance'),

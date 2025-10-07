@@ -189,8 +189,10 @@ export class MFAService {
       WHERE user_id = $1
     `, [userId]);
 
-    // Clear trusted devices
-    await q(`DELETE FROM trusted_devices WHERE user_id = $1`, [userId]);
+    // Revoke all trusted devices when MFA is disabled
+    const { TrustedDeviceService } = await import('./trusted-devices.js');
+    await TrustedDeviceService.revokeAllDevices(userId, 'system:mfa_disable');
+    console.log(`🗑️ [MFA] Revoked all trusted devices for user ${userId} (MFA disabled)`);
   }
 
   /**
