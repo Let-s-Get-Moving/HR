@@ -104,7 +104,49 @@ r.post("/run-migrations", async (req, res) => {
       console.log('✅ mfa_attempts table already exists');
     }
     
-    // 4. Test all tables
+    // 4. Create trusted_devices table (check if it exists first)
+    console.log('📱 Creating trusted_devices table...');
+    
+    const trustedDevicesExists = await q(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'trusted_devices'
+      )
+    `);
+    
+    if (!trustedDevicesExists.rows[0].exists) {
+      const trustedDevicesSQL = `
+        CREATE TABLE trusted_devices (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          token_hash TEXT NOT NULL UNIQUE,
+          device_label TEXT,
+          ua_family TEXT,
+          os_family TEXT,
+          ip_created INET,
+          ip_last_used INET,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+          last_used_at TIMESTAMPTZ,
+          expires_at TIMESTAMPTZ NOT NULL,
+          rotated_at TIMESTAMPTZ,
+          revoked_at TIMESTAMPTZ,
+          revoked_by TEXT
+        )
+      `;
+      
+      await q(trustedDevicesSQL);
+      console.log('✅ trusted_devices table created');
+      
+      // Create indexes
+      await q('CREATE INDEX IF NOT EXISTS idx_trusted_devices_user_id ON trusted_devices (user_id)');
+      await q('CREATE INDEX IF NOT EXISTS idx_trusted_devices_user_id_expires_at ON trusted_devices (user_id, expires_at)');
+      await q('CREATE INDEX IF NOT EXISTS idx_trusted_devices_token_hash ON trusted_devices (token_hash)');
+      console.log('✅ trusted_devices indexes created');
+    } else {
+      console.log('✅ trusted_devices table already exists');
+    }
+    
+    // 5. Test all tables
     console.log('🧪 Testing all tables...');
     
     const settingsTest = await q(`
@@ -126,13 +168,20 @@ r.post("/run-migrations", async (req, res) => {
     `);
     console.log(`📊 MFA attempts: ${attemptsTest.rows[0].count}`);
     
+    const trustedDevicesTest = await q(`
+      SELECT COUNT(*) as count 
+      FROM trusted_devices
+    `);
+    console.log(`📱 Trusted devices: ${trustedDevicesTest.rows[0].count}`);
+    
     res.json({
       success: true,
       message: 'All Render migrations completed successfully!',
       results: {
         systemSettings: settingsTest.rows[0].count,
         mfaRecords: mfaTest.rows[0].count,
-        mfaAttempts: attemptsTest.rows[0].count
+        mfaAttempts: attemptsTest.rows[0].count,
+        trustedDevices: trustedDevicesTest.rows[0].count
       }
     });
     
