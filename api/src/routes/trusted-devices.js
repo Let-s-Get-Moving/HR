@@ -6,6 +6,7 @@
 import express from 'express';
 import { requireAuth } from '../session.js';
 import { TrustedDeviceService } from '../services/trusted-devices.js';
+import { cleanupExpiredDevices } from '../jobs/cleanup-trusted-devices.js';
 
 const r = express.Router();
 
@@ -18,11 +19,8 @@ r.get('/', requireAuth, async (req, res) => {
     const userId = req.user.id;
     const devices = await TrustedDeviceService.listUserDevices(userId);
     
-    res.json({
-      success: true,
-      devices,
-      maxDevices: TrustedDeviceService.CONFIG.MAX_DEVICES_PER_USER
-    });
+    // Return array directly for simpler frontend handling
+    res.json(devices);
   } catch (error) {
     console.error('❌ [TrustedDevices] List error:', error);
     res.status(500).json({
@@ -127,6 +125,34 @@ r.put('/:deviceId/label', requireAuth, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to update device label'
+    });
+  }
+});
+
+/**
+ * POST /api/trusted-devices/cleanup
+ * Admin/Cron endpoint to cleanup expired devices
+ * Can be called by Render's scheduled jobs or manually
+ */
+r.post('/cleanup', async (req, res) => {
+  try {
+    // Optional: Add authentication check here (e.g., secret token from env)
+    const secret = req.headers['x-cleanup-secret'];
+    if (process.env.CLEANUP_SECRET && secret !== process.env.CLEANUP_SECRET) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
+
+    const result = await cleanupExpiredDevices();
+
+    res.json(result);
+  } catch (error) {
+    console.error('❌ [TrustedDevices] Cleanup error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Cleanup failed'
     });
   }
 });

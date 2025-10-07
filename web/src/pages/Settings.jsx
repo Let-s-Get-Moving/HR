@@ -40,6 +40,10 @@ export default function Settings() {
   });
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
+  
+  // Trusted Devices State
+  const [trustedDevices, setTrustedDevices] = useState([]);
+  const [loadingDevices, setLoadingDevices] = useState(false);
 
   const tabs = [
     { id: "system", name: "System Settings", icon: "⚙️" },
@@ -420,6 +424,60 @@ export default function Settings() {
     ));
   };
   
+  // Load Trusted Devices
+  const loadTrustedDevices = async () => {
+    setLoadingDevices(true);
+    try {
+      const devices = await API('/api/trusted-devices');
+      setTrustedDevices(devices);
+      console.log('✅ Loaded trusted devices:', devices);
+    } catch (error) {
+      console.error('❌ Failed to load trusted devices:', error);
+      setTrustedDevices([]);
+    } finally {
+      setLoadingDevices(false);
+    }
+  };
+  
+  // Revoke a specific device
+  const revokeDevice = async (deviceId) => {
+    if (!confirm('Are you sure you want to revoke this trusted device? You will need to verify MFA again next time you log in from this device.')) {
+      return;
+    }
+    
+    try {
+      await API(`/api/trusted-devices/${deviceId}`, { method: 'DELETE' });
+      alert('✅ Device revoked successfully');
+      loadTrustedDevices(); // Reload list
+    } catch (error) {
+      console.error('❌ Failed to revoke device:', error);
+      alert('Failed to revoke device: ' + error.message);
+    }
+  };
+  
+  // Revoke all devices
+  const revokeAllDevices = async () => {
+    if (!confirm('⚠️ Are you sure you want to revoke ALL trusted devices? You will need to verify MFA on all your devices next time you log in.')) {
+      return;
+    }
+    
+    try {
+      const response = await API('/api/trusted-devices/revoke-all', { method: 'POST' });
+      alert(`✅ ${response.message || 'All devices revoked successfully'}`);
+      loadTrustedDevices(); // Reload list
+    } catch (error) {
+      console.error('❌ Failed to revoke all devices:', error);
+      alert('Failed to revoke devices: ' + error.message);
+    }
+  };
+  
+  // Load trusted devices when security tab is opened
+  useEffect(() => {
+    if (activeTab === 'security') {
+      loadTrustedDevices();
+    }
+  }, [activeTab]);
+  
   // Open Change Password Modal
   const openPasswordModal = () => {
     setShowPasswordModal(true);
@@ -759,6 +817,95 @@ export default function Settings() {
                 <p className="text-xs text-tertiary mt-2">
                   Your password expires every 90 days. Choose a strong password you haven't used before.
                 </p>
+              </div>
+            </div>
+            
+            {/* Trusted Devices Section */}
+            <div className="card">
+              <div className="card-header">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold">📱 Trusted Devices</h2>
+                    <p className="text-sm text-secondary mt-1">Manage devices that can bypass MFA for 7 days</p>
+                  </div>
+                  {trustedDevices.length > 0 && (
+                    <button
+                      onClick={revokeAllDevices}
+                      className="btn-danger px-4 py-2 rounded-lg hover:opacity-90 transition-all text-sm"
+                    >
+                      Revoke All
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="card-content">
+                {loadingDevices ? (
+                  <div className="text-center py-8">
+                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                    <p className="text-sm text-secondary mt-2">Loading devices...</p>
+                  </div>
+                ) : trustedDevices.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-5xl mb-3">🔓</div>
+                    <p className="text-secondary">No trusted devices yet</p>
+                    <p className="text-xs text-tertiary mt-2">
+                      When you check "Trust this device for 7 days" during MFA login, it will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {trustedDevices.map((device) => (
+                      <div 
+                        key={device.id} 
+                        className="flex items-start justify-between p-4 bg-neutral-900 bg-opacity-40 rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="text-lg">
+                              {device.os === 'macOS' ? '🍎' :
+                               device.os === 'Windows' ? '🪟' :
+                               device.os === 'Linux' ? '🐧' :
+                               device.os === 'Android' ? '🤖' :
+                               device.os === 'iOS' ? '📱' : '💻'}
+                            </span>
+                            <h3 className="font-semibold">{device.label}</h3>
+                          </div>
+                          <div className="text-xs text-tertiary space-y-1">
+                            <p>
+                              <span className="inline-block w-20">Browser:</span>
+                              <span className="text-secondary">{device.browser || 'Unknown'}</span>
+                            </p>
+                            <p>
+                              <span className="inline-block w-20">Last used:</span>
+                              <span className="text-secondary">
+                                {device.lastUsedAt ? new Date(device.lastUsedAt).toLocaleString() : 'Never'}
+                              </span>
+                            </p>
+                            <p>
+                              <span className="inline-block w-20">Expires in:</span>
+                              <span className={device.expiresIn?.includes('1 day') || device.expiresIn?.includes('Less') ? 'text-yellow-500' : 'text-secondary'}>
+                                {device.expiresIn}
+                              </span>
+                            </p>
+                            <p>
+                              <span className="inline-block w-20">IP:</span>
+                              <span className="text-secondary font-mono text-xs">
+                                {device.ipLastUsed || device.ipCreated || 'Unknown'}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => revokeDevice(device.id)}
+                          className="ml-4 px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-20 rounded transition-all"
+                          title="Revoke this device"
+                        >
+                          Revoke
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </>
