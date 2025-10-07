@@ -20,6 +20,7 @@ import performance from "./routes/performance.js";
 import analytics from "./routes/analytics.js";
 import metrics from "./routes/metrics.js";
 import settings from "./routes/settings.js";
+import migrate from "./routes/migrate.js";
 import health from "./routes/health.js";
 import termination from "./routes/termination.js";
 import bonuses from "./routes/bonuses.js";
@@ -280,6 +281,7 @@ app.use("/api/performance", requireAuth, performance);
 app.use("/api/analytics", requireAuth, analytics);
 app.use("/api/metrics", requireAuth, metrics);
 app.use("/api/settings", settings); // Settings routes handle auth per-endpoint
+app.use("/api/migrate", migrate); // Database migration endpoint
 app.use("/api/termination", requireAuth, termination);
 app.use("/api/bonuses", requireAuth, bonuses);
 app.use("/api/commissions", requireAuth, commissions);
