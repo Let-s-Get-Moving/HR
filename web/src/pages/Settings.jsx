@@ -174,7 +174,18 @@ export default function Settings() {
         { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
       ];
 
-      // ALWAYS try to load authenticated settings - if API returns 401, it will fall back to defaults
+      // Check if user is authenticated before trying authenticated endpoints
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        console.log('⚠️ [Settings] No session found, using default settings only');
+        setUserPreferences(defaultPreferences);
+        setNotifications(defaultNotifications);
+        setSecurity(defaultSecurity);
+        setMaintenance(defaultMaintenance);
+        return;
+      }
+
+      // Try to load authenticated settings - if API returns 401, it will fall back to defaults
       console.log('📡 [Settings] Attempting to load authenticated settings from API...');
       const [preferences, notifs, sec, maint] = await Promise.all([
         API("/api/settings/preferences").catch((err) => {

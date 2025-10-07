@@ -16,6 +16,7 @@ import BonusesCommissions from "./pages/BonusesCommissions.jsx";
 
 import { API } from './config/api.js';
 import { sessionManager } from './utils/sessionManager.js';
+import { checkAndFixSession, forceLogout } from './utils/sessionFix.js';
 
 // Professional SVG Icons
 const Icons = {
@@ -125,19 +126,27 @@ export default function App() {
 
     applyTheme(); // Call applyTheme on app load
 
-    // Check for existing session on app load using sessionManager
+    // Check for existing session on app load with proper cleanup
     const checkSession = async () => {
-      // Only check session if we have a session ID
-      if (sessionManager.hasSession()) {
-        const sessionData = await sessionManager.checkSession(API);
-        if (sessionData && sessionData.user) {
-          setUser(sessionData.user);
-          console.log('Session valid, user logged in');
+      try {
+        const isValid = await checkAndFixSession(API);
+        
+        if (isValid) {
+          const sessionData = await sessionManager.checkSession(API);
+          if (sessionData && sessionData.user) {
+            setUser(sessionData.user);
+            console.log('✅ Session valid, user logged in');
+          } else {
+            console.log('❌ Session check failed, user not logged in');
+            setUser(null);
+          }
         } else {
-          console.log('No valid session found');
+          console.log('❌ No valid session found, user not logged in');
+          setUser(null);
         }
-      } else {
-        console.log('No session ID found, skipping session check');
+      } catch (error) {
+        console.error('❌ Session check error:', error);
+        setUser(null);
       }
     };
 
