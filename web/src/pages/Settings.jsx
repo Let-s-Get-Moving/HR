@@ -134,10 +134,10 @@ export default function Settings() {
       return;
     }
     
+    console.log('🔄 [Settings] Starting to load settings...');
+    setLoading(true);
+    
     try {
-      setLoading(true);
-      console.log('🔄 [Settings] Loading settings...');
-      
       // Clean up any MFA status from localStorage (it should ONLY come from server)
       localStorage.removeItem('security_two_factor_auth');
       
