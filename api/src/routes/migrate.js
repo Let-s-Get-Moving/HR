@@ -104,9 +104,10 @@ r.post("/run-migrations", async (req, res) => {
       console.log('✅ mfa_attempts table already exists');
     }
     
-    // 4. Create trusted_devices table (check if it exists first)
-    console.log('📱 Creating trusted_devices table...');
+    // 4. Recreate trusted_devices table with new schema
+    console.log('📱 Recreating trusted_devices table with new schema...');
     
+    // Check if table exists
     const trustedDevicesExists = await q(`
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
@@ -114,7 +115,31 @@ r.post("/run-migrations", async (req, res) => {
       )
     `);
     
-    if (!trustedDevicesExists.rows[0].exists) {
+    if (trustedDevicesExists.rows[0].exists) {
+      // Check if it has the old schema (device_fingerprint column)
+      const hasOldSchema = await q(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns 
+          WHERE table_name = 'trusted_devices' AND column_name = 'device_fingerprint'
+        )
+      `);
+      
+      if (hasOldSchema.rows[0].exists) {
+        console.log('⚠️ Old schema detected, dropping table...');
+        await q('DROP TABLE IF EXISTS trusted_devices CASCADE');
+        console.log('✅ Old table dropped');
+      }
+    }
+    
+    // Create new table with correct schema
+    const trustedDevicesCheck = await q(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'trusted_devices'
+      )
+    `);
+    
+    if (!trustedDevicesCheck.rows[0].exists) {
       const trustedDevicesSQL = `
         CREATE TABLE trusted_devices (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -135,7 +160,7 @@ r.post("/run-migrations", async (req, res) => {
       `;
       
       await q(trustedDevicesSQL);
-      console.log('✅ trusted_devices table created');
+      console.log('✅ trusted_devices table created with new schema');
       
       // Create indexes
       await q('CREATE INDEX IF NOT EXISTS idx_trusted_devices_user_id ON trusted_devices (user_id)');
@@ -143,7 +168,7 @@ r.post("/run-migrations", async (req, res) => {
       await q('CREATE INDEX IF NOT EXISTS idx_trusted_devices_token_hash ON trusted_devices (token_hash)');
       console.log('✅ trusted_devices indexes created');
     } else {
-      console.log('✅ trusted_devices table already exists');
+      console.log('✅ trusted_devices table already exists with correct schema');
     }
     
     // 5. Test all tables
