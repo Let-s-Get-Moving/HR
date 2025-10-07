@@ -135,9 +135,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
       console.log(`⚠️ Password expiring soon for user ${user.id}: ${daysLeft} days left`);
     }
     
-    // ============================================================
-    // MFA IS MANDATORY FOR ALL USERS
-    // ============================================================
+    // Check if MFA is enabled
     const mfaEnabled = await MFAService.isMFAEnabled(user.id);
     
     // Check if device is trusted (via secure cookie)
@@ -177,8 +175,8 @@ r.post("/login", checkAccountLockout, async (req, res) => {
       }
     }
     
-    // MFA is REQUIRED for everyone, UNLESS device is trusted (only possible if MFA is set up)
-    if (!mfaEnabled || (mfaEnabled && !deviceTrusted)) {
+    // MFA required only if enabled AND device is not trusted
+    if (mfaEnabled && !deviceTrusted) {
       // MFA required - don't create full session yet
       // Create temporary token for MFA verification
       const tempToken = generateSecureSessionId();
@@ -199,14 +197,16 @@ r.post("/login", checkAccountLockout, async (req, res) => {
       return res.json({
         requiresMFA: true,
         tempToken: tempToken,
-        message: "MFA verification required",
-        mfaSetup: !mfaEnabled // Tell frontend if user needs to set up MFA first
+        message: "MFA verification required"
       });
     }
     
-    // Only reach here if MFA is enabled AND device is trusted
-    // This means user successfully logged in with password + MFA before and trusted this device
-    console.log(`✅ [Login] Trusted device ${trustedDeviceId}, bypassing MFA for user ${user.full_name}`);
+    // No MFA or trusted device - create full session
+    if (mfaEnabled && deviceTrusted) {
+      console.log(`✅ [Login] Trusted device ${trustedDeviceId}, bypassing MFA for user ${user.full_name}`);
+    } else {
+      console.log(`✅ [Login] No MFA enabled, password-only login for user ${user.full_name}`);
+    }
     
     const sessionId = generateSecureSessionId();
     const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
