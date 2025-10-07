@@ -18,7 +18,19 @@ r.get("/system", async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error("Error fetching system settings:", error);
-    res.status(500).json({ error: "Failed to fetch system settings" });
+    
+    // If table doesn't exist, return default settings
+    if (error.message.includes('relation "application_settings" does not exist')) {
+      console.log("📋 Settings table not found, returning default settings");
+      res.json([
+        { key: 'company_name', value: 'C&C Logistics', type: 'string', description: 'Company name' },
+        { key: 'timezone', value: 'UTC', type: 'string', description: 'Default timezone' },
+        { key: 'date_format', value: 'MM/DD/YYYY', type: 'string', description: 'Date format' },
+        { key: 'currency', value: 'USD', type: 'string', description: 'Default currency' }
+      ]);
+    } else {
+      res.status(500).json({ error: "Failed to fetch system settings" });
+    }
   }
 });
 
@@ -186,7 +198,20 @@ r.get("/security", requireAuth, async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error("Error fetching security settings:", error);
-    res.status(500).json({ error: "Failed to fetch security settings" });
+    
+    // If table doesn't exist, return default security settings
+    if (error.message.includes('relation "application_settings" does not exist')) {
+      console.log("📋 Settings table not found, returning default security settings");
+      res.json([
+        { key: 'session_timeout_minutes', value: '30', type: 'number', description: 'Session timeout in minutes' },
+        { key: 'password_min_length', value: '8', type: 'number', description: 'Minimum password length' },
+        { key: 'two_factor_auth', value: 'false', type: 'boolean', description: 'Enable two-factor authentication' },
+        { key: 'login_attempts_limit', value: '5', type: 'number', description: 'Maximum login attempts before lockout' },
+        { key: 'lockout_duration_minutes', value: '30', type: 'number', description: 'Account lockout duration in minutes' }
+      ]);
+    } else {
+      res.status(500).json({ error: "Failed to fetch security settings" });
+    }
   }
 });
 
