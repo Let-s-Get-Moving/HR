@@ -21,7 +21,7 @@ export default function Settings() {
   const [notifications, setNotifications] = useState([]);
   const [security, setSecurity] = useState([]);
   const [maintenance, setMaintenance] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState({});
   
   // MFA Setup Modal State
