@@ -23,7 +23,7 @@ export class TrustedDeviceService {
     COOKIE_OPTIONS: {
       httpOnly: true,
       secure: true, // Always true on Render
-      sameSite: 'strict',
+      sameSite: 'none', // Required for cross-origin (frontend on Vercel, API on Render)
       path: '/'
     }
   };
