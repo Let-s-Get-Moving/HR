@@ -53,6 +53,7 @@ export default function Settings() {
   const isInitialMount = React.useRef(true);
 
   useEffect(() => {
+    console.log('🎬 [Settings] useEffect #1 triggered - calling loadSettings()');
     loadSettings();
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
@@ -62,7 +63,7 @@ export default function Settings() {
     const handleVisibilityChange = () => {
       // Only reload if document was hidden and is now visible AND not initial mount
       if (!document.hidden && !isInitialMount.current) {
-        console.log('👁️ [Settings] Tab became visible, reloading settings...');
+        console.log('👁️ [Settings] Tab became visible (useEffect #2), reloading settings...');
         loadSettings();
       }
     };
@@ -73,7 +74,9 @@ export default function Settings() {
 
   // Load local settings after initial settings are loaded
   useEffect(() => {
+    console.log('🎬 [Settings] useEffect #3 triggered - userPreferences.length:', userPreferences.length);
     if (userPreferences.length > 0) {
+      console.log('✅ [Settings] Calling loadLocalSettings()');
       loadLocalSettings();
     }
   }, [userPreferences.length]);
@@ -128,14 +131,23 @@ export default function Settings() {
   };
 
   const loadSettings = async () => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔄 [Settings] loadSettings() called');
+    console.log('📊 [Settings] Current loading state:', loading);
+    console.log('📊 [Settings] Current userPreferences:', userPreferences.length);
+    console.log('📊 [Settings] Current security:', security.length);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    
     // Prevent concurrent loads
     if (loading) {
       console.log('⏳ [Settings] Already loading, skipping duplicate request...');
+      console.log('⚠️ [Settings] THIS IS THE PROBLEM - loading is stuck at true!');
       return;
     }
     
-    console.log('🔄 [Settings] Starting to load settings...');
+    console.log('✅ [Settings] Starting to load settings...');
     setLoading(true);
+    console.log('✅ [Settings] Loading state set to TRUE');
     
     try {
       // Clean up any MFA status from localStorage (it should ONLY come from server)
@@ -176,18 +188,19 @@ export default function Settings() {
 
       // Check if user is authenticated before trying authenticated endpoints
       const sessionId = localStorage.getItem('sessionId');
+      
+      let preferences, notifs, sec, maint;
+      
       if (!sessionId) {
         console.log('⚠️ [Settings] No session found, using default settings only');
-        setUserPreferences(defaultPreferences);
-        setNotifications(defaultNotifications);
-        setSecurity(defaultSecurity);
-        setMaintenance(defaultMaintenance);
-        return;
-      }
-
-      // Try to load authenticated settings - if API returns 401, it will fall back to defaults
-      console.log('📡 [Settings] Attempting to load authenticated settings from API...');
-      const [preferences, notifs, sec, maint] = await Promise.all([
+        preferences = defaultPreferences;
+        notifs = defaultNotifications;
+        sec = defaultSecurity;
+        maint = defaultMaintenance;
+      } else {
+        // Try to load authenticated settings - if API returns 401, it will fall back to defaults
+        console.log('📡 [Settings] Attempting to load authenticated settings from API...');
+        [preferences, notifs, sec, maint] = await Promise.all([
         API("/api/settings/preferences").catch((err) => {
           console.log('⚠️ [Settings] Preferences API failed, using defaults:', err.message);
           return defaultPreferences;
@@ -205,16 +218,21 @@ export default function Settings() {
           return defaultMaintenance;
         })
       ]);
+      }
       
-      console.log('✅ [Settings] Security settings loaded from API:', sec);
+      console.log('✅ [Settings] Security settings loaded:', sec);
       console.log('🔐 [Settings] MFA toggle value:', sec?.find(s => s.key === 'two_factor_auth')?.value);
       
+      // Set all settings regardless of whether they came from API or defaults
+      console.log('✅ [Settings] Setting state with preferences:', preferences?.length);
+      console.log('✅ [Settings] Setting state with security:', sec?.length);
       setUserPreferences(preferences || defaultPreferences);
       setNotifications(notifs || defaultNotifications);
       setSecurity(sec || defaultSecurity);
       setMaintenance(maint || defaultMaintenance);
+      console.log('✅ [Settings] All settings state updated successfully');
     } catch (error) {
-      console.error("Error loading settings:", error);
+      console.error("❌ [Settings] Error loading settings:", error);
       // Set default settings to prevent empty arrays
       setSystemSettings([]);
       // Detect current theme from DOM for error fallback
@@ -241,7 +259,9 @@ export default function Settings() {
         { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
       ]);
     } finally {
+      console.log('🏁 [Settings] Finally block reached - setting loading to FALSE');
       setLoading(false);
+      console.log('🏁 [Settings] Loading state set to FALSE');
     }
   };
 
