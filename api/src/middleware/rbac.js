@@ -151,10 +151,13 @@ export const ROLE_PERMISSIONS = {
 export const getUserRole = async (userId) => {
   try {
     const { rows } = await q(`
-      SELECT role FROM users WHERE id = $1
+      SELECT r.role_name 
+      FROM users u
+      LEFT JOIN hr_roles r ON u.role_id = r.id
+      WHERE u.id = $1
     `, [userId]);
     
-    return rows[0]?.role || ROLES.EMPLOYEE;
+    return rows[0]?.role_name || ROLES.EMPLOYEE;
   } catch (error) {
     console.error('Error getting user role:', error);
     return ROLES.EMPLOYEE;

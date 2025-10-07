@@ -20,20 +20,26 @@ async function fixAdminLogin() {
   try {
     console.log('🔧 Starting permanent admin login fix...\n');
     
-    // 1. Ensure users table exists with correct schema
-    console.log('📋 Step 1: Checking users table schema...');
+    // 1. Ensure hr_roles table exists first
+    console.log('📋 Step 1: Checking hr_roles table...');
     await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS hr_roles (
         id SERIAL PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        full_name TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'admin',
-        password_hash TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        role_name VARCHAR(50) UNIQUE NOT NULL,
+        display_name VARCHAR(100) NOT NULL,
+        description TEXT,
+        permissions JSONB DEFAULT '{}',
+        created_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
-    console.log('✅ Users table ready\n');
+    
+    // Insert Admin role if it doesn't exist
+    await client.query(`
+      INSERT INTO hr_roles (role_name, display_name, description, permissions)
+      VALUES ('Admin', 'Administrator', 'Full system access', '{"all": true}')
+      ON CONFLICT (role_name) DO NOTHING;
+    `);
+    console.log('✅ hr_roles table ready\n');
     
     // 2. Delete ALL existing users to start fresh
     console.log('🗑️  Step 2: Clearing all existing users...');
@@ -47,26 +53,38 @@ async function fixAdminLogin() {
     const email = 'avneet@hr.local';
     const role = 'Admin';
     
+    // Get Admin role ID
+    const adminRole = await client.query(`
+      SELECT id FROM hr_roles WHERE role_name = $1
+    `, [role]);
+    
+    if (adminRole.rows.length === 0) {
+      throw new Error('Admin role not found - this should not happen');
+    }
+    
+    const adminRoleId = adminRole.rows[0].id;
+    
     // Generate fresh password hash
     const passwordHash = await bcrypt.hash(password, 10);
     console.log(`   Username: ${username}`);
     console.log(`   Password: ${password}`);
     console.log(`   Email: ${email}`);
-    console.log(`   Role: ${role}`);
+    console.log(`   Role: ${role} (ID: ${adminRoleId})`);
     console.log(`   Hash generated: ${passwordHash.substring(0, 20)}...`);
     
     await client.query(`
-      INSERT INTO users (email, full_name, role, password_hash)
-      VALUES ($1, $2, $3, $4)
-    `, [email, username, role, passwordHash]);
+      INSERT INTO users (email, full_name, role_id, password_hash, is_active)
+      VALUES ($1, $2, $3, $4, $5)
+    `, [email, username, adminRoleId, passwordHash, true]);
     console.log('✅ Admin user created\n');
     
     // 4. Verify the user was created correctly
     console.log('🔍 Step 4: Verifying user creation...');
     const verifyResult = await client.query(`
-      SELECT id, email, full_name, role, password_hash
-      FROM users
-      WHERE full_name = $1
+      SELECT u.id, u.email, u.full_name, r.role_name, u.password_hash
+      FROM users u
+      LEFT JOIN hr_roles r ON u.role_id = r.id
+      WHERE u.full_name = $1
     `, [username]);
     
     if (verifyResult.rows.length === 0) {
@@ -78,7 +96,7 @@ async function fixAdminLogin() {
     console.log(`   ID: ${user.id}`);
     console.log(`   Email: ${user.email}`);
     console.log(`   Full Name: ${user.full_name}`);
-    console.log(`   Role: ${user.role}`);
+    console.log(`   Role: ${user.role_name}`);
     console.log(`   Password Hash: ${user.password_hash.substring(0, 20)}...`);
     console.log('');
     

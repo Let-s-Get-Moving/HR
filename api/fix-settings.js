@@ -9,7 +9,7 @@ async function createSettingsTable() {
   try {
     console.log('🔧 Creating application_settings table...');
     
-    const sql = fs.readFileSync('./create-settings-table.sql', 'utf8');
+    const sql = fs.readFileSync('./api/create-settings-table.sql', 'utf8');
     await q(sql);
     
     console.log('✅ application_settings table created successfully');
