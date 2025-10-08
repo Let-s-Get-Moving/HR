@@ -1,6 +1,7 @@
 import XLSX from 'xlsx';
 import { pool } from '../db.js';
 import { findExistingEmployee, mergeEmployeeData } from './employeeMatching.js';
+import { findAndMergeDuplicates } from './autoMergeDuplicates.js';
 
 /**
  * Parse Excel file and save for display viewing
@@ -501,6 +502,18 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         await client.query('COMMIT');
         
         console.log(`✅ Upload ${uploadId} committed successfully`);
+        
+        // Auto-merge duplicates after successful upload
+        console.log(`\n🔍 Checking for duplicate employees to auto-merge...`);
+        try {
+            const mergeResult = await findAndMergeDuplicates();
+            if (mergeResult.merged > 0) {
+                console.log(`✅ Auto-merged ${mergeResult.merged} duplicate employee(s)`);
+            }
+        } catch (mergeError) {
+            console.error(`⚠️  Auto-merge failed (non-critical):`, mergeError.message);
+            // Don't fail the upload if merge fails
+        }
         
         return {
             success: true,
