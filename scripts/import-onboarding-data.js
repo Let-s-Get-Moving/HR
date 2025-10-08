@@ -25,8 +25,32 @@ const FILE2 = 'Onboarding Form (Responses).xlsx';
 
 // Excel date to JS date converter
 function excelDateToJSDate(excelDate) {
-  if (!excelDate || excelDate === '') return null;
-  if (typeof excelDate === 'string') return excelDate; // Already a date string
+  if (!excelDate || excelDate === '' || excelDate === 'NA' || excelDate === 'N/A') return null;
+  
+  // Handle string dates in various formats
+  if (typeof excelDate === 'string') {
+    excelDate = excelDate.trim();
+    
+    // Format: DD-MM-YYYY or DD/MM/YYYY
+    const ddmmyyyy = excelDate.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
+    if (ddmmyyyy) {
+      const [, day, month, year] = ddmmyyyy;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    
+    // Format: YYYY-MM-DD (already correct)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(excelDate)) {
+      return excelDate;
+    }
+    
+    // Try parsing as ISO date
+    const parsed = new Date(excelDate);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+    
+    return null;
+  }
   
   // Excel dates are days since 1900-01-01 (with a leap year bug)
   const date = new Date((excelDate - 25569) * 86400 * 1000);
@@ -317,7 +341,7 @@ async function upsertEmployee(employeeData) {
   } else {
     console.log(`   ✚ Creating: ${employeeData.first_name} ${employeeData.last_name}`);
     
-    // Create new employee
+    // Create new employee with ON CONFLICT to handle email duplicates
     const result = await pool.query(
       `INSERT INTO employees (
         first_name, last_name, email, phone, birth_date, hire_date,
@@ -329,7 +353,24 @@ async function upsertEmployee(employeeData) {
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
-      ) RETURNING *`,
+      )
+      ON CONFLICT (email) DO UPDATE SET
+        phone = EXCLUDED.phone,
+        birth_date = EXCLUDED.birth_date,
+        hire_date = EXCLUDED.hire_date,
+        role_title = EXCLUDED.role_title,
+        full_address = EXCLUDED.full_address,
+        sin_number = COALESCE(EXCLUDED.sin_number, employees.sin_number),
+        sin_expiry_date = COALESCE(EXCLUDED.sin_expiry_date, employees.sin_expiry_date),
+        bank_name = COALESCE(EXCLUDED.bank_name, employees.bank_name),
+        bank_transit_number = COALESCE(EXCLUDED.bank_transit_number, employees.bank_transit_number),
+        bank_account_number = COALESCE(EXCLUDED.bank_account_number, employees.bank_account_number),
+        emergency_contact_name = COALESCE(EXCLUDED.emergency_contact_name, employees.emergency_contact_name),
+        emergency_contact_phone = COALESCE(EXCLUDED.emergency_contact_phone, employees.emergency_contact_phone),
+        contract_status = COALESCE(EXCLUDED.contract_status, employees.contract_status),
+        gift_card_sent = EXCLUDED.gift_card_sent,
+        onboarding_source = COALESCE(EXCLUDED.onboarding_source, employees.onboarding_source)
+      RETURNING *`,
       [
         employeeData.first_name,
         employeeData.last_name,
