@@ -140,7 +140,19 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       location_id: employee.location_id || null,
       hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : '',
       probation_end: employee.probation_end ? employee.probation_end.split('T')[0] : '',
-      status: employee.status
+      status: employee.status,
+      // New onboarding fields
+      full_address: employee.full_address || '',
+      emergency_contact_name: employee.emergency_contact_name || '',
+      emergency_contact_phone: employee.emergency_contact_phone || '',
+      sin_number: employee.sin_number || '',
+      sin_expiry_date: employee.sin_expiry_date ? employee.sin_expiry_date.split('T')[0] : '',
+      bank_name: employee.bank_name || '',
+      bank_transit_number: employee.bank_transit_number || '',
+      bank_account_number: employee.bank_account_number || '',
+      contract_status: employee.contract_status || 'Not Sent',
+      contract_signed_date: employee.contract_signed_date ? employee.contract_signed_date.split('T')[0] : '',
+      gift_card_sent: employee.gift_card_sent || false
     });
     setIsEditing(true);
   };
@@ -631,7 +643,17 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Address:</span>
-                  <span className="text-right max-w-xs">{employee.full_address || 'Not provided'}</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.full_address || ''}
+                      onChange={(e) => setEditData({...editData, full_address: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-64 text-right"
+                      placeholder="Full address"
+                    />
+                  ) : (
+                    <span className="text-right max-w-xs">{employee.full_address || 'Not provided'}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -641,11 +663,31 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Name:</span>
-                  <span>{employee.emergency_contact_name || 'Not provided'}</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.emergency_contact_name || ''}
+                      onChange={(e) => setEditData({...editData, emergency_contact_name: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      placeholder="Contact name"
+                    />
+                  ) : (
+                    <span>{employee.emergency_contact_name || 'Not provided'}</span>
+                  )}
                 </div>
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Phone:</span>
-                  <span>{employee.emergency_contact_phone || 'Not provided'}</span>
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      value={editData.emergency_contact_phone || ''}
+                      onChange={(e) => setEditData({...editData, emergency_contact_phone: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      placeholder="Contact phone"
+                    />
+                  ) : (
+                    <span>{employee.emergency_contact_phone || 'Not provided'}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -741,57 +783,107 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-neutral-400">SIN:</span>
-                  <span className="font-mono text-indigo-400">{employee.sin_number || 'Not provided'}</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.sin_number || ''}
+                      onChange={(e) => setEditData({...editData, sin_number: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 font-mono"
+                      placeholder="123-456-789"
+                      maxLength="11"
+                    />
+                  ) : (
+                    <span className="font-mono text-indigo-400">{employee.sin_number || 'Not provided'}</span>
+                  )}
                 </div>
-                {employee.sin_expiry_date && (
+                {(employee.sin_expiry_date || isEditing) && (
                   <div className="flex justify-between">
                     <span className="text-neutral-400">SIN Expiry:</span>
-                    <span className={(() => {
-                      if (!employee.sin_expiry_date) return '';
-                      try {
-                        const dateStr = employee.sin_expiry_date.includes('T') 
-                          ? employee.sin_expiry_date.split('T')[0] 
-                          : employee.sin_expiry_date;
-                        const expiryDate = new Date(dateStr + 'T00:00:00');
-                        return expiryDate < new Date() ? 'text-red-400' : '';
-                      } catch (e) {
-                        return '';
-                      }
-                    })()}>
-                      {(() => {
-                        if (!employee.sin_expiry_date || employee.sin_expiry_date === 'Invalid Date') {
-                          return 'Invalid Date';
-                        }
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={editData.sin_expiry_date || ''}
+                        onChange={(e) => setEditData({...editData, sin_expiry_date: e.target.value})}
+                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      />
+                    ) : (
+                      <span className={(() => {
+                        if (!employee.sin_expiry_date) return '';
                         try {
                           const dateStr = employee.sin_expiry_date.includes('T') 
                             ? employee.sin_expiry_date.split('T')[0] 
                             : employee.sin_expiry_date;
                           const expiryDate = new Date(dateStr + 'T00:00:00');
-                          const formatted = expiryDate.toLocaleDateString();
-                          const expired = expiryDate < new Date() ? ' ⚠️ Expired' : '';
-                          return formatted + expired;
+                          return expiryDate < new Date() ? 'text-red-400' : '';
                         } catch (e) {
-                          console.error('❌ [EmployeeProfile] Error parsing SIN expiry date:', employee.sin_expiry_date, e);
-                          return 'Invalid Date';
+                          return '';
                         }
-                      })()}
-                    </span>
+                      })()}>
+                        {(() => {
+                          if (!employee.sin_expiry_date || employee.sin_expiry_date === 'Invalid Date') {
+                            return 'Invalid Date';
+                          }
+                          try {
+                            const dateStr = employee.sin_expiry_date.includes('T') 
+                              ? employee.sin_expiry_date.split('T')[0] 
+                              : employee.sin_expiry_date;
+                            const expiryDate = new Date(dateStr + 'T00:00:00');
+                            const formatted = expiryDate.toLocaleDateString();
+                            const expired = expiryDate < new Date() ? ' ⚠️ Expired' : '';
+                            return formatted + expired;
+                          } catch (e) {
+                            console.error('❌ [EmployeeProfile] Error parsing SIN expiry date:', employee.sin_expiry_date, e);
+                            return 'Invalid Date';
+                          }
+                        })()}
+                      </span>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Bank:</span>
-                  <span>{employee.bank_name || 'Not provided'}</span>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editData.bank_name || ''}
+                      onChange={(e) => setEditData({...editData, bank_name: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      placeholder="Bank name"
+                    />
+                  ) : (
+                    <span>{employee.bank_name || 'Not provided'}</span>
+                  )}
                 </div>
-                {employee.bank_transit_number && (
+                {(employee.bank_transit_number || isEditing) && (
                   <div className="flex justify-between">
                     <span className="text-neutral-400">Transit:</span>
-                    <span className="font-mono">{employee.bank_transit_number}</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editData.bank_transit_number || ''}
+                        onChange={(e) => setEditData({...editData, bank_transit_number: e.target.value})}
+                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 font-mono"
+                        placeholder="Transit number"
+                      />
+                    ) : (
+                      <span className="font-mono">{employee.bank_transit_number}</span>
+                    )}
                   </div>
                 )}
-                {employee.bank_account_number && (
+                {(employee.bank_account_number || isEditing) && (
                   <div className="flex justify-between">
                     <span className="text-neutral-400">Account:</span>
-                    <span className="font-mono text-indigo-400">{employee.bank_account_number}</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editData.bank_account_number || ''}
+                        onChange={(e) => setEditData({...editData, bank_account_number: e.target.value})}
+                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 font-mono"
+                        placeholder="Account number"
+                      />
+                    ) : (
+                      <span className="font-mono text-indigo-400">{employee.bank_account_number}</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -804,31 +896,64 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center">
                   <span className="text-neutral-400">Contract:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    employee.contract_status === 'Signed' 
-                      ? 'bg-green-900/50 text-green-300' 
-                      : employee.contract_status === 'Sent' 
-                      ? 'bg-yellow-900/50 text-yellow-300'
-                      : 'bg-neutral-700 text-neutral-400'
-                  }`}>
-                    {employee.contract_status || 'Not Sent'}
-                  </span>
+                  {isEditing ? (
+                    <select
+                      value={editData.contract_status || 'Not Sent'}
+                      onChange={(e) => setEditData({...editData, contract_status: e.target.value})}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                    >
+                      <option value="Not Sent">Not Sent</option>
+                      <option value="Sent">Sent</option>
+                      <option value="Signed">Signed</option>
+                    </select>
+                  ) : (
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      employee.contract_status === 'Signed' 
+                        ? 'bg-green-900/50 text-green-300' 
+                        : employee.contract_status === 'Sent' 
+                        ? 'bg-yellow-900/50 text-yellow-300'
+                        : 'bg-neutral-700 text-neutral-400'
+                    }`}>
+                      {employee.contract_status || 'Not Sent'}
+                    </span>
+                  )}
                 </div>
-                {employee.contract_signed_date && (
+                {(employee.contract_signed_date || isEditing) && (
                   <div className="flex justify-between">
                     <span className="text-neutral-400">Signed On:</span>
-                    <span>{new Date(employee.contract_signed_date).toLocaleDateString()}</span>
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={editData.contract_signed_date || ''}
+                        onChange={(e) => setEditData({...editData, contract_signed_date: e.target.value})}
+                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      />
+                    ) : (
+                      <span>{new Date(employee.contract_signed_date).toLocaleDateString()}</span>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between items-center">
                   <span className="text-neutral-400">Gift Card:</span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    employee.gift_card_sent 
-                      ? 'bg-green-900/50 text-green-300' 
-                      : 'bg-neutral-700 text-neutral-400'
-                  }`}>
-                    {employee.gift_card_sent ? 'Sent ✓' : 'Pending'}
-                  </span>
+                  {isEditing ? (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={editData.gift_card_sent || false}
+                        onChange={(e) => setEditData({...editData, gift_card_sent: e.target.checked})}
+                        className="w-4 h-4 bg-neutral-700 border-neutral-600 rounded"
+                      />
+                      <span className="text-sm">Sent</span>
+                    </label>
+                  ) : (
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      employee.gift_card_sent 
+                        ? 'bg-green-900/50 text-green-300' 
+                        : 'bg-neutral-700 text-neutral-400'
+                    }`}>
+                      {employee.gift_card_sent ? 'Sent ✓' : 'Pending'}
+                    </span>
+                  )}
                 </div>
                 {employee.onboarding_source && (
                   <div className="flex justify-between">

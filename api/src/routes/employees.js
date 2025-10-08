@@ -96,8 +96,12 @@ r.put("/:id", async (req, res) => {
        SET first_name = $1, last_name = $2, email = $3, phone = $4, 
            role_title = $5, hourly_rate = $6, employment_type = $7,
            department_id = $8, location_id = $9, hire_date = $10,
-           gender = $11, birth_date = $12, status = $13, probation_end = $14
-       WHERE id = $15
+           gender = $11, birth_date = $12, status = $13, probation_end = $14,
+           full_address = $15, emergency_contact_name = $16, emergency_contact_phone = $17,
+           sin_number = $18, sin_expiry_date = $19, bank_name = $20,
+           bank_transit_number = $21, bank_account_number = $22,
+           contract_status = $23, contract_signed_date = $24, gift_card_sent = $25
+       WHERE id = $26
        RETURNING *`,
       [
         data.first_name,
@@ -114,6 +118,18 @@ r.put("/:id", async (req, res) => {
         nullIfEmpty(data.birth_date),
         data.status, // Required field - don't null it
         nullIfEmpty(data.probation_end),
+        // New onboarding fields
+        nullIfEmpty(data.full_address),
+        nullIfEmpty(data.emergency_contact_name),
+        nullIfEmpty(data.emergency_contact_phone),
+        nullIfEmpty(data.sin_number),
+        nullIfEmpty(data.sin_expiry_date),
+        nullIfEmpty(data.bank_name),
+        nullIfEmpty(data.bank_transit_number),
+        nullIfEmpty(data.bank_account_number),
+        nullIfEmpty(data.contract_status),
+        nullIfEmpty(data.contract_signed_date),
+        data.gift_card_sent || false,
         id
       ]
     );
