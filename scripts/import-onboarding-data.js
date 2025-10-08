@@ -35,12 +35,32 @@ function excelDateToJSDate(excelDate) {
     const ddmmyyyy = excelDate.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})$/);
     if (ddmmyyyy) {
       const [, day, month, year] = ddmmyyyy;
+      const monthNum = parseInt(month);
+      const dayNum = parseInt(day);
+      
+      // Validate month and day
+      if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
+        console.log(`      ⚠️  Invalid date: ${excelDate} - ignoring`);
+        return null;
+      }
+      
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
     
-    // Format: YYYY-MM-DD (already correct)
-    if (/^\d{4}-\d{2}-\d{2}$/.test(excelDate)) {
-      return excelDate;
+    // Format: YYYY-MM-DD
+    const yyyymmdd = excelDate.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (yyyymmdd) {
+      const [, year, month, day] = yyyymmdd;
+      const monthNum = parseInt(month);
+      const dayNum = parseInt(day);
+      
+      // Validate month and day
+      if (monthNum < 1 || monthNum > 12 || dayNum < 1 || dayNum > 31) {
+        console.log(`      ⚠️  Invalid date: ${excelDate} - ignoring`);
+        return null;
+      }
+      
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
     
     // Try parsing as ISO date
@@ -49,6 +69,7 @@ function excelDateToJSDate(excelDate) {
       return parsed.toISOString().split('T')[0];
     }
     
+    console.log(`      ⚠️  Invalid date format: ${excelDate} - ignoring`);
     return null;
   }
   
@@ -177,7 +198,7 @@ function parseFile2() {
 
 // Find existing employee by name (with fuzzy matching)
 async function findEmployeeByName(firstName, lastName) {
-  // Try exact match first
+  // First try exact match
   const exactResult = await pool.query(
     `SELECT * FROM employees 
      WHERE LOWER(TRIM(first_name)) = LOWER(TRIM($1))
@@ -189,6 +210,20 @@ async function findEmployeeByName(firstName, lastName) {
   
   if (exactResult.rows.length > 0) {
     return exactResult.rows[0];
+  }
+  
+  // Try email match (duplicate email = same person)
+  const emailToSearch = `${firstName.toLowerCase()}@letsgetmovinggroup.com`;
+  const emailResult = await pool.query(
+    `SELECT * FROM employees 
+     WHERE LOWER(TRIM(email)) = LOWER(TRIM($1))
+     LIMIT 1`,
+    [emailToSearch]
+  );
+  
+  if (emailResult.rows.length > 0) {
+    console.log(`   🔗 Matched by email: ${firstName} → ${emailResult.rows[0].first_name} ${emailResult.rows[0].last_name}`);
+    return emailResult.rows[0];
   }
   
   // Try fuzzy match - get all employees with same last name
@@ -341,36 +376,20 @@ async function upsertEmployee(employeeData) {
   } else {
     console.log(`   ✚ Creating: ${employeeData.first_name} ${employeeData.last_name}`);
     
-    // Create new employee with ON CONFLICT to handle email duplicates
-    const result = await pool.query(
-      `INSERT INTO employees (
-        first_name, last_name, email, phone, birth_date, hire_date,
-        employment_type, role_title, full_address, status,
-        sin_number, sin_expiry_date,
-        bank_name, bank_transit_number, bank_account_number,
-        emergency_contact_name, emergency_contact_phone,
-        contract_status, gift_card_sent, onboarding_source, imported_at
-      ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
-      )
-      ON CONFLICT (email) DO UPDATE SET
-        phone = EXCLUDED.phone,
-        birth_date = EXCLUDED.birth_date,
-        hire_date = EXCLUDED.hire_date,
-        role_title = EXCLUDED.role_title,
-        full_address = EXCLUDED.full_address,
-        sin_number = COALESCE(EXCLUDED.sin_number, employees.sin_number),
-        sin_expiry_date = COALESCE(EXCLUDED.sin_expiry_date, employees.sin_expiry_date),
-        bank_name = COALESCE(EXCLUDED.bank_name, employees.bank_name),
-        bank_transit_number = COALESCE(EXCLUDED.bank_transit_number, employees.bank_transit_number),
-        bank_account_number = COALESCE(EXCLUDED.bank_account_number, employees.bank_account_number),
-        emergency_contact_name = COALESCE(EXCLUDED.emergency_contact_name, employees.emergency_contact_name),
-        emergency_contact_phone = COALESCE(EXCLUDED.emergency_contact_phone, employees.emergency_contact_phone),
-        contract_status = COALESCE(EXCLUDED.contract_status, employees.contract_status),
-        gift_card_sent = EXCLUDED.gift_card_sent,
-        onboarding_source = COALESCE(EXCLUDED.onboarding_source, employees.onboarding_source)
-      RETURNING *`,
+    // Create new employee
+    try {
+      const result = await pool.query(
+        `INSERT INTO employees (
+          first_name, last_name, email, phone, birth_date, hire_date,
+          employment_type, role_title, full_address, status,
+          sin_number, sin_expiry_date,
+          bank_name, bank_transit_number, bank_account_number,
+          emergency_contact_name, emergency_contact_phone,
+          contract_status, gift_card_sent, onboarding_source, imported_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+        ) RETURNING *`,
       [
         employeeData.first_name,
         employeeData.last_name,
@@ -396,6 +415,54 @@ async function upsertEmployee(employeeData) {
       ]
     );
     return result.rows[0];
+    } catch (error) {
+      // If duplicate email error, it means same person - skip silently
+      if (error.code === '23505' && error.constraint === 'employees_email_key') {
+        console.log(`      ↻ Email exists - treating as update`);
+        // Find by email and update
+        const existing = await pool.query(
+          `SELECT * FROM employees WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+          [employeeData.email || `${employeeData.first_name.toLowerCase()}@letsgetmovinggroup.com`]
+        );
+        if (existing.rows.length > 0) {
+          // Update the existing employee
+          const updates = [];
+          const values = [];
+          let paramCount = 1;
+          
+          const addUpdate = (field, value) => {
+            if (value !== null && value !== undefined) {
+              updates.push(`${field} = $${paramCount}`);
+              values.push(value);
+              paramCount++;
+            }
+          };
+          
+          addUpdate('phone', employeeData.phone);
+          addUpdate('birth_date', employeeData.birth_date);
+          addUpdate('role_title', employeeData.role_title);
+          addUpdate('full_address', employeeData.full_address);
+          addUpdate('sin_number', employeeData.sin_number);
+          addUpdate('sin_expiry_date', employeeData.sin_expiry_date);
+          addUpdate('bank_name', employeeData.bank_name);
+          addUpdate('bank_transit_number', employeeData.bank_transit_number);
+          addUpdate('bank_account_number', employeeData.bank_account_number);
+          addUpdate('emergency_contact_name', employeeData.emergency_contact_name);
+          addUpdate('emergency_contact_phone', employeeData.emergency_contact_phone);
+          addUpdate('contract_status', employeeData.contract_status);
+          addUpdate('onboarding_source', employeeData.source);
+          
+          if (updates.length > 0) {
+            values.push(existing.rows[0].id);
+            const query = `UPDATE employees SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+            const updateResult = await pool.query(query, values);
+            return updateResult.rows[0];
+          }
+          return existing.rows[0];
+        }
+      }
+      throw error;
+    }
   }
 }
 
