@@ -614,7 +614,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       {employee.birth_date && employee.birth_date !== 'Invalid Date' 
                         ? (() => {
                             try {
-                              const date = new Date(employee.birth_date + 'T00:00:00');
+                              // Handle both ISO strings and YYYY-MM-DD format
+                              const dateStr = employee.birth_date.includes('T') 
+                                ? employee.birth_date.split('T')[0] 
+                                : employee.birth_date;
+                              const date = new Date(dateStr + 'T00:00:00');
                               return date.toLocaleDateString();
                             } catch (e) {
                               console.error('❌ [EmployeeProfile] Error parsing birth date:', employee.birth_date, e);
@@ -742,9 +746,35 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {employee.sin_expiry_date && (
                   <div className="flex justify-between">
                     <span className="text-neutral-400">SIN Expiry:</span>
-                    <span className={new Date(employee.sin_expiry_date + 'T00:00:00') < new Date() ? 'text-red-400' : ''}>
-                      {new Date(employee.sin_expiry_date + 'T00:00:00').toLocaleDateString()}
-                      {new Date(employee.sin_expiry_date + 'T00:00:00') < new Date() && ' ⚠️ Expired'}
+                    <span className={(() => {
+                      if (!employee.sin_expiry_date) return '';
+                      try {
+                        const dateStr = employee.sin_expiry_date.includes('T') 
+                          ? employee.sin_expiry_date.split('T')[0] 
+                          : employee.sin_expiry_date;
+                        const expiryDate = new Date(dateStr + 'T00:00:00');
+                        return expiryDate < new Date() ? 'text-red-400' : '';
+                      } catch (e) {
+                        return '';
+                      }
+                    })()}>
+                      {(() => {
+                        if (!employee.sin_expiry_date || employee.sin_expiry_date === 'Invalid Date') {
+                          return 'Invalid Date';
+                        }
+                        try {
+                          const dateStr = employee.sin_expiry_date.includes('T') 
+                            ? employee.sin_expiry_date.split('T')[0] 
+                            : employee.sin_expiry_date;
+                          const expiryDate = new Date(dateStr + 'T00:00:00');
+                          const formatted = expiryDate.toLocaleDateString();
+                          const expired = expiryDate < new Date() ? ' ⚠️ Expired' : '';
+                          return formatted + expired;
+                        } catch (e) {
+                          console.error('❌ [EmployeeProfile] Error parsing SIN expiry date:', employee.sin_expiry_date, e);
+                          return 'Invalid Date';
+                        }
+                      })()}
                     </span>
                   </div>
                 )}
