@@ -16,6 +16,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const [editData, setEditData] = useState({});
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadData, setUploadData] = useState({
+    doc_type: 'Other',
+    document_category: 'Other',
+    file_name: '',
+    file: null,
+    notes: '',
+    signed: false
+  });
 
   useEffect(() => {
     if (employeeId) {
@@ -136,6 +145,148 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const handleCancel = () => {
     setIsEditing(false);
     setEditData({});
+  };
+
+  // Document handling functions
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadData({
+        ...uploadData,
+        file,
+        file_name: file.name
+      });
+    }
+  };
+
+  const handleUploadDocument = async () => {
+    if (!uploadData.file || !uploadData.doc_type) {
+      alert('Please select a file and document type');
+      return;
+    }
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64 = reader.result.split(',')[1];
+        
+        const payload = {
+          doc_type: uploadData.doc_type,
+          file_name: uploadData.file_name,
+          file_data_base64: base64,
+          mime_type: uploadData.file.type,
+          document_category: uploadData.document_category,
+          notes: uploadData.notes,
+          signed: uploadData.signed
+        };
+
+        await API(`/api/employees/${employeeId}/documents`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          credentials: 'include'
+        });
+
+        alert('Document uploaded successfully!');
+        setShowUploadModal(false);
+        setUploadData({
+          doc_type: 'Other',
+          document_category: 'Other',
+          file_name: '',
+          file: null,
+          notes: '',
+          signed: false
+        });
+        await loadEmployeeData();
+      };
+      reader.readAsDataURL(uploadData.file);
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      alert('Failed to upload document: ' + error.message);
+    }
+  };
+
+  const handleViewDocument = async (doc) => {
+    try {
+      if (doc.file_url && !doc.has_file_data) {
+        // External URL - open in new tab
+        window.open(doc.file_url, '_blank');
+      } else {
+        // Download from server
+        const response = await fetch(`/api/employees/${employeeId}/documents/${doc.id}/download`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            // It's a JSON response with a URL
+            const data = await response.json();
+            if (data.url) {
+              window.open(data.url, '_blank');
+            }
+          } else {
+            // It's a file blob
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(() => window.URL.revokeObjectURL(url), 100);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error viewing document:', error);
+      alert('Failed to open document');
+    }
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+    
+    try {
+      await API(`/api/employees/${employeeId}/documents/${docId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      alert('Document deleted successfully');
+      await loadEmployeeData();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      alert('Failed to delete document');
+    }
+  };
+
+  const getDocumentIcon = (docType) => {
+    const icons = {
+      Contract: '📄',
+      VoidCheque: '💳',
+      DirectDeposit: '🏦',
+      WorkPermit: '🛂',
+      PR_Card: '🇨🇦',
+      Citizenship: '📜',
+      SIN_Document: '🔢',
+      StudyPermit: '🎓',
+      PolicyAck: '✅',
+      Visa: '✈️',
+      Other: '📎'
+    };
+    return icons[docType] || '📎';
+  };
+
+  const formatDocType = (docType) => {
+    return docType.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').trim();
+  };
+
+  const categorizeDocuments = () => {
+    if (!documents || documents.length === 0) return {};
+    
+    return {
+      Financial: documents.filter(d => ['VoidCheque', 'DirectDeposit', 'SIN_Document'].includes(d.doc_type)),
+      Immigration: documents.filter(d => ['WorkPermit', 'PR_Card', 'Citizenship', 'StudyPermit', 'Visa'].includes(d.doc_type)),
+      Employment: documents.filter(d => ['Contract', 'PolicyAck'].includes(d.doc_type)),
+      Other: documents.filter(d => d.doc_type === 'Other' || !['VoidCheque', 'DirectDeposit', 'SIN_Document', 'WorkPermit', 'PR_Card', 'Citizenship', 'StudyPermit', 'Visa', 'Contract', 'PolicyAck'].includes(d.doc_type))
+    };
   };
 
   const tabs = [
@@ -381,6 +532,24 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <span>{employee.birth_date ? new Date(employee.birth_date).toLocaleDateString() : 'Not provided'}</span>
                   )}
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Address:</span>
+                  <span className="text-right max-w-xs">{employee.full_address || 'Not provided'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4">Emergency Contact</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Name:</span>
+                  <span>{employee.emergency_contact_name || 'Not provided'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Phone:</span>
+                  <span>{employee.emergency_contact_phone || 'Not provided'}</span>
+                </div>
               </div>
             </div>
 
@@ -468,6 +637,85 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="space-y-6">
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <span className="mr-2">💰</span> Financial Information
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">SIN:</span>
+                  <span className="font-mono text-indigo-400">{employee.sin_number || 'Not provided'}</span>
+                </div>
+                {employee.sin_expiry_date && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">SIN Expiry:</span>
+                    <span className={new Date(employee.sin_expiry_date) < new Date() ? 'text-red-400' : ''}>
+                      {new Date(employee.sin_expiry_date).toLocaleDateString()}
+                      {new Date(employee.sin_expiry_date) < new Date() && ' ⚠️ Expired'}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span className="text-neutral-400">Bank:</span>
+                  <span>{employee.bank_name || 'Not provided'}</span>
+                </div>
+                {employee.bank_transit_number && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Transit:</span>
+                    <span className="font-mono">{employee.bank_transit_number}</span>
+                  </div>
+                )}
+                {employee.bank_account_number && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Account:</span>
+                    <span className="font-mono text-indigo-400">{employee.bank_account_number}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h3 className="text-lg font-semibold mb-4 flex items-center">
+                <span className="mr-2">📋</span> Onboarding Status
+              </h3>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-neutral-400">Contract:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    employee.contract_status === 'Signed' 
+                      ? 'bg-green-900/50 text-green-300' 
+                      : employee.contract_status === 'Sent' 
+                      ? 'bg-yellow-900/50 text-yellow-300'
+                      : 'bg-neutral-700 text-neutral-400'
+                  }`}>
+                    {employee.contract_status || 'Not Sent'}
+                  </span>
+                </div>
+                {employee.contract_signed_date && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Signed On:</span>
+                    <span>{new Date(employee.contract_signed_date).toLocaleDateString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center">
+                  <span className="text-neutral-400">Gift Card:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    employee.gift_card_sent 
+                      ? 'bg-green-900/50 text-green-300' 
+                      : 'bg-neutral-700 text-neutral-400'
+                  }`}>
+                    {employee.gift_card_sent ? 'Sent ✓' : 'Pending'}
+                  </span>
+                </div>
+                {employee.onboarding_source && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Source:</span>
+                    <span className="text-xs">{employee.onboarding_source}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="bg-neutral-800 p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
               <div className="space-y-4">
@@ -671,27 +919,332 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="space-y-6"
         >
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Employee Documents</h3>
-            <div className="grid gap-4">
-              {(documents || []).map((doc) => (
-                <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg">
-                  <div>
-                    <div className="font-medium">{doc.doc_type}</div>
-                    <div className="text-sm text-neutral-400">{doc.file_name}</div>
-                    <div className="text-xs text-neutral-500">Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}</div>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold">Employee Documents</h3>
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex items-center space-x-2 transition"
+              >
+                <span>📤</span>
+                <span>Upload Document</span>
+              </button>
+            </div>
+
+            {(() => {
+              const categorized = categorizeDocuments();
+              const hasDocuments = documents && documents.length > 0;
+
+              if (!hasDocuments) {
+                return (
+                  <div className="text-center py-12 text-neutral-400">
+                    <div className="text-6xl mb-4">📁</div>
+                    <p>No documents uploaded yet</p>
+                    <p className="text-sm mt-2">Click "Upload Document" to add files</p>
                   </div>
+                );
+              }
+
+              return (
+                <div className="space-y-6">
+                  {/* Financial Documents */}
+                  {categorized.Financial && categorized.Financial.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                        <span className="mr-2">💰</span> Financial Documents
+                      </h4>
+                      <div className="grid gap-3">
+                        {categorized.Financial.map(doc => (
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                            <div className="flex items-center space-x-4">
+                              <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
+                              <div>
+                                <div className="font-medium">{formatDocType(doc.doc_type)}</div>
+                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-xs text-neutral-500">
+                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
+                              }`}>
+                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                              </span>
+                              <button
+                                onClick={() => handleViewDocument(doc)}
+                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                              >
+                                👁️ View
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDocument(doc.id)}
+                                className="text-neutral-400 hover:text-red-400 transition"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Immigration Documents */}
+                  {categorized.Immigration && categorized.Immigration.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                        <span className="mr-2">🛂</span> Immigration & Status
+                      </h4>
+                      <div className="grid gap-3">
+                        {categorized.Immigration.map(doc => (
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                            <div className="flex items-center space-x-4">
+                              <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
+                              <div>
+                                <div className="font-medium">{formatDocType(doc.doc_type)}</div>
+                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-xs text-neutral-500">
+                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
+                              }`}>
+                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                              </span>
+                              <button
+                                onClick={() => handleViewDocument(doc)}
+                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                              >
+                                👁️ View
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDocument(doc.id)}
+                                className="text-neutral-400 hover:text-red-400 transition"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Employment Documents */}
+                  {categorized.Employment && categorized.Employment.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                        <span className="mr-2">📄</span> Employment Documents
+                      </h4>
+                      <div className="grid gap-3">
+                        {categorized.Employment.map(doc => (
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                            <div className="flex items-center space-x-4">
+                              <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
+                              <div>
+                                <div className="font-medium">{formatDocType(doc.doc_type)}</div>
+                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-xs text-neutral-500">
+                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
+                              }`}>
+                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                              </span>
+                              <button
+                                onClick={() => handleViewDocument(doc)}
+                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                              >
+                                👁️ View
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDocument(doc.id)}
+                                className="text-neutral-400 hover:text-red-400 transition"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Other Documents */}
+                  {categorized.Other && categorized.Other.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                        <span className="mr-2">📎</span> Other Documents
+                      </h4>
+                      <div className="grid gap-3">
+                        {categorized.Other.map(doc => (
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                            <div className="flex items-center space-x-4">
+                              <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
+                              <div>
+                                <div className="font-medium">{formatDocType(doc.doc_type)}</div>
+                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-xs text-neutral-500">
+                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
+                                </div>
+                                {doc.notes && (
+                                  <div className="text-xs text-neutral-400 mt-1">Note: {doc.notes}</div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
+                              }`}>
+                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                              </span>
+                              <button
+                                onClick={() => handleViewDocument(doc)}
+                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                              >
+                                👁️ View
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDocument(doc.id)}
+                                className="text-neutral-400 hover:text-red-400 transition"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Upload Modal */}
+          {showUploadModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-neutral-800 p-6 rounded-lg max-w-md w-full mx-4"
+              >
+                <h3 className="text-xl font-semibold mb-4">Upload Document</h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Document Type *</label>
+                    <select
+                      value={uploadData.doc_type}
+                      onChange={(e) => setUploadData({...uploadData, doc_type: e.target.value})}
+                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2"
+                    >
+                      <option value="Contract">Contract</option>
+                      <option value="VoidCheque">Void Cheque</option>
+                      <option value="DirectDeposit">Direct Deposit Form</option>
+                      <option value="WorkPermit">Work Permit</option>
+                      <option value="PR_Card">PR Card</option>
+                      <option value="Citizenship">Citizenship</option>
+                      <option value="SIN_Document">SIN Document</option>
+                      <option value="StudyPermit">Study Permit</option>
+                      <option value="PolicyAck">Policy Acknowledgment</option>
+                      <option value="Visa">Visa</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Category</label>
+                    <select
+                      value={uploadData.document_category}
+                      onChange={(e) => setUploadData({...uploadData, document_category: e.target.value})}
+                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2"
+                    >
+                      <option value="Financial">Financial</option>
+                      <option value="Immigration">Immigration</option>
+                      <option value="Employment">Employment</option>
+                      <option value="Personal">Personal</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">File *</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={handleFileSelect}
+                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2 text-sm"
+                    />
+                    {uploadData.file && (
+                      <p className="text-xs text-neutral-400 mt-1">
+                        Selected: {uploadData.file_name} ({(uploadData.file.size / 1024).toFixed(1)} KB)
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Notes</label>
+                    <textarea
+                      value={uploadData.notes}
+                      onChange={(e) => setUploadData({...uploadData, notes: e.target.value})}
+                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2 text-sm"
+                      rows="3"
+                      placeholder="Optional notes about this document..."
+                    ></textarea>
+                  </div>
+
                   <div className="flex items-center space-x-2">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      doc.signed ? 'bg-green-900 text-green-300' : 'bg-yellow-900 text-yellow-300'
-                    }`}>
-                      {doc.signed ? 'Signed' : 'Pending'}
-                    </span>
-                    <button className="text-indigo-400 hover:text-indigo-300">View</button>
+                    <input
+                      type="checkbox"
+                      id="signed"
+                      checked={uploadData.signed}
+                      onChange={(e) => setUploadData({...uploadData, signed: e.target.checked})}
+                      className="rounded"
+                    />
+                    <label htmlFor="signed" className="text-sm">Document is signed</label>
+                  </div>
+
+                  <div className="flex space-x-3 mt-6">
+                    <button
+                      onClick={handleUploadDocument}
+                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                    >
+                      Upload
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUploadModal(false);
+                        setUploadData({
+                          doc_type: 'Other',
+                          document_category: 'Other',
+                          file_name: '',
+                          file: null,
+                          notes: '',
+                          signed: false
+                        });
+                      }}
+                      className="flex-1 bg-neutral-700 hover:bg-neutral-600 px-4 py-2 rounded-lg transition"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
-              ))}
+              </motion.div>
             </div>
-          </div>
+          )}
         </motion.div>
       )}
 

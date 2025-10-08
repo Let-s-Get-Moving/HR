@@ -211,13 +211,128 @@ r.get("/:id/documents", async (req, res) => {
   try {
     const { id } = req.params;
     const { rows } = await q(
-      `SELECT * FROM documents WHERE employee_id = $1 ORDER BY uploaded_on DESC`,
+      `SELECT id, employee_id, doc_type, file_name, uploaded_on, signed, 
+              file_url, file_size, mime_type, document_category, notes,
+              CASE WHEN file_data IS NOT NULL THEN true ELSE false END as has_file_data
+       FROM documents 
+       WHERE employee_id = $1 
+       ORDER BY uploaded_on DESC`,
       [id]
     );
     res.json(rows);
   } catch (error) {
     console.error('Error fetching documents:', error);
     res.status(500).json({ error: 'Failed to fetch documents', details: error.message });
+  }
+});
+
+// Upload new document for employee
+r.post("/:id/documents", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { doc_type, file_name, file_data_base64, mime_type, notes, document_category, signed } = req.body;
+    
+    // Validate required fields
+    if (!doc_type || !file_name || !file_data_base64) {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: 'doc_type, file_name, and file_data_base64 are required' 
+      });
+    }
+    
+    // Convert base64 to buffer
+    const fileBuffer = Buffer.from(file_data_base64, 'base64');
+    
+    // Insert document
+    const { rows } = await q(
+      `INSERT INTO documents (
+        employee_id, doc_type, file_name, file_data, file_size, mime_type,
+        document_category, notes, signed, uploaded_on, uploaded_by
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), $10)
+      RETURNING id, employee_id, doc_type, file_name, uploaded_on, signed, 
+                file_size, mime_type, document_category, notes`,
+      [
+        id,
+        doc_type,
+        file_name,
+        fileBuffer,
+        fileBuffer.length,
+        mime_type || 'application/octet-stream',
+        document_category || 'Other',
+        notes || null,
+        signed || false,
+        req.user?.id || null
+      ]
+    );
+    
+    console.log(`✅ Document uploaded: ${file_name} for employee ${id}`);
+    res.status(201).json(rows[0]);
+  } catch (error) {
+    console.error('Error uploading document:', error);
+    res.status(500).json({ error: 'Failed to upload document', details: error.message });
+  }
+});
+
+// Download specific document
+r.get("/:id/documents/:docId/download", async (req, res) => {
+  try {
+    const { id, docId } = req.params;
+    
+    const { rows } = await q(
+      `SELECT file_data, file_name, mime_type, file_url
+       FROM documents 
+       WHERE id = $1 AND employee_id = $2`,
+      [docId, id]
+    );
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+    
+    const doc = rows[0];
+    
+    // If we have file data, serve it
+    if (doc.file_data) {
+      res.setHeader('Content-Type', doc.mime_type || 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${doc.file_name}"`);
+      res.send(doc.file_data);
+    } 
+    // If we only have a URL, redirect to it
+    else if (doc.file_url) {
+      res.json({ 
+        message: 'Document is stored externally',
+        url: doc.file_url,
+        file_name: doc.file_name 
+      });
+    } 
+    else {
+      res.status(404).json({ error: 'Document file not available' });
+    }
+  } catch (error) {
+    console.error('Error downloading document:', error);
+    res.status(500).json({ error: 'Failed to download document', details: error.message });
+  }
+});
+
+// Delete document
+r.delete("/:id/documents/:docId", async (req, res) => {
+  try {
+    const { id, docId } = req.params;
+    
+    const { rowCount } = await q(
+      `DELETE FROM documents WHERE id = $1 AND employee_id = $2`,
+      [docId, id]
+    );
+    
+    if (rowCount === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+    
+    console.log(`🗑️ Document deleted: ${docId} for employee ${id}`);
+    res.sendStatus(204);
+  } catch (error) {
+    console.error('Error deleting document:', error);
+    res.status(500).json({ error: 'Failed to delete document', details: error.message });
   }
 });
 

@@ -61,6 +61,32 @@ HR/
 
 All mock/test data has been removed from the system. The database is clean and ready for real employee data.
 
+### **📥 NEW: Onboarding Data Import System**
+
+Import employee onboarding data from XLSX files (Monday.com & Google Forms exports) including personal info, financial details, emergency contacts, and document URLs.
+
+**Quick Start:**
+```bash
+# 1. Run database migration
+psql $DATABASE_URL < db/init/011_onboarding_fields.sql
+
+# 2. Run import script
+node scripts/import-onboarding-data.js
+
+# 3. View documents in employee profiles → Documents tab
+```
+
+**Features:**
+- ✅ Imports from 2 XLSX files (Monday.com + Google Forms)
+- ✅ Stores SIN, bank info, addresses, emergency contacts
+- ✅ Document URLs (contracts, void cheques, work permits, SIN docs)
+- ✅ Beautiful categorized document UI with upload functionality
+- ✅ Safe to run multiple times (no duplicates)
+
+📖 **Full Documentation**: 
+- Quick Start: [ONBOARDING_QUICKSTART.md](ONBOARDING_QUICKSTART.md)
+- Detailed Guide: [docs/ONBOARDING_IMPORT_SYSTEM.md](docs/ONBOARDING_IMPORT_SYSTEM.md)
+
 ### **🗑️ Remove All Data (Clean Start)**
 
 To completely clean the database and start fresh:
