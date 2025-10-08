@@ -33,8 +33,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   }, [employeeId]);
 
   const loadEmployeeData = async () => {
-    console.log(`🔄 [EmployeeProfile] Loading data for employee ${employeeId}...`);
+    console.log(`🔄 [EmployeeProfile] ===== Loading data for employee ${employeeId} =====`);
     try {
+      console.log(`🔄 [EmployeeProfile] Fetching employee data...`);
       const [empData, timeData, docData, trainingData, payrollData, hrData, deptsData, locsData] = await Promise.all([
         API(`/api/employees/${employeeId}`),
         API(`/api/employees/${employeeId}/time-entries`),
@@ -47,9 +48,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       ]);
       
       console.log(`✅ [EmployeeProfile] Employee data loaded:`, {
-        employee: `${empData?.first_name} ${empData?.last_name}`,
+        employee: empData,
         timeEntries: timeData?.length || 0,
-        documents: docData?.length || 0,
+        documents: docData,
         trainingRecords: trainingData?.length || 0,
         payrollHistory: payrollData?.length || 0,
         hrDetails: {
@@ -59,7 +60,19 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           identifiers: hrData?.identifiers?.length || 0,
           compensationHistory: hrData?.compensation_history?.length || 0,
           statusHistory: hrData?.status_history?.length || 0
-        }
+        },
+        departments: deptsData?.length || 0,
+        locations: locsData?.length || 0
+      });
+      
+      console.log(`📄 [EmployeeProfile] Documents received:`, docData);
+      console.log(`👤 [EmployeeProfile] Employee details:`, {
+        id: empData?.id,
+        name: `${empData?.first_name} ${empData?.last_name}`,
+        birth_date: empData?.birth_date,
+        sin_number: empData?.sin_number ? 'Present' : 'Not provided',
+        bank_name: empData?.bank_name || 'Not provided',
+        emergency_contact_name: empData?.emergency_contact_name || 'Not provided'
       });
       
       setEmployee(empData);
@@ -72,8 +85,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       setLocations(locsData || []);
     } catch (error) {
       console.error("❌ [EmployeeProfile] Error loading employee data:", error);
+      console.error("❌ [EmployeeProfile] Error details:", {
+        message: error.message,
+        stack: error.stack
+      });
     } finally {
       setLoading(false);
+      console.log(`✅ [EmployeeProfile] Loading complete, setting loading=false`);
     }
   };
 
@@ -166,10 +184,22 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
     }
 
     try {
+      console.log(`📤 [EmployeeProfile] Uploading document...`, {
+        employeeId,
+        doc_type: uploadData.doc_type,
+        file_name: uploadData.file_name,
+        file_size: uploadData.file.size,
+        mime_type: uploadData.file.type,
+        category: uploadData.document_category,
+        signed: uploadData.signed
+      });
+      
       // Convert file to base64
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64 = reader.result.split(',')[1];
+        
+        console.log(`🔄 [EmployeeProfile] File converted to base64, size: ${base64.length} characters`);
         
         const payload = {
           doc_type: uploadData.doc_type,
@@ -181,13 +211,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           signed: uploadData.signed
         };
 
-        await API(`/api/employees/${employeeId}/documents`, {
+        console.log(`🚀 [EmployeeProfile] Sending upload request...`);
+        const result = await API(`/api/employees/${employeeId}/documents`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
           credentials: 'include'
         });
 
+        console.log(`✅ [EmployeeProfile] Document uploaded successfully:`, result);
         alert('Document uploaded successfully!');
         setShowUploadModal(false);
         setUploadData({
@@ -202,17 +234,24 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       };
       reader.readAsDataURL(uploadData.file);
     } catch (error) {
-      console.error('Error uploading document:', error);
+      console.error('❌ [EmployeeProfile] Error uploading document:', error);
+      console.error('❌ [EmployeeProfile] Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       alert('Failed to upload document: ' + error.message);
     }
   };
 
   const handleViewDocument = async (doc) => {
+    console.log(`👁️ [EmployeeProfile] Viewing document:`, doc);
     try {
       if (doc.file_url && !doc.has_file_data) {
+        console.log(`🌐 [EmployeeProfile] Opening external URL:`, doc.file_url);
         // External URL - open in new tab
         window.open(doc.file_url, '_blank');
       } else {
+        console.log(`📥 [EmployeeProfile] Downloading from server...`);
         // Download from server
         const response = await fetch(`/api/employees/${employeeId}/documents/${doc.id}/download`, {
           credentials: 'include',
@@ -221,17 +260,23 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           }
         });
         
+        console.log(`📡 [EmployeeProfile] Download response status:`, response.status);
+        
         if (response.ok) {
           const contentType = response.headers.get('content-type');
+          console.log(`📄 [EmployeeProfile] Content-Type:`, contentType);
+          
           if (contentType && contentType.includes('application/json')) {
             // It's a JSON response with a URL
             const data = await response.json();
+            console.log(`🔗 [EmployeeProfile] Got JSON response with URL:`, data);
             if (data.url) {
               window.open(data.url, '_blank');
             }
           } else {
             // It's a file blob - create proper blob URL and open
             const blob = await response.blob();
+            console.log(`📦 [EmployeeProfile] Received blob, size:`, blob.size);
             const blobUrl = window.URL.createObjectURL(blob);
             
             // Open in new window with proper handling
@@ -239,10 +284,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             
             // Clean up blob URL after window loads
             if (newWindow) {
+              console.log(`✅ [EmployeeProfile] Opened in new window`);
               newWindow.onload = () => {
                 setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
               };
             } else {
+              console.log(`⚠️ [EmployeeProfile] Popup blocked, downloading instead`);
               // If popup blocked, download instead
               const link = document.createElement('a');
               link.href = blobUrl;
@@ -254,28 +301,40 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             }
           }
         } else {
+          console.error(`❌ [EmployeeProfile] Download failed:`, response.statusText);
           alert('Failed to load document: ' + response.statusText);
         }
       }
     } catch (error) {
-      console.error('Error viewing document:', error);
+      console.error('❌ [EmployeeProfile] Error viewing document:', error);
+      console.error('❌ [EmployeeProfile] Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
       alert('Failed to open document: ' + error.message);
     }
   };
 
   const handleDeleteDocument = async (docId) => {
+    console.log(`🗑️ [EmployeeProfile] Deleting document:`, docId);
     if (!confirm('Are you sure you want to delete this document?')) return;
     
     try {
+      console.log(`🚀 [EmployeeProfile] Sending delete request...`);
       await API(`/api/employees/${employeeId}/documents/${docId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
+      console.log(`✅ [EmployeeProfile] Document deleted successfully`);
       alert('Document deleted successfully');
       await loadEmployeeData();
     } catch (error) {
-      console.error('Error deleting document:', error);
-      alert('Failed to delete document');
+      console.error('❌ [EmployeeProfile] Error deleting document:', error);
+      console.error('❌ [EmployeeProfile] Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
+      alert('Failed to delete document: ' + error.message);
     }
   };
 
@@ -551,7 +610,19 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     />
                   ) : (
-                    <span>{employee.birth_date ? new Date(employee.birth_date + 'T00:00:00').toLocaleDateString() : 'Not provided'}</span>
+                    <span>
+                      {employee.birth_date && employee.birth_date !== 'Invalid Date' 
+                        ? (() => {
+                            try {
+                              const date = new Date(employee.birth_date + 'T00:00:00');
+                              return date.toLocaleDateString();
+                            } catch (e) {
+                              console.error('❌ [EmployeeProfile] Error parsing birth date:', employee.birth_date, e);
+                              return 'Invalid Date';
+                            }
+                          })()
+                        : 'Not provided'}
+                    </span>
                   )}
                 </div>
                 <div className="flex justify-between">

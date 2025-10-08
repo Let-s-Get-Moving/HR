@@ -210,6 +210,7 @@ r.get("/:id/time-entries", async (req, res) => {
 r.get("/:id/documents", async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(`📄 [API] Fetching documents for employee ${id}`);
     const { rows } = await q(
       `SELECT id, employee_id, doc_type, file_name, uploaded_on, signed, 
               file_url, file_size, mime_type, document_category, notes,
@@ -219,9 +220,17 @@ r.get("/:id/documents", async (req, res) => {
        ORDER BY uploaded_on DESC`,
       [id]
     );
+    console.log(`✅ [API] Found ${rows.length} documents for employee ${id}`);
+    console.log(`📋 [API] Document details:`, rows.map(r => ({
+      id: r.id,
+      doc_type: r.doc_type,
+      file_name: r.file_name,
+      has_file_data: r.has_file_data,
+      file_url: r.file_url ? 'Present' : 'None'
+    })));
     res.json(rows);
   } catch (error) {
-    console.error('Error fetching documents:', error);
+    console.error('❌ [API] Error fetching documents:', error);
     res.status(500).json({ error: 'Failed to fetch documents', details: error.message });
   }
 });
@@ -232,17 +241,31 @@ r.post("/:id/documents", async (req, res) => {
     const { id } = req.params;
     const { doc_type, file_name, file_data_base64, mime_type, notes, document_category, signed } = req.body;
     
+    console.log(`📤 [API] Upload request for employee ${id}:`, {
+      doc_type,
+      file_name,
+      mime_type,
+      document_category,
+      signed,
+      base64_length: file_data_base64?.length || 0,
+      has_notes: !!notes
+    });
+    
     // Validate required fields
     if (!doc_type || !file_name || !file_data_base64) {
+      console.error(`❌ [API] Missing required fields for upload`);
       return res.status(400).json({ 
         error: 'Missing required fields',
         details: 'doc_type, file_name, and file_data_base64 are required' 
       });
     }
     
+    console.log(`🔄 [API] Converting base64 to buffer...`);
     // Convert base64 to buffer
     const fileBuffer = Buffer.from(file_data_base64, 'base64');
+    console.log(`✅ [API] Buffer created, size: ${fileBuffer.length} bytes (${(fileBuffer.length / 1024).toFixed(2)} KB)`);
     
+    console.log(`💾 [API] Inserting into database...`);
     // Insert document
     const { rows } = await q(
       `INSERT INTO documents (
@@ -265,10 +288,22 @@ r.post("/:id/documents", async (req, res) => {
       ]
     );
     
-    console.log(`✅ Document uploaded: ${file_name} for employee ${id}`);
+    console.log(`✅ [API] Document uploaded successfully:`, {
+      document_id: rows[0].id,
+      employee_id: id,
+      file_name,
+      file_size: rows[0].file_size,
+      doc_type,
+      category: rows[0].document_category
+    });
     res.status(201).json(rows[0]);
   } catch (error) {
-    console.error('Error uploading document:', error);
+    console.error('❌ [API] Error uploading document:', error);
+    console.error('❌ [API] Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Failed to upload document', details: error.message });
   }
 });
@@ -278,6 +313,8 @@ r.get("/:id/documents/:docId/download", async (req, res) => {
   try {
     const { id, docId } = req.params;
     
+    console.log(`📥 [API] Download request for document ${docId} of employee ${id}`);
+    
     const { rows } = await q(
       `SELECT file_data, file_name, mime_type, file_url
        FROM documents 
@@ -286,19 +323,30 @@ r.get("/:id/documents/:docId/download", async (req, res) => {
     );
     
     if (rows.length === 0) {
+      console.error(`❌ [API] Document not found: ${docId}`);
       return res.status(404).json({ error: 'Document not found' });
     }
     
     const doc = rows[0];
     
+    console.log(`📄 [API] Document found:`, {
+      file_name: doc.file_name,
+      mime_type: doc.mime_type,
+      has_file_data: !!doc.file_data,
+      has_file_url: !!doc.file_url,
+      file_size: doc.file_data?.length || 0
+    });
+    
     // If we have file data, serve it
     if (doc.file_data) {
+      console.log(`✅ [API] Serving file data, size: ${doc.file_data.length} bytes`);
       res.setHeader('Content-Type', doc.mime_type || 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="${doc.file_name}"`);
       res.send(doc.file_data);
     } 
     // If we only have a URL, redirect to it
     else if (doc.file_url) {
+      console.log(`🔗 [API] Returning external URL`);
       res.json({ 
         message: 'Document is stored externally',
         url: doc.file_url,
@@ -306,10 +354,16 @@ r.get("/:id/documents/:docId/download", async (req, res) => {
       });
     } 
     else {
+      console.error(`❌ [API] Document has neither file_data nor file_url`);
       res.status(404).json({ error: 'Document file not available' });
     }
   } catch (error) {
-    console.error('Error downloading document:', error);
+    console.error('❌ [API] Error downloading document:', error);
+    console.error('❌ [API] Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Failed to download document', details: error.message });
   }
 });
@@ -319,19 +373,27 @@ r.delete("/:id/documents/:docId", async (req, res) => {
   try {
     const { id, docId } = req.params;
     
+    console.log(`🗑️ [API] Delete request for document ${docId} of employee ${id}`);
+    
     const { rowCount } = await q(
       `DELETE FROM documents WHERE id = $1 AND employee_id = $2`,
       [docId, id]
     );
     
     if (rowCount === 0) {
+      console.error(`❌ [API] Document not found for deletion: ${docId}`);
       return res.status(404).json({ error: 'Document not found' });
     }
     
-    console.log(`🗑️ Document deleted: ${docId} for employee ${id}`);
+    console.log(`✅ [API] Document deleted successfully: ${docId}`);
     res.sendStatus(204);
   } catch (error) {
-    console.error('Error deleting document:', error);
+    console.error('❌ [API] Error deleting document:', error);
+    console.error('❌ [API] Error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
     res.status(500).json({ error: 'Failed to delete document', details: error.message });
   }
 });
