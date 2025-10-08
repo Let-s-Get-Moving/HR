@@ -22,6 +22,9 @@ const pool = new Pool({
 // Tables that reference employee_id
 const RELATED_TABLES = [
   'time_entries',
+  'timecard_entries',
+  'timecards',
+  'timecard_uploads',
   'documents',
   'training_records',
   'performance_reviews',

@@ -47,12 +47,11 @@ async function findDuplicates() {
   try {
     console.log('🔍 Searching for duplicate employees...\n');
     
-    // Get all active employees
+    // Get all employees (including terminated ones for complete check)
     const { rows: employees } = await pool.query(`
       SELECT id, first_name, last_name, email, hire_date, role_title, 
              department_id, onboarding_source, status
       FROM employees
-      WHERE status <> 'Terminated'
       ORDER BY last_name, first_name
     `);
     
