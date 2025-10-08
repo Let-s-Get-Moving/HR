@@ -104,7 +104,7 @@ function parseFile1() {
     const employee = {
       first_name: row[2]?.trim(),
       last_name: row[3]?.trim(),
-      status: row[4],
+      status: row[4]?.trim(),
       contract_status: row[5] === 'Signed & returned' ? 'Signed' : (row[5] ? 'Sent' : null),
       contract_url: row[6],
       gift_card_sent: row[7] === 'Done',
@@ -114,11 +114,11 @@ function parseFile1() {
       email: row[11]?.trim().toLowerCase(),
       role_title: row[12],
       full_address: row[13],
-      sin_number: row[14] ? row[14].toString() : null,
+      sin_number: row[14] ? row[14].toString().trim() : null,
       sin_expiry_date: excelDateToJSDate(row[15]),
       bank_name: row[19],
-      bank_transit_number: row[20] ? row[20].toString() : null,
-      bank_account_number: row[21] ? row[21].toString() : null,
+      bank_transit_number: row[20] ? row[20].toString().trim() : null,
+      bank_account_number: row[21] ? row[21].toString().trim() : null,
       emergency_contact_phone: cleanPhone(row[22]),
       emergency_contact_name: row[23],
       termination_date: excelDateToJSDate(row[24]),
@@ -327,10 +327,54 @@ function levenshteinDistance(str1, str2) {
 
 // Create or update employee
 async function upsertEmployee(employeeData) {
-  const existing = await findEmployeeByName(employeeData.first_name, employeeData.last_name);
+  // Sanitize data - remove invalid fields instead of failing
+  const sanitizedData = { ...employeeData };
+  
+  // Validate and sanitize dates
+  if (sanitizedData.birth_date && !isValidDate(sanitizedData.birth_date)) {
+    console.log(`      ⚠️  Invalid birth_date: ${sanitizedData.birth_date} - skipping field`);
+    sanitizedData.birth_date = null;
+  }
+  if (sanitizedData.hire_date && !isValidDate(sanitizedData.hire_date)) {
+    console.log(`      ⚠️  Invalid hire_date: ${sanitizedData.hire_date} - skipping field`);
+    sanitizedData.hire_date = null;
+  }
+  if (sanitizedData.sin_expiry_date && !isValidDate(sanitizedData.sin_expiry_date)) {
+    console.log(`      ⚠️  Invalid sin_expiry_date: ${sanitizedData.sin_expiry_date} - skipping field`);
+    sanitizedData.sin_expiry_date = null;
+  }
+  if (sanitizedData.contract_signed_date && !isValidDate(sanitizedData.contract_signed_date)) {
+    console.log(`      ⚠️  Invalid contract_signed_date: ${sanitizedData.contract_signed_date} - skipping field`);
+    sanitizedData.contract_signed_date = null;
+  }
+  
+  // Validate status field
+  const validStatuses = ['Active', 'On Leave', 'Terminated'];
+  if (sanitizedData.status) {
+    // Trim and normalize status
+    let normalizedStatus = sanitizedData.status.toString().trim();
+    
+    // Map common variations
+    if (normalizedStatus === 'Inactive') {
+      console.log(`      ⚠️  Mapping "Inactive" → "Terminated"`);
+      normalizedStatus = 'Terminated';
+    }
+    
+    if (!validStatuses.includes(normalizedStatus)) {
+      console.log(`      ⚠️  Invalid status: "${sanitizedData.status}" - defaulting to Active`);
+      sanitizedData.status = 'Active';
+    } else {
+      sanitizedData.status = normalizedStatus;
+    }
+  } else {
+    // If no status provided, default to Active
+    sanitizedData.status = 'Active';
+  }
+  
+  const existing = await findEmployeeByName(sanitizedData.first_name, sanitizedData.last_name);
   
   if (existing) {
-    console.log(`   ↻ Updating: ${employeeData.first_name} ${employeeData.last_name}`);
+    console.log(`   ↻ Updating: ${sanitizedData.first_name} ${sanitizedData.last_name}`);
     
     // Update existing employee - only update fields that have values
     const updates = [];
@@ -346,35 +390,64 @@ async function upsertEmployee(employeeData) {
       }
     };
     
-    addUpdate('email', employeeData.email);
-    addUpdate('phone', employeeData.phone);
-    addUpdate('birth_date', employeeData.birth_date);
-    addUpdate('hire_date', employeeData.hire_date);
-    addUpdate('role_title', employeeData.role_title);
-    addUpdate('full_address', employeeData.full_address);
-    addUpdate('sin_number', employeeData.sin_number);
-    addUpdate('sin_expiry_date', employeeData.sin_expiry_date);
-    addUpdate('bank_name', employeeData.bank_name);
-    addUpdate('bank_transit_number', employeeData.bank_transit_number);
-    addUpdate('bank_account_number', employeeData.bank_account_number);
-    addUpdate('emergency_contact_name', employeeData.emergency_contact_name);
-    addUpdate('emergency_contact_phone', employeeData.emergency_contact_phone);
-    addUpdate('contract_status', employeeData.contract_status);
-    addUpdate('gift_card_sent', employeeData.gift_card_sent);
-    addUpdate('onboarding_source', employeeData.source);
+    addUpdate('email', sanitizedData.email);
+    addUpdate('phone', sanitizedData.phone);
+    addUpdate('birth_date', sanitizedData.birth_date);
+    addUpdate('hire_date', sanitizedData.hire_date);
+    addUpdate('role_title', sanitizedData.role_title);
+    addUpdate('full_address', sanitizedData.full_address);
+    addUpdate('sin_number', sanitizedData.sin_number);
+    addUpdate('sin_expiry_date', sanitizedData.sin_expiry_date);
+    addUpdate('bank_name', sanitizedData.bank_name);
+    addUpdate('bank_transit_number', sanitizedData.bank_transit_number);
+    addUpdate('bank_account_number', sanitizedData.bank_account_number);
+    addUpdate('emergency_contact_name', sanitizedData.emergency_contact_name);
+    addUpdate('emergency_contact_phone', sanitizedData.emergency_contact_phone);
+    addUpdate('contract_status', sanitizedData.contract_status);
+    addUpdate('gift_card_sent', sanitizedData.gift_card_sent);
+    addUpdate('onboarding_source', sanitizedData.source);
     addUpdate('imported_at', new Date().toISOString());
     
     if (updates.length > 0) {
-      values.push(existing.id);
-      const query = `UPDATE employees SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
-      const result = await pool.query(query, values);
-      return result.rows[0];
+      try {
+        values.push(existing.id);
+        const query = `UPDATE employees SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`;
+        const result = await pool.query(query, values);
+        return result.rows[0];
+      } catch (updateError) {
+        // If email conflict during update, skip email and retry
+        if (updateError.code === '23505' && updateError.constraint === 'employees_email_key') {
+          console.log(`      ⚠️  Email conflict - updating without email change`);
+          // Remove email from updates and retry
+          const noEmailUpdates = [];
+          const noEmailValues = [];
+          let newParamCount = 1;
+          
+          for (let i = 0; i < updates.length; i++) {
+            if (!updates[i].includes('email =')) {
+              noEmailUpdates.push(updates[i].replace(/\$\d+/, `$${newParamCount}`));
+              noEmailValues.push(values[i]);
+              newParamCount++;
+            }
+          }
+          
+          if (noEmailUpdates.length > 0) {
+            noEmailValues.push(existing.id);
+            const retryQuery = `UPDATE employees SET ${noEmailUpdates.join(', ')} WHERE id = $${newParamCount} RETURNING *`;
+            const retryResult = await pool.query(retryQuery, noEmailValues);
+            return retryResult.rows[0];
+          }
+        } else {
+          throw updateError;
+        }
+      }
     }
     
     return existing;
     
   } else {
-    console.log(`   ✚ Creating: ${employeeData.first_name} ${employeeData.last_name}`);
+    console.log(`   ✚ Creating: ${sanitizedData.first_name} ${sanitizedData.last_name}`);
+    console.log(`      Status will be: "${sanitizedData.status}"`);
     
     // Create new employee
     try {
@@ -391,38 +464,38 @@ async function upsertEmployee(employeeData) {
           $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
         ) RETURNING *`,
       [
-        employeeData.first_name,
-        employeeData.last_name,
-        employeeData.email || `${employeeData.first_name.toLowerCase()}@letsgetmovinggroup.com`,
-        employeeData.phone,
-        employeeData.birth_date,
-        employeeData.hire_date || new Date().toISOString().split('T')[0],
+        sanitizedData.first_name,
+        sanitizedData.last_name,
+        sanitizedData.email || `${sanitizedData.first_name.toLowerCase()}@letsgetmovinggroup.com`,
+        sanitizedData.phone,
+        sanitizedData.birth_date,
+        sanitizedData.hire_date || new Date().toISOString().split('T')[0],
         'Full-time', // Default
-        employeeData.role_title,
-        employeeData.full_address,
-        employeeData.status || 'Active',
-        employeeData.sin_number,
-        employeeData.sin_expiry_date,
-        employeeData.bank_name,
-        employeeData.bank_transit_number,
-        employeeData.bank_account_number,
-        employeeData.emergency_contact_name,
-        employeeData.emergency_contact_phone,
-        employeeData.contract_status,
-        employeeData.gift_card_sent || false,
-        employeeData.source,
+        sanitizedData.role_title,
+        sanitizedData.full_address,
+        sanitizedData.status || 'Active',
+        sanitizedData.sin_number,
+        sanitizedData.sin_expiry_date,
+        sanitizedData.bank_name,
+        sanitizedData.bank_transit_number,
+        sanitizedData.bank_account_number,
+        sanitizedData.emergency_contact_name,
+        sanitizedData.emergency_contact_phone,
+        sanitizedData.contract_status,
+        sanitizedData.gift_card_sent || false,
+        sanitizedData.source,
         new Date().toISOString()
       ]
     );
     return result.rows[0];
     } catch (error) {
-      // If duplicate email error, it means same person - skip silently
+      // If duplicate email error, it means same person - update existing
       if (error.code === '23505' && error.constraint === 'employees_email_key') {
         console.log(`      ↻ Email exists - treating as update`);
         // Find by email and update
         const existing = await pool.query(
           `SELECT * FROM employees WHERE LOWER(email) = LOWER($1) LIMIT 1`,
-          [employeeData.email || `${employeeData.first_name.toLowerCase()}@letsgetmovinggroup.com`]
+          [sanitizedData.email || `${sanitizedData.first_name.toLowerCase()}@letsgetmovinggroup.com`]
         );
         if (existing.rows.length > 0) {
           // Update the existing employee
@@ -438,19 +511,19 @@ async function upsertEmployee(employeeData) {
             }
           };
           
-          addUpdate('phone', employeeData.phone);
-          addUpdate('birth_date', employeeData.birth_date);
-          addUpdate('role_title', employeeData.role_title);
-          addUpdate('full_address', employeeData.full_address);
-          addUpdate('sin_number', employeeData.sin_number);
-          addUpdate('sin_expiry_date', employeeData.sin_expiry_date);
-          addUpdate('bank_name', employeeData.bank_name);
-          addUpdate('bank_transit_number', employeeData.bank_transit_number);
-          addUpdate('bank_account_number', employeeData.bank_account_number);
-          addUpdate('emergency_contact_name', employeeData.emergency_contact_name);
-          addUpdate('emergency_contact_phone', employeeData.emergency_contact_phone);
-          addUpdate('contract_status', employeeData.contract_status);
-          addUpdate('onboarding_source', employeeData.source);
+          addUpdate('phone', sanitizedData.phone);
+          addUpdate('birth_date', sanitizedData.birth_date);
+          addUpdate('role_title', sanitizedData.role_title);
+          addUpdate('full_address', sanitizedData.full_address);
+          addUpdate('sin_number', sanitizedData.sin_number);
+          addUpdate('sin_expiry_date', sanitizedData.sin_expiry_date);
+          addUpdate('bank_name', sanitizedData.bank_name);
+          addUpdate('bank_transit_number', sanitizedData.bank_transit_number);
+          addUpdate('bank_account_number', sanitizedData.bank_account_number);
+          addUpdate('emergency_contact_name', sanitizedData.emergency_contact_name);
+          addUpdate('emergency_contact_phone', sanitizedData.emergency_contact_phone);
+          addUpdate('contract_status', sanitizedData.contract_status);
+          addUpdate('onboarding_source', sanitizedData.source);
           
           if (updates.length > 0) {
             values.push(existing.rows[0].id);
@@ -464,6 +537,21 @@ async function upsertEmployee(employeeData) {
       throw error;
     }
   }
+}
+
+// Helper function to validate dates
+function isValidDate(dateString) {
+  if (!dateString || dateString === 'NA' || dateString === 'N/A') return false;
+  
+  // Try to parse as a date
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return false;
+  
+  // Check if date is reasonable (not too far in past/future)
+  const year = date.getFullYear();
+  if (year < 1900 || year > 2100) return false;
+  
+  return true;
 }
 
 // Store document URLs for an employee
@@ -581,16 +669,27 @@ async function importOnboardingData() {
     for (const employeeData of allEmployees) {
       try {
         const existing = await findEmployeeByName(employeeData.first_name, employeeData.last_name);
+        
+        // Always try to create/update - skip only invalid fields
         const employee = await upsertEmployee(employeeData);
         
-        if (existing) {
-          updated++;
+        if (employee) {
+          if (existing) {
+            updated++;
+          } else {
+            created++;
+          }
+          
+          // Store document URLs (non-fatal if fails)
+          try {
+            await storeDocumentUrls(employee.id, employeeData.documents, employeeData.source);
+          } catch (docError) {
+            console.log(`      ⚠️  Document error (non-fatal): ${docError.message}`);
+          }
         } else {
-          created++;
+          errors++;
+          console.error(`   ❌ Failed to create/update ${employeeData.first_name} ${employeeData.last_name}`);
         }
-        
-        // Store document URLs
-        await storeDocumentUrls(employee.id, employeeData.documents, employeeData.source);
         
       } catch (error) {
         errors++;
