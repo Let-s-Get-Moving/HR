@@ -571,14 +571,31 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 <div className="flex justify-between">
                   <span className="text-neutral-400">Email:</span>
                   {isEditing ? (
-                    <input
-                      type="email"
-                      value={editData.email || ''}
-                      onChange={(e) => setEditData({...editData, email: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right"
-                    />
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="text-xs text-neutral-500">Company email (auto-generated)</div>
+                      <div className="font-mono text-xs text-indigo-400">
+                        {employee.first_name?.toLowerCase()}@letsgetmovinggroup.com
+                      </div>
+                      <div className="text-xs text-neutral-500 mt-2">Personal email</div>
+                      <input
+                        type="email"
+                        value={editData.email || ''}
+                        onChange={(e) => setEditData({...editData, email: e.target.value})}
+                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right w-64"
+                        placeholder="Personal email (optional)"
+                      />
+                    </div>
                   ) : (
-                    <span>{employee.email}</span>
+                    <div className="text-right space-y-1">
+                      <div className="font-mono text-xs text-indigo-400">
+                        {employee.first_name?.toLowerCase()}@letsgetmovinggroup.com
+                      </div>
+                      {employee.email && employee.email.toLowerCase() !== `${employee.first_name?.toLowerCase()}@letsgetmovinggroup.com` && (
+                        <div className="text-neutral-300 text-xs">
+                          {employee.email}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div className="flex justify-between">
