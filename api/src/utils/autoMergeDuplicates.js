@@ -10,6 +10,42 @@ const RELATED_TABLES = [
   'documents', 'training_records', 'performance_reviews', 'leave_requests'
 ];
 
+function levenshteinDistance(str1, str2) {
+  const m = str1.length;
+  const n = str2.length;
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(
+          dp[i - 1][j],
+          dp[i][j - 1],
+          dp[i - 1][j - 1]
+        );
+      }
+    }
+  }
+  
+  return dp[m][n];
+}
+
+function areWordsSimilar(word1, word2) {
+  if (word1 === word2) return true;
+  if (word1.startsWith(word2) || word2.startsWith(word1)) return true;
+  
+  const distance = levenshteinDistance(word1, word2);
+  const maxLen = Math.max(word1.length, word2.length);
+  const threshold = maxLen <= 4 ? 1 : 2;
+  
+  return distance <= threshold;
+}
+
 function areNamesSimilar(name1, name2) {
   const n1 = name1.toLowerCase().trim();
   const n2 = name2.toLowerCase().trim();
@@ -18,13 +54,20 @@ function areNamesSimilar(name1, name2) {
   const words1 = n1.split(/\s+/);
   const words2 = n2.split(/\s+/);
   
-  if (words1[0] !== words2[0]) return false;
+  // First names must be similar (using Levenshtein distance)
+  if (!areWordsSimilar(words1[0], words2[0])) return false;
   
   const lastName1 = words1[words1.length - 1];
   const lastName2 = words2[words2.length - 1];
   
+  // Handle initials
   if (lastName1.length === 1 && lastName2.length > 1) return lastName1 === lastName2.charAt(0);
   if (lastName2.length === 1 && lastName1.length > 1) return lastName2 === lastName1.charAt(0);
+  
+  // Last names must be similar (using Levenshtein distance)
+  if (areWordsSimilar(lastName1, lastName2)) return true;
+  
+  // One name contains the other (handles middle names)
   if (n1.includes(n2) || n2.includes(n1)) return true;
   
   return false;
