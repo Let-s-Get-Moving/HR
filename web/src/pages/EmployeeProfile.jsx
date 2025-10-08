@@ -215,7 +215,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       } else {
         // Download from server
         const response = await fetch(`/api/employees/${employeeId}/documents/${doc.id}/download`, {
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'x-session-id': localStorage.getItem('sessionId') || ''
+          }
         });
         
         if (response.ok) {
@@ -227,17 +230,36 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               window.open(data.url, '_blank');
             }
           } else {
-            // It's a file blob
+            // It's a file blob - create proper blob URL and open
             const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            window.open(url, '_blank');
-            setTimeout(() => window.URL.revokeObjectURL(url), 100);
+            const blobUrl = window.URL.createObjectURL(blob);
+            
+            // Open in new window with proper handling
+            const newWindow = window.open(blobUrl, '_blank');
+            
+            // Clean up blob URL after window loads
+            if (newWindow) {
+              newWindow.onload = () => {
+                setTimeout(() => window.URL.revokeObjectURL(blobUrl), 1000);
+              };
+            } else {
+              // If popup blocked, download instead
+              const link = document.createElement('a');
+              link.href = blobUrl;
+              link.download = doc.file_name || 'document';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+            }
           }
+        } else {
+          alert('Failed to load document: ' + response.statusText);
         }
       }
     } catch (error) {
       console.error('Error viewing document:', error);
-      alert('Failed to open document');
+      alert('Failed to open document: ' + error.message);
     }
   };
 
@@ -529,7 +551,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     />
                   ) : (
-                    <span>{employee.birth_date ? new Date(employee.birth_date).toLocaleDateString() : 'Not provided'}</span>
+                    <span>{employee.birth_date ? new Date(employee.birth_date + 'T00:00:00').toLocaleDateString() : 'Not provided'}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
@@ -649,9 +671,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {employee.sin_expiry_date && (
                   <div className="flex justify-between">
                     <span className="text-neutral-400">SIN Expiry:</span>
-                    <span className={new Date(employee.sin_expiry_date) < new Date() ? 'text-red-400' : ''}>
-                      {new Date(employee.sin_expiry_date).toLocaleDateString()}
-                      {new Date(employee.sin_expiry_date) < new Date() && ' ⚠️ Expired'}
+                    <span className={new Date(employee.sin_expiry_date + 'T00:00:00') < new Date() ? 'text-red-400' : ''}>
+                      {new Date(employee.sin_expiry_date + 'T00:00:00').toLocaleDateString()}
+                      {new Date(employee.sin_expiry_date + 'T00:00:00') < new Date() && ' ⚠️ Expired'}
                     </span>
                   </div>
                 )}

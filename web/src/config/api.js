@@ -54,6 +54,11 @@ export const API = (path, options = {}) => {
       throw new Error(`HTTP ${response.status}: ${error}`);
     }
     
+    // Handle 204 No Content responses (no body to parse)
+    if (response.status === 204) {
+      return null;
+    }
+    
     const data = await response.json();
     
     // If this is a login response, store the session ID
