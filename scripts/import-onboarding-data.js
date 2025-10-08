@@ -151,16 +151,119 @@ function parseFile2() {
   return employees;
 }
 
-// Find existing employee by name
+// Find existing employee by name (with fuzzy matching)
 async function findEmployeeByName(firstName, lastName) {
-  const result = await pool.query(
+  // Try exact match first
+  const exactResult = await pool.query(
     `SELECT * FROM employees 
-     WHERE LOWER(first_name) = LOWER($1) 
-     AND LOWER(last_name) = LOWER($2)
+     WHERE LOWER(TRIM(first_name)) = LOWER(TRIM($1))
+     AND LOWER(TRIM(last_name)) = LOWER(TRIM($2))
+     AND status <> 'Terminated'
      LIMIT 1`,
     [firstName, lastName]
   );
-  return result.rows[0];
+  
+  if (exactResult.rows.length > 0) {
+    return exactResult.rows[0];
+  }
+  
+  // Try fuzzy match - get all employees with same last name
+  const candidatesResult = await pool.query(
+    `SELECT * FROM employees 
+     WHERE LOWER(TRIM(last_name)) = LOWER(TRIM($1))
+     AND status <> 'Terminated'`,
+    [lastName]
+  );
+  
+  if (candidatesResult.rows.length === 0) {
+    return null;
+  }
+  
+  // Check for similar names (handles variations, typos, middle names)
+  const searchName = `${firstName} ${lastName}`.toLowerCase();
+  
+  for (const candidate of candidatesResult.rows) {
+    const candidateName = `${candidate.first_name} ${candidate.last_name}`.toLowerCase();
+    
+    // Check if names are similar
+    if (areNamesSimilar(searchName, candidateName)) {
+      console.log(`   🔗 Fuzzy matched: "${searchName}" → "${candidateName}" (ID: ${candidate.id})`);
+      return candidate;
+    }
+  }
+  
+  return null;
+}
+
+// Helper function to check if two names are similar
+function areNamesSimilar(name1, name2) {
+  const n1 = name1.toLowerCase().trim();
+  const n2 = name2.toLowerCase().trim();
+  
+  if (n1 === n2) return true;
+  
+  const words1 = n1.split(/\s+/);
+  const words2 = n2.split(/\s+/);
+  
+  // First names must be similar
+  if (!areWordsSimilar(words1[0], words2[0])) return false;
+  
+  const lastName1 = words1[words1.length - 1];
+  const lastName2 = words2[words2.length - 1];
+  
+  // Handle initials
+  if (lastName1.length === 1 && lastName2.length > 1) {
+    return lastName1 === lastName2.charAt(0);
+  }
+  if (lastName2.length === 1 && lastName1.length > 1) {
+    return lastName2 === lastName1.charAt(0);
+  }
+  
+  // Last names must be similar
+  if (!areWordsSimilar(lastName1, lastName2)) {
+    // Check if one name contains the other (handles middle names)
+    if (n1.includes(n2) || n2.includes(n1)) return true;
+    return false;
+  }
+  
+  return true;
+}
+
+// Check if two words are similar (handles typos, variations)
+function areWordsSimilar(word1, word2) {
+  if (word1 === word2) return true;
+  if (word1.startsWith(word2) || word2.startsWith(word1)) return true;
+  
+  // Calculate Levenshtein distance
+  const distance = levenshteinDistance(word1, word2);
+  const maxLen = Math.max(word1.length, word2.length);
+  const threshold = maxLen <= 4 ? 1 : 2;
+  
+  return distance <= threshold;
+}
+
+// Levenshtein distance (edit distance) calculation
+function levenshteinDistance(str1, str2) {
+  const m = str1.length;
+  const n = str2.length;
+  const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+  
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1] === str2[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1];
+      } else {
+        dp[i][j] = 1 + Math.min(
+          dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]
+        );
+      }
+    }
+  }
+  
+  return dp[m][n];
 }
 
 // Create or update employee

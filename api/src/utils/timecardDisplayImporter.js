@@ -1,5 +1,6 @@
 import XLSX from 'xlsx';
 import { pool } from '../db.js';
+import { findExistingEmployee, mergeEmployeeData } from './employeeMatching.js';
 
 /**
  * Parse Excel file and save for display viewing
@@ -370,16 +371,36 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         
         // Process each employee
         for (const emp of employees) {
-            // Find or skip employee (must exist after our changes)
-            // Find or create employee
-            let employeeId;
-            const empResult = await client.query(`
-                SELECT id FROM employees
-                WHERE LOWER(TRIM(first_name || ' ' || last_name)) = LOWER(TRIM($1))
-                LIMIT 1
-            `, [emp.name]);
+            // Use unified employee matching
+            const queryFn = (sql, params) => client.query(sql, params);
+            const existing = await findExistingEmployee({ name: emp.name }, queryFn);
             
-            if (empResult.rows.length === 0) {
+            let employeeId;
+            
+            if (existing) {
+                // Employee found - use existing
+                employeeId = existing.id;
+                console.log(`✓ Matched existing employee: ${emp.name} (ID: ${employeeId})`);
+                
+                // Merge any missing data from timecard
+                const updates = mergeEmployeeData(existing, {
+                    hire_date: payPeriod.start,
+                    employment_type: 'Full-time',
+                    role_title: 'Employee'
+                }, 'timecard');
+                
+                if (Object.keys(updates).length > 0) {
+                    const setClause = Object.keys(updates)
+                        .map((key, i) => `${key} = $${i + 2}`)
+                        .join(', ');
+                    
+                    await client.query(
+                        `UPDATE employees SET ${setClause} WHERE id = $1`,
+                        [employeeId, ...Object.values(updates)]
+                    );
+                    console.log(`  Updated employee with timecard data: ${Object.keys(updates).join(', ')}`);
+                }
+            } else {
                 // Auto-create employee if not found
                 console.log(`➕ Creating new employee: ${emp.name}`);
                 const nameParts = emp.name.trim().split(' ');
@@ -401,8 +422,6 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                 ]);
                 
                 employeeId = createResult.rows[0].id;
-            } else {
-                employeeId = empResult.rows[0].id;
             }
             
             // Calculate total hours

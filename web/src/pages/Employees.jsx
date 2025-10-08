@@ -213,7 +213,6 @@ export default function Employees() {
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Name</th>
                 <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Email</th>
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Department</th>
-                <th className="hidden lg:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Location</th>
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Type</th>
                 <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Hire Date</th>
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Status</th>
@@ -247,9 +246,19 @@ export default function Employees() {
                       <div className="text-sm text-neutral-400">{employee.role_title}</div>
                     </div>
                   </td>
-                  <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-sm">{employee.email}</td>
+                  <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-sm">
+                    <div className="space-y-1">
+                      <div className="text-indigo-400 font-mono text-xs">
+                        {employee.first_name.toLowerCase()}@letsgetmovinggroup.com
+                      </div>
+                      {employee.email && employee.email.toLowerCase() !== `${employee.first_name.toLowerCase()}@letsgetmovinggroup.com` && (
+                        <div className="text-neutral-300 text-xs">
+                          {employee.email}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-3 sm:px-6 py-4 text-sm">{employee.department}</td>
-                  <td className="hidden lg:table-cell px-3 sm:px-6 py-4 text-sm">{employee.location}</td>
                   <td className="px-3 sm:px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       employee.employment_type === 'Full-time' ? 'bg-green-900 text-green-300' :
