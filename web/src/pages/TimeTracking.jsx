@@ -4,12 +4,11 @@ import { API } from '../config/api.js';
 import { 
   UploadsListView, 
   UploadDetailView, 
-  EmployeeTimecardView,
-  UploadDashboardView 
+  EmployeeTimecardView
 } from '../components/TimecardUploadViewer.jsx';
 
 export default function TimeTracking() {
-  const [view, setView] = useState("uploads"); // uploads, main, individual, dashboard, upload-detail, day-view
+  const [view, setView] = useState("day-view"); // uploads, main, individual, upload-detail, day-view, employee-timecard
   const [timecards, setTimecards] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [payPeriods, setPayPeriods] = useState([]);
@@ -220,56 +219,6 @@ export default function TimeTracking() {
     }
   };
 
-  const loadUploadStats = async () => {
-    try {
-      console.log('\n═══════════════════════════════════════════════════════════');
-      console.log('🔄 [Frontend] LOADING UPLOAD STATS...');
-      console.log('🔄 [Frontend] Time:', new Date().toISOString());
-      setLoading(true);
-      
-      const data = await API('/api/timecard-uploads/stats');
-      
-      console.log('✅ [Frontend] API RESPONSE received:');
-      console.log('   - Response type:', typeof data);
-      console.log('   - Has summary?', !!data?.summary);
-      console.log('   - Has topEmployees?', !!data?.topEmployees);
-      console.log('   - Has missingPunches?', data?.missingPunches !== undefined);
-      console.log('   - Has latestUpload?', !!data?.latestUpload);
-      
-      if (data?.summary) {
-        console.log('📊 [Frontend] Summary data:');
-        console.log('   - total_uploads:', data.summary.total_uploads);
-        console.log('   - total_employees:', data.summary.total_employees);
-        console.log('   - total_hours:', data.summary.total_hours);
-        console.log('   - avg_hours_per_employee:', data.summary.avg_hours_per_employee);
-      } else {
-        console.error('⚠️ [Frontend] NO SUMMARY DATA in response!');
-      }
-      
-      if (data?.topEmployees) {
-        console.log('👥 [Frontend] Top employees data:');
-        console.log('   - Count:', data.topEmployees.length);
-        data.topEmployees.forEach((emp, idx) => {
-          console.log(`   ${idx + 1}. ${emp.name}: ${emp.total_hours} hours`);
-        });
-      } else {
-        console.error('⚠️ [Frontend] NO TOP EMPLOYEES DATA in response!');
-      }
-      
-      console.log('✅ [Frontend] Setting stats state...');
-      setStats(data);
-      console.log('✅ [Frontend] Stats state updated. Current stats value:', data);
-      console.log('═══════════════════════════════════════════════════════════\n');
-    } catch (error) {
-      console.error('\n═══════════════════════════════════════════════════════════');
-      console.error('❌ [Frontend] ERROR loading upload stats:', error);
-      console.error('❌ [Frontend] Error details:', error.message);
-      console.error('═══════════════════════════════════════════════════════════\n');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     console.log('\n═══════════════════════════════════════════════════════════');
     console.log('🔄 [Frontend] VIEW CHANGE EFFECT triggered');
@@ -278,32 +227,9 @@ export default function TimeTracking() {
     if (view === 'uploads') {
       console.log('🔄 [Frontend] View is "uploads" - calling loadUploads()');
       loadUploads();
-    } else if (view === 'dashboard') {
-      console.log('🔄 [Frontend] View is "dashboard" - calling loadUploadStats()');
-      loadUploadStats();
-    } else {
-      console.log('🔄 [Frontend] View is neither "uploads" nor "dashboard" - no action');
     }
     console.log('═══════════════════════════════════════════════════════════\n');
   }, [view]);
-  
-  // Also refresh dashboard when uploads change (in case data was added)
-  useEffect(() => {
-    console.log('\n═══════════════════════════════════════════════════════════');
-    console.log('🔄 [Frontend] UPLOADS LENGTH CHANGE EFFECT triggered');
-    console.log('🔄 [Frontend] Current view:', view);
-    console.log('🔄 [Frontend] Uploads count:', uploads.length);
-    
-    if (view === 'dashboard' && uploads.length > 0) {
-      console.log('🔄 [Frontend] Conditions met - calling loadUploadStats()');
-      loadUploadStats();
-    } else {
-      console.log('🔄 [Frontend] Conditions NOT met - no action');
-      console.log(`   - view === 'dashboard': ${view === 'dashboard'}`);
-      console.log(`   - uploads.length > 0: ${uploads.length > 0}`);
-    }
-    console.log('═══════════════════════════════════════════════════════════\n');
-  }, [uploads.length]);
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -360,8 +286,6 @@ export default function TimeTracking() {
         // Refresh the appropriate view
         if (view === 'uploads') {
           loadUploads();
-        } else if (view === 'dashboard') {
-          loadUploadStats();
         }
         
         // Also refresh uploads list in case user navigates back
@@ -603,7 +527,6 @@ export default function TimeTracking() {
           <UploadsListView 
             uploads={uploads}
             onViewUpload={loadUploadDetails}
-            onViewDashboard={() => setView("dashboard")}
             loading={loading}
           />
         )}
@@ -625,13 +548,6 @@ export default function TimeTracking() {
             entries={uploadEntries}
             upload={selectedUpload}
             onBack={() => setView("upload-detail")}
-            loading={loading}
-          />
-        )}
-        {view === "dashboard" && (
-          <UploadDashboardView
-            stats={stats}
-            onBack={() => setView("uploads")}
             loading={loading}
           />
         )}

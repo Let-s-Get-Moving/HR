@@ -54,6 +54,12 @@ export default function PayrollV2() {
       const next = await API("/api/payroll-simple/next-period").catch(() => null);
       setNextPayPeriod(next);
       
+      // Pre-fill date filters with current pay period
+      if (next) {
+        setStartDate(next.period_start);
+        setEndDate(next.period_end);
+      }
+      
     } catch (error) {
       console.error("Error loading payroll data:", error);
       setErrorMessage("Failed to load payroll data");
