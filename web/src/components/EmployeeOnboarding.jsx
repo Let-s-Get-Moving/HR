@@ -7,12 +7,12 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
-  const [trainings, setTrainings] = useState([]);
   const [formData, setFormData] = useState({
     // Step 1: Basic Information
     first_name: "",
     last_name: "",
-    email: "",
+    work_email: "",  // Company email
+    email: "",       // Personal email (optional)
     phone: "",
     gender: "",
     birth_date: "",
@@ -26,45 +26,25 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
     probation_end: "",
     hourly_rate: 25,
     
-    // Step 3: Documents & Financial
-    contract_file: null,
-    id_document: null,
+    // Step 3: Personal Details & Banking
+    full_address: "",
     sin_number: "",
-    direct_deposit_info: {
-      bank_name: "",
-      account_number: "",
-      transit_number: "",
-      institution_number: ""
-    },
-    tax_forms: {
-      td1_on: null,
-      td1_ab: null
-    },
-    status_documents: {
-      work_permit: null,
-      permanent_resident_card: null,
-      canadian_passport: null,
-      birth_certificate: null
-    },
-    emergency_contact: {
-      name: "",
-      relationship: "",
-      phone: ""
-    },
+    sin_expiry_date: "",
+    bank_name: "",
+    bank_account_number: "",
+    bank_transit_number: "",
+    emergency_contact_name: "",
+    emergency_contact_phone: "",
     
-    // Step 4: Training & Compliance
-    required_trainings: [],
-    
-    // Step 5: Review
+    // Step 4: Review
     reviewed: false
   });
 
   const steps = [
     { id: 1, title: "Basic Information", icon: "👤" },
     { id: 2, title: "Employment Details", icon: "💼" },
-    { id: 3, title: "Documents & Contracts", icon: "📄" },
-    { id: 4, title: "Training & Compliance", icon: "✅" },
-    { id: 5, title: "Review & Submit", icon: "📋" }
+    { id: 3, title: "Personal Details & Banking", icon: "🏦" },
+    { id: 4, title: "Review & Submit", icon: "📋" }
   ];
 
   React.useEffect(() => {
@@ -73,93 +53,59 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
 
   const loadReferenceData = async () => {
     try {
-      const [deptData, locData, trainingData] = await Promise.all([
+      const [deptData, locData] = await Promise.all([
         API("/api/employees/departments"),
-        API("/api/employees/locations"),
-        API("/api/compliance/trainings")
+        API("/api/employees/locations")
       ]);
       setDepartments(deptData);
       setLocations(locData);
-      setTrainings(trainingData);
     } catch (error) {
       console.error("Error loading reference data:", error);
     }
   };
 
-  const handleFileUpload = (field, file) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: file
-    }));
-  };
-
   const handleSubmit = async () => {
     try {
-      // Create employee
+      console.log('📤 [Onboarding] Creating employee with data:', formData);
+      
+      // Create employee with all collected data
       const employeeResponse = await API("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           first_name: formData.first_name,
           last_name: formData.last_name,
-          email: formData.email,
+          work_email: formData.work_email,
+          email: formData.email || null,
           phone: formData.phone,
           gender: formData.gender,
           birth_date: formData.birth_date,
           hire_date: formData.hire_date,
           employment_type: formData.employment_type,
-          department_id: formData.department_id,
-          location_id: formData.location_id,
+          department_id: formData.department_id || null,
+          location_id: formData.location_id || null,
           role_title: formData.role_title,
           probation_end: formData.probation_end,
-          hourly_rate: formData.hourly_rate
+          hourly_rate: formData.hourly_rate,
+          // Step 3 data
+          full_address: formData.full_address,
+          sin_number: formData.sin_number,
+          sin_expiry_date: formData.sin_expiry_date || null,
+          bank_name: formData.bank_name,
+          bank_account_number: formData.bank_account_number,
+          bank_transit_number: formData.bank_transit_number,
+          emergency_contact_name: formData.emergency_contact_name,
+          emergency_contact_phone: formData.emergency_contact_phone
         })
       });
 
-      // Add documents
-      if (formData.contract_file) {
-        await API("/api/documents", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            employee_id: employeeResponse.id,
-            doc_type: "Contract",
-            file_name: formData.contract_file.name,
-            signed: true
-          })
-        });
-      }
-
-      if (formData.id_document) {
-        await API("/api/documents", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            employee_id: employeeResponse.id,
-            doc_type: "ID",
-            file_name: formData.id_document.name,
-            signed: false
-          })
-        });
-      }
-
-      // Add training records
-      for (const trainingId of formData.required_trainings) {
-        await API("/api/training-records", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            employee_id: employeeResponse.id,
-            training_id: trainingId,
-            completed_on: new Date().toISOString().split('T')[0]
-          })
-        });
-      }
-
+      console.log('✅ [Onboarding] Employee created successfully:', employeeResponse);
+      alert(`Employee ${formData.first_name} ${formData.last_name} created successfully! Documents can be uploaded through their profile.`);
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Error creating employee:", error);
+      console.error("❌ [Onboarding] Error creating employee:", error);
+      alert('Failed to create employee: ' + (error.message || 'Unknown error'));
     }
   };
 
@@ -197,12 +143,24 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 />
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Work Email * (Company Email)</label>
+              <input
+                type="email"
+                required
+                placeholder="firstname@letsgetmovinggroup.com"
+                value={formData.work_email}
+                onChange={(e) => setFormData({...formData, work_email: e.target.value})}
+                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 font-mono text-sm"
+              />
+              <p className="text-xs text-neutral-400 mt-1">Company email address</p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Email *</label>
+                <label className="block text-sm font-medium mb-2">Personal Email (Optional)</label>
                 <input
                   type="email"
-                  required
+                  placeholder="personal@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -363,244 +321,93 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <h3 className="text-lg font-semibold mb-4">Documents, Financial & Status</h3>
+            <h3 className="text-lg font-semibold mb-4">Personal Details & Banking</h3>
+            <p className="text-sm text-neutral-400 mb-4">
+              Documents can be uploaded later through the employee profile
+            </p>
             
             <div className="space-y-6">
-              {/* Employment Contract */}
+              {/* Address */}
               <div>
-                <label className="block text-sm font-medium mb-2">Employment Contract *</label>
-                <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={(e) => handleFileUpload('contract_file', e.target.files[0])}
-                    className="hidden"
-                    id="contract-upload"
-                  />
-                  <label htmlFor="contract-upload" className="cursor-pointer">
-                    <div className="text-4xl mb-2">📄</div>
-                    <p className="text-neutral-400">
-                      {formData.contract_file ? formData.contract_file.name : "Click to upload contract"}
-                    </p>
-                    <p className="text-xs text-neutral-500 mt-1">PDF, DOC, or DOCX files</p>
-                  </label>
-                </div>
-              </div>
-
-              {/* SIN Number */}
-              <div>
-                <label className="block text-sm font-medium mb-2">SIN Number (Social Insurance Number) *</label>
-                <input
-                  type="text"
-                  placeholder="123-456-789"
-                  value={formData.sin_number}
-                  onChange={(e) => setFormData({...formData, sin_number: e.target.value})}
+                <label className="block text-sm font-medium mb-2">Full Address</label>
+                <textarea
+                  rows="3"
+                  placeholder="Street, City, Province, Postal Code"
+                  value={formData.full_address}
+                  onChange={(e) => setFormData({...formData, full_address: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 />
-                <p className="text-xs text-neutral-400 mt-1">Required for payroll and tax purposes</p>
+              </div>
+
+              {/* SIN Information */}
+              <div className="bg-neutral-800 p-4 rounded-lg">
+                <h4 className="font-medium mb-3">Social Insurance Number (SIN)</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <input
+                    type="text"
+                    placeholder="123-456-789"
+                    value={formData.sin_number}
+                    onChange={(e) => setFormData({...formData, sin_number: e.target.value})}
+                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                  />
+                  <div>
+                    <input
+                      type="date"
+                      placeholder="Expiry Date (if temporary)"
+                      value={formData.sin_expiry_date}
+                      onChange={(e) => setFormData({...formData, sin_expiry_date: e.target.value})}
+                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    />
+                    <p className="text-xs text-neutral-400 mt-1">Leave empty if permanent</p>
+                  </div>
+                </div>
+                <p className="text-xs text-neutral-400 mt-2">Required for payroll and tax purposes</p>
               </div>
 
               {/* Direct Deposit Information */}
               <div className="bg-neutral-800 p-4 rounded-lg">
                 <h4 className="font-medium mb-3">Direct Deposit Information</h4>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <input
                     type="text"
                     placeholder="Bank Name"
-                    value={formData.direct_deposit_info.bank_name}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      direct_deposit_info: {...formData.direct_deposit_info, bank_name: e.target.value}
-                    })}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Account Number"
-                    value={formData.direct_deposit_info.account_number}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      direct_deposit_info: {...formData.direct_deposit_info, account_number: e.target.value}
-                    })}
+                    value={formData.bank_name}
+                    onChange={(e) => setFormData({...formData, bank_name: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
                   <input
                     type="text"
                     placeholder="Transit Number (5 digits)"
-                    value={formData.direct_deposit_info.transit_number}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      direct_deposit_info: {...formData.direct_deposit_info, transit_number: e.target.value}
-                    })}
+                    value={formData.bank_transit_number}
+                    onChange={(e) => setFormData({...formData, bank_transit_number: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
                   <input
                     type="text"
-                    placeholder="Institution Number (3 digits)"
-                    value={formData.direct_deposit_info.institution_number}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      direct_deposit_info: {...formData.direct_deposit_info, institution_number: e.target.value}
-                    })}
+                    placeholder="Account Number"
+                    value={formData.bank_account_number}
+                    onChange={(e) => setFormData({...formData, bank_account_number: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
-                </div>
-              </div>
-
-              {/* Tax Forms */}
-              <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Tax Forms (TD1)</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">TD1-ON (Ontario)</label>
-                    <div className="border-2 border-dashed border-neutral-700 rounded-lg p-4 text-center">
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => handleFileUpload('tax_forms.td1_on', e.target.files[0])}
-                        className="hidden"
-                        id="td1-on-upload"
-                      />
-                      <label htmlFor="td1-on-upload" className="cursor-pointer">
-                        <div className="text-2xl mb-1">📋</div>
-                        <p className="text-xs text-neutral-400">
-                          {formData.tax_forms.td1_on ? formData.tax_forms.td1_on.name : "Upload TD1-ON"}
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">TD1-AB (Alberta)</label>
-                    <div className="border-2 border-dashed border-neutral-700 rounded-lg p-4 text-center">
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => handleFileUpload('tax_forms.td1_ab', e.target.files[0])}
-                        className="hidden"
-                        id="td1-ab-upload"
-                      />
-                      <label htmlFor="td1-ab-upload" className="cursor-pointer">
-                        <div className="text-2xl mb-1">📋</div>
-                        <p className="text-xs text-neutral-400">
-                          {formData.tax_forms.td1_ab ? formData.tax_forms.td1_ab.name : "Upload TD1-AB"}
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status Documents */}
-              <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Canadian Status Documents</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Work Permit (if applicable)</label>
-                    <div className="border-2 border-dashed border-neutral-700 rounded-lg p-4 text-center">
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => handleFileUpload('status_documents.work_permit', e.target.files[0])}
-                        className="hidden"
-                        id="work-permit-upload"
-                      />
-                      <label htmlFor="work-permit-upload" className="cursor-pointer">
-                        <div className="text-2xl mb-1">🛂</div>
-                        <p className="text-xs text-neutral-400">
-                          {formData.status_documents.work_permit ? formData.status_documents.work_permit.name : "Upload Work Permit"}
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Permanent Resident Card</label>
-                    <div className="border-2 border-dashed border-neutral-700 rounded-lg p-4 text-center">
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => handleFileUpload('status_documents.permanent_resident_card', e.target.files[0])}
-                        className="hidden"
-                        id="pr-card-upload"
-                      />
-                      <label htmlFor="pr-card-upload" className="cursor-pointer">
-                        <div className="text-2xl mb-1">🛂</div>
-                        <p className="text-xs text-neutral-400">
-                          {formData.status_documents.permanent_resident_card ? formData.status_documents.permanent_resident_card.name : "Upload PR Card"}
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Canadian Passport</label>
-                    <div className="border-2 border-dashed border-neutral-700 rounded-lg p-4 text-center">
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => handleFileUpload('status_documents.canadian_passport', e.target.files[0])}
-                        className="hidden"
-                        id="passport-upload"
-                      />
-                      <label htmlFor="passport-upload" className="cursor-pointer">
-                        <div className="text-2xl mb-1">🛂</div>
-                        <p className="text-xs text-neutral-400">
-                          {formData.status_documents.canadian_passport ? formData.status_documents.canadian_passport.name : "Upload Canadian Passport"}
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Birth Certificate</label>
-                    <div className="border-2 border-dashed border-neutral-700 rounded-lg p-4 text-center">
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => handleFileUpload('status_documents.birth_certificate', e.target.files[0])}
-                        className="hidden"
-                        id="birth-cert-upload"
-                      />
-                      <label htmlFor="birth-cert-upload" className="cursor-pointer">
-                        <div className="text-2xl mb-1">🛂</div>
-                        <p className="text-xs text-neutral-400">
-                          {formData.status_documents.birth_certificate ? formData.status_documents.birth_certificate.name : "Upload Birth Certificate"}
-                        </p>
-                      </label>
-                    </div>
-                  </div>
                 </div>
               </div>
 
               {/* Emergency Contact */}
               <div className="bg-neutral-800 p-4 rounded-lg">
                 <h4 className="font-medium mb-3">Emergency Contact</h4>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
                     placeholder="Name"
-                    value={formData.emergency_contact.name}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      emergency_contact: {...formData.emergency_contact, name: e.target.value}
-                    })}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Relationship"
-                    value={formData.emergency_contact.relationship}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      emergency_contact: {...formData.emergency_contact, relationship: e.target.value}
-                    })}
+                    value={formData.emergency_contact_name}
+                    onChange={(e) => setFormData({...formData, emergency_contact_name: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
                   <input
                     type="tel"
                     placeholder="Phone"
-                    value={formData.emergency_contact.phone}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      emergency_contact: {...formData.emergency_contact, phone: e.target.value}
-                    })}
+                    value={formData.emergency_contact_phone}
+                    onChange={(e) => setFormData({...formData, emergency_contact_phone: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
                 </div>
@@ -610,52 +417,6 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
         );
 
       case 4:
-        return (
-          <motion.div
-            key="step4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-4"
-          >
-            <h3 className="text-lg font-semibold mb-4">Training & Compliance</h3>
-            
-            <div className="space-y-3">
-              <p className="text-sm text-neutral-400">Select required trainings for this employee:</p>
-              {trainings.map((training) => (
-                <label key={training.id} className="flex items-center space-x-3 p-3 bg-neutral-800 rounded-lg cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.required_trainings.includes(training.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({
-                          ...formData,
-                          required_trainings: [...formData.required_trainings, training.id]
-                        });
-                      } else {
-                        setFormData({
-                          ...formData,
-                          required_trainings: formData.required_trainings.filter(id => id !== training.id)
-                        });
-                      }
-                    }}
-                    className="w-4 h-4 text-indigo-600 bg-neutral-700 border-neutral-600 rounded focus:ring-indigo-500"
-                  />
-                  <div>
-                    <div className="font-medium">{training.name}</div>
-                    <div className="text-sm text-neutral-400">
-                      {training.mandatory ? "Mandatory" : "Optional"} • 
-                      {training.validity_months ? ` Valid for ${training.validity_months} months` : " No expiry"}
-                    </div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </motion.div>
-        );
-
-      case 5:
         return (
           <motion.div
             key="step5"
@@ -773,7 +534,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               ← Previous
             </button>
             
-            {currentStep < 5 ? (
+            {currentStep < 4 ? (
               <button
                 onClick={() => setCurrentStep(currentStep + 1)}
                 className="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-lg font-medium transition-colors"

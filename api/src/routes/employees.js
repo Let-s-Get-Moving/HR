@@ -39,34 +39,53 @@ r.get("/time-entries", async (_req, res) => {
 const employeeSchema = z.object({
   first_name: z.string().min(1),
   last_name: z.string().min(1),
-  email: z.string().email(),
-  phone: z.string().optional(),
+  work_email: z.string().email(),
+  email: z.string().email().nullable().optional(),
+  phone: z.string().nullable().optional(),
   gender: z.string().nullable().optional(),
   birth_date: z.string().nullable().optional(),
   hire_date: z.string(),
   employment_type: z.enum(["Full-time","Part-time","Contract"]),
   department_id: z.number().int().nullable().optional(),
   location_id: z.number().int().nullable().optional(),
-  role_title: z.string().optional(),
+  role_title: z.string().nullable().optional(),
   probation_end: z.string().nullable().optional(),
-  hourly_rate: z.number().min(0).optional()
+  hourly_rate: z.number().min(0).optional(),
+  // Personal details from onboarding
+  full_address: z.string().nullable().optional(),
+  sin_number: z.string().nullable().optional(),
+  sin_expiry_date: z.string().nullable().optional(),
+  bank_name: z.string().nullable().optional(),
+  bank_account_number: z.string().nullable().optional(),
+  bank_transit_number: z.string().nullable().optional(),
+  emergency_contact_name: z.string().nullable().optional(),
+  emergency_contact_phone: z.string().nullable().optional()
 });
 
 r.post("/", async (req, res) => {
-  const data = employeeSchema.parse(req.body);
-  const { rows } = await q(
-    `INSERT INTO employees
-     (first_name,last_name,email,phone,gender,birth_date,hire_date,employment_type,department_id,location_id,role_title,probation_end,hourly_rate)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-     RETURNING *`,
-    [
-      data.first_name, data.last_name, data.email, data.phone ?? null,
-      data.gender ?? null, data.birth_date ?? null, data.hire_date,
-      data.employment_type, data.department_id, data.location_id,
-      data.role_title ?? null, data.probation_end ?? null, data.hourly_rate ?? 25
-    ]
-  );
-  res.status(201).json(rows[0]);
+  try {
+    const data = employeeSchema.parse(req.body);
+    const { rows } = await q(
+      `INSERT INTO employees
+       (first_name,last_name,work_email,email,phone,gender,birth_date,hire_date,employment_type,department_id,location_id,role_title,probation_end,hourly_rate,full_address,sin_number,sin_expiry_date,bank_name,bank_account_number,bank_transit_number,emergency_contact_name,emergency_contact_phone)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+       RETURNING *`,
+      [
+        data.first_name, data.last_name, data.work_email, data.email ?? null,
+        data.phone ?? null, data.gender ?? null, data.birth_date ?? null, data.hire_date,
+        data.employment_type, data.department_id ?? null, data.location_id ?? null,
+        data.role_title ?? null, data.probation_end ?? null, data.hourly_rate ?? 25,
+        data.full_address ?? null, data.sin_number ?? null, data.sin_expiry_date ?? null,
+        data.bank_name ?? null, data.bank_account_number ?? null, data.bank_transit_number ?? null,
+        data.emergency_contact_name ?? null, data.emergency_contact_phone ?? null
+      ]
+    );
+    console.log('✅ [API] Employee created:', rows[0]);
+    res.status(201).json(rows[0]);
+  } catch (error) {
+    console.error('❌ [API] Error creating employee:', error);
+    res.status(500).json({ error: 'Failed to create employee', details: error.message });
+  }
 });
 
 r.delete("/:id", async (req, res) => {
