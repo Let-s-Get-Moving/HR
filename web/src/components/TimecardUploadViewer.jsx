@@ -10,7 +10,7 @@ const formatHoursAsTime = (decimalHours) => {
 };
 
 // Uploads List View
-export function UploadsListView({ uploads, onViewUpload, onViewDashboard, loading }) {
+export function UploadsListView({ uploads, onViewUpload, loading }) {
   if (loading) {
     return <div className="text-center py-8 text-secondary">Loading uploads...</div>;
   }
@@ -38,24 +38,6 @@ export function UploadsListView({ uploads, onViewUpload, onViewDashboard, loadin
       exit={{ opacity: 0, y: -20 }}
       className="space-y-6"
     >
-      {/* Dashboard Stats Button */}
-      <div className="card p-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold">Timecard Dashboard</h2>
-            <p className="text-indigo-100 mt-1">View comprehensive statistics across all uploads</p>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={onViewDashboard}
-            className="bg-white text-indigo-600 px-6 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
-          >
-            View Dashboard →
-          </motion.button>
-        </div>
-      </div>
-
       {/* Uploads Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {uploads.map((upload) => (
