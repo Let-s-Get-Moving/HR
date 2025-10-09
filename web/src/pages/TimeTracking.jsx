@@ -1178,19 +1178,29 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
               {/* Employee Header */}
               <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="space-y-1">
                     <h3 className="font-semibold text-primary text-lg">
                       {employee.first_name} {employee.last_name}
                     </h3>
-                    <p className="text-sm text-secondary">{employee.email}</p>
+                    {/* Work email (auto-generated) */}
+                    <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                      {employee.first_name?.toLowerCase()}@letsgetmovinggroup.com
+                    </p>
+                    {/* Personal email (if different from work) */}
+                    {employee.email && employee.email.toLowerCase() !== `${employee.first_name?.toLowerCase()}@letsgetmovinggroup.com` && (
+                      <p className="text-sm text-secondary">{employee.email}</p>
+                    )}
                     {employee.department && (
-                      <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{employee.department}</p>
+                      <p className="text-xs text-secondary uppercase tracking-wide">{employee.department}</p>
                     )}
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-primary">
                       {employee.total_hours.toFixed(2)} hours
                     </div>
+                    {employee.total_hours > 8 && (
+                      <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">OVERTIME</span>
+                    )}
                   </div>
                 </div>
               </div>
