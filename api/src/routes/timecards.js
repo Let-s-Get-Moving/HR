@@ -140,6 +140,7 @@ r.get("/day-view/:date", async (req, res) => {
         e.last_name,
         e.email,
         d.name as department,
+        te.id as entry_id,
         te.work_date,
         te.clock_in,
         te.clock_out,
@@ -557,6 +558,64 @@ r.delete("/entries/:id", async (req, res) => {
   } catch (error) {
     console.error("Error deleting timecard entry:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * Update a timecard entry (clock times, notes)
+ * Recalculates hours automatically
+ */
+r.put("/entries/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { clock_in, clock_out, notes } = req.body;
+    
+    console.log(`\n✏️ [Edit Entry] Updating entry ${id}`);
+    console.log(`   Clock In: ${clock_in}, Clock Out: ${clock_out}`);
+    
+    // Calculate hours if both times provided
+    let hours_worked = null;
+    let is_overtime = false;
+    
+    if (clock_in && clock_out) {
+      const start = new Date(`1970-01-01T${clock_in}`);
+      const end = new Date(`1970-01-01T${clock_out}`);
+      
+      // Handle overnight shifts
+      if (end < start) {
+        end.setDate(end.getDate() + 1);
+      }
+      
+      hours_worked = (end - start) / (1000 * 60 * 60); // Convert to hours
+      is_overtime = hours_worked > 8;
+      
+      console.log(`   Calculated hours: ${hours_worked.toFixed(2)}`);
+    }
+    
+    // Update the entry
+    const { rows } = await q(`
+      UPDATE timecard_entries
+      SET 
+        clock_in = $1,
+        clock_out = $2,
+        hours_worked = $3,
+        is_overtime = $4,
+        notes = $5,
+        updated_at = NOW()
+      WHERE id = $6
+      RETURNING *
+    `, [clock_in, clock_out, hours_worked, is_overtime, notes, id]);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Entry not found" });
+    }
+    
+    console.log(`✅ [Edit Entry] Entry ${id} updated successfully`);
+    
+    res.json(rows[0]);
+  } catch (error) {
+    console.error("❌ [Edit Entry] Error:", error);
+    res.status(500).json({ error: "Failed to update entry" });
   }
 });
 

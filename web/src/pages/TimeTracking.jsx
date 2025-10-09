@@ -1048,6 +1048,45 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 
 // Day View Component
 function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading }) {
+  const [editingEntryId, setEditingEntryId] = React.useState(null);
+  const [editForm, setEditForm] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
+
+  const handleEdit = (entry) => {
+    setEditingEntryId(entry.entry_id);
+    setEditForm({
+      clock_in: entry.clock_in || '',
+      clock_out: entry.clock_out || '',
+      notes: entry.notes || ''
+    });
+  };
+
+  const handleCancel = () => {
+    setEditingEntryId(null);
+    setEditForm({});
+  };
+
+  const handleSave = async (entryId) => {
+    try {
+      setSaving(true);
+      await API(`/api/timecards/entries/${entryId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm)
+      });
+      
+      // Reload the day view data
+      onDateChange(selectedDate);
+      setEditingEntryId(null);
+      setEditForm({});
+    } catch (error) {
+      console.error('Error saving entry:', error);
+      alert('Failed to save changes: ' + (error.message || 'Unknown error'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Group entries by employee
   const groupedData = dayViewData.reduce((acc, entry) => {
     const key = entry.employee_id;
@@ -1110,7 +1149,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
           <p className="text-secondary">Select another date or upload timecards</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {employees.map((employee) => (
             <div key={employee.employee_id} className="card overflow-hidden">
               {/* Employee Header */}
@@ -1140,28 +1179,88 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                       <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Clock Out</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase">Hours</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Notes</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-secondary uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                    {employee.entries.map((entry, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                        <td className="px-6 py-3 text-sm text-primary">
-                          {entry.clock_in || "—"}
-                        </td>
-                        <td className="px-6 py-3 text-sm text-primary">
-                          {entry.clock_out || "—"}
-                        </td>
-                        <td className="px-6 py-3 text-right font-medium text-primary">
-                          {entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : "—"}
-                          {entry.is_overtime && (
-                            <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-3 text-sm text-secondary">
-                          {entry.notes || "—"}
-                        </td>
-                      </tr>
-                    ))}
+                    {employee.entries.map((entry, idx) => {
+                      const isEditing = editingEntryId === entry.entry_id;
+                      
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                          <td className="px-6 py-3">
+                            {isEditing ? (
+                              <input
+                                type="time"
+                                value={editForm.clock_in}
+                                onChange={(e) => setEditForm({ ...editForm, clock_in: e.target.value })}
+                                className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
+                              />
+                            ) : (
+                              <span className="text-sm text-primary">{entry.clock_in || "—"}</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-3">
+                            {isEditing ? (
+                              <input
+                                type="time"
+                                value={editForm.clock_out}
+                                onChange={(e) => setEditForm({ ...editForm, clock_out: e.target.value })}
+                                className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
+                              />
+                            ) : (
+                              <span className="text-sm text-primary">{entry.clock_out || "—"}</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-3 text-right font-medium text-primary">
+                            {entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : "—"}
+                            {entry.is_overtime && (
+                              <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-3">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={editForm.notes}
+                                onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                                placeholder="Add notes..."
+                                className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
+                              />
+                            ) : (
+                              <span className="text-sm text-secondary">{entry.notes || "—"}</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-3 text-center">
+                            {isEditing ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <button
+                                  onClick={() => handleSave(entry.entry_id)}
+                                  disabled={saving}
+                                  className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50"
+                                >
+                                  {saving ? 'Saving...' : 'Save'}
+                                </button>
+                                <button
+                                  onClick={handleCancel}
+                                  disabled={saving}
+                                  className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-xs font-medium disabled:opacity-50"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleEdit(entry)}
+                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium"
+                              >
+                                Edit
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
