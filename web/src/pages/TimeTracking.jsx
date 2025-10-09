@@ -1115,6 +1115,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
         first_name: entry.first_name,
         last_name: entry.last_name,
         email: entry.email,
+        work_email: entry.work_email,
         department: entry.department,
         entries: [],
         total_hours: 0
@@ -1182,12 +1183,14 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                     <h3 className="font-semibold text-primary text-lg">
                       {employee.first_name} {employee.last_name}
                     </h3>
-                    {/* Work email (auto-generated) */}
-                    <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                      {employee.first_name?.toLowerCase()}@letsgetmovinggroup.com
-                    </p>
-                    {/* Personal email (if different from work) */}
-                    {employee.email && employee.email.toLowerCase() !== `${employee.first_name?.toLowerCase()}@letsgetmovinggroup.com` && (
+                    {/* Work email from database */}
+                    {employee.work_email && (
+                      <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                        {employee.work_email}
+                      </p>
+                    )}
+                    {/* Personal email (if exists) */}
+                    {employee.email && (
                       <p className="text-sm text-secondary">{employee.email}</p>
                     )}
                     {employee.department && (

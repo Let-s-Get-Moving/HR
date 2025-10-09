@@ -653,10 +653,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   <span className="text-neutral-400">Email:</span>
                   {isEditing ? (
                     <div className="flex flex-col items-end gap-2">
-                      <div className="text-xs text-neutral-500">Company email (auto-generated)</div>
-                      <div className="font-mono text-xs text-indigo-400">
-                        {employee.first_name?.toLowerCase()}@letsgetmovinggroup.com
-                      </div>
+                      <div className="text-xs text-neutral-500">Work email</div>
+                      <input
+                        type="email"
+                        value={editData.work_email || ''}
+                        onChange={(e) => setEditData({...editData, work_email: e.target.value})}
+                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right w-64 font-mono text-xs text-indigo-400"
+                        placeholder="firstname@letsgetmovinggroup.com"
+                      />
                       <div className="text-xs text-neutral-500 mt-2">Personal email</div>
                       <input
                         type="email"
@@ -669,9 +673,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   ) : (
                     <div className="text-right space-y-1">
                       <div className="font-mono text-xs text-indigo-400">
-                        {employee.first_name?.toLowerCase()}@letsgetmovinggroup.com
+                        {employee.work_email || `${employee.first_name?.toLowerCase()}@letsgetmovinggroup.com`}
                       </div>
-                      {employee.email && employee.email.toLowerCase() !== `${employee.first_name?.toLowerCase()}@letsgetmovinggroup.com` && (
+                      {employee.email && (
                         <div className="text-neutral-300 text-xs">
                           {employee.email}
                         </div>

@@ -139,6 +139,7 @@ r.get("/day-view/:date", async (req, res) => {
         e.first_name,
         e.last_name,
         e.email,
+        e.work_email,
         d.name as department,
         te.id as entry_id,
         te.work_date,

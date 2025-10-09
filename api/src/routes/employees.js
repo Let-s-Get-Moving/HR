@@ -93,20 +93,21 @@ r.put("/:id", async (req, res) => {
     
     const { rows } = await q(
       `UPDATE employees 
-       SET first_name = $1, last_name = $2, email = $3, phone = $4, 
-           role_title = $5, hourly_rate = $6, employment_type = $7,
-           department_id = $8, location_id = $9, hire_date = $10,
-           gender = $11, birth_date = $12, status = $13, probation_end = $14,
-           full_address = $15, emergency_contact_name = $16, emergency_contact_phone = $17,
-           sin_number = $18, sin_expiry_date = $19, bank_name = $20,
-           bank_transit_number = $21, bank_account_number = $22,
-           contract_status = $23, contract_signed_date = $24, gift_card_sent = $25
-       WHERE id = $26
+       SET first_name = $1, last_name = $2, email = $3, work_email = $4, phone = $5, 
+           role_title = $6, hourly_rate = $7, employment_type = $8,
+           department_id = $9, location_id = $10, hire_date = $11,
+           gender = $12, birth_date = $13, status = $14, probation_end = $15,
+           full_address = $16, emergency_contact_name = $17, emergency_contact_phone = $18,
+           sin_number = $19, sin_expiry_date = $20, bank_name = $21,
+           bank_transit_number = $22, bank_account_number = $23,
+           contract_status = $24, contract_signed_date = $25, gift_card_sent = $26
+       WHERE id = $27
        RETURNING *`,
       [
         data.first_name,
         data.last_name,
-        data.email,
+        nullIfEmpty(data.email),
+        nullIfEmpty(data.work_email),
         nullIfEmpty(data.phone),
         nullIfEmpty(data.role_title),
         data.hourly_rate || 25,
