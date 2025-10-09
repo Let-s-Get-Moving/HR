@@ -1052,11 +1052,18 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
   const [editForm, setEditForm] = React.useState({});
   const [saving, setSaving] = React.useState(false);
 
+  // Format time to HH:MM (remove seconds)
+  const formatTime = (time) => {
+    if (!time) return '';
+    // If time has seconds (HH:MM:SS), remove them
+    return time.length > 5 ? time.substring(0, 5) : time;
+  };
+
   const handleEdit = (entry) => {
     setEditingEntryId(entry.entry_id);
     setEditForm({
-      clock_in: entry.clock_in || '',
-      clock_out: entry.clock_out || '',
+      clock_in: formatTime(entry.clock_in),
+      clock_out: formatTime(entry.clock_out),
       notes: entry.notes || ''
     });
   };
@@ -1201,7 +1208,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
                               />
                             ) : (
-                              <span className="text-sm text-primary">{entry.clock_in || "—"}</span>
+                              <span className="text-sm text-primary">{formatTime(entry.clock_in) || "—"}</span>
                             )}
                           </td>
                           <td className="px-6 py-3">
@@ -1213,7 +1220,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
                               />
                             ) : (
-                              <span className="text-sm text-primary">{entry.clock_out || "—"}</span>
+                              <span className="text-sm text-primary">{formatTime(entry.clock_out) || "—"}</span>
                             )}
                           </td>
                           <td className="px-6 py-3 text-right font-medium text-primary">
