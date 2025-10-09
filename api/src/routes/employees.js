@@ -19,6 +19,21 @@ r.get("/", async (_req, res) => {
   res.json(rows);
 });
 
+r.get("/terminated", async (_req, res) => {
+  const { rows } = await q(
+    `SELECT e.*, 
+     e.first_name || ' ' || e.last_name AS name,
+     d.name AS department, 
+     l.name AS location
+     FROM employees e
+     LEFT JOIN departments d ON d.id = e.department_id
+     LEFT JOIN locations l ON l.id = e.location_id
+     WHERE e.status = 'Terminated'
+     ORDER BY e.termination_date DESC NULLS LAST, e.first_name, e.last_name`
+  );
+  res.json(rows);
+});
+
 r.get("/departments", async (_req, res) => {
   const { rows } = await q(`SELECT * FROM departments ORDER BY name`);
   res.json(rows);

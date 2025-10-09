@@ -111,6 +111,8 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      console.log('📤 [Offboarding] Processing termination for employee', employee.id);
+      
       // Create termination details
       const terminationResponse = await API("/api/termination/details", {
         method: "POST",
@@ -136,15 +138,19 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
           equipment_return_date: formData.equipment_return_date,
           equipment_return_notes: formData.equipment_return_notes,
           access_revoked: formData.access_revoked,
-          access_revoked_date: formData.access_revoked_date
+          access_revoked_date: formData.access_revoked_date,
+          final_pay_notes: formData.final_pay_notes
         })
       });
+
+      console.log('✅ [Offboarding] Termination details created:', terminationResponse);
 
       // Update employee status
       await API(`/api/employees/${employee.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...employee,
           status: "Terminated",
           termination_date: formData.termination_date,
           termination_type: formData.termination_type,
@@ -157,6 +163,8 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
         })
       });
 
+      console.log('✅ [Offboarding] Employee status updated');
+
       // Create checklist items
       await API("/api/termination/checklist", {
         method: "POST",
@@ -168,32 +176,62 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
         })
       });
 
-      // Upload documents if provided
-      const documents = [
-        { type: "Termination Letter", file: formData.termination_letter },
-        { type: "Release Agreement", file: formData.release_agreement },
-        { type: "ROE", file: formData.roe_document },
-        { type: "Final Pay Statement", file: formData.final_pay_statement },
-        { type: "Exit Interview Form", file: formData.exit_interview_form }
+      console.log('✅ [Offboarding] Checklist created');
+
+      // Upload documents to employee documents (same as employee profile)
+      const documentMappings = [
+        { type: "Termination Letter", file: formData.termination_letter, category: "Termination" },
+        { type: "Release Agreement", file: formData.release_agreement, category: "Termination" },
+        { type: "ROE", file: formData.roe_document, category: "Termination" },
+        { type: "Final Pay Statement", file: formData.final_pay_statement, category: "Termination" },
+        { type: "Exit Interview Form", file: formData.exit_interview_form, category: "Termination" }
       ].filter(doc => doc.file);
 
-      for (const doc of documents) {
-        const docFormData = new FormData();
-        docFormData.append('file', doc.file);
-        docFormData.append('document_type', doc.type);
-        docFormData.append('employee_id', employee.id);
-        docFormData.append('termination_detail_id', terminationResponse.terminationId);
+      console.log(`📄 [Offboarding] Uploading ${documentMappings.length} documents...`);
 
-        await API("/api/termination/documents", {
-          method: "POST",
-          body: docFormData
-        });
+      for (const doc of documentMappings) {
+        try {
+          // Convert file to base64 (same as employee profile)
+          const reader = new FileReader();
+          const base64Promise = new Promise((resolve, reject) => {
+            reader.onloadend = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(doc.file);
+          });
+          
+          const base64 = await base64Promise;
+          
+          console.log(`📤 [Offboarding] Uploading ${doc.type}, size: ${base64.length} chars`);
+
+          // Upload to employee documents endpoint (same as profile)
+          await API(`/api/employees/${employee.id}/documents`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              doc_type: doc.type,
+              file_name: doc.file.name,
+              file_data_base64: base64,
+              mime_type: doc.file.type,
+              document_category: doc.category,
+              notes: `Uploaded during termination process on ${new Date().toLocaleDateString()}`,
+              signed: false
+            })
+          });
+
+          console.log(`✅ [Offboarding] ${doc.type} uploaded successfully`);
+        } catch (error) {
+          console.error(`❌ [Offboarding] Error uploading ${doc.type}:`, error);
+          // Continue with other documents even if one fails
+        }
       }
 
+      console.log('✅ [Offboarding] All documents uploaded');
+      alert(`Employee ${employee.first_name} ${employee.last_name} has been terminated successfully. Documents have been uploaded to their profile.`);
       onSuccess();
       onClose();
     } catch (error) {
-      console.error("Error processing termination:", error);
+      console.error("❌ [Offboarding] Error processing termination:", error);
+      alert('Failed to process termination: ' + (error.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }

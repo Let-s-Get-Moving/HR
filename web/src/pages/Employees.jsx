@@ -17,6 +17,7 @@ export default function Employees() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredEmployees, setFilteredEmployees] = useState([]);
+  const [filterStatus, setFilterStatus] = useState("active"); // "active" or "terminated"
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -36,7 +37,7 @@ export default function Employees() {
     loadEmployees();
     loadDepartments();
     loadLocations();
-  }, []);
+  }, [filterStatus]); // Reload when filter changes
 
   // Update filtered employees when main employees list changes
   useEffect(() => {
@@ -45,7 +46,9 @@ export default function Employees() {
 
   const loadEmployees = async () => {
     try {
-      const data = await API("/api/employees");
+      setLoading(true);
+      const endpoint = filterStatus === "terminated" ? "/api/employees/terminated" : "/api/employees";
+      const data = await API(endpoint);
       setEmployees(data);
       setFilteredEmployees(data); // Initialize filtered list
     } catch (error) {
@@ -169,9 +172,22 @@ export default function Employees() {
         </motion.button>
       </div>
 
-      {/* Search Bar */}
-      <div className="mb-6">
-        <div className="relative max-w-md">
+      {/* Filter and Search Bar */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        {/* Status Filter Dropdown */}
+        <div className="w-full sm:w-64">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
+          >
+            <option value="active">Active Employees</option>
+            <option value="terminated">Terminated Employees</option>
+          </select>
+        </div>
+        
+        {/* Search Bar */}
+        <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -179,10 +195,10 @@ export default function Employees() {
           </div>
           <input
             type="text"
-            placeholder="Search employees by name, department, role, email..."
+            placeholder={`Search ${filterStatus === "terminated" ? "terminated" : "active"} employees...`}
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="block w-full pl-10 pr-3 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+            className="block w-full pl-10 pr-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
           />
           {searchQuery && (
             <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -197,12 +213,12 @@ export default function Employees() {
             </div>
           )}
         </div>
-        {searchQuery && (
-          <div className="mt-2 text-sm text-neutral-400">
-            Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
-          </div>
-        )}
       </div>
+      {searchQuery && (
+        <div className="mb-4 text-sm text-neutral-400">
+          Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
+        </div>
+      )}
 
       {/* Employee Table */}
       <div className="card overflow-hidden">
