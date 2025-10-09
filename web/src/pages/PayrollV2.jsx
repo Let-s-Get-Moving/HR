@@ -38,20 +38,20 @@ export default function PayrollV2() {
     try {
       setLoading(true);
       
-      // Load payrolls
-      const payrollsData = await API("/api/payroll-v2/").catch(() => []);
+      // Load payrolls - USE SIMPLE ENDPOINT THAT WORKS NOW!
+      const payrollsData = await API("/api/payroll-simple/calculate-live").catch(() => []);
       setPayrolls(payrollsData);
       
-      // Load pay periods
-      const periodsData = await API("/api/payroll-v2/periods/list").catch(() => []);
+      // Load pay periods from timecards
+      const periodsData = await API("/api/payroll-simple/periods").catch(() => []);
       setPayPeriods(periodsData);
       
-      // Load vacation balances
+      // Load vacation balances (keep v2 if it works, otherwise skip)
       const vacationData = await API("/api/payroll-v2/vacation/balances").catch(() => []);
       setVacationBalances(vacationData);
       
-      // Load next pay period info
-      const next = await API("/api/payroll-v2/next-pay-period").catch(() => null);
+      // Calculate next pay period (simple)
+      const next = periodsData.length > 0 ? periodsData[0] : null;
       setNextPayPeriod(next);
       
     } catch (error) {

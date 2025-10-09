@@ -15,6 +15,7 @@ import auth from "./routes/auth-mfa.js"; // Updated to MFA-enabled auth
 import users from "./routes/users.js"; // New user management
 import payroll from "./routes/payroll.js";
 import payrollV2 from "./routes/payroll-v2.js";
+import payrollSimple from "./routes/payroll-simple.js";
 import compliance from "./routes/compliance.js";
 import leave from "./routes/leave.js";
 import performance from "./routes/performance.js";
@@ -280,6 +281,8 @@ app.use("/api/users", users); // User management (has own auth middleware)
 app.use("/api/payroll", requireAuth, payroll);
 // New payroll system (v2) - automated calculation based on timecards
 app.use("/api/payroll-v2", requireAuth, payrollV2);
+// Simple payroll - calculate on-the-fly from existing data (WORKS NOW!)
+app.use("/api/payroll-simple", requireAuth, payrollSimple);
 app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);
 app.use("/api/performance", requireAuth, performance);
