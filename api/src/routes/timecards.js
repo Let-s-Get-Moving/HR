@@ -484,62 +484,6 @@ r.post("/entries", async (req, res) => {
   }
 });
 
-// Update timecard entry
-r.put("/entries/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const entrySchema = z.object({
-      work_date: z.string().optional(),
-      clock_in: z.string().nullable().optional(),
-      clock_out: z.string().nullable().optional(),
-      notes: z.string().nullable().optional()
-    });
-    
-    const data = entrySchema.parse(req.body);
-    
-    // Get existing entry
-    const { rows: existing } = await q(
-      `SELECT * FROM timecard_entries WHERE id = $1`,
-      [id]
-    );
-    
-    if (existing.length === 0) {
-      return res.status(404).json({ error: "Entry not found" });
-    }
-    
-    const entry = existing[0];
-    const work_date = data.work_date || entry.work_date;
-    const clock_in = data.clock_in !== undefined ? data.clock_in : entry.clock_in;
-    const clock_out = data.clock_out !== undefined ? data.clock_out : entry.clock_out;
-    
-    // Recalculate hours
-    let hours_worked = null;
-    if (clock_in && clock_out) {
-      const inTime = new Date(`${work_date}T${clock_in}`);
-      const outTime = new Date(`${work_date}T${clock_out}`);
-      const diff = (outTime - inTime) / (1000 * 60 * 60);
-      hours_worked = Math.round(diff * 100) / 100;
-    }
-    
-    const { rows } = await q(
-      `UPDATE timecard_entries 
-       SET work_date = $1, clock_in = $2, clock_out = $3, 
-           hours_worked = $4, notes = $5
-       WHERE id = $6
-       RETURNING *`,
-      [work_date, clock_in, clock_out, hours_worked, data.notes, id]
-    );
-    
-    res.json(rows[0]);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: "Invalid data", details: error.errors });
-    }
-    console.error("Error updating timecard entry:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Delete timecard entry
 r.delete("/entries/:id", async (req, res) => {
   try {
