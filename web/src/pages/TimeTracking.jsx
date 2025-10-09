@@ -68,11 +68,16 @@ export default function TimeTracking() {
         const datesData = await API("/api/timecards/dates-with-data");
         setAvailableDates(datesData);
         if (datesData.length > 0) {
-          const mostRecent = new Date(datesData[0]);
-          setSelectedDate(mostRecent.toISOString().split('T')[0]);
+          const mostRecent = datesData[0];
+          setSelectedDate(mostRecent);
+          
+          // Load day view data for the most recent date
+          const dayData = await API(`/api/timecards/day-view/${mostRecent}`);
+          setDayViewData(dayData);
+          console.log(`✅ [Frontend] Loaded ${dayData.length} entries for date ${mostRecent}`);
         }
       } catch (error) {
-        console.log("Note: Could not load dates for day view");
+        console.log("Note: Could not load dates for day view", error);
       }
       
       // Load periods
@@ -109,6 +114,23 @@ export default function TimeTracking() {
       console.error("❌ [Frontend] ERROR loading initial data:", error);
       console.error("❌ [Frontend] Error details:", error.message);
       console.error('═══════════════════════════════════════════════════════════\n');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDayViewData = async (date) => {
+    if (!date) return;
+    
+    try {
+      console.log(`🌅 [Frontend] Loading day view for ${date}`);
+      setLoading(true);
+      const data = await API(`/api/timecards/day-view/${date}`);
+      setDayViewData(data);
+      console.log(`✅ [Frontend] Loaded ${data.length} entries for ${date}`);
+    } catch (error) {
+      console.error("❌ [Frontend] Error loading day view:", error);
+      setDayViewData([]);
     } finally {
       setLoading(false);
     }
@@ -508,15 +530,9 @@ export default function TimeTracking() {
         {view === "day-view" && (
           <DayView 
             selectedDate={selectedDate}
-            onDateChange={async (date) => {
+            onDateChange={(date) => {
               setSelectedDate(date);
-              try {
-                const data = await API(`/api/timecards/day-view/${date}`);
-                setDayViewData(data);
-              } catch (error) {
-                console.error("Error loading day view:", error);
-                setDayViewData([]);
-              }
+              loadDayViewData(date);
             }}
             dayViewData={dayViewData}
             availableDates={availableDates}
@@ -1027,12 +1043,6 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 
 // Day View Component
 function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading }) {
-  useEffect(() => {
-    if (selectedDate) {
-      onDateChange(selectedDate);
-    }
-  }, [selectedDate]);
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
