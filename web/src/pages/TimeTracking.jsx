@@ -1102,7 +1102,11 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
       };
     }
     acc[key].entries.push(entry);
-    acc[key].total_hours += parseFloat(entry.hours_worked || 0);
+    // Only add to total if hours_worked is valid
+    const hours = parseFloat(entry.hours_worked || 0);
+    if (!isNaN(hours)) {
+      acc[key].total_hours += hours;
+    }
     return acc;
   }, {});
 
@@ -1213,8 +1217,10 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                             )}
                           </td>
                           <td className="px-6 py-3 text-right font-medium text-primary">
-                            {entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : "—"}
-                            {entry.is_overtime && (
+                            {entry.hours_worked && !isNaN(entry.hours_worked) 
+                              ? parseFloat(entry.hours_worked).toFixed(2) 
+                              : "—"}
+                            {entry.is_overtime && entry.hours_worked && !isNaN(entry.hours_worked) && (
                               <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
                             )}
                           </td>

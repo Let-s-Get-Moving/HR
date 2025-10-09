@@ -573,13 +573,26 @@ r.put("/entries/:id", async (req, res) => {
     console.log(`\n✏️ [Edit Entry] Updating entry ${id}`);
     console.log(`   Clock In: ${clock_in}, Clock Out: ${clock_out}`);
     
+    // Normalize time format (add :00 seconds if missing)
+    const normalizeTime = (time) => {
+      if (!time) return null;
+      // If format is HH:MM, add :00 seconds
+      if (time.length === 5 && time.match(/^\d{2}:\d{2}$/)) {
+        return time + ':00';
+      }
+      return time;
+    };
+    
+    const normalizedClockIn = normalizeTime(clock_in);
+    const normalizedClockOut = normalizeTime(clock_out);
+    
     // Calculate hours if both times provided
     let hours_worked = null;
     let is_overtime = false;
     
-    if (clock_in && clock_out) {
-      const start = new Date(`1970-01-01T${clock_in}`);
-      const end = new Date(`1970-01-01T${clock_out}`);
+    if (normalizedClockIn && normalizedClockOut) {
+      const start = new Date(`1970-01-01T${normalizedClockIn}`);
+      const end = new Date(`1970-01-01T${normalizedClockOut}`);
       
       // Handle overnight shifts
       if (end < start) {
@@ -587,6 +600,13 @@ r.put("/entries/:id", async (req, res) => {
       }
       
       hours_worked = (end - start) / (1000 * 60 * 60); // Convert to hours
+      
+      // Check if calculation succeeded
+      if (isNaN(hours_worked)) {
+        console.error(`❌ [Edit Entry] Failed to calculate hours from ${normalizedClockIn} to ${normalizedClockOut}`);
+        return res.status(400).json({ error: "Invalid time format" });
+      }
+      
       is_overtime = hours_worked > 8;
       
       console.log(`   Calculated hours: ${hours_worked.toFixed(2)}`);
@@ -604,7 +624,7 @@ r.put("/entries/:id", async (req, res) => {
         updated_at = NOW()
       WHERE id = $6
       RETURNING *
-    `, [clock_in, clock_out, hours_worked, is_overtime, notes, id]);
+    `, [normalizedClockIn, normalizedClockOut, hours_worked, is_overtime, notes, id]);
     
     if (rows.length === 0) {
       return res.status(404).json({ error: "Entry not found" });
