@@ -50,8 +50,8 @@ export default function PayrollV2() {
       const vacationData = await API("/api/payroll-v2/vacation/balances").catch(() => []);
       setVacationBalances(vacationData);
       
-      // Calculate next pay period (simple)
-      const next = periodsData.length > 0 ? periodsData[0] : null;
+      // Get next pay period
+      const next = await API("/api/payroll-simple/next-period").catch(() => null);
       setNextPayPeriod(next);
       
     } catch (error) {

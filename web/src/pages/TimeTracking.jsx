@@ -9,7 +9,7 @@ import {
 } from '../components/TimecardUploadViewer.jsx';
 
 export default function TimeTracking() {
-  const [view, setView] = useState("uploads"); // uploads, main, individual, dashboard, upload-detail
+  const [view, setView] = useState("uploads"); // uploads, main, individual, dashboard, upload-detail, day-view
   const [timecards, setTimecards] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [payPeriods, setPayPeriods] = useState([]);
@@ -18,6 +18,11 @@ export default function TimeTracking() {
   const [employeeSearch, setEmployeeSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
+  
+  // Day view state
+  const [selectedDate, setSelectedDate] = useState("");
+  const [dayViewData, setDayViewData] = useState([]);
+  const [availableDates, setAvailableDates] = useState([]);
   
   // Upload viewing
   const [uploads, setUploads] = useState([]);
@@ -58,6 +63,18 @@ export default function TimeTracking() {
       console.log("✅ [Frontend] Employees API response:", employeesData.length, "employees");
       setEmployees(employeesData);
       console.log("✅ [Frontend] Employees state updated");
+      
+      // Load available dates for day view
+      try {
+        const datesData = await API("/api/timecards/dates-with-data");
+        setAvailableDates(datesData);
+        if (datesData.length > 0) {
+          const mostRecent = new Date(datesData[0]);
+          setSelectedDate(mostRecent.toISOString().split('T')[0]);
+        }
+      } catch (error) {
+        console.log("Note: Could not load dates for day view");
+      }
       
       // Load periods
       console.log("📅 [Frontend] Fetching periods from API...");
@@ -440,6 +457,21 @@ export default function TimeTracking() {
       {/* View Tabs */}
       <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
         <button
+          onClick={() => setView("day-view")}
+          className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
+            view === "day-view"
+              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+              : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Day View
+          </div>
+        </button>
+        <button
           onClick={() => setView("uploads")}
           className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
             view === "uploads" || view === "upload-detail" || view === "employee-timecard"
@@ -549,6 +581,24 @@ export default function TimeTracking() {
 
       {/* Main Content */}
       <AnimatePresence mode="wait">
+        {view === "day-view" && (
+          <DayView 
+            selectedDate={selectedDate}
+            onDateChange={async (date) => {
+              setSelectedDate(date);
+              try {
+                const data = await API(`/api/timecards/day-view/${date}`);
+                setDayViewData(data);
+              } catch (error) {
+                console.error("Error loading day view:", error);
+                setDayViewData([]);
+              }
+            }}
+            dayViewData={dayViewData}
+            availableDates={availableDates}
+            loading={loading}
+          />
+        )}
         {view === "uploads" && (
           <UploadsListView 
             uploads={uploads}
@@ -1056,5 +1106,115 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
             </div>
           </motion.div>
     </div>
+  );
+}
+
+// Day View Component
+function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading }) {
+  useEffect(() => {
+    if (selectedDate) {
+      onDateChange(selectedDate);
+    }
+  }, [selectedDate]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="space-y-6"
+    >
+      {/* Date Selector */}
+      <div className="card p-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium mb-2 text-primary">Select Date</label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+            />
+          </div>
+          <div className="text-sm text-secondary">
+            Showing {dayViewData.length} entries
+          </div>
+        </div>
+      </div>
+
+      {/* Day View Data */}
+      {loading ? (
+        <div className="text-center py-12 text-secondary">Loading...</div>
+      ) : dayViewData.length === 0 ? (
+        <div className="card p-12 text-center">
+          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <h3 className="text-lg font-medium text-primary mb-2">No Data for This Date</h3>
+          <p className="text-secondary">Select another date or upload timecards</p>
+        </div>
+      ) : (
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-100 dark:bg-slate-800">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-primary">Employee</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-primary">Department</th>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-primary">Clock In</th>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-primary">Clock Out</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-primary">Hours</th>
+                  <th className="px-6 py-4 text-center text-sm font-medium text-primary">Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-primary">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                {dayViewData.map((entry, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div>
+                        <div className="font-medium text-primary">
+                          {entry.first_name} {entry.last_name}
+                        </div>
+                        <div className="text-sm text-secondary">{entry.email}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-secondary">
+                      {entry.department || "—"}
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-secondary">
+                      {entry.clock_in || "—"}
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-secondary">
+                      {entry.clock_out || "—"}
+                    </td>
+                    <td className="px-6 py-4 text-right font-medium text-primary">
+                      {entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : "—"}
+                      {entry.is_overtime && (
+                        <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        entry.timecard_status === 'Approved' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : entry.timecard_status === 'Submitted'
+                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                      }`}>
+                        {entry.timecard_status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-secondary">
+                      {entry.notes || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </motion.div>
   );
 }
