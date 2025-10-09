@@ -534,7 +534,20 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
             <div className="text-sm text-neutral-400">Department</div>
-            <div className="font-medium">{employee.department_name || 'Not assigned'}</div>
+            {isEditing ? (
+              <select
+                value={editData.department_id || ''}
+                onChange={(e) => setEditData({...editData, department_id: parseInt(e.target.value) || null})}
+                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
+              >
+                <option value="">Not assigned</option>
+                {departments.map(dept => (
+                  <option key={dept.id} value={dept.id}>{dept.name}</option>
+                ))}
+              </select>
+            ) : (
+              <div className="font-medium">{employee.department_name || 'Not assigned'}</div>
+            )}
           </div>
         </div>
       </div>
