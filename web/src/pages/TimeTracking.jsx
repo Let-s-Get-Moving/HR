@@ -1067,7 +1067,11 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
     return acc;
   }, {});
 
-  const employees = Object.values(groupedData);
+  const employees = Object.values(groupedData).sort((a, b) => {
+    const lastNameCompare = a.last_name.localeCompare(b.last_name);
+    if (lastNameCompare !== 0) return lastNameCompare;
+    return a.first_name.localeCompare(b.first_name);
+  });
 
   return (
     <motion.div
@@ -1135,7 +1139,6 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                       <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Clock In</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Clock Out</th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase">Hours</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-secondary uppercase">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Notes</th>
                     </tr>
                   </thead>
@@ -1153,17 +1156,6 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                           {entry.is_overtime && (
                             <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
                           )}
-                        </td>
-                        <td className="px-6 py-3 text-center">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            entry.timecard_status === 'Approved' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : entry.timecard_status === 'Submitted'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                          }`}>
-                            {entry.timecard_status}
-                          </span>
                         </td>
                         <td className="px-6 py-3 text-sm text-secondary">
                           {entry.notes || "—"}
