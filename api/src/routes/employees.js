@@ -70,7 +70,7 @@ r.post("/", async (req, res) => {
 });
 
 r.delete("/:id", async (req, res) => {
-  await q(`UPDATE employees SET status='Terminated', termination_date=CURRENT_DATE WHERE id=$1`, [req.params.id]);
+  await q(`UPDATE employees SET status='Terminated', termination_date=CURRENT_DATE, termination_reason='Terminated via HR system' WHERE id=$1`, [req.params.id]);
   res.sendStatus(204);
 });
 

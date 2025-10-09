@@ -408,9 +408,12 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                 const firstName = nameParts[0];
                 const lastName = nameParts.slice(1).join(' ') || firstName;
                 
+                // Generate work email (allow duplicates, HR will fix manually)
+                const workEmail = `${firstName.toLowerCase().replace(/\s/g, '')}@letsgetmovinggroup.com`;
+                
                 const createResult = await client.query(`
                     INSERT INTO employees (
-                        first_name, last_name, email, hire_date, 
+                        first_name, last_name, work_email, hire_date, 
                         employment_type, status, role_title
                     )
                     VALUES ($1, $2, $3, $4, 'Full-time', 'Active', 'Employee')
@@ -418,11 +421,12 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                 `, [
                     firstName, 
                     lastName, 
-                    `${firstName.toLowerCase()}@letsgetmovinggroup.com`,
+                    workEmail,
                     payPeriod.start
                 ]);
                 
                 employeeId = createResult.rows[0].id;
+                console.log(`   ✓ Created employee ID ${employeeId} with work_email: ${workEmail}`);
             }
             
             // Calculate total hours

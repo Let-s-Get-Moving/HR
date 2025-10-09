@@ -218,6 +218,7 @@ r.delete("/:id", async (req, res) => {
       UPDATE employees 
       SET status = 'Terminated', 
           termination_date = CURRENT_DATE,
+          termination_reason = 'Terminated via HR system',
           updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
     `, [id]);

@@ -85,10 +85,10 @@ r.post("/details", async (req, res) => {
       validatedData.initiated_by
     ]);
 
-    // Update employee status
+    // Update employee status with reason and type
     await q(
-      "UPDATE employees SET status = 'Terminated', termination_date = $1 WHERE id = $2",
-      [validatedData.termination_date, validatedData.employee_id]
+      "UPDATE employees SET status = 'Terminated', termination_date = $1, termination_reason = $2, termination_type = $3 WHERE id = $4",
+      [validatedData.termination_date, validatedData.termination_reason, validatedData.termination_type, validatedData.employee_id]
     );
 
     res.status(201).json({
