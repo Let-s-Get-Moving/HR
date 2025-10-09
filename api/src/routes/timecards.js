@@ -123,6 +123,67 @@ r.get("/", async (req, res) => {
   }
 });
 
+/**
+ * Get all timecard entries for a specific day
+ * Shows all employees who worked on that day
+ */
+r.get("/day-view/:date", async (req, res) => {
+  try {
+    const { date } = req.params;
+    
+    console.log(`\n🌅 [Day View] Getting data for ${date}`);
+    
+    const { rows } = await q(`
+      SELECT 
+        e.id as employee_id,
+        e.first_name,
+        e.last_name,
+        e.email,
+        d.name as department,
+        te.work_date,
+        te.clock_in,
+        te.clock_out,
+        te.hours_worked,
+        te.is_overtime,
+        te.notes,
+        t.status as timecard_status,
+        te.day_of_week
+      FROM timecard_entries te
+      JOIN timecards t ON te.timecard_id = t.id
+      JOIN employees e ON t.employee_id = e.id
+      LEFT JOIN departments d ON e.department_id = d.id
+      WHERE te.work_date = $1::date
+      ORDER BY e.last_name, e.first_name, te.clock_in
+    `, [date]);
+    
+    console.log(`🌅 [Day View] Found ${rows.length} entries for ${date}`);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error("❌ [Day View] Error:", error);
+    res.status(500).json({ error: "Failed to fetch day view" });
+  }
+});
+
+/**
+ * Get list of dates with timecard entries (for date picker)
+ */
+r.get("/dates-with-data", async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT DISTINCT work_date
+      FROM timecard_entries
+      ORDER BY work_date DESC
+      LIMIT 365
+    `);
+    
+    res.json(rows.map(r => r.work_date));
+  } catch (error) {
+    console.error("❌ [Dates] Error:", error);
+    res.status(500).json({ error: "Failed to fetch dates" });
+  }
+});
+
 // Get timecard by ID with all entries
 r.get("/:id", async (req, res) => {
   try {
@@ -492,66 +553,3 @@ r.delete("/entries/:id", async (req, res) => {
 });
 
 export default r;
-
-
-/**
- * Get all timecard entries for a specific day
- * Shows all employees who worked on that day
- */
-r.get("/day-view/:date", async (req, res) => {
-  try {
-    const { date } = req.params;
-    
-    console.log(`\n🌅 [Day View] Getting data for ${date}`);
-    
-    const { rows } = await q(`
-      SELECT 
-        e.id as employee_id,
-        e.first_name,
-        e.last_name,
-        e.email,
-        d.name as department,
-        te.work_date,
-        te.clock_in,
-        te.clock_out,
-        te.hours_worked,
-        te.is_overtime,
-        te.notes,
-        t.status as timecard_status,
-        te.day_of_week
-      FROM timecard_entries te
-      JOIN timecards t ON te.timecard_id = t.id
-      JOIN employees e ON t.employee_id = e.id
-      LEFT JOIN departments d ON e.department_id = d.id
-      WHERE te.work_date = $1::date
-      ORDER BY e.last_name, e.first_name, te.clock_in
-    `, [date]);
-    
-    console.log(`🌅 [Day View] Found ${rows.length} entries for ${date}`);
-    
-    res.json(rows);
-  } catch (error) {
-    console.error("❌ [Day View] Error:", error);
-    res.status(500).json({ error: "Failed to fetch day view" });
-  }
-});
-
-/**
- * Get list of dates with timecard entries (for date picker)
- */
-r.get("/dates-with-data", async (req, res) => {
-  try {
-    const { rows } = await q(`
-      SELECT DISTINCT work_date
-      FROM timecard_entries
-      ORDER BY work_date DESC
-      LIMIT 365
-    `);
-    
-    res.json(rows.map(r => r.work_date));
-  } catch (error) {
-    console.error("❌ [Dates] Error:", error);
-    res.status(500).json({ error: "Failed to fetch dates" });
-  }
-});
-
