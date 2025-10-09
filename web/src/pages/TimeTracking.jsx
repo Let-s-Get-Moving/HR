@@ -542,6 +542,7 @@ export default function TimeTracking() {
             dayViewData={dayViewData}
             availableDates={availableDates}
             loading={loading}
+            loadDayViewData={loadDayViewData}
           />
         )}
         {view === "uploads" && (
@@ -1047,7 +1048,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 }
 
 // Day View Component
-function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading }) {
+function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData }) {
   const [editingEntryId, setEditingEntryId] = React.useState(null);
   const [editForm, setEditForm] = React.useState({});
   const [saving, setSaving] = React.useState(false);
@@ -1076,19 +1077,30 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
   const handleSave = async (entryId) => {
     try {
       setSaving(true);
-      await API(`/api/timecards/entries/${entryId}`, {
+      
+      console.log('💾 [Frontend] Saving entry:', entryId);
+      console.log('💾 [Frontend] Edit form data:', editForm);
+      
+      const response = await API(`/api/timecards/entries/${entryId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editForm)
       });
       
+      console.log('✅ [Frontend] Save response:', response);
+      console.log('   - hours_worked:', response.hours_worked);
+      console.log('   - is_overtime:', response.is_overtime);
+      
       // Reload the day view data
-      onDateChange(selectedDate);
+      console.log('🔄 [Frontend] Reloading day view data...');
+      await loadDayViewData(selectedDate);
+      console.log('✅ [Frontend] Day view data reloaded');
+      
       setEditingEntryId(null);
       setEditForm({});
     } catch (error) {
-      console.error('Error saving entry:', error);
-      alert('Failed to save changes: ' + (error.message || 'Unknown error'));
+      console.error('❌ [Frontend] Error saving entry:', error);
+      alert('Failed to save changes: ' + (error.message || error.error || 'Unknown error'));
     } finally {
       setSaving(false);
     }

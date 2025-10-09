@@ -571,6 +571,7 @@ r.put("/entries/:id", async (req, res) => {
     const { clock_in, clock_out, notes } = req.body;
     
     console.log(`\n✏️ [Edit Entry] Updating entry ${id}`);
+    console.log(`   Request body:`, req.body);
     console.log(`   Clock In: ${clock_in}, Clock Out: ${clock_out}`);
     
     // Normalize time format (add :00 seconds if missing)
@@ -586,6 +587,9 @@ r.put("/entries/:id", async (req, res) => {
     const normalizedClockIn = normalizeTime(clock_in);
     const normalizedClockOut = normalizeTime(clock_out);
     
+    console.log(`   Normalized Clock In: ${normalizedClockIn}`);
+    console.log(`   Normalized Clock Out: ${normalizedClockOut}`);
+    
     // Calculate hours if both times provided
     let hours_worked = null;
     let is_overtime = false;
@@ -594,12 +598,19 @@ r.put("/entries/:id", async (req, res) => {
       const start = new Date(`1970-01-01T${normalizedClockIn}`);
       const end = new Date(`1970-01-01T${normalizedClockOut}`);
       
+      console.log(`   Start date object: ${start}`);
+      console.log(`   End date object: ${end}`);
+      
       // Handle overnight shifts
       if (end < start) {
         end.setDate(end.getDate() + 1);
+        console.log(`   Overnight shift detected, adjusted end: ${end}`);
       }
       
       hours_worked = (end - start) / (1000 * 60 * 60); // Convert to hours
+      
+      console.log(`   Calculated hours_worked: ${hours_worked}`);
+      console.log(`   Is NaN: ${isNaN(hours_worked)}`);
       
       // Check if calculation succeeded
       if (isNaN(hours_worked)) {
@@ -609,10 +620,11 @@ r.put("/entries/:id", async (req, res) => {
       
       is_overtime = hours_worked > 8;
       
-      console.log(`   Calculated hours: ${hours_worked.toFixed(2)}`);
+      console.log(`   Final hours: ${hours_worked.toFixed(2)}, Overtime: ${is_overtime}`);
     }
     
     // Update the entry
+    console.log(`   Executing UPDATE query...`);
     const { rows } = await q(`
       UPDATE timecard_entries
       SET 
@@ -627,14 +639,17 @@ r.put("/entries/:id", async (req, res) => {
     `, [normalizedClockIn, normalizedClockOut, hours_worked, is_overtime, notes, id]);
     
     if (rows.length === 0) {
+      console.error(`❌ [Edit Entry] Entry ${id} not found`);
       return res.status(404).json({ error: "Entry not found" });
     }
     
     console.log(`✅ [Edit Entry] Entry ${id} updated successfully`);
+    console.log(`   Updated entry:`, rows[0]);
     
     res.json(rows[0]);
   } catch (error) {
     console.error("❌ [Edit Entry] Error:", error);
+    console.error("   Stack:", error.stack);
     res.status(500).json({ error: "Failed to update entry" });
   }
 });
