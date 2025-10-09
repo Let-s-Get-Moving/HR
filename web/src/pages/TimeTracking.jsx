@@ -1048,6 +1048,27 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 
 // Day View Component
 function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading }) {
+  // Group entries by employee
+  const groupedData = dayViewData.reduce((acc, entry) => {
+    const key = entry.employee_id;
+    if (!acc[key]) {
+      acc[key] = {
+        employee_id: entry.employee_id,
+        first_name: entry.first_name,
+        last_name: entry.last_name,
+        email: entry.email,
+        department: entry.department,
+        entries: [],
+        total_hours: 0
+      };
+    }
+    acc[key].entries.push(entry);
+    acc[key].total_hours += parseFloat(entry.hours_worked || 0);
+    return acc;
+  }, {});
+
+  const employees = Object.values(groupedData);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -1068,7 +1089,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
             />
           </div>
           <div className="text-sm text-secondary">
-            Showing {dayViewData.length} entries
+            {employees.length} employees • {dayViewData.length} entries
           </div>
         </div>
       </div>
@@ -1076,7 +1097,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
       {/* Day View Data */}
       {loading ? (
         <div className="text-center py-12 text-secondary">Loading...</div>
-      ) : dayViewData.length === 0 ? (
+      ) : employees.length === 0 ? (
         <div className="card p-12 text-center">
           <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1085,65 +1106,75 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
           <p className="text-secondary">Select another date or upload timecards</p>
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-100 dark:bg-slate-800">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-primary">Employee</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-primary">Department</th>
-                  <th className="px-6 py-4 text-center text-sm font-medium text-primary">Clock In</th>
-                  <th className="px-6 py-4 text-center text-sm font-medium text-primary">Clock Out</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-primary">Hours</th>
-                  <th className="px-6 py-4 text-center text-sm font-medium text-primary">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-primary">Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                {dayViewData.map((entry, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-primary">
-                          {entry.first_name} {entry.last_name}
-                        </div>
-                        <div className="text-sm text-secondary">{entry.email}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-secondary">
-                      {entry.department || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm text-secondary">
-                      {entry.clock_in || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-center text-sm text-secondary">
-                      {entry.clock_out || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-right font-medium text-primary">
-                      {entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : "—"}
-                      {entry.is_overtime && (
-                        <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        entry.timecard_status === 'Approved' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                          : entry.timecard_status === 'Submitted'
-                          ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-                      }`}>
-                        {entry.timecard_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-secondary">
-                      {entry.notes || "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="space-y-4">
+          {employees.map((employee) => (
+            <div key={employee.employee_id} className="card overflow-hidden">
+              {/* Employee Header */}
+              <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-primary text-lg">
+                      {employee.first_name} {employee.last_name}
+                    </h3>
+                    <p className="text-sm text-secondary">{employee.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-secondary">{employee.department || "—"}</div>
+                    <div className="text-lg font-bold text-primary">
+                      {employee.total_hours.toFixed(2)} hours
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Time Entries Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-100 dark:bg-slate-800">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Clock In</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Clock Out</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase">Hours</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-secondary uppercase">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {employee.entries.map((entry, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                        <td className="px-6 py-3 text-sm text-primary">
+                          {entry.clock_in || "—"}
+                        </td>
+                        <td className="px-6 py-3 text-sm text-primary">
+                          {entry.clock_out || "—"}
+                        </td>
+                        <td className="px-6 py-3 text-right font-medium text-primary">
+                          {entry.hours_worked ? parseFloat(entry.hours_worked).toFixed(2) : "—"}
+                          {entry.is_overtime && (
+                            <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            entry.timecard_status === 'Approved' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                              : entry.timecard_status === 'Submitted'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+                          }`}>
+                            {entry.timecard_status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-3 text-sm text-secondary">
+                          {entry.notes || "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </motion.div>
