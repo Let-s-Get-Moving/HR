@@ -232,8 +232,12 @@ export default function Employees() {
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Type</th>
                 <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Hire Date</th>
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Status</th>
-                <th className="hidden lg:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Termination Date</th>
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Actions</th>
+                {filterStatus === "terminated" && (
+                  <th className="hidden lg:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Termination Date</th>
+                )}
+                {filterStatus === "active" && (
+                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-800">
@@ -294,11 +298,13 @@ export default function Employees() {
                       {employee.status}
                     </span>
                   </td>
-                  <td className="hidden lg:table-cell px-3 sm:px-6 py-4 text-sm">
-                    {employee.termination_date ? new Date(employee.termination_date).toLocaleDateString() : '-'}
-                  </td>
-                  <td className="px-3 sm:px-6 py-4">
-                    {employee.status === 'Active' ? (
+                  {filterStatus === "terminated" && (
+                    <td className="hidden lg:table-cell px-3 sm:px-6 py-4 text-sm">
+                      {employee.termination_date ? new Date(employee.termination_date).toLocaleDateString() : '-'}
+                    </td>
+                  )}
+                  {filterStatus === "active" && (
+                    <td className="px-3 sm:px-6 py-4">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -308,10 +314,8 @@ export default function Employees() {
                       >
                         Terminate
                       </button>
-                    ) : (
-                      <span className="text-neutral-400 text-sm">-</span>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
                 ))
               )}
