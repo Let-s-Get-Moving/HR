@@ -595,11 +595,25 @@ r.put("/entries/:id", async (req, res) => {
     let is_overtime = false;
     
     if (normalizedClockIn && normalizedClockOut) {
-      const start = new Date(`1970-01-01T${normalizedClockIn}`);
-      const end = new Date(`1970-01-01T${normalizedClockOut}`);
+      console.log(`   Creating date objects with:
+         - clockIn: 1970-01-01T${normalizedClockIn}
+         - clockOut: 1970-01-01T${normalizedClockOut}`);
+      
+      // Parse the times - split by colon and create date manually
+      const [inHour, inMin, inSec = '00'] = normalizedClockIn.split(':');
+      const [outHour, outMin, outSec = '00'] = normalizedClockOut.split(':');
+      
+      console.log(`   Parsed clock in: ${inHour}:${inMin}:${inSec}`);
+      console.log(`   Parsed clock out: ${outHour}:${outMin}:${outSec}`);
+      
+      // Create dates using specific components (more reliable than string parsing)
+      const start = new Date(1970, 0, 1, parseInt(inHour), parseInt(inMin), parseInt(inSec));
+      const end = new Date(1970, 0, 1, parseInt(outHour), parseInt(outMin), parseInt(outSec));
       
       console.log(`   Start date object: ${start}`);
       console.log(`   End date object: ${end}`);
+      console.log(`   Start timestamp: ${start.getTime()}`);
+      console.log(`   End timestamp: ${end.getTime()}`);
       console.log(`   Start is valid: ${!isNaN(start.getTime())}`);
       console.log(`   End is valid: ${!isNaN(end.getTime())}`);
       
@@ -615,19 +629,22 @@ r.put("/entries/:id", async (req, res) => {
         console.log(`   Overnight shift detected, adjusted end: ${end}`);
       }
       
-      hours_worked = (end - start) / (1000 * 60 * 60); // Convert to hours
+      const millisDiff = end.getTime() - start.getTime();
+      hours_worked = millisDiff / (1000 * 60 * 60); // Convert to hours
       
+      console.log(`   Milliseconds difference: ${millisDiff}`);
       console.log(`   Calculated hours_worked: ${hours_worked}`);
       console.log(`   Is NaN: ${isNaN(hours_worked)}`);
       
-      // CRITICAL: If result is NaN, set to null instead
-      if (isNaN(hours_worked)) {
-        console.error(`❌ [Edit Entry] Calculation resulted in NaN - setting to null`);
-        hours_worked = null;
-      } else {
-        is_overtime = hours_worked > 8;
-        console.log(`   Final hours: ${hours_worked.toFixed(2)}, Overtime: ${is_overtime}`);
+      // CRITICAL: If result is NaN, something went wrong
+      if (isNaN(hours_worked) || hours_worked === null || hours_worked === undefined) {
+        console.error(`❌ [Edit Entry] Calculation resulted in NaN/null/undefined`);
+        console.error(`   This should not happen - check time parsing`);
+        return res.status(400).json({ error: "Failed to calculate hours - invalid time values" });
       }
+      
+      is_overtime = hours_worked > 8;
+      console.log(`   Final hours: ${hours_worked.toFixed(2)}, Overtime: ${is_overtime}`);
     }
     
     // Update the entry
