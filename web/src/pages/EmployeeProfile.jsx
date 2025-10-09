@@ -103,6 +103,74 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
     return `${hours}:${minutes.toString().padStart(2, '0')}`;
   };
 
+  // Canadian payroll deduction rates (2024/2025)
+  const DEDUCTION_RATES = {
+    cpp: 0.0595,  // 5.95% CPP contribution
+    ei: 0.0158,   // 1.58% EI premium
+    federal_tax: {
+      basic: 0.15,  // 15% federal tax (simplified - first bracket)
+    },
+    provincial_tax: {
+      'ON': 0.0505,  // Ontario
+      'BC': 0.0506,  // British Columbia
+      'AB': 0.10,    // Alberta
+      'QC': 0.15,    // Quebec
+      'MB': 0.108,   // Manitoba
+      'SK': 0.105,   // Saskatchewan
+      'NS': 0.0879,  // Nova Scotia
+      'NB': 0.094,   // New Brunswick
+      'NL': 0.087,   // Newfoundland
+      'PE': 0.098,   // PEI
+      'NT': 0.059,   // Northwest Territories
+      'YT': 0.064,   // Yukon
+      'NU': 0.04,    // Nunavut
+    }
+  };
+
+  // Get province from employee address or default to ON
+  const getEmployeeProvince = () => {
+    if (!employee?.full_address) return 'ON';
+    const address = employee.full_address.toUpperCase();
+    
+    // Check for province codes or names in address
+    if (address.includes('ONTARIO') || address.includes('ON')) return 'ON';
+    if (address.includes('BRITISH COLUMBIA') || address.includes('BC')) return 'BC';
+    if (address.includes('ALBERTA') || address.includes('AB')) return 'AB';
+    if (address.includes('QUEBEC') || address.includes('QC')) return 'QC';
+    if (address.includes('MANITOBA') || address.includes('MB')) return 'MB';
+    if (address.includes('SASKATCHEWAN') || address.includes('SK')) return 'SK';
+    if (address.includes('NOVA SCOTIA') || address.includes('NS')) return 'NS';
+    if (address.includes('NEW BRUNSWICK') || address.includes('NB')) return 'NB';
+    if (address.includes('NEWFOUNDLAND') || address.includes('NL')) return 'NL';
+    if (address.includes('PEI') || address.includes('PE')) return 'PE';
+    if (address.includes('NORTHWEST') || address.includes('NT')) return 'NT';
+    if (address.includes('YUKON') || address.includes('YT')) return 'YT';
+    if (address.includes('NUNAVUT') || address.includes('NU')) return 'NU';
+    
+    return 'ON'; // Default to Ontario
+  };
+
+  // Calculate deductions for a given amount
+  const calculateDeductions = (grossAmount) => {
+    const province = getEmployeeProvince();
+    const provincialRate = DEDUCTION_RATES.provincial_tax[province] || 0.0505;
+    
+    const cpp = grossAmount * DEDUCTION_RATES.cpp;
+    const ei = grossAmount * DEDUCTION_RATES.ei;
+    const federalTax = grossAmount * DEDUCTION_RATES.federal_tax.basic;
+    const provincialTax = grossAmount * provincialRate;
+    
+    return {
+      cpp,
+      ei,
+      federalTax,
+      provincialTax,
+      total: cpp + ei + federalTax + provincialTax,
+      province
+    };
+  };
+
+  // Calculate total hours from time entries
   const calculateTotalHours = () => {
     if (!timeEntries || !Array.isArray(timeEntries) || timeEntries.length === 0) return 0;
     const total = timeEntries.reduce((total, entry) => {
@@ -907,19 +975,37 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="bg-neutral-800 p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Deductions</h3>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span>Taxes:</span>
-                  <span>${((calculateTotalEarnings() || 0) * 0.25).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Benefits:</span>
-                  <span>${((calculateTotalEarnings() || 0) * 0.05).toFixed(2)}</span>
-                </div>
-                <hr className="border-neutral-700" />
-                <div className="flex justify-between font-bold">
-                  <span>Total Deductions:</span>
-                  <span>${((calculateTotalEarnings() || 0) * 0.30).toFixed(2)}</span>
-                </div>
+                {(() => {
+                  const deductions = calculateDeductions(calculateTotalEarnings() || 0);
+                  return (
+                    <>
+                      <div className="flex justify-between text-xs text-neutral-400 mb-2">
+                        <span>Province: {deductions.province}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>CPP (5.95%):</span>
+                        <span>${deductions.cpp.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>EI (1.58%):</span>
+                        <span>${deductions.ei.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Federal Tax (15%):</span>
+                        <span>${deductions.federalTax.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Provincial Tax ({(DEDUCTION_RATES.provincial_tax[deductions.province] * 100).toFixed(2)}%):</span>
+                        <span>${deductions.provincialTax.toFixed(2)}</span>
+                      </div>
+                      <hr className="border-neutral-700" />
+                      <div className="flex justify-between font-bold">
+                        <span>Total Deductions:</span>
+                        <span>${deductions.total.toFixed(2)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -927,10 +1013,56 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <h3 className="text-lg font-semibold mb-4">Net Pay</h3>
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-400 mb-2">
-                  ${((calculateTotalEarnings() || 0) * 0.70).toFixed(2)}
+                  ${(() => {
+                    const gross = calculateTotalEarnings() || 0;
+                    const deductions = calculateDeductions(gross);
+                    return (gross - deductions.total).toFixed(2);
+                  })()}
                 </div>
                 <div className="text-sm text-neutral-400">Net earnings after deductions</div>
-              </div>
+            </div>
+          </div>
+          </div>
+
+          {/* YTD (Year-to-Date) Summary */}
+          <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 p-6 rounded-lg border border-indigo-700/50">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <span className="mr-2">📊</span> Year-to-Date Summary ({new Date().getFullYear()})
+            </h3>
+            <div className="grid grid-cols-5 gap-4">
+              {(() => {
+                const gross = calculateTotalEarnings() || 0;
+                const deductions = calculateDeductions(gross);
+                const net = gross - deductions.total;
+                
+                return (
+                  <>
+                    <div className="text-center">
+                      <div className="text-sm text-neutral-400 mb-1">Gross Earnings</div>
+                      <div className="text-2xl font-bold text-green-400">${gross.toFixed(2)}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-neutral-400 mb-1">CPP Deducted</div>
+                      <div className="text-xl font-semibold">${deductions.cpp.toFixed(2)}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-neutral-400 mb-1">EI Deducted</div>
+                      <div className="text-xl font-semibold">${deductions.ei.toFixed(2)}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-neutral-400 mb-1">Tax Withheld</div>
+                      <div className="text-xl font-semibold">${(deductions.federalTax + deductions.provincialTax).toFixed(2)}</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-neutral-400 mb-1">Net Pay</div>
+                      <div className="text-2xl font-bold text-indigo-400">${net.toFixed(2)}</div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            <div className="mt-4 text-xs text-neutral-400 text-center">
+              Based on all time entries recorded this year • Province: {getEmployeeProvince()}
             </div>
           </div>
 
