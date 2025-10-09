@@ -433,9 +433,11 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <h4 className="font-medium mb-3">Personal Information</h4>
                   <div className="space-y-2 text-sm">
                     <div><span className="text-neutral-400">Name:</span> {formData.first_name} {formData.last_name}</div>
-                    <div><span className="text-neutral-400">Email:</span> {formData.email}</div>
+                    <div><span className="text-neutral-400">Work Email:</span> <span className="font-mono text-xs text-indigo-400">{formData.work_email}</span></div>
+                    {formData.email && <div><span className="text-neutral-400">Personal Email:</span> {formData.email}</div>}
                     <div><span className="text-neutral-400">Phone:</span> {formData.phone || 'Not provided'}</div>
                     <div><span className="text-neutral-400">Gender:</span> {formData.gender || 'Not specified'}</div>
+                    <div><span className="text-neutral-400">Birth Date:</span> {formData.birth_date || 'Not provided'}</div>
                   </div>
                 </div>
                 
@@ -445,18 +447,27 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                     <div><span className="text-neutral-400">Hire Date:</span> {formData.hire_date}</div>
                     <div><span className="text-neutral-400">Type:</span> {formData.employment_type}</div>
                     <div><span className="text-neutral-400">Role:</span> {formData.role_title || 'Not specified'}</div>
-                    <div><span className="text-neutral-400">Department:</span> {departments.find(d => d.id == formData.department_id)?.name}</div>
+                    <div><span className="text-neutral-400">Department:</span> {departments.find(d => d.id == formData.department_id)?.name || 'None'}</div>
+                    <div><span className="text-neutral-400">Location:</span> {locations.find(l => l.id == formData.location_id)?.name || 'None'}</div>
+                    <div><span className="text-neutral-400">Hourly Rate:</span> ${formData.hourly_rate}/hr</div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Documents & Training</h4>
+                <h4 className="font-medium mb-3">Banking & Personal Details</h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="text-neutral-400">Contract:</span> {formData.contract_file ? formData.contract_file.name : 'Not uploaded'}</div>
-                  <div><span className="text-neutral-400">ID Document:</span> {formData.id_document ? formData.id_document.name : 'Not uploaded'}</div>
-                  <div><span className="text-neutral-400">Required Trainings:</span> {formData.required_trainings.length} selected</div>
+                  <div><span className="text-neutral-400">Address:</span> {formData.full_address || 'Not provided'}</div>
+                  <div><span className="text-neutral-400">SIN:</span> {formData.sin_number ? '***-***-' + formData.sin_number.slice(-3) : 'Not provided'}</div>
+                  <div><span className="text-neutral-400">Bank:</span> {formData.bank_name || 'Not provided'}</div>
+                  <div><span className="text-neutral-400">Emergency Contact:</span> {formData.emergency_contact_name || 'Not provided'}</div>
                 </div>
+              </div>
+
+              <div className="bg-indigo-900/30 border border-indigo-700 p-4 rounded-lg">
+                <p className="text-sm text-indigo-300">
+                  📄 <strong>Note:</strong> Documents can be uploaded after employee creation through their profile page.
+                </p>
               </div>
 
               <label className="flex items-center space-x-3">
