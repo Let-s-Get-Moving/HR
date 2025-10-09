@@ -66,18 +66,23 @@ export default function TimeTracking() {
       // Load available dates for day view
       try {
         const datesData = await API("/api/timecards/dates-with-data");
+        console.log("📅 [Frontend] Dates received:", datesData);
         setAvailableDates(datesData);
         if (datesData.length > 0) {
           const mostRecent = datesData[0];
+          console.log(`📅 [Frontend] Setting selectedDate to: ${mostRecent}`);
           setSelectedDate(mostRecent);
           
           // Load day view data for the most recent date
+          console.log(`🌅 [Frontend] Loading day view data for: ${mostRecent}`);
           const dayData = await API(`/api/timecards/day-view/${mostRecent}`);
           setDayViewData(dayData);
           console.log(`✅ [Frontend] Loaded ${dayData.length} entries for date ${mostRecent}`);
+        } else {
+          console.log("⚠️ [Frontend] No dates available");
         }
       } catch (error) {
-        console.log("Note: Could not load dates for day view", error);
+        console.error("❌ [Frontend] Error loading dates for day view:", error);
       }
       
       // Load periods

@@ -171,13 +171,21 @@ r.get("/day-view/:date", async (req, res) => {
 r.get("/dates-with-data", async (req, res) => {
   try {
     const { rows } = await q(`
-      SELECT DISTINCT work_date
+      SELECT DISTINCT work_date::date
       FROM timecard_entries
       ORDER BY work_date DESC
       LIMIT 365
     `);
     
-    res.json(rows.map(r => r.work_date));
+    // Format dates as YYYY-MM-DD strings for date picker
+    const formattedDates = rows.map(r => {
+      const date = new Date(r.work_date);
+      return date.toISOString().split('T')[0];
+    });
+    
+    console.log(`📅 [Dates API] Found ${formattedDates.length} dates, latest: ${formattedDates[0]}`);
+    
+    res.json(formattedDates);
   } catch (error) {
     console.error("❌ [Dates] Error:", error);
     res.status(500).json({ error: "Failed to fetch dates" });
