@@ -451,7 +451,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               ) : (
                 <>
                   <h1 className="text-3xl font-bold">{employee.first_name} {employee.last_name}</h1>
-                  <p className="text-neutral-400">{employee.role_title} • {employee.department_name}</p>
+                  <p className="text-neutral-400">{employee.role_title}</p>
                 </>
               )}
             </div>

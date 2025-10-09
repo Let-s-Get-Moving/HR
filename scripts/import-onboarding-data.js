@@ -84,6 +84,58 @@ function cleanPhone(phone) {
   return phone.toString().replace(/\D/g, ''); // Remove non-digits
 }
 
+// Map position/role to department ID
+function mapDepartmentId(positionOrName) {
+  if (!positionOrName) return null;
+  
+  const pos = positionOrName.toLowerCase().trim();
+  
+  // Sales Department (ID: 3)
+  if (pos.includes('sales') || pos.includes('franchise sales')) {
+    return 3;
+  }
+  
+  // Customer Service Department - maps to Operations (ID: 1)
+  if (pos.includes('customer service') || pos.includes('customer support') || 
+      pos.includes('moving consultant')) {
+    return 1; // Operations
+  }
+  
+  // Marketing Department - maps to Operations (ID: 1)
+  if (pos.includes('marketing') || pos.includes('seo')) {
+    return 1; // Operations
+  }
+  
+  // IT/Engineering Department (ID: 160)
+  if (pos.includes('it') || pos.includes('tech') || pos.includes('developer') || 
+      pos.includes('software') || pos.includes('web design') || pos.includes('engineer')) {
+    return 160;
+  }
+  
+  // Finance/Accounting - maps to Operations (ID: 1)
+  if (pos.includes('finance') || pos.includes('accounting') || pos.includes('cfo')) {
+    return 1; // Operations
+  }
+  
+  // Operations Department (ID: 1)
+  if (pos.includes('operations') || pos.includes('coo') || pos.includes('franchise success')) {
+    return 1;
+  }
+  
+  // HR Department (ID: 2)
+  if (pos.includes('hr') || pos.includes('human resources')) {
+    return 2;
+  }
+  
+  // Admin/Executive roles - Operations (ID: 1)
+  if (pos.includes('cdo') || pos.includes('lead admin')) {
+    return 1;
+  }
+  
+  // Default: null (user can edit later)
+  return null;
+}
+
 // Parse Monday.com file (Onboarding_Form_1759757641.xlsx)
 function parseFile1() {
   console.log(`\n📄 Parsing ${FILE1}...`);
@@ -99,7 +151,23 @@ function parseFile1() {
   // Data starts at row 3
   for (let i = 3; i < data.length; i++) {
     const row = data[i];
-    if (!row || row.length === 0 || !row[2]) continue; // Skip empty rows
+    if (!row || row.length === 0) continue; // Skip completely empty rows
+    
+    // Import if we have at least a first name OR last name
+    const firstName = row[2]?.trim();
+    const lastName = row[3]?.trim();
+    if (!firstName && !lastName) {
+      // Debug: log skipped rows
+      if (i >= 77 && i <= 78) {
+        console.log(`   ⚠️  Row ${i}: Skipped - firstName='${firstName}' lastName='${lastName}'`);
+      }
+      continue; // Skip only if both are missing
+    }
+    
+    // Debug: log included rows with partial names
+    if ((firstName && !lastName) || (!firstName && lastName)) {
+      console.log(`   ℹ️  Row ${i}: Partial name - firstName='${firstName || '(empty)'}' lastName='${lastName || '(empty)'}'`);
+    }
     
     const employee = {
       first_name: row[2]?.trim(),
@@ -113,6 +181,7 @@ function parseFile1() {
       phone: cleanPhone(row[10]),
       email: row[11]?.trim().toLowerCase(),
       role_title: row[12],
+      department_id: mapDepartmentId(row[0]) || mapDepartmentId(row[12]), // Use Name (col 0) or Position (col 12)
       full_address: row[13],
       sin_number: row[14] ? row[14].toString().trim() : null,
       sin_expiry_date: excelDateToJSDate(row[15]),
@@ -131,7 +200,8 @@ function parseFile1() {
       source: 'Monday.com'
     };
     
-    if (employee.first_name && employee.last_name) {
+    // Add employee if we have at least a first name OR last name
+    if (employee.first_name || employee.last_name) {
       employees.push(employee);
     }
   }
@@ -168,6 +238,7 @@ function parseFile2() {
       termination_date: excelDateToJSDate(row[3]),
       contract_status: row[5] === 'Signed & returned' ? 'Signed' : (row[4] ? 'Sent' : null),
       role_title: row[6],
+      department_id: mapDepartmentId(row[6]), // Map from Position column
       birth_date: excelDateToJSDate(row[7]),
       phone: cleanPhone(row[8]),
       email: row[9]?.trim().toLowerCase(),
@@ -198,6 +269,25 @@ function parseFile2() {
 
 // Find existing employee by name (with fuzzy matching)
 async function findEmployeeByName(firstName, lastName) {
+  // If no first name, can't search
+  if (!firstName) return null;
+  
+  // If no last name, search by first name only
+  if (!lastName || lastName === '') {
+    const result = await pool.query(
+      `SELECT * FROM employees 
+       WHERE LOWER(TRIM(first_name)) = LOWER(TRIM($1))
+       AND (last_name IS NULL OR last_name = '' OR LENGTH(last_name) <= 2)
+       AND status <> 'Terminated'
+       LIMIT 1`,
+      [firstName]
+    );
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    }
+    return null;
+  }
+  
   // First try exact match
   const exactResult = await pool.query(
     `SELECT * FROM employees 
@@ -330,6 +420,22 @@ async function upsertEmployee(employeeData) {
   // Sanitize data - remove invalid fields instead of failing
   const sanitizedData = { ...employeeData };
   
+  // Ensure we have at least first name OR last name
+  if (!sanitizedData.first_name && !sanitizedData.last_name) {
+    console.log(`      ⚠️  No name provided - skipping employee`);
+    return null;
+  }
+  
+  // Set default values for missing names
+  if (!sanitizedData.first_name) {
+    sanitizedData.first_name = 'Unknown';
+    console.log(`      ⚠️  Missing first name - using "Unknown"`);
+  }
+  if (!sanitizedData.last_name) {
+    sanitizedData.last_name = '';
+    console.log(`      ⚠️  Missing last name - using blank`);
+  }
+  
   // Validate and sanitize dates
   if (sanitizedData.birth_date && !isValidDate(sanitizedData.birth_date)) {
     console.log(`      ⚠️  Invalid birth_date: ${sanitizedData.birth_date} - skipping field`);
@@ -395,6 +501,7 @@ async function upsertEmployee(employeeData) {
     addUpdate('birth_date', sanitizedData.birth_date);
     addUpdate('hire_date', sanitizedData.hire_date);
     addUpdate('role_title', sanitizedData.role_title);
+    addUpdate('department_id', sanitizedData.department_id);
     addUpdate('full_address', sanitizedData.full_address);
     addUpdate('sin_number', sanitizedData.sin_number);
     addUpdate('sin_expiry_date', sanitizedData.sin_expiry_date);
@@ -454,14 +561,14 @@ async function upsertEmployee(employeeData) {
       const result = await pool.query(
         `INSERT INTO employees (
           first_name, last_name, email, phone, birth_date, hire_date,
-          employment_type, role_title, full_address, status,
+          employment_type, role_title, department_id, full_address, status,
           sin_number, sin_expiry_date,
           bank_name, bank_transit_number, bank_account_number,
           emergency_contact_name, emergency_contact_phone,
           contract_status, gift_card_sent, onboarding_source, imported_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+          $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
         ) RETURNING *`,
       [
         sanitizedData.first_name,
@@ -472,6 +579,7 @@ async function upsertEmployee(employeeData) {
         sanitizedData.hire_date || new Date().toISOString().split('T')[0],
         'Full-time', // Default
         sanitizedData.role_title,
+        sanitizedData.department_id,
         sanitizedData.full_address,
         sanitizedData.status || 'Active',
         sanitizedData.sin_number,
@@ -514,6 +622,7 @@ async function upsertEmployee(employeeData) {
           addUpdate('phone', sanitizedData.phone);
           addUpdate('birth_date', sanitizedData.birth_date);
           addUpdate('role_title', sanitizedData.role_title);
+          addUpdate('department_id', sanitizedData.department_id);
           addUpdate('full_address', sanitizedData.full_address);
           addUpdate('sin_number', sanitizedData.sin_number);
           addUpdate('sin_expiry_date', sanitizedData.sin_expiry_date);
