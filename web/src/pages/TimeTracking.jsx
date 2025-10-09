@@ -1107,9 +1107,9 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
   }, {});
 
   const employees = Object.values(groupedData).sort((a, b) => {
-    const lastNameCompare = a.last_name.localeCompare(b.last_name);
-    if (lastNameCompare !== 0) return lastNameCompare;
-    return a.first_name.localeCompare(b.first_name);
+    const firstNameCompare = a.first_name.localeCompare(b.first_name);
+    if (firstNameCompare !== 0) return firstNameCompare;
+    return a.last_name.localeCompare(b.last_name);
   });
 
   return (
