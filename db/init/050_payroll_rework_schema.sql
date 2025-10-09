@@ -321,11 +321,15 @@ RETURNS TABLE (
 ) AS $$
 DECLARE
     base_date DATE := '2025-09-26'::DATE;  -- Last payout date
+    days_since INTEGER;
     weeks_since INTEGER;
     next_pay_date DATE;
 BEGIN
+    -- Calculate how many days have passed
+    days_since := CURRENT_DATE - base_date;
+    
     -- Calculate how many 2-week periods have passed
-    weeks_since := FLOOR(EXTRACT(EPOCH FROM (CURRENT_DATE - base_date)) / (14 * 24 * 60 * 60));
+    weeks_since := FLOOR(days_since / 14.0);
     
     -- Calculate next pay date
     next_pay_date := base_date + ((weeks_since + 1) * 14);
@@ -351,11 +355,15 @@ RETURNS TABLE (
 ) AS $$
 DECLARE
     base_date DATE := '2025-09-26'::DATE;
+    days_since INTEGER;
     weeks_since INTEGER;
     current_pay_date DATE;
 BEGIN
+    -- Calculate how many days have passed
+    days_since := CURRENT_DATE - base_date;
+    
     -- Calculate how many complete 2-week periods have passed
-    weeks_since := FLOOR(EXTRACT(EPOCH FROM (CURRENT_DATE - base_date)) / (14 * 24 * 60 * 60));
+    weeks_since := FLOOR(days_since / 14.0);
     
     -- Current period pay date
     current_pay_date := base_date + (weeks_since * 14);
