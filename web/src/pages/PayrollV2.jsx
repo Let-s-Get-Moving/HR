@@ -99,9 +99,9 @@ export default function PayrollV2() {
   const applyDateFilter = async () => {
     try {
       setLoading(true);
-      let url = "/api/payroll-v2/?";
-      if (startDate) url += `start_date=${startDate}&`;
-      if (endDate) url += `end_date=${endDate}`;
+      let url = "/api/payroll-simple/calculate-live?";
+      if (startDate) url += `pay_period_start=${startDate}&`;
+      if (endDate) url += `pay_period_end=${endDate}`;
       
       const filteredData = await API(url).catch(() => []);
       setPayrolls(filteredData);
