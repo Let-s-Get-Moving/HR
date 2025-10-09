@@ -14,6 +14,7 @@ import employees from "./routes/employees.js";
 import auth from "./routes/auth-mfa.js"; // Updated to MFA-enabled auth
 import users from "./routes/users.js"; // New user management
 import payroll from "./routes/payroll.js";
+import payrollV2 from "./routes/payroll-v2.js";
 import compliance from "./routes/compliance.js";
 import leave from "./routes/leave.js";
 import performance from "./routes/performance.js";
@@ -275,7 +276,10 @@ app.use("/api/users", users); // User management (has own auth middleware)
 // Test routes REMOVED FOR SECURITY - NO UNAUTHENTICATED ENDPOINTS IN PRODUCTION
 // import testFileValidation from "./routes/test-file-validation.js";
 // app.use("/api/test", testFileValidation);
+// Legacy payroll (kept for backwards compatibility)
 app.use("/api/payroll", requireAuth, payroll);
+// New payroll system (v2) - automated calculation based on timecards
+app.use("/api/payroll-v2", requireAuth, payrollV2);
 app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);
 app.use("/api/performance", requireAuth, performance);

@@ -7,6 +7,7 @@ import TimeTracking from "./pages/TimeTracking.jsx";
 import Compliance from "./pages/Compliance.jsx";
 import Recruiting from "./pages/Recruiting.jsx";
 import Payroll from "./pages/Payroll.jsx";
+import PayrollV2 from "./pages/PayrollV2.jsx";
 import Settings from "./pages/Settings.jsx";
 import LeaveManagement from "./pages/LeaveManagement.jsx";
 import Testing from "./pages/Testing.jsx";
@@ -93,7 +94,7 @@ const pages = {
   employees: { name: "Employees", component: Employees, icon: Icons.employees },
   timeTracking: { name: "Time Tracking", component: TimeTracking, icon: Icons.timeTracking },
   leave: { name: "Leave Management", component: LeaveManagement, icon: Icons.leave },
-  payroll: { name: "Payroll", component: Payroll, icon: Icons.payroll },
+  payroll: { name: "Payroll", component: PayrollV2, icon: Icons.payroll },
   performance: { name: "Performance", component: Performance, icon: Icons.performance },
   recruiting: { name: "Recruiting", component: Recruiting, icon: Icons.recruiting },
   compliance: { name: "Compliance", component: Compliance, icon: Icons.compliance },

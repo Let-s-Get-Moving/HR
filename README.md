@@ -119,11 +119,16 @@ After cleanup, import production data:
 - Document management (contracts, permits, certificates)
 - Emergency contact information
 
-### **💰 Payroll & Compensation**
-- Automated payroll calculations across 16 pay periods
-- Hourly rate tracking and compensation history
-- Bonus and commission management
-- Deduction tracking and vacation pay
+### **💰 Payroll & Compensation V2 (NEW)**
+- **Automated Calculation**: Payroll automatically generated from approved timecards
+- **Hourly Rate × Time Tracking**: No manual CSV imports needed
+- **Vacation Accrual**: 4% vacation pay accumulated (not paid immediately)
+- **Bi-weekly Pay Periods**: Automated scheduling (last payout: Sept 26, next: Oct 10)
+- **Vacation Balance Tracking**: Track earned, paid, and remaining vacation pay
+- **Flexible Payouts**: Request vacation payouts anytime
+- **Status Workflow**: Draft → Approved → Paid with automatic vacation updates
+- **Bonus and Commission Management**: Separate tracking systems
+- See [PAYROLL_SYSTEM_V2.md](docs/PAYROLL_SYSTEM_V2.md) for complete documentation
 
 ### **⏱️ Time Tracking & Timecards**
 - **Excel Timecard Upload**: Upload timecard Excel files and view them in exact format
@@ -219,7 +224,19 @@ cd scripts && node remove-all-mock-data.js
 - `POST /api/employees` - Create new employee
 - `PUT /api/employees/:id` - Update employee
 
-### **Payroll**
+### **Payroll V2 (NEW - Automated)**
+- `GET /api/payroll-v2/` - Get all payroll records
+- `GET /api/payroll-v2/:id` - Get specific payroll
+- `POST /api/payroll-v2/generate` - Generate payroll from timecards
+- `POST /api/payroll-v2/:id/approve` - Approve payroll
+- `POST /api/payroll-v2/:id/mark-paid` - Mark as paid
+- `GET /api/payroll-v2/vacation/balances` - Get vacation balances
+- `GET /api/payroll-v2/vacation/balance/:employee_id` - Get employee vacation balance
+- `POST /api/payroll-v2/vacation/payout` - Process vacation payout
+- `GET /api/payroll-v2/next-pay-period` - Get next pay period dates
+- See [PAYROLL_SYSTEM_V2.md](docs/PAYROLL_SYSTEM_V2.md) for details
+
+### **Payroll (Legacy)**
 - `GET /api/payroll/calculations` - Get payroll records
 - `GET /api/payroll/periods` - Get pay periods
 - `POST /api/payroll/calculate` - Calculate payroll
