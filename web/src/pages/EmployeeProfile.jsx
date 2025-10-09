@@ -11,6 +11,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const [payrollHistory, setPayrollHistory] = useState([]);
   const [activeTab, setActiveTab] = useState("overview");
   const [hrDetails, setHrDetails] = useState({ addresses: [], emergency_contacts: [], bank_accounts: [], identifiers: [], compensation_history: [], status_history: [] });
+  const [terminationDetails, setTerminationDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
@@ -83,6 +84,19 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       setHrDetails(hrData);
       setDepartments(deptsData || []);
       setLocations(locsData || []);
+      
+      // If employee is terminated, fetch termination details
+      if (empData.status === 'Terminated') {
+        console.log(`🔄 [EmployeeProfile] Employee is terminated, fetching termination details...`);
+        try {
+          const termData = await API(`/api/termination/details/${employeeId}`);
+          console.log(`✅ [EmployeeProfile] Termination details loaded:`, termData);
+          setTerminationDetails(termData);
+        } catch (error) {
+          console.error("❌ [EmployeeProfile] Error loading termination details:", error);
+          setTerminationDetails(null);
+        }
+      }
     } catch (error) {
       console.error("❌ [EmployeeProfile] Error loading employee data:", error);
       console.error("❌ [EmployeeProfile] Error details:", {
@@ -450,7 +464,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
     };
   };
 
-  const tabs = [
+  const tabs = employee?.status === 'Terminated' ? [
+    { id: "overview", name: "Overview", icon: "👤" },
+    { id: "termination", name: "Termination", icon: "🚪" },
+    { id: "exit", name: "Exit Details", icon: "📋" },
+    { id: "financial", name: "Financial", icon: "💰" },
+    { id: "documents", name: "Documents", icon: "📄" },
+    { id: "time", name: "Time Tracking", icon: "⏰" }
+  ] : [
     { id: "overview", name: "Overview", icon: "👤" },
     { id: "financial", name: "Financial", icon: "💰" },
     { id: "hr", name: "HR Details", icon: "🗂️" },
@@ -1694,6 +1715,158 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               ))}
             </div>
           </div>
+        </motion.div>
+      )}
+
+      {/* Termination Tab */}
+      {activeTab === "termination" && terminationDetails && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <div className="bg-red-900/20 border border-red-700 p-6 rounded-lg">
+            <h3 className="text-lg font-semibold mb-4 text-red-400">⚠️ Termination Information</h3>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <div className="text-sm text-neutral-400">Termination Date</div>
+                <div className="font-medium text-lg">{terminationDetails.termination_date ? new Date(terminationDetails.termination_date).toLocaleDateString() : 'N/A'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-neutral-400">Termination Type</div>
+                <div className="font-medium">{terminationDetails.termination_type || 'N/A'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-neutral-400">Reason Category</div>
+                <div className="font-medium">{terminationDetails.reason_category || 'N/A'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-neutral-400">Initiated By</div>
+                <div className="font-medium">{terminationDetails.initiated_by || 'N/A'}</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-neutral-800 p-6 rounded-lg">
+            <h4 className="font-semibold mb-3">Termination Reason</h4>
+            <p className="text-neutral-300">{terminationDetails.termination_reason || 'No reason provided'}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h4 className="font-semibold mb-4">Timeline</h4>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-sm text-neutral-400">Notice Period</div>
+                  <div className="font-medium">{terminationDetails.notice_period_days || 0} days</div>
+                </div>
+                <div>
+                  <div className="text-sm text-neutral-400">Last Working Day</div>
+                  <div className="font-medium">{terminationDetails.last_working_day ? new Date(terminationDetails.last_working_day).toLocaleDateString() : 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h4 className="font-semibold mb-4">Financial Summary</h4>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-sm text-neutral-400">Severance Payment</div>
+                  <div className="font-medium">{terminationDetails.severance_paid ? `$${terminationDetails.severance_amount || 0}` : 'Not paid'}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-neutral-400">Vacation Payout</div>
+                  <div className="font-medium">${terminationDetails.vacation_payout || 0}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-neutral-400">Final Pay Date</div>
+                  <div className="font-medium">{terminationDetails.final_pay_date ? new Date(terminationDetails.final_pay_date).toLocaleDateString() : 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-neutral-400">Benefits End Date</div>
+                  <div className="font-medium">{terminationDetails.benefits_end_date ? new Date(terminationDetails.benefits_end_date).toLocaleDateString() : 'N/A'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Exit Details Tab */}
+      {activeTab === "exit" && terminationDetails && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <div className="bg-neutral-800 p-6 rounded-lg">
+            <h4 className="font-semibold mb-4">Exit Interview</h4>
+            <div className="grid grid-cols-2 gap-6 mb-4">
+              <div>
+                <div className="text-sm text-neutral-400">Interview Date</div>
+                <div className="font-medium">{terminationDetails.exit_interview_date ? new Date(terminationDetails.exit_interview_date).toLocaleDateString() : 'Not conducted'}</div>
+              </div>
+              <div>
+                <div className="text-sm text-neutral-400">Conducted By</div>
+                <div className="font-medium">{terminationDetails.exit_interview_conducted_by || 'N/A'}</div>
+              </div>
+            </div>
+            {terminationDetails.exit_interview_notes && (
+              <div>
+                <div className="text-sm text-neutral-400 mb-2">Interview Notes</div>
+                <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.exit_interview_notes}</div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h4 className="font-semibold mb-4">Equipment Return</h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded text-sm ${terminationDetails.equipment_returned ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                    {terminationDetails.equipment_returned ? '✓ Returned' : '✗ Not Returned'}
+                  </span>
+                </div>
+                {terminationDetails.equipment_return_date && (
+                  <div>
+                    <div className="text-sm text-neutral-400">Return Date</div>
+                    <div className="font-medium">{new Date(terminationDetails.equipment_return_date).toLocaleDateString()}</div>
+                  </div>
+                )}
+                {terminationDetails.equipment_return_notes && (
+                  <div>
+                    <div className="text-sm text-neutral-400">Notes</div>
+                    <div className="text-neutral-300">{terminationDetails.equipment_return_notes}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h4 className="font-semibold mb-4">System Access</h4>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded text-sm ${terminationDetails.access_revoked ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                    {terminationDetails.access_revoked ? '✓ Revoked' : '✗ Not Revoked'}
+                  </span>
+                </div>
+                {terminationDetails.access_revoked_date && (
+                  <div>
+                    <div className="text-sm text-neutral-400">Revoked Date</div>
+                    <div className="font-medium">{new Date(terminationDetails.access_revoked_date).toLocaleDateString()}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {terminationDetails.final_pay_notes && (
+            <div className="bg-neutral-800 p-6 rounded-lg">
+              <h4 className="font-semibold mb-3">Final Pay Notes</h4>
+              <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.final_pay_notes}</div>
+            </div>
+          )}
         </motion.div>
       )}
     </div>
