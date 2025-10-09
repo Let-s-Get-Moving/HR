@@ -746,8 +746,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {isEditing ? (
                     <select
                       value={editData.department_id || ''}
-                      onChange={(e) => setEditData({...editData, department_id: parseInt(e.target.value) || null})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      onChange={(e) => {
+                        const newValue = parseInt(e.target.value) || null;
+                        console.log('Department changed to:', newValue);
+                        setEditData({...editData, department_id: newValue});
+                      }}
+                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
                     >
                       <option value="">None - To be assigned</option>
                       {departments.map(dept => (
