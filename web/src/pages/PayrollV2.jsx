@@ -5,6 +5,7 @@ import { API } from '../config/api.js';
 export default function PayrollV2() {
   const [activeTab, setActiveTab] = useState("overview");
   const [payrolls, setPayrolls] = useState([]);
+  const [payPeriods, setPayPeriods] = useState([]);
   const [selectedPayPeriod, setSelectedPayPeriod] = useState(null);
   const [vacationBalances, setVacationBalances] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,10 +13,11 @@ export default function PayrollV2() {
   const [showErrorMessage, setShowErrorMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [nextPayPeriod, setNextPayPeriod] = useState(null);
-  const [currentPayPeriod, setCurrentPayPeriod] = useState(null);
-  const [generating, setGenerating] = useState(false);
+  
+  // Date range filters
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   
   // Vacation payout dialog
   const [vacationPayoutDialog, setVacationPayoutDialog] = useState(false);
@@ -23,8 +25,7 @@ export default function PayrollV2() {
   const [vacationHoursToPay, setVacationHoursToPay] = useState("");
 
   const tabs = [
-    { id: "overview", name: "Payroll Overview", icon: "💰" },
-    { id: "generate", name: "Generate Payroll", icon: "⚡" },
+    { id: "overview", name: "Payroll Overview", icon: "��" },
     { id: "vacation", name: "Vacation Balances", icon: "🏖️" },
     { id: "history", name: "Payment History", icon: "📋" }
   ];
@@ -41,16 +42,17 @@ export default function PayrollV2() {
       const payrollsData = await API("/api/payroll-v2/").catch(() => []);
       setPayrolls(payrollsData);
       
+      // Load pay periods
+      const periodsData = await API("/api/payroll-v2/periods/list").catch(() => []);
+      setPayPeriods(periodsData);
+      
       // Load vacation balances
       const vacationData = await API("/api/payroll-v2/vacation/balances").catch(() => []);
       setVacationBalances(vacationData);
       
-      // Load pay period info
+      // Load next pay period info
       const next = await API("/api/payroll-v2/next-pay-period").catch(() => null);
       setNextPayPeriod(next);
-      
-      const current = await API("/api/payroll-v2/current-pay-period").catch(() => null);
-      setCurrentPayPeriod(current);
       
     } catch (error) {
       console.error("Error loading payroll data:", error);
@@ -58,74 +60,6 @@ export default function PayrollV2() {
       setShowErrorMessage(true);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleGeneratePayroll = async () => {
-    if (!nextPayPeriod) {
-      setErrorMessage("Could not determine next pay period");
-      setShowErrorMessage(true);
-      return;
-    }
-
-    setGenerating(true);
-    try {
-      const response = await API("/api/payroll-v2/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pay_period_start: nextPayPeriod.period_start,
-          pay_period_end: nextPayPeriod.period_end,
-          pay_date: nextPayPeriod.pay_date,
-        }),
-      });
-
-      setSuccessMessage(
-        `Payroll generated successfully! Processed ${response.success.length} employees. Total: $${response.summary.total_gross_pay.toFixed(2)}`
-      );
-      setShowSuccessMessage(true);
-      setGenerateDialogOpen(false);
-      await loadData();
-    } catch (error) {
-      console.error("Error generating payroll:", error);
-      setErrorMessage(`Failed to generate payroll: ${error.message}`);
-      setShowErrorMessage(true);
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  const handleApprovePayroll = async (payrollId) => {
-    try {
-      await API(`/api/payroll-v2/${payrollId}/approve`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-
-      setSuccessMessage("Payroll approved successfully!");
-      setShowSuccessMessage(true);
-      await loadData();
-    } catch (error) {
-      console.error("Error approving payroll:", error);
-      setErrorMessage(`Failed to approve payroll: ${error.message}`);
-      setShowErrorMessage(true);
-    }
-  };
-
-  const handleMarkPaid = async (payrollId) => {
-    try {
-      await API(`/api/payroll-v2/${payrollId}/mark-paid`, {
-        method: "POST",
-      });
-
-      setSuccessMessage("Payroll marked as paid!");
-      setShowSuccessMessage(true);
-      await loadData();
-    } catch (error) {
-      console.error("Error marking payroll as paid:", error);
-      setErrorMessage(`Failed to mark payroll as paid: ${error.message}`);
-      setShowErrorMessage(true);
     }
   };
 
@@ -162,31 +96,29 @@ export default function PayrollV2() {
     }
   };
 
-  // Group payrolls by pay period
-  const groupedPayrolls = payrolls.reduce((acc, payroll) => {
-    const key = `${payroll.pay_period_start}_${payroll.pay_period_end}`;
-    if (!acc[key]) {
-      acc[key] = {
-        period_start: payroll.pay_period_start,
-        period_end: payroll.pay_period_end,
-        pay_date: payroll.pay_date,
-        status: payroll.status,
-        payrolls: [],
-        total_gross: 0,
-        total_net: 0,
-        total_vacation: 0,
-      };
+  const applyDateFilter = async () => {
+    try {
+      setLoading(true);
+      let url = "/api/payroll-v2/?";
+      if (startDate) url += `start_date=${startDate}&`;
+      if (endDate) url += `end_date=${endDate}`;
+      
+      const filteredData = await API(url).catch(() => []);
+      setPayrolls(filteredData);
+    } catch (error) {
+      console.error("Error filtering payrolls:", error);
+      setErrorMessage("Failed to filter payrolls");
+      setShowErrorMessage(true);
+    } finally {
+      setLoading(false);
     }
-    acc[key].payrolls.push(payroll);
-    acc[key].total_gross += parseFloat(payroll.gross_pay || 0);
-    acc[key].total_net += parseFloat(payroll.net_pay || 0);
-    acc[key].total_vacation += parseFloat(payroll.vacation_pay_accrued || 0);
-    return acc;
-  }, {});
+  };
 
-  const payPeriods = Object.values(groupedPayrolls).sort((a, b) => 
-    new Date(b.pay_date) - new Date(a.pay_date)
-  );
+  const clearDateFilter = async () => {
+    setStartDate("");
+    setEndDate("");
+    await loadData();
+  };
 
   if (loading) {
     return (
@@ -208,7 +140,10 @@ export default function PayrollV2() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Payroll Management</h1>
           <p className="text-neutral-400">
-            Automated payroll calculation based on timecard hours
+            Automatically calculated from approved timecards (hourly rate × hours)
+          </p>
+          <p className="text-sm text-neutral-500 mt-1">
+            ⚡ Payroll is automatically created when ALL timecards for an employee/period are approved
           </p>
         </div>
 
@@ -309,130 +244,47 @@ export default function PayrollV2() {
                   <div className="p-8 text-center text-neutral-400">
                     <div className="text-4xl mb-4">💰</div>
                     <p>No payroll records found</p>
-                    <p className="text-sm mt-2">Generate your first payroll to get started</p>
+                    <p className="text-sm mt-2">Payroll will appear automatically when timecards are approved</p>
                   </div>
                 ) : (
                   payPeriods.map((period, index) => (
-                    <div key={index} className="p-6 hover:bg-neutral-800/50 transition-colors">
+                    <div key={index} className="p-6 hover:bg-neutral-800/50 transition-colors cursor-pointer"
+                         onClick={() => setSelectedPayPeriod(period)}>
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="text-lg font-semibold mb-1">
-                            {new Date(period.period_start).toLocaleDateString()} -{" "}
-                            {new Date(period.period_end).toLocaleDateString()}
+                            {new Date(period.pay_period_start).toLocaleDateString()} -{" "}
+                            {new Date(period.pay_period_end).toLocaleDateString()}
                           </h3>
                           <p className="text-sm text-neutral-400">
                             Pay Date: {new Date(period.pay_date).toLocaleDateString()}
                           </p>
                         </div>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            period.status === "Paid"
-                              ? "bg-green-900/50 text-green-300"
-                              : period.status === "Approved"
-                              ? "bg-blue-900/50 text-blue-300"
-                              : "bg-yellow-900/50 text-yellow-300"
-                          }`}
-                        >
-                          {period.status}
-                        </span>
                       </div>
 
-                      <div className="grid grid-cols-4 gap-4 mb-4">
+                      <div className="grid grid-cols-4 gap-4">
                         <div>
                           <div className="text-sm text-neutral-400">Employees</div>
-                          <div className="text-lg font-semibold">{period.payrolls.length}</div>
+                          <div className="text-lg font-semibold">{period.employee_count || 0}</div>
                         </div>
                         <div>
                           <div className="text-sm text-neutral-400">Gross Pay</div>
-                          <div className="text-lg font-semibold">${period.total_gross.toFixed(2)}</div>
+                          <div className="text-lg font-semibold">${parseFloat(period.total_gross_pay || 0).toFixed(2)}</div>
                         </div>
                         <div>
                           <div className="text-sm text-neutral-400">Net Pay</div>
-                          <div className="text-lg font-semibold">${period.total_net.toFixed(2)}</div>
+                          <div className="text-lg font-semibold">${parseFloat(period.total_net_pay || 0).toFixed(2)}</div>
                         </div>
                         <div>
                           <div className="text-sm text-neutral-400">Vacation Accrued</div>
                           <div className="text-lg font-semibold text-green-400">
-                            ${period.total_vacation.toFixed(2)}
+                            ${parseFloat(period.total_vacation_accrued || 0).toFixed(2)}
                           </div>
                         </div>
                       </div>
-
-                      <button
-                        onClick={() => setSelectedPayPeriod(period)}
-                        className="text-sm text-indigo-400 hover:text-indigo-300"
-                      >
-                        View Details →
-                      </button>
                     </div>
                   ))
                 )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Generate Payroll Tab */}
-        {activeTab === "generate" && (
-          <div className="space-y-6">
-            <div className="bg-neutral-900 rounded-lg border border-neutral-800 p-8">
-              <div className="max-w-2xl mx-auto">
-                <div className="text-center mb-8">
-                  <div className="text-6xl mb-4">⚡</div>
-                  <h2 className="text-2xl font-bold mb-2">Generate Payroll</h2>
-                  <p className="text-neutral-400">
-                    Automatically calculate payroll based on approved timecards
-                  </p>
-                </div>
-
-                {nextPayPeriod && (
-                  <div className="bg-neutral-800 rounded-lg p-6 mb-6">
-                    <h3 className="font-semibold mb-4">Next Pay Period</h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <div className="text-sm text-neutral-400">Period Start</div>
-                        <div className="font-medium">
-                          {new Date(nextPayPeriod.period_start).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-neutral-400">Period End</div>
-                        <div className="font-medium">
-                          {new Date(nextPayPeriod.period_end).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-neutral-400">Pay Date</div>
-                        <div className="font-medium text-indigo-400">
-                          {new Date(nextPayPeriod.pay_date).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="bg-indigo-900/20 border border-indigo-800 rounded-lg p-4 mb-6">
-                  <h4 className="font-semibold mb-2 text-indigo-300">How it works:</h4>
-                  <ul className="text-sm space-y-2 text-neutral-300">
-                    <li>✓ Fetches all approved timecards for the pay period</li>
-                    <li>✓ Calculates regular pay (hours × hourly rate)</li>
-                    <li>✓ Calculates overtime pay (overtime hours × hourly rate × 1.5)</li>
-                    <li>✓ Accrues vacation pay (4% of hours and gross pay)</li>
-                    <li>✓ Creates payroll records in Draft status for review</li>
-                  </ul>
-                </div>
-
-                <button
-                  onClick={handleGeneratePayroll}
-                  disabled={generating}
-                  className={`w-full py-4 rounded-lg font-medium transition-colors ${
-                    generating
-                      ? "bg-neutral-700 text-neutral-400 cursor-not-allowed"
-                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                  }`}
-                >
-                  {generating ? "Generating Payroll..." : "Generate Payroll Now"}
-                </button>
               </div>
             </div>
           </div>
@@ -468,7 +320,7 @@ export default function PayrollV2() {
                         <td colSpan="7" className="px-6 py-12 text-center text-neutral-400">
                           <div className="text-4xl mb-4">🏖️</div>
                           <p>No vacation balance records yet</p>
-                          <p className="text-sm mt-2">Balances will appear after generating payroll</p>
+                          <p className="text-sm mt-2">Balances will appear after payroll is calculated</p>
                         </td>
                       </tr>
                     ) : (
@@ -524,9 +376,48 @@ export default function PayrollV2() {
         {/* History Tab */}
         {activeTab === "history" && (
           <div className="space-y-6">
+            {/* Date Range Filter */}
+            <div className="bg-neutral-900 rounded-lg border border-neutral-800 p-4">
+              <div className="flex items-end gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-medium mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+                <button
+                  onClick={applyDateFilter}
+                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium"
+                >
+                  Apply Filter
+                </button>
+                <button
+                  onClick={clearDateFilter}
+                  className="px-6 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg font-medium"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
             <div className="bg-neutral-900 rounded-lg border border-neutral-800">
               <div className="p-6 border-b border-neutral-800">
                 <h2 className="text-xl font-semibold">Payment History</h2>
+                <p className="text-sm text-neutral-400 mt-1">
+                  All payroll records (automatically calculated from approved timecards)
+                </p>
               </div>
 
               <div className="overflow-x-auto">
@@ -540,17 +431,15 @@ export default function PayrollV2() {
                       <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Gross Pay</th>
                       <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Vacation Accrued</th>
                       <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Net Pay</th>
-                      <th className="text-center px-6 py-3 text-sm font-medium text-neutral-400">Status</th>
-                      <th className="text-center px-6 py-3 text-sm font-medium text-neutral-400">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-800">
                     {payrolls.length === 0 ? (
                       <tr>
-                        <td colSpan="9" className="px-6 py-12 text-center text-neutral-400">
+                        <td colSpan="7" className="px-6 py-12 text-center text-neutral-400">
                           <div className="text-4xl mb-4">📋</div>
                           <p>No payroll history yet</p>
-                          <p className="text-sm mt-2">Generate payroll to get started</p>
+                          <p className="text-sm mt-2">Payroll will appear when timecards are approved</p>
                         </td>
                       </tr>
                     ) : (
@@ -588,40 +477,6 @@ export default function PayrollV2() {
                           </td>
                           <td className="px-6 py-4 text-right font-semibold">
                             ${parseFloat(payroll.net_pay || 0).toFixed(2)}
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                payroll.status === "Paid"
-                                  ? "bg-green-900/50 text-green-300"
-                                  : payroll.status === "Approved"
-                                  ? "bg-blue-900/50 text-blue-300"
-                                  : "bg-yellow-900/50 text-yellow-300"
-                              }`}
-                            >
-                              {payroll.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-center">
-                            {payroll.status === "Draft" && (
-                              <button
-                                onClick={() => handleApprovePayroll(payroll.id)}
-                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-xs font-medium"
-                              >
-                                Approve
-                              </button>
-                            )}
-                            {payroll.status === "Approved" && (
-                              <button
-                                onClick={() => handleMarkPaid(payroll.id)}
-                                className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg text-xs font-medium"
-                              >
-                                Mark Paid
-                              </button>
-                            )}
-                            {payroll.status === "Paid" && (
-                              <span className="text-xs text-neutral-500">—</span>
-                            )}
                           </td>
                         </tr>
                       ))
@@ -714,120 +569,7 @@ export default function PayrollV2() {
             </motion.div>
           </div>
         )}
-
-        {/* Pay Period Detail Modal */}
-        {selectedPayPeriod && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-neutral-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-neutral-800"
-            >
-              <div className="p-6 border-b border-neutral-800 sticky top-0 bg-neutral-900">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-1">
-                      Pay Period: {new Date(selectedPayPeriod.period_start).toLocaleDateString()} -{" "}
-                      {new Date(selectedPayPeriod.period_end).toLocaleDateString()}
-                    </h3>
-                    <p className="text-sm text-neutral-400">
-                      Pay Date: {new Date(selectedPayPeriod.pay_date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setSelectedPayPeriod(null)}
-                    className="text-neutral-400 hover:text-white text-2xl"
-                  >
-                    ×
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="grid grid-cols-4 gap-4 mb-6">
-                  <div className="bg-neutral-800 rounded-lg p-4">
-                    <div className="text-sm text-neutral-400">Employees</div>
-                    <div className="text-2xl font-bold">{selectedPayPeriod.payrolls.length}</div>
-                  </div>
-                  <div className="bg-neutral-800 rounded-lg p-4">
-                    <div className="text-sm text-neutral-400">Total Gross</div>
-                    <div className="text-2xl font-bold">${selectedPayPeriod.total_gross.toFixed(2)}</div>
-                  </div>
-                  <div className="bg-neutral-800 rounded-lg p-4">
-                    <div className="text-sm text-neutral-400">Total Net</div>
-                    <div className="text-2xl font-bold">${selectedPayPeriod.total_net.toFixed(2)}</div>
-                  </div>
-                  <div className="bg-neutral-800 rounded-lg p-4">
-                    <div className="text-sm text-neutral-400">Vacation Accrued</div>
-                    <div className="text-2xl font-bold text-green-400">
-                      ${selectedPayPeriod.total_vacation.toFixed(2)}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-neutral-800">
-                      <tr>
-                        <th className="text-left px-4 py-3 text-sm font-medium">Employee</th>
-                        <th className="text-right px-4 py-3 text-sm font-medium">Hours</th>
-                        <th className="text-right px-4 py-3 text-sm font-medium">Rate</th>
-                        <th className="text-right px-4 py-3 text-sm font-medium">Gross</th>
-                        <th className="text-right px-4 py-3 text-sm font-medium">Vacation</th>
-                        <th className="text-right px-4 py-3 text-sm font-medium">Net</th>
-                        <th className="text-center px-4 py-3 text-sm font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-800">
-                      {selectedPayPeriod.payrolls.map((payroll) => (
-                        <tr key={payroll.id} className="hover:bg-neutral-800/30">
-                          <td className="px-4 py-3">
-                            {payroll.first_name} {payroll.last_name}
-                          </td>
-                          <td className="px-4 py-3 text-right text-sm">
-                            {parseFloat(payroll.regular_hours).toFixed(2)}
-                            {parseFloat(payroll.overtime_hours) > 0 && (
-                              <span className="text-yellow-400 ml-1">
-                                +{parseFloat(payroll.overtime_hours).toFixed(2)}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-right text-sm">
-                            ${parseFloat(payroll.hourly_rate).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-right font-medium">
-                            ${parseFloat(payroll.gross_pay).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-right text-green-400 text-sm">
-                            ${parseFloat(payroll.vacation_pay_accrued).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-right font-semibold">
-                            ${parseFloat(payroll.net_pay).toFixed(2)}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                payroll.status === "Paid"
-                                  ? "bg-green-900/50 text-green-300"
-                                  : payroll.status === "Approved"
-                                  ? "bg-blue-900/50 text-blue-300"
-                                  : "bg-yellow-900/50 text-yellow-300"
-                              }`}
-                            >
-                              {payroll.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
       </div>
     </div>
   );
 }
-

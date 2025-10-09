@@ -55,15 +55,11 @@ CREATE TABLE IF NOT EXISTS payrolls (
     -- Net Pay
     net_pay NUMERIC(10,2) DEFAULT 0,            -- gross_pay - deductions
     
-    -- Status
-    status TEXT NOT NULL DEFAULT 'Draft' CHECK (status IN ('Draft', 'Approved', 'Paid')),
-    
     -- Metadata
     notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    approved_by INTEGER REFERENCES users(id),
-    approved_at TIMESTAMP,
+    calculated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Ensure one payroll per employee per period
     UNIQUE(employee_id, pay_period_start, pay_period_end)
@@ -88,7 +84,6 @@ CREATE TABLE IF NOT EXISTS vacation_payouts (
 -- ===== INDEXES FOR PERFORMANCE =====
 CREATE INDEX IF NOT EXISTS idx_payrolls_employee ON payrolls(employee_id);
 CREATE INDEX IF NOT EXISTS idx_payrolls_period ON payrolls(pay_period_start, pay_period_end);
-CREATE INDEX IF NOT EXISTS idx_payrolls_status ON payrolls(status);
 CREATE INDEX IF NOT EXISTS idx_payrolls_pay_date ON payrolls(pay_date);
 CREATE INDEX IF NOT EXISTS idx_vacation_balance_employee ON employee_vacation_balance(employee_id);
 CREATE INDEX IF NOT EXISTS idx_vacation_payouts_employee ON vacation_payouts(employee_id);
@@ -126,12 +121,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Attach trigger to payrolls table (only when status becomes 'Approved')
+-- Attach trigger to payrolls table (fires on insert or update)
 DROP TRIGGER IF EXISTS trigger_update_vacation_balance ON payrolls;
 CREATE TRIGGER trigger_update_vacation_balance
-    AFTER INSERT OR UPDATE OF status ON payrolls
+    AFTER INSERT OR UPDATE ON payrolls
     FOR EACH ROW
-    WHEN (NEW.status = 'Approved')
     EXECUTE FUNCTION update_vacation_balance_from_payroll();
 
 -- ===== TRIGGER: Update vacation balance after payout =====
@@ -179,6 +173,143 @@ CREATE TRIGGER trigger_vacation_payouts_updated_at
     BEFORE UPDATE ON vacation_payouts
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+-- ===== TRIGGER: Auto-create payroll when ALL timecards approved =====
+CREATE OR REPLACE FUNCTION auto_create_payroll_from_timecards()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_employee_id INTEGER;
+    v_pay_period_start DATE;
+    v_pay_period_end DATE;
+    v_pay_date DATE;
+    v_total_hours NUMERIC;
+    v_overtime_hours NUMERIC;
+    v_regular_hours NUMERIC;
+    v_hourly_rate NUMERIC;
+    v_regular_pay NUMERIC;
+    v_overtime_pay NUMERIC;
+    v_gross_pay NUMERIC;
+    v_vacation_hours NUMERIC;
+    v_vacation_pay NUMERIC;
+    v_net_pay NUMERIC;
+    v_all_approved BOOLEAN;
+BEGIN
+    -- Only proceed if the timecard was just approved
+    IF NEW.status = 'Approved' AND (OLD.status IS NULL OR OLD.status != 'Approved') THEN
+        
+        v_employee_id := NEW.employee_id;
+        v_pay_period_start := NEW.pay_period_start;
+        v_pay_period_end := NEW.pay_period_end;
+        
+        -- Check if ALL timecards for this employee and pay period are approved
+        SELECT 
+            COUNT(*) FILTER (WHERE status != 'Approved') = 0
+        INTO v_all_approved
+        FROM timecards
+        WHERE employee_id = v_employee_id
+          AND pay_period_start = v_pay_period_start
+          AND pay_period_end = v_pay_period_end;
+        
+        -- If all timecards are approved, calculate and create/update payroll
+        IF v_all_approved THEN
+            
+            -- Calculate pay date (day after period end)
+            v_pay_date := v_pay_period_end + INTERVAL '1 day';
+            
+            -- Get total hours and overtime
+            SELECT 
+                COALESCE(SUM(total_hours), 0),
+                COALESCE(SUM(overtime_hours), 0)
+            INTO v_total_hours, v_overtime_hours
+            FROM timecards
+            WHERE employee_id = v_employee_id
+              AND pay_period_start = v_pay_period_start
+              AND pay_period_end = v_pay_period_end
+              AND status = 'Approved';
+            
+            -- Calculate regular hours (total - overtime)
+            v_regular_hours := v_total_hours - v_overtime_hours;
+            
+            -- Get employee's hourly rate
+            SELECT COALESCE(hourly_rate, 0)
+            INTO v_hourly_rate
+            FROM employees
+            WHERE id = v_employee_id;
+            
+            -- Calculate pay
+            v_regular_pay := v_regular_hours * v_hourly_rate;
+            v_overtime_pay := v_overtime_hours * v_hourly_rate * 1.5;
+            v_gross_pay := v_regular_pay + v_overtime_pay;
+            
+            -- Calculate vacation (4%)
+            v_vacation_hours := v_total_hours * 0.04;
+            v_vacation_pay := v_gross_pay * 0.04;
+            
+            -- Calculate net pay (no deductions for now)
+            v_net_pay := v_gross_pay;
+            
+            -- Insert or update payroll record
+            INSERT INTO payrolls (
+                employee_id,
+                pay_period_start,
+                pay_period_end,
+                pay_date,
+                regular_hours,
+                overtime_hours,
+                hourly_rate,
+                regular_pay,
+                overtime_pay,
+                gross_pay,
+                vacation_hours_accrued,
+                vacation_pay_accrued,
+                deductions,
+                net_pay,
+                calculated_at
+            )
+            VALUES (
+                v_employee_id,
+                v_pay_period_start,
+                v_pay_period_end,
+                v_pay_date,
+                v_regular_hours,
+                v_overtime_hours,
+                v_hourly_rate,
+                v_regular_pay,
+                v_overtime_pay,
+                v_gross_pay,
+                v_vacation_hours,
+                v_vacation_pay,
+                0, -- deductions
+                v_net_pay,
+                CURRENT_TIMESTAMP
+            )
+            ON CONFLICT (employee_id, pay_period_start, pay_period_end)
+            DO UPDATE SET
+                regular_hours = EXCLUDED.regular_hours,
+                overtime_hours = EXCLUDED.overtime_hours,
+                hourly_rate = EXCLUDED.hourly_rate,
+                regular_pay = EXCLUDED.regular_pay,
+                overtime_pay = EXCLUDED.overtime_pay,
+                gross_pay = EXCLUDED.gross_pay,
+                vacation_hours_accrued = EXCLUDED.vacation_hours_accrued,
+                vacation_pay_accrued = EXCLUDED.vacation_pay_accrued,
+                net_pay = EXCLUDED.net_pay,
+                calculated_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP;
+            
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Attach trigger to timecards table
+DROP TRIGGER IF EXISTS trigger_auto_create_payroll ON timecards;
+CREATE TRIGGER trigger_auto_create_payroll
+    AFTER INSERT OR UPDATE OF status ON timecards
+    FOR EACH ROW
+    EXECUTE FUNCTION auto_create_payroll_from_timecards();
 
 -- ===== HELPER FUNCTION: Calculate next pay period dates =====
 -- Based on bi-weekly schedule (last payout: Sept 26, 2025)
@@ -264,10 +395,8 @@ SELECT
     p.vacation_pay_accrued,
     p.deductions,
     p.net_pay,
-    p.status,
     p.created_at,
-    p.approved_by,
-    p.approved_at
+    p.calculated_at
 FROM payrolls p
 JOIN employees e ON p.employee_id = e.id
 LEFT JOIN departments d ON e.department_id = d.id;

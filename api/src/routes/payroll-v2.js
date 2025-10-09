@@ -5,7 +5,7 @@ import { q } from "../db.js";
 const r = express.Router();
 
 // =====================================================
-// PAYROLL GENERATION
+// PAYROLL VIEWING (Auto-calculated from timecards)
 // =====================================================
 
 /**
@@ -35,204 +35,17 @@ r.get("/current-pay-period", async (req, res) => {
   }
 });
 
-/**
- * Generate payroll for a specific pay period
- * Calculates payroll for all active employees based on their timecards
- */
-r.post("/generate", async (req, res) => {
-  const schema = z.object({
-    pay_period_start: z.string(),
-    pay_period_end: z.string(),
-    pay_date: z.string(),
-    employee_ids: z.array(z.number()).optional(), // Optional: generate for specific employees only
-  });
-
-  try {
-    const { pay_period_start, pay_period_end, pay_date, employee_ids } = schema.parse(req.body);
-
-    console.log(`\n🔄 Generating payroll for period: ${pay_period_start} to ${pay_period_end}`);
-    console.log(`💰 Pay date: ${pay_date}`);
-
-    // Get active employees
-    let employeesQuery = `
-      SELECT 
-        e.id,
-        e.first_name,
-        e.last_name,
-        e.email,
-        COALESCE(e.hourly_rate, 0) as hourly_rate,
-        e.status
-      FROM employees e
-      WHERE e.status = 'Active'
-    `;
-
-    const queryParams = [];
-    if (employee_ids && employee_ids.length > 0) {
-      employeesQuery += ` AND e.id = ANY($1)`;
-      queryParams.push(employee_ids);
-    }
-
-    const { rows: employees } = await q(employeesQuery, queryParams);
-
-    console.log(`👥 Found ${employees.length} active employees`);
-
-    const results = {
-      success: [],
-      errors: [],
-      summary: {
-        total_employees: employees.length,
-        total_regular_hours: 0,
-        total_overtime_hours: 0,
-        total_gross_pay: 0,
-        total_vacation_accrued: 0,
-      },
-    };
-
-    // Generate payroll for each employee
-    for (const employee of employees) {
-      try {
-        console.log(`\n  Processing: ${employee.first_name} ${employee.last_name} (ID: ${employee.id})`);
-
-        // Get approved timecards for this period
-        const { rows: timecards } = await q(
-          `
-          SELECT 
-            SUM(total_hours) as total_hours,
-            SUM(overtime_hours) as overtime_hours
-          FROM timecards
-          WHERE employee_id = $1
-            AND pay_period_start >= $2
-            AND pay_period_end <= $3
-            AND status = 'Approved'
-          `,
-          [employee.id, pay_period_start, pay_period_end]
-        );
-
-        const totalHours = parseFloat(timecards[0]?.total_hours || 0);
-        const overtimeHours = parseFloat(timecards[0]?.overtime_hours || 0);
-        const regularHours = Math.max(0, totalHours - overtimeHours);
-
-        console.log(`    ⏰ Hours: ${regularHours} regular, ${overtimeHours} overtime`);
-
-        const hourlyRate = parseFloat(employee.hourly_rate);
-        const regularPay = regularHours * hourlyRate;
-        const overtimePay = overtimeHours * hourlyRate * 1.5; // 1.5x for overtime
-        const grossPay = regularPay + overtimePay;
-
-        // Calculate vacation accrual (4% of hours and pay)
-        const vacationHoursAccrued = totalHours * 0.04;
-        const vacationPayAccrued = grossPay * 0.04;
-
-        console.log(`    💵 Pay: $${regularPay.toFixed(2)} regular + $${overtimePay.toFixed(2)} overtime = $${grossPay.toFixed(2)}`);
-        console.log(`    🏖️  Vacation accrued: ${vacationHoursAccrued.toFixed(2)} hours ($${vacationPayAccrued.toFixed(2)})`);
-
-        // No deductions for now
-        const deductions = 0;
-        const netPay = grossPay - deductions;
-
-        // Insert or update payroll record
-        const { rows: payrollRows } = await q(
-          `
-          INSERT INTO payrolls (
-            employee_id,
-            pay_period_start,
-            pay_period_end,
-            pay_date,
-            regular_hours,
-            overtime_hours,
-            hourly_rate,
-            regular_pay,
-            overtime_pay,
-            gross_pay,
-            vacation_hours_accrued,
-            vacation_pay_accrued,
-            deductions,
-            net_pay,
-            status
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'Draft')
-          ON CONFLICT (employee_id, pay_period_start, pay_period_end)
-          DO UPDATE SET
-            pay_date = EXCLUDED.pay_date,
-            regular_hours = EXCLUDED.regular_hours,
-            overtime_hours = EXCLUDED.overtime_hours,
-            hourly_rate = EXCLUDED.hourly_rate,
-            regular_pay = EXCLUDED.regular_pay,
-            overtime_pay = EXCLUDED.overtime_pay,
-            gross_pay = EXCLUDED.gross_pay,
-            vacation_hours_accrued = EXCLUDED.vacation_hours_accrued,
-            vacation_pay_accrued = EXCLUDED.vacation_pay_accrued,
-            deductions = EXCLUDED.deductions,
-            net_pay = EXCLUDED.net_pay,
-            updated_at = CURRENT_TIMESTAMP
-          RETURNING *
-          `,
-          [
-            employee.id,
-            pay_period_start,
-            pay_period_end,
-            pay_date,
-            regularHours,
-            overtimeHours,
-            hourlyRate,
-            regularPay,
-            overtimePay,
-            grossPay,
-            vacationHoursAccrued,
-            vacationPayAccrued,
-            deductions,
-            netPay,
-          ]
-        );
-
-        results.success.push({
-          employee_id: employee.id,
-          employee_name: `${employee.first_name} ${employee.last_name}`,
-          payroll_id: payrollRows[0].id,
-          gross_pay: grossPay,
-          net_pay: netPay,
-        });
-
-        // Update summary
-        results.summary.total_regular_hours += regularHours;
-        results.summary.total_overtime_hours += overtimeHours;
-        results.summary.total_gross_pay += grossPay;
-        results.summary.total_vacation_accrued += vacationPayAccrued;
-
-        console.log(`    ✅ Payroll created (ID: ${payrollRows[0].id})`);
-      } catch (employeeError) {
-        console.error(`    ❌ Error processing employee ${employee.id}:`, employeeError);
-        results.errors.push({
-          employee_id: employee.id,
-          employee_name: `${employee.first_name} ${employee.last_name}`,
-          error: employeeError.message,
-        });
-      }
-    }
-
-    console.log(`\n✅ Payroll generation complete!`);
-    console.log(`   Success: ${results.success.length} employees`);
-    console.log(`   Errors: ${results.errors.length} employees`);
-    console.log(`   Total Gross Pay: $${results.summary.total_gross_pay.toFixed(2)}`);
-    console.log(`   Total Vacation Accrued: $${results.summary.total_vacation_accrued.toFixed(2)}`);
-
-    res.json(results);
-  } catch (error) {
-    console.error("Error generating payroll:", error);
-    res.status(500).json({ error: "Failed to generate payroll: " + error.message });
-  }
-});
-
 // =====================================================
-// PAYROLL MANAGEMENT
+// PAYROLL RECORDS
 // =====================================================
 
 /**
  * Get all payroll records with filters
+ * Payroll is automatically calculated when ALL timecards for an employee/period are approved
  */
 r.get("/", async (req, res) => {
   try {
-    const { employee_id, status, pay_period_start, pay_period_end } = req.query;
+    const { employee_id, pay_period_start, pay_period_end, start_date, end_date } = req.query;
 
     let query = `
       SELECT * FROM payroll_summary
@@ -245,11 +58,6 @@ r.get("/", async (req, res) => {
       query += ` AND employee_id = $${params.length}`;
     }
 
-    if (status) {
-      params.push(status);
-      query += ` AND status = $${params.length}`;
-    }
-
     if (pay_period_start) {
       params.push(pay_period_start);
       query += ` AND pay_period_start >= $${params.length}`;
@@ -258,6 +66,17 @@ r.get("/", async (req, res) => {
     if (pay_period_end) {
       params.push(pay_period_end);
       query += ` AND pay_period_end <= $${params.length}`;
+    }
+
+    // Date range filter (for filtering by pay_date)
+    if (start_date) {
+      params.push(start_date);
+      query += ` AND pay_date >= $${params.length}`;
+    }
+
+    if (end_date) {
+      params.push(end_date);
+      query += ` AND pay_date <= $${params.length}`;
     }
 
     query += ` ORDER BY pay_date DESC, last_name, first_name`;
@@ -290,130 +109,6 @@ r.get("/:id", async (req, res) => {
 });
 
 /**
- * Approve a payroll (moves status from Draft to Approved)
- * This triggers vacation balance update
- */
-r.post("/:id/approve", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { approved_by } = req.body;
-
-    const { rows } = await q(
-      `
-      UPDATE payrolls
-      SET 
-        status = 'Approved',
-        approved_by = $2,
-        approved_at = CURRENT_TIMESTAMP
-      WHERE id = $1
-      RETURNING *
-      `,
-      [id, approved_by || null]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Payroll not found" });
-    }
-
-    console.log(`✅ Payroll ${id} approved`);
-    res.json(rows[0]);
-  } catch (error) {
-    console.error("Error approving payroll:", error);
-    res.status(500).json({ error: "Failed to approve payroll" });
-  }
-});
-
-/**
- * Approve multiple payrolls at once
- */
-r.post("/bulk-approve", async (req, res) => {
-  const schema = z.object({
-    payroll_ids: z.array(z.number()),
-    approved_by: z.number().optional(),
-  });
-
-  try {
-    const { payroll_ids, approved_by } = schema.parse(req.body);
-
-    const { rows } = await q(
-      `
-      UPDATE payrolls
-      SET 
-        status = 'Approved',
-        approved_by = $2,
-        approved_at = CURRENT_TIMESTAMP
-      WHERE id = ANY($1)
-      RETURNING *
-      `,
-      [payroll_ids, approved_by || null]
-    );
-
-    console.log(`✅ Approved ${rows.length} payrolls`);
-    res.json({ approved_count: rows.length, payrolls: rows });
-  } catch (error) {
-    console.error("Error bulk approving payrolls:", error);
-    res.status(500).json({ error: "Failed to bulk approve payrolls" });
-  }
-});
-
-/**
- * Mark payroll as paid
- */
-r.post("/:id/mark-paid", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const { rows } = await q(
-      `
-      UPDATE payrolls
-      SET status = 'Paid'
-      WHERE id = $1 AND status = 'Approved'
-      RETURNING *
-      `,
-      [id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Payroll not found or not approved" });
-    }
-
-    console.log(`✅ Payroll ${id} marked as paid`);
-    res.json(rows[0]);
-  } catch (error) {
-    console.error("Error marking payroll as paid:", error);
-    res.status(500).json({ error: "Failed to mark payroll as paid" });
-  }
-});
-
-/**
- * Delete a payroll (only if status is Draft)
- */
-r.delete("/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const { rows } = await q(
-      `
-      DELETE FROM payrolls
-      WHERE id = $1 AND status = 'Draft'
-      RETURNING *
-      `,
-      [id]
-    );
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: "Payroll not found or cannot be deleted (not in Draft status)" });
-    }
-
-    console.log(`🗑️  Payroll ${id} deleted`);
-    res.json({ message: "Payroll deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting payroll:", error);
-    res.status(500).json({ error: "Failed to delete payroll" });
-  }
-});
-
-/**
  * Get payroll summary by pay period
  */
 r.get("/summary/by-period", async (req, res) => {
@@ -430,7 +125,6 @@ r.get("/summary/by-period", async (req, res) => {
         pay_period_start,
         pay_period_end,
         pay_date,
-        status,
         COUNT(*) as employee_count,
         SUM(regular_hours) as total_regular_hours,
         SUM(overtime_hours) as total_overtime_hours,
@@ -441,7 +135,7 @@ r.get("/summary/by-period", async (req, res) => {
         SUM(net_pay) as total_net_pay
       FROM payrolls
       WHERE pay_period_start = $1 AND pay_period_end = $2
-      GROUP BY pay_period_start, pay_period_end, pay_date, status
+      GROUP BY pay_period_start, pay_period_end, pay_date
       `,
       [pay_period_start, pay_period_end]
     );
@@ -450,6 +144,34 @@ r.get("/summary/by-period", async (req, res) => {
   } catch (error) {
     console.error("Error fetching payroll summary:", error);
     res.status(500).json({ error: "Failed to fetch payroll summary" });
+  }
+});
+
+/**
+ * Get all unique pay periods
+ */
+r.get("/periods/list", async (req, res) => {
+  try {
+    const { rows } = await q(
+      `
+      SELECT DISTINCT
+        pay_period_start,
+        pay_period_end,
+        pay_date,
+        COUNT(*) as employee_count,
+        SUM(gross_pay) as total_gross_pay,
+        SUM(net_pay) as total_net_pay,
+        SUM(vacation_pay_accrued) as total_vacation_accrued
+      FROM payrolls
+      GROUP BY pay_period_start, pay_period_end, pay_date
+      ORDER BY pay_date DESC
+      `
+    );
+
+    res.json(rows);
+  } catch (error) {
+    console.error("Error fetching pay periods:", error);
+    res.status(500).json({ error: "Failed to fetch pay periods" });
   }
 });
 
@@ -615,4 +337,3 @@ r.get("/vacation/payouts/:employee_id", async (req, res) => {
 });
 
 export default r;
-
