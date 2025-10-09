@@ -600,6 +600,14 @@ r.put("/entries/:id", async (req, res) => {
       
       console.log(`   Start date object: ${start}`);
       console.log(`   End date object: ${end}`);
+      console.log(`   Start is valid: ${!isNaN(start.getTime())}`);
+      console.log(`   End is valid: ${!isNaN(end.getTime())}`);
+      
+      // Check if dates are valid before calculation
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.error(`❌ [Edit Entry] Invalid date objects - cannot parse times`);
+        return res.status(400).json({ error: "Invalid time format - cannot parse times" });
+      }
       
       // Handle overnight shifts
       if (end < start) {
@@ -612,15 +620,14 @@ r.put("/entries/:id", async (req, res) => {
       console.log(`   Calculated hours_worked: ${hours_worked}`);
       console.log(`   Is NaN: ${isNaN(hours_worked)}`);
       
-      // Check if calculation succeeded
+      // CRITICAL: If result is NaN, set to null instead
       if (isNaN(hours_worked)) {
-        console.error(`❌ [Edit Entry] Failed to calculate hours from ${normalizedClockIn} to ${normalizedClockOut}`);
-        return res.status(400).json({ error: "Invalid time format" });
+        console.error(`❌ [Edit Entry] Calculation resulted in NaN - setting to null`);
+        hours_worked = null;
+      } else {
+        is_overtime = hours_worked > 8;
+        console.log(`   Final hours: ${hours_worked.toFixed(2)}, Overtime: ${is_overtime}`);
       }
-      
-      is_overtime = hours_worked > 8;
-      
-      console.log(`   Final hours: ${hours_worked.toFixed(2)}, Overtime: ${is_overtime}`);
     }
     
     // Update the entry
