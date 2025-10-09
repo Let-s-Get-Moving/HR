@@ -1183,9 +1183,11 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                       {employee.first_name} {employee.last_name}
                     </h3>
                     <p className="text-sm text-secondary">{employee.email}</p>
+                    {employee.department && (
+                      <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">{employee.department}</p>
+                    )}
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-secondary">{employee.department || "—"}</div>
                     <div className="text-lg font-bold text-primary">
                       {employee.total_hours.toFixed(2)} hours
                     </div>
