@@ -1108,68 +1108,23 @@ export default function BonusesCommissions() {
             </button>
           </div>
           
-          {/* Collapsible calendar dropdown */}
-          <div className="relative calendar-dropdown">
-            {/* Selected period display (collapsed state) */}
-            <button
-              onClick={() => setShowCalendar(!showCalendar)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 flex justify-between items-center hover:border-indigo-500 transition-colors"
-            >
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">📅</span>
-                <div className="text-left">
-                  <div className="text-sm text-neutral-400">Selected Period</div>
-                  <div className="text-lg font-semibold">
-                    {(() => {
-                      const selectedPeriodData = availablePeriods.find(p => p.period_start === selectedPeriod || p.period_month === selectedPeriod);
-                      if (!selectedPeriodData) return 'Select a period';
-                      
-                      // Display 4-week period format: "May 19 - June 1 & June 2 - June 15"
-                      if (selectedPeriodData.period_start && selectedPeriodData.period_end) {
-                        return `${selectedPeriodData.period_start_label} - ${selectedPeriodData.period_end_label}`;
-                      }
-                      
-                      // Fallback to old format
-                      const [year, month] = selectedPeriod.split('-');
-                      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                                         'July', 'August', 'September', 'October', 'November', 'December'];
-                      const monthName = monthNames[parseInt(month) - 1];
-                      return `${monthName} ${year}`;
-                    })()}
-                  </div>
-                  {(() => {
-                    const selectedPeriodData = availablePeriods.find(p => p.period_start === selectedPeriod || p.period_month === selectedPeriod);
-                    if (selectedPeriodData && selectedPeriodData.payday_1 && selectedPeriodData.payday_2) {
-                      return (
-                        <div className="text-xs text-neutral-400 mt-1">
-                          Paydays: {selectedPeriodData.payday_1_label} & {selectedPeriodData.payday_2_label}
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
-                </div>
-              </div>
-              <svg
-                className={`w-5 h-5 text-neutral-400 transition-transform ${showCalendar ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Expanded calendar (visible when showCalendar is true) */}
-            {showCalendar && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-neutral-800 border border-neutral-700 rounded-lg p-4 shadow-2xl z-50">
-                <div className="text-xs text-neutral-400 mb-3">Select a 4-week commission period</div>
-                
-                {/* Display periods as list (not grouped by year since they're 4-week blocks) */}
-                <div className="space-y-2 max-h-96 overflow-y-auto">
+          {/* Period Selector - Matches Payroll Style */}
+          <div className="card p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Commission Period Filter */}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-primary">Commission Period</label>
+                <select
+                  value={selectedPeriod || ""}
+                  onChange={(e) => {
+                    setSelectedPeriod(e.target.value);
+                    setShowCalendar(false);
+                  }}
+                  className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                >
+                  <option value="">Select commission period...</option>
                   {availablePeriods.map((period) => {
                     const periodKey = period.period_start || period.period_month;
-                    const isSelected = selectedPeriod === periodKey;
                     
                     // Display format for 4-week periods
                     let displayText;
@@ -1184,37 +1139,43 @@ export default function BonusesCommissions() {
                     }
                     
                     return (
-                      <button
-                        key={periodKey}
-                        onClick={() => {
-                          setSelectedPeriod(periodKey);
-                          setShowCalendar(false);
-                        }}
-                        className={`
-                          w-full px-4 py-3 rounded border transition-all text-left
-                          ${isSelected 
-                            ? 'border-indigo-500 bg-indigo-600 shadow-md' 
-                            : 'border-neutral-700 bg-neutral-900 hover:border-indigo-400 hover:bg-neutral-800'
-                          }
-                        `}
-                      >
-                        <div className={`font-semibold ${isSelected ? 'text-white' : 'text-neutral-300'}`}>
-                          {displayText}
-                        </div>
-                        {period.payday_1 && period.payday_2 && (
-                          <div className={`text-xs mt-1 ${isSelected ? 'text-indigo-200' : 'text-neutral-500'}`}>
-                            Paydays: {period.payday_1_label} & {period.payday_2_label}
-                          </div>
-                        )}
-                        <div className={`text-xs mt-1 ${isSelected ? 'text-indigo-200' : 'text-neutral-500'}`}>
-                          {period.employee_count} employees
-                        </div>
-                      </button>
+                      <option key={periodKey} value={periodKey}>
+                        {displayText}
+                      </option>
                     );
                   })}
-                </div>
+                </select>
               </div>
-            )}
+
+              {/* Summary Stats */}
+              {selectedPeriod && (() => {
+                const selectedPeriodData = availablePeriods.find(p => (p.period_start || p.period_month) === selectedPeriod);
+                if (!selectedPeriodData) return null;
+                
+                return (
+                  <div className="flex items-end">
+                    <div className="grid grid-cols-2 gap-4 w-full">
+                      <div>
+                        <div className="text-xs text-secondary uppercase">Paydays</div>
+                        <div className="text-sm font-medium text-primary">
+                          {selectedPeriodData.payday_1 && selectedPeriodData.payday_2 ? (
+                            <>{selectedPeriodData.payday_1_label} & {selectedPeriodData.payday_2_label}</>
+                          ) : (
+                            'N/A'
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-secondary uppercase">Employees</div>
+                        <div className="text-lg font-semibold text-primary">
+                          {selectedPeriodData.employee_count || 0}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
           </div>
         </div>
 
