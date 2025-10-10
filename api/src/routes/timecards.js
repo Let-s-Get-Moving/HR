@@ -143,6 +143,17 @@ r.get("/day-view/:date", async (req, res) => {
     const { date } = req.params;
     
     console.log(`\n🌅 [Day View] Getting data for ${date}`);
+    console.log(`🔒 [RBAC] User scope: ${req.userScope}, Employee ID: ${req.employeeId}`);
+    
+    let whereClause = 'WHERE te.work_date = $1::date';
+    const params = [date];
+    
+    // RBAC: Users can only see their own timecard entries
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      whereClause += ` AND t.employee_id = $${params.length}`;
+      console.log(`🔒 [RBAC] Filtering day-view for employee ${req.employeeId}`);
+    }
     
     const { rows } = await q(`
       SELECT 
@@ -165,9 +176,9 @@ r.get("/day-view/:date", async (req, res) => {
       JOIN timecards t ON te.timecard_id = t.id
       JOIN employees e ON t.employee_id = e.id
       LEFT JOIN departments d ON e.department_id = d.id
-      WHERE te.work_date = $1::date
+      ${whereClause}
       ORDER BY e.last_name, e.first_name, te.clock_in
-    `, [date]);
+    `, params);
     
     console.log(`🌅 [Day View] Found ${rows.length} entries for ${date}`);
     
@@ -183,12 +194,27 @@ r.get("/day-view/:date", async (req, res) => {
  */
 r.get("/dates-with-data", async (req, res) => {
   try {
+    console.log(`🔒 [RBAC] User scope: ${req.userScope}, Employee ID: ${req.employeeId}`);
+    
+    let whereClause = '';
+    const params = [];
+    
+    // RBAC: Users can only see dates for their own timecards
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      whereClause = `WHERE te.timecard_id IN (
+        SELECT id FROM timecards WHERE employee_id = $${params.length}
+      )`;
+      console.log(`🔒 [RBAC] Filtering dates for employee ${req.employeeId}`);
+    }
+    
     const { rows } = await q(`
       SELECT DISTINCT work_date::date
-      FROM timecard_entries
+      FROM timecard_entries te
+      ${whereClause}
       ORDER BY work_date DESC
       LIMIT 365
-    `);
+    `, params);
     
     // Format dates as YYYY-MM-DD strings for date picker
     const formattedDates = rows.map(r => {
@@ -356,17 +382,36 @@ r.get("/periods/list", async (req, res) => {
   try {
     console.log('\n═══════════════════════════════════════════════════════════');
     console.log(`📅 [Periods LIST] Request received at ${new Date().toISOString()}`);
+    console.log(`🔒 [RBAC] User scope: ${req.userScope}, Employee ID: ${req.employeeId}`);
     
-    const { rows } = await q(
-      `SELECT DISTINCT 
+    // RBAC: Users can only see periods where they have timecards
+    let query = '';
+    const params = [];
+    
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      query = `SELECT DISTINCT 
+        t.pay_period_start,
+        t.pay_period_end,
+        TO_CHAR(t.pay_period_start, 'YYYY-MM-DD') || ' - ' || TO_CHAR(t.pay_period_end, 'YYYY-MM-DD') as period_label,
+        COUNT(*) as timecard_count
+      FROM timecards t
+      WHERE t.employee_id = $1
+      GROUP BY t.pay_period_start, t.pay_period_end
+      ORDER BY t.pay_period_start DESC`;
+      console.log(`🔒 [RBAC] Filtering periods for employee ${req.employeeId}`);
+    } else {
+      query = `SELECT DISTINCT 
         pay_period_start,
         pay_period_end,
         TO_CHAR(pay_period_start, 'YYYY-MM-DD') || ' - ' || TO_CHAR(pay_period_end, 'YYYY-MM-DD') as period_label,
         employee_count as timecard_count
       FROM timecard_uploads
       WHERE status = 'processed'
-      ORDER BY pay_period_start DESC`
-    );
+      ORDER BY pay_period_start DESC`;
+    }
+    
+    const { rows } = await q(query, params);
     
     const totalTime = Date.now() - startTime;
     console.log(`📅 [Periods LIST] ✅ Query executed in ${totalTime}ms`);
