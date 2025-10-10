@@ -397,9 +397,8 @@ r.get("/periods", async (req, res) => {
              TO_CHAR(payday_2::date, 'Mon DD, YYYY') as payday_2_label,
              COUNT(*) as employee_count
       FROM employee_commission_monthly
-      WHERE period_start IS NOT NULL
       GROUP BY period_start, period_end, payday_1, payday_2, period_month
-      ORDER BY period_start DESC
+      ORDER BY COALESCE(period_start, period_month) DESC
     `);
     
     res.json(result.rows);
