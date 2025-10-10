@@ -649,7 +649,7 @@ function MainTableView({ timecards, onViewIndividual, loading }) {
                 </td>
                 <td className="px-6 py-4 text-sm text-secondary">{timecard.email}</td>
                 <td className="px-6 py-4 text-right">
-                  <span className="text-primary font-medium">{parseFloat(timecard.total_hours || 0).toFixed(2)}</span>
+                  <span className="text-primary font-medium">{formatHoursAsTime(parseFloat(timecard.total_hours || 0))}</span>
                 </td>
                 <td className="px-6 py-4 text-right">
                   {parseFloat(timecard.overtime_hours || 0) > 0 ? (
@@ -721,7 +721,7 @@ function DashboardView({ stats, selectedPeriod }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-3xl font-bold text-primary">{parseFloat(stats.summary.total_hours || 0).toFixed(2)}</p>
+          <p className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(stats.summary.total_hours || 0))}</p>
         </div>
 
         <div className="card p-6">
@@ -769,7 +769,7 @@ function DashboardView({ stats, selectedPeriod }) {
               {stats.employees.map((emp) => (
                 <tr key={emp.employee_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="px-6 py-4 text-sm text-primary font-medium">{emp.employee_name}</td>
-                  <td className="px-6 py-4 text-sm text-right text-primary">{parseFloat(emp.total_hours || 0).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm text-right text-primary">{formatHoursAsTime(parseFloat(emp.total_hours || 0))}</td>
                   <td className="px-6 py-4 text-sm text-right">
                     {parseFloat(emp.overtime_hours || 0) > 0 ? (
                       <span className="text-amber-600 dark:text-amber-400 font-medium">
@@ -1199,7 +1199,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-primary">
-                      {employee.total_hours.toFixed(2)} hours
+                      {formatHoursAsTime(employee.total_hours)}
                     </div>
                     {employee.total_hours > 8 && (
                       <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">OVERTIME</span>
@@ -1252,7 +1252,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                           </td>
                           <td className="px-6 py-3 text-right font-medium text-primary">
                             {entry.hours_worked && !isNaN(entry.hours_worked) 
-                              ? parseFloat(entry.hours_worked).toFixed(2) 
+                              ? formatHoursAsTime(parseFloat(entry.hours_worked)) 
                               : "—"}
                             {entry.is_overtime && entry.hours_worked && !isNaN(entry.hours_worked) && (
                               <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
