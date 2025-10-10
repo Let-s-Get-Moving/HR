@@ -416,7 +416,7 @@ r.get("/periods", async (req, res) => {
              COUNT(*) as employee_count
       FROM employee_commission_monthly
       GROUP BY period_start, period_end, payday_1, payday_2, period_month
-      ORDER BY COALESCE(period_start, period_month) DESC
+      ORDER BY period_start DESC NULLS LAST, period_month DESC
     `);
     
     console.log(`📊 [COMMISSIONS] Found ${result.rows.length} periods`);
