@@ -654,10 +654,10 @@ function MainTableView({ timecards, onViewIndividual, loading }) {
                 <td className="px-6 py-4 text-right">
                   {parseFloat(timecard.overtime_hours || 0) > 0 ? (
                     <span className="text-amber-600 dark:text-amber-400 font-medium">
-                      {parseFloat(timecard.overtime_hours).toFixed(2)}
+                      {formatHoursAsTime(parseFloat(timecard.overtime_hours))}
                     </span>
                   ) : (
-                    <span className="text-secondary">0.00</span>
+                    <span className="text-secondary">0:00</span>
                   )}
                 </td>
                 <td className="px-6 py-4 text-center">
@@ -732,7 +732,7 @@ function DashboardView({ stats, selectedPeriod }) {
             </svg>
           </div>
           <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
-            {parseFloat(stats.summary.total_overtime || 0).toFixed(2)}
+            {formatHoursAsTime(parseFloat(stats.summary.total_overtime || 0))}
           </p>
           <p className="text-xs text-secondary mt-1">{stats.summary.employees_with_overtime} employees</p>
         </div>
@@ -773,10 +773,10 @@ function DashboardView({ stats, selectedPeriod }) {
                   <td className="px-6 py-4 text-sm text-right">
                     {parseFloat(emp.overtime_hours || 0) > 0 ? (
                       <span className="text-amber-600 dark:text-amber-400 font-medium">
-                        {parseFloat(emp.overtime_hours).toFixed(2)}
+                        {formatHoursAsTime(parseFloat(emp.overtime_hours))}
                       </span>
                     ) : (
-                      <span className="text-secondary">0.00</span>
+                      <span className="text-secondary">0:00</span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-center">
