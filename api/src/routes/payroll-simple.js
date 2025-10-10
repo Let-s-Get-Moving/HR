@@ -62,7 +62,7 @@ r.get("/calculate-live", async (req, res) => {
         d.name as department,
         COALESCE(e.hourly_rate, 0) as hourly_rate,
         
-        -- Sum ALL timecard entries where work_date is in the period
+        -- Sum ALL timecard entries where work_date is in the period (no approval filter)
         COALESCE((
           SELECT SUM(te.hours_worked)
           FROM timecard_entries te
@@ -70,7 +70,6 @@ r.get("/calculate-live", async (req, res) => {
           WHERE t.employee_id = e.id
             AND te.work_date >= $1::date
             AND te.work_date <= $2::date
-            AND t.status = 'Approved'
         ), 0) as total_hours,
         
         -- Calculate overtime (hours over 8 per day)
@@ -85,7 +84,6 @@ r.get("/calculate-live", async (req, res) => {
             WHERE t.employee_id = e.id
               AND te.work_date >= $1::date
               AND te.work_date <= $2::date
-              AND t.status = 'Approved'
             GROUP BY te.work_date
           ) daily_hours
         ), 0) as overtime_hours,
@@ -145,17 +143,16 @@ r.get("/calculate-live", async (req, res) => {
 });
 
 /**
- * Get all unique pay periods from approved timecards
+ * Get all unique pay periods from timecards (no approval filter)
  * Groups by 2-week periods ending on Friday
  */
 r.get("/periods", async (req, res) => {
   try {
-    // Get all approved timecard dates
+    // Get all timecard dates (no approval filter - if timecards exist, they count)
     const { rows: dates } = await q(`
       SELECT DISTINCT work_date
       FROM timecard_entries te
       JOIN timecards t ON te.timecard_id = t.id
-      WHERE t.status = 'Approved'
       ORDER BY work_date DESC
     `);
     
@@ -199,8 +196,7 @@ r.get("/periods", async (req, res) => {
           SELECT COUNT(DISTINCT t.employee_id) as employee_count
           FROM timecard_entries te
           JOIN timecards t ON te.timecard_id = t.id
-          WHERE t.status = 'Approved'
-            AND te.work_date >= $1::date
+          WHERE te.work_date >= $1::date
             AND te.work_date <= $2::date
         `, [period.pay_period_start, period.pay_period_end]);
         
