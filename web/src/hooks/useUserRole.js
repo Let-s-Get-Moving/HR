@@ -44,7 +44,6 @@ export function canViewAllEmployees(role) {
 
 // Pages that users can access (limited role)
 export const USER_ALLOWED_PAGES = [
-  'dashboard',
   'timeTracking',
   'leave',
   'payroll',
