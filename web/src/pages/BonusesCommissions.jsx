@@ -159,7 +159,8 @@ export default function BonusesCommissions() {
           }
         }
         
-        setSelectedPeriod(closestPeriod.period_start || closestPeriod.period_month);
+        // Use period_month for filtering (this is what the API expects)
+        setSelectedPeriod(closestPeriod.period_month);
       } else {
         // No periods available - stop loading
         console.log('📊 [Commissions] No periods available');
@@ -1124,7 +1125,8 @@ export default function BonusesCommissions() {
                 >
                   <option value="">Select commission period...</option>
                   {availablePeriods.map((period) => {
-                    const periodKey = period.period_start || period.period_month;
+                    // Use period_month as the key and value (this is what the API expects)
+                    const periodKey = period.period_month;
                     
                     // Display format for 4-week periods
                     let displayText;
@@ -1149,7 +1151,7 @@ export default function BonusesCommissions() {
 
               {/* Summary Stats */}
               {selectedPeriod && (() => {
-                const selectedPeriodData = availablePeriods.find(p => (p.period_start || p.period_month) === selectedPeriod);
+                const selectedPeriodData = availablePeriods.find(p => p.period_month === selectedPeriod);
                 if (!selectedPeriodData) return null;
                 
                 return (
