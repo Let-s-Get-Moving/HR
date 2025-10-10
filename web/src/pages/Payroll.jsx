@@ -174,11 +174,13 @@ export default function Payroll() {
             >
               <option value="">Select pay date...</option>
               {payPeriods.map((period) => {
-                const payDate = new Date(period.pay_date);
+                // Parse date as UTC to avoid timezone shifts
+                const payDate = new Date(period.pay_date + 'T00:00:00Z');
                 const formattedDate = payDate.toLocaleDateString('en-US', {
                   day: 'numeric',
                   month: 'short',
-                  year: 'numeric'
+                  year: 'numeric',
+                  timeZone: 'UTC'
                 }).toUpperCase();
                 
                 return (
@@ -197,7 +199,7 @@ export default function Payroll() {
                 <div>
                   <div className="text-xs text-secondary uppercase">Work Period</div>
                   <div className="text-sm font-medium text-primary">
-                    {new Date(selectedPeriod.pay_period_start).toLocaleDateString()} - {new Date(selectedPeriod.pay_period_end).toLocaleDateString()}
+                    {new Date(selectedPeriod.pay_period_start + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(selectedPeriod.pay_period_end + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })}
                   </div>
                 </div>
                 <div>
@@ -378,10 +380,10 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
                 <p className="text-sm text-secondary mt-1">Department: {employee.department}</p>
               )}
               <p className="text-sm text-secondary">
-                Pay Period: {new Date(employee.pay_period_start).toLocaleDateString()} - {new Date(employee.pay_period_end).toLocaleDateString()}
+                Pay Period: {new Date(employee.pay_period_start + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(employee.pay_period_end + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })}
               </p>
               <p className="text-sm text-secondary">
-                Pay Date: {new Date(employee.pay_date).toLocaleDateString()}
+                Pay Date: {new Date(employee.pay_date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })}
               </p>
             </div>
             <button

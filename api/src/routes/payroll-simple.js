@@ -11,8 +11,10 @@ const r = express.Router();
  * - Base paydays: Sep 12, Sep 26, Oct 10, Oct 24...
  */
 function getPayPeriod(basePayday = '2025-09-26') {
-  const base = new Date(basePayday);
+  // Use UTC to avoid timezone issues
+  const base = new Date(basePayday + 'T00:00:00Z');
   const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
   
   // Find how many 14-day periods have passed since base payday
   const daysSinceBase = Math.floor((today - base) / (1000 * 60 * 60 * 24));
@@ -20,15 +22,15 @@ function getPayPeriod(basePayday = '2025-09-26') {
   
   // Calculate next payday (always a Friday, every 2 weeks)
   const nextPayday = new Date(base);
-  nextPayday.setDate(base.getDate() + (periodsSinceBase + 1) * 14);
+  nextPayday.setUTCDate(base.getUTCDate() + (periodsSinceBase + 1) * 14);
   
   // Period ends 7 days before payday (Friday of Week 2)
   const periodEnd = new Date(nextPayday);
-  periodEnd.setDate(nextPayday.getDate() - 7);
+  periodEnd.setUTCDate(nextPayday.getUTCDate() - 7);
   
   // Period starts 13 days before period end (Saturday of Week 0/1)
   const periodStart = new Date(periodEnd);
-  periodStart.setDate(periodEnd.getDate() - 13);
+  periodStart.setUTCDate(periodEnd.getUTCDate() - 13);
   
   return {
     period_start: periodStart.toISOString().split('T')[0],
@@ -203,11 +205,11 @@ r.get("/periods", async (req, res) => {
     console.log('📅 [PAYROLL-PERIODS] Grouping dates into 2-week pay periods...');
     // Group into 2-week pay periods (Saturday to Friday)
     const periods = [];
-    const basePayday = new Date('2025-09-26');
+    const basePayday = new Date('2025-09-26T00:00:00Z');
     console.log('📅 [PAYROLL-PERIODS] Base payday:', basePayday.toISOString().split('T')[0]);
     
     dates.forEach(row => {
-      const workDate = new Date(row.work_date);
+      const workDate = new Date(row.work_date + 'T00:00:00Z');
       
       // Find which pay period this date belongs to
       // Work weeks end on Friday, pay periods are 14 days (Sat-Fri, Sat-Fri)
@@ -216,22 +218,22 @@ r.get("/periods", async (req, res) => {
       // Calculate days from base payday
       const daysSinceBase = Math.floor((workDate - basePayday) / (1000 * 60 * 60 * 24));
       
-      // Work date is in period that ends 7 days before its payday
-      // So add 7 to workDate to get conceptual payday, then round to nearest 14-day cycle
-      const daysToConceptualPayday = daysSinceBase + 7;
-      const periodsSinceBase = Math.floor(daysToConceptualPayday / 14);
+      // Work date + 7 days = its payday
+      // Round this to the nearest 14-day cycle from base
+      const daysToPayday = daysSinceBase + 7;
+      const periodsSinceBase = Math.round(daysToPayday / 14); // Use Math.round instead of Math.floor
       
       // Calculate the actual payday for this work date
       const payday = new Date(basePayday);
-      payday.setDate(basePayday.getDate() + periodsSinceBase * 14);
+      payday.setUTCDate(basePayday.getUTCDate() + periodsSinceBase * 14);
       
       // Period ends 7 days before payday (Friday of Week 2)
       const periodEnd = new Date(payday);
-      periodEnd.setDate(payday.getDate() - 7);
+      periodEnd.setUTCDate(payday.getUTCDate() - 7);
       
       // Period starts 13 days before period end (Saturday of Week 0/1)
       const periodStart = new Date(periodEnd);
-      periodStart.setDate(periodEnd.getDate() - 13);
+      periodStart.setUTCDate(periodEnd.getUTCDate() - 13);
       
       const key = `${periodStart.toISOString().split('T')[0]}_${periodEnd.toISOString().split('T')[0]}`;
       
