@@ -210,7 +210,7 @@ export default function Payroll() {
             </div>
           )}
         </div>
-      </div>
+          </div>
 
       {/* Period View - Employee Grid */}
       <AnimatePresence mode="wait">
@@ -285,39 +285,39 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                   {employee.department && (
                     <p className="text-xs text-secondary uppercase tracking-wide">{employee.department}</p>
                   )}
-                </div>
+        </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(employee.net_pay)}
-                  </div>
+          </div>
                   <div className="text-xs text-secondary">Net Pay</div>
-                </div>
-              </div>
-            </div>
+                    </div>
+                        </div>
+                      </div>
 
             {/* Payroll Summary */}
             <div className="p-6">
               <div className="grid grid-cols-2 gap-4">
                 {/* Hours */}
-                <div>
+                      <div>
                   <div className="text-xs text-secondary uppercase mb-1">Total Hours</div>
                   <div className="text-lg font-semibold text-primary">{formatHours(employee.total_hours)}</div>
-                </div>
+                        </div>
                 <div>
                   <div className="text-xs text-secondary uppercase mb-1">Regular Hours</div>
                   <div className="text-lg font-semibold text-primary">{formatHours(employee.regular_hours)}</div>
-                </div>
-                <div>
+                      </div>
+                      <div>
                   <div className="text-xs text-secondary uppercase mb-1">Overtime Hours</div>
                   <div className="text-lg font-semibold text-amber-600 dark:text-amber-400">
                     {formatHours(employee.overtime_hours)}
-                  </div>
-                </div>
-                <div>
+                        </div>
+                      </div>
+                      <div>
                   <div className="text-xs text-secondary uppercase mb-1">Hourly Rate</div>
                   <div className="text-lg font-semibold text-primary">{formatCurrency(employee.hourly_rate)}/hr</div>
-                </div>
-              </div>
+                        </div>
+                      </div>
 
               {/* Pay Breakdown */}
               <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
@@ -325,13 +325,13 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                   <div className="flex justify-between">
                     <span className="text-secondary">Regular Pay:</span>
                     <span className="font-medium text-primary">{formatCurrency(employee.regular_pay)}</span>
-                  </div>
+                    </div>
                   <div className="flex justify-between">
                     <span className="text-secondary">Overtime Pay:</span>
                     <span className="font-medium text-amber-600 dark:text-amber-400">
                       {formatCurrency(employee.overtime_pay)}
                     </span>
-                  </div>
+                      </div>
                   <div className="flex justify-between">
                     <span className="text-secondary">Gross Pay:</span>
                     <span className="font-medium text-primary">{formatCurrency(employee.gross_pay)}</span>
@@ -400,53 +400,53 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
             <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold text-primary mb-4">Hours Breakdown</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
+          <div>
                   <div className="text-xs text-secondary uppercase mb-1">Total Hours</div>
                   <div className="text-2xl font-bold text-primary">{formatHours(employee.total_hours)}</div>
-                </div>
+            </div>
                 <div>
                   <div className="text-xs text-secondary uppercase mb-1">Regular Hours</div>
                   <div className="text-2xl font-bold text-primary">{formatHours(employee.regular_hours)}</div>
-                </div>
-                <div>
+          </div>
+          <div>
                   <div className="text-xs text-secondary uppercase mb-1">Overtime Hours</div>
                   <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                     {formatHours(employee.overtime_hours)}
-                  </div>
-                </div>
+            </div>
+          </div>
                 <div>
                   <div className="text-xs text-secondary uppercase mb-1">Hourly Rate</div>
                   <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                     {formatCurrency(employee.hourly_rate)}
-                  </div>
-                </div>
-              </div>
-            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
             {/* Pay Breakdown */}
             <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold text-primary mb-4">Pay Breakdown</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
-                  <div>
+          <div>
                     <div className="font-medium text-primary">Regular Pay</div>
                     <div className="text-xs text-secondary">
                       {formatHours(employee.regular_hours)} hours × {formatCurrency(employee.hourly_rate)}
-                    </div>
-                  </div>
+      </div>
+    </div>
                   <div className="text-xl font-bold text-primary">{formatCurrency(employee.regular_pay)}</div>
-                </div>
+        </div>
                 <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
                   <div>
                     <div className="font-medium text-primary">Overtime Pay</div>
                     <div className="text-xs text-secondary">
                       {formatHours(employee.overtime_hours)} hours × {formatCurrency(employee.hourly_rate * 1.5)} (1.5×)
-                    </div>
-                  </div>
+      </div>
+    </div>
                   <div className="text-xl font-bold text-amber-600 dark:text-amber-400">
                     {formatCurrency(employee.overtime_pay)}
-                  </div>
-                </div>
+          </div>
+        </div>
                 <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
                   <div>
                     <div className="font-medium text-primary">Gross Pay</div>
@@ -473,7 +473,7 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
                   </div>
                 </div>
               </div>
-            </div>
+          </div>
 
             {/* Vacation Accrual */}
             <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
@@ -511,15 +511,15 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
 
           {/* Close Button */}
           <div className="mt-6 flex justify-end">
-            <button
+                  <button
               onClick={onClose}
               className="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-lg font-medium transition-colors"
-            >
+                  >
               Close
-            </button>
-          </div>
-        </div>
-      </motion.div>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
     </div>
   );
 }
