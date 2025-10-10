@@ -146,19 +146,19 @@ export default function BonusesCommissions() {
     
     // Filter monthly commissions by employee name
     const filteredM = analyticsMonthly.filter(item => {
-      const name = `${item.first_name || ''} ${item.last_name || ''}`.toLowerCase();
+      const name = (item.employee_name || item.name_raw || '').toLowerCase();
       return name.includes(searchTerm);
     });
     
     // Filter agents by employee name
     const filteredA = analyticsAgents.filter(item => {
-      const name = `${item.first_name || ''} ${item.last_name || ''}`.toLowerCase();
+      const name = (item.employee_name || item.name_raw || '').toLowerCase();
       return name.includes(searchTerm);
     });
     
     // Filter hourly payouts by employee name
     const filteredH = analyticsHourly.filter(item => {
-      const name = `${item.first_name || ''} ${item.last_name || ''}`.toLowerCase();
+      const name = (item.employee_name || item.name_raw || '').toLowerCase();
       return name.includes(searchTerm);
     });
 
@@ -1437,7 +1437,7 @@ export default function BonusesCommissions() {
                     analyticsHourly[0].date_periods.map((period, idx) => (
                       <th key={idx} className="text-left py-2 px-3 bg-neutral-900">
                         {period.label}
-                        {period.cash_paid && <span className="ml-1 text-xs text-green-400">💵</span>}
+                        {period.cash_paid && <span className="ml-1 text-xs text-green-400">(in cash)</span>}
                       </th>
                     ))
                   }
@@ -1453,7 +1453,7 @@ export default function BonusesCommissions() {
                       {periods.map((period, pIdx) => (
                         <td key={pIdx} className="py-2 px-3 text-blue-400">
                           ${(period.amount || 0).toLocaleString()}
-                          {period.cash_paid && <span className="ml-1 text-xs text-green-400">💵</span>}
+                          {period.cash_paid && <span className="ml-1 text-xs text-green-400">(in cash)</span>}
                         </td>
                       ))}
                       <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_for_month || 0).toLocaleString()}</td>
