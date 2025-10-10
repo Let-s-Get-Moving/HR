@@ -36,7 +36,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
              r.role_name, r.display_name as role_display_name
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
-      WHERE (u.full_name = $1 OR u.email = $1) AND u.is_active = true
+      WHERE (u.username = $1 OR u.full_name = $1 OR u.email = $1) AND u.is_active = true
       LIMIT 1
     `, [username]);
     
