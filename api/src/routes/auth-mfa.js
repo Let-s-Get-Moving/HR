@@ -731,8 +731,9 @@ r.get("/session", async (req, res) => {
   
   try {
     const sessionResult = await q(`
-      SELECT s.id, s.user_id, s.expires_at, u.email, u.full_name, 
-             r.role_name, r.display_name as role_display_name
+      SELECT s.id, s.user_id, s.expires_at, u.email, u.full_name, u.employee_id,
+             r.role_name, r.display_name as role_display_name,
+             r.permissions->>'scope' as scope
       FROM user_sessions s
       JOIN users u ON s.user_id = u.id
       LEFT JOIN hr_roles r ON u.role_id = r.id
@@ -753,7 +754,9 @@ r.get("/session", async (req, res) => {
         username: session.full_name,
         email: session.email,
         role: session.role_name,
-        roleDisplayName: session.role_display_name
+        roleDisplayName: session.role_display_name,
+        scope: session.scope || 'own',
+        employeeId: session.employee_id
       }
     });
   } catch (error) {

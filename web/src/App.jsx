@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import Login from "./components/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
@@ -104,10 +104,22 @@ const pages = {
   settings: { name: "Settings", component: Settings, icon: Icons.settings }
 };
 
+import { useUserRole, canAccessPage } from './hooks/useUserRole.js';
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { userRole } = useUserRole();
+  
+  // Filter pages based on user role
+  const allowedPages = useMemo(() => {
+    if (!user || !userRole) return pages; // Show all during loading
+    
+    return Object.fromEntries(
+      Object.entries(pages).filter(([key]) => canAccessPage(userRole, key))
+    );
+  }, [user, userRole]);
   const [passwordWarning, setPasswordWarning] = useState(null);
 
   useEffect(() => {
@@ -297,7 +309,7 @@ export default function App() {
               </button>
             </div>
             <div className="space-y-2">
-              {Object.entries(pages).map(([key, page]) => (
+              {Object.entries(allowedPages).map(([key, page]) => (
                 <motion.button
                   key={key}
                   whileHover={{ x: 4 }}

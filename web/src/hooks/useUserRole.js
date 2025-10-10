@@ -45,7 +45,7 @@ export function canViewAllEmployees(role) {
 // Pages that users can access (limited role)
 export const USER_ALLOWED_PAGES = [
   'dashboard',
-  'time-tracking',
+  'timeTracking',
   'leave',
   'payroll',
   'bonuses',
@@ -54,9 +54,10 @@ export const USER_ALLOWED_PAGES = [
 
 export function canAccessPage(role, pageName) {
   if (hasFullAccess(role)) {
-    return true;
+    return true; // Admin and Manager can access all pages
   }
   
+  // User role - only specific pages
   return USER_ALLOWED_PAGES.includes(pageName);
 }
 
