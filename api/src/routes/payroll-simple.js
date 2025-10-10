@@ -14,13 +14,13 @@ function getPayPeriod(basePayday = '2025-09-26') {
   const base = new Date(basePayday);
   const today = new Date();
   
-  // Find how many weeks have passed since base payday
+  // Find how many 14-day periods have passed since base payday
   const daysSinceBase = Math.floor((today - base) / (1000 * 60 * 60 * 24));
-  const weeksSinceBase = Math.floor(daysSinceBase / 7);
+  const periodsSinceBase = Math.floor(daysSinceBase / 14); // Paydays are every 14 days
   
   // Calculate next payday (always a Friday, every 2 weeks)
   const nextPayday = new Date(base);
-  nextPayday.setDate(base.getDate() + (weeksSinceBase + 1) * 14);
+  nextPayday.setDate(base.getDate() + (periodsSinceBase + 1) * 14);
   
   // Period ends 7 days before payday (Friday of Week 2)
   const periodEnd = new Date(nextPayday);
