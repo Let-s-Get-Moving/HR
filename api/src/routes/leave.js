@@ -1,8 +1,12 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
+import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = Router();
+
+// Apply scope filter to all leave routes (adds role info, doesn't block)
+r.use(applyScopeFilter);
 
 // Get all leave requests
 r.get("/requests", async (_req, res) => {

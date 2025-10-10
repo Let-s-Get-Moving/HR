@@ -3,9 +3,13 @@ import { z } from "zod";
 import { q } from "../db.js";
 import multer from "multer";
 import { importTimecardsFromExcel } from "../utils/timecardImporter.js";
+import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Apply scope filter to all timecard routes (adds role info, doesn't block)
+r.use(applyScopeFilter);
 
 // Get all timecards with filters
 r.get("/", async (req, res) => {
