@@ -1,21 +1,35 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
+import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = Router();
 
-r.get("/", async (_req, res) => {
-  const { rows } = await q(
-    `SELECT e.*, 
+// Apply RBAC scope filtering to all employee routes
+r.use(applyScopeFilter);
+
+r.get("/", async (req, res) => {
+  let query = `SELECT e.*, 
      e.first_name || ' ' || e.last_name AS name,
      d.name AS department, 
      l.name AS location
      FROM employees e
      LEFT JOIN departments d ON d.id = e.department_id
      LEFT JOIN locations l ON l.id = e.location_id
-     WHERE e.status <> 'Terminated'
-     ORDER BY e.first_name, e.last_name`
-  );
+     WHERE e.status <> 'Terminated'`;
+  
+  const params = [];
+  
+  // RBAC: Users can only see themselves as an employee
+  if (req.userScope === 'own' && req.employeeId) {
+    params.push(req.employeeId);
+    query += ` AND e.id = $${params.length}`;
+    console.log(`🔒 [RBAC] Filtering employees for employee ${req.employeeId}`);
+  }
+  
+  query += ` ORDER BY e.first_name, e.last_name`;
+  
+  const { rows } = await q(query, params);
   res.json(rows);
 });
 
