@@ -228,7 +228,9 @@ export default function Employees() {
               <tr>
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Name</th>
                 <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Email</th>
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Department</th>
+                {filterStatus === "active" && (
+                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Department</th>
+                )}
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Type</th>
                 <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Hire Date</th>
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Status</th>
@@ -278,7 +280,9 @@ export default function Employees() {
                       )}
                     </div>
                   </td>
-                  <td className="px-3 sm:px-6 py-4 text-sm">{employee.department}</td>
+                  {filterStatus === "active" && (
+                    <td className="px-3 sm:px-6 py-4 text-sm">{employee.department}</td>
+                  )}
                   <td className="px-3 sm:px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       employee.employment_type === 'Full-time' ? 'bg-green-900 text-green-300' :
