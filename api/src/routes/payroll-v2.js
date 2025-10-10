@@ -183,14 +183,34 @@ r.get("/periods/list", async (req, res) => {
  * Get vacation balance for all employees
  */
 r.get("/vacation/balances", async (req, res) => {
+  const startTime = Date.now();
   try {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('🏖️  [VACATION-BALANCES] Request received');
+    console.log('🏖️  [VACATION-BALANCES] Timestamp:', new Date().toISOString());
+    
     const { rows } = await q(`
       SELECT * FROM employee_vacation_summary
       ORDER BY last_name, first_name
     `);
+    
+    const totalTime = Date.now() - startTime;
+    const totalHours = rows.reduce((sum, emp) => sum + parseFloat(emp.vacation_hours_balance || 0), 0);
+    const totalPay = rows.reduce((sum, emp) => sum + parseFloat(emp.vacation_pay_balance || 0), 0);
+    
+    console.log(`🏖️  [VACATION-BALANCES] ✅ Complete in ${totalTime}ms`);
+    console.log(`🏖️  [VACATION-BALANCES] Found ${rows.length} employees`);
+    console.log(`🏖️  [VACATION-BALANCES] Total vacation balance: ${totalHours.toFixed(2)} hours ($${totalPay.toFixed(2)})`);
+    console.log('═══════════════════════════════════════════════════════════\n');
+    
     res.json(rows);
   } catch (error) {
-    console.error("Error fetching vacation balances:", error);
+    const totalTime = Date.now() - startTime;
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error(`❌ [VACATION-BALANCES] ERROR (${totalTime}ms)`);
+    console.error('❌ [VACATION-BALANCES] Error:', error.message);
+    console.error('❌ [VACATION-BALANCES] Stack:', error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
     res.status(500).json({ error: "Failed to fetch vacation balances" });
   }
 });
@@ -229,6 +249,7 @@ r.get("/vacation/balance/:employee_id", async (req, res) => {
  * Request vacation payout for an employee
  */
 r.post("/vacation/payout", async (req, res) => {
+  const startTime = Date.now();
   const schema = z.object({
     employee_id: z.number(),
     vacation_hours_paid: z.number().positive(),
@@ -238,9 +259,19 @@ r.post("/vacation/payout", async (req, res) => {
   });
 
   try {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('🏖️  [VACATION-PAYOUT] Request received');
+    console.log('🏖️  [VACATION-PAYOUT] Timestamp:', new Date().toISOString());
+    console.log('🏖️  [VACATION-PAYOUT] Request body:', req.body);
+    
     const data = schema.parse(req.body);
+    console.log('🏖️  [VACATION-PAYOUT] ✅ Validation passed');
+    console.log(`🏖️  [VACATION-PAYOUT] Employee ID: ${data.employee_id}`);
+    console.log(`🏖️  [VACATION-PAYOUT] Hours to pay out: ${data.vacation_hours_paid}`);
+    console.log(`🏖️  [VACATION-PAYOUT] Payout date: ${data.payout_date}`);
 
     // Get employee's current vacation balance and hourly rate
+    console.log('🏖️  [VACATION-PAYOUT] Fetching employee balance...');
     const { rows: balanceRows } = await q(
       `
       SELECT 
@@ -255,13 +286,18 @@ r.post("/vacation/payout", async (req, res) => {
     );
 
     if (balanceRows.length === 0) {
+      console.log(`⚠️  [VACATION-PAYOUT] Employee ${data.employee_id} vacation balance not found`);
       return res.status(404).json({ error: "Employee vacation balance not found" });
     }
 
     const balance = balanceRows[0];
+    console.log(`🏖️  [VACATION-PAYOUT] Current balance: ${balance.vacation_hours_balance} hours`);
 
     // Check if employee has enough vacation balance
     if (balance.vacation_hours_balance < data.vacation_hours_paid) {
+      console.log(`⚠️  [VACATION-PAYOUT] Insufficient balance!`);
+      console.log(`   Available: ${balance.vacation_hours_balance} hours`);
+      console.log(`   Requested: ${data.vacation_hours_paid} hours`);
       return res.status(400).json({
         error: "Insufficient vacation balance",
         available: balance.vacation_hours_balance,
@@ -271,6 +307,8 @@ r.post("/vacation/payout", async (req, res) => {
 
     // Calculate payout amount at current hourly rate
     const vacationPayAmount = data.vacation_hours_paid * parseFloat(balance.hourly_rate);
+    console.log(`🏖️  [VACATION-PAYOUT] Payout amount: $${vacationPayAmount.toFixed(2)}`);
+    console.log(`🏖️  [VACATION-PAYOUT] Creating payout record...`);
 
     // Create vacation payout record
     const { rows: payoutRows } = await q(
@@ -299,11 +337,20 @@ r.post("/vacation/payout", async (req, res) => {
       ]
     );
 
-    console.log(`🏖️  Vacation payout created: ${data.vacation_hours_paid} hours ($${vacationPayAmount.toFixed(2)}) for employee ${data.employee_id}`);
+    const totalTime = Date.now() - startTime;
+    console.log(`🏖️  [VACATION-PAYOUT] ✅ Complete in ${totalTime}ms`);
+    console.log(`🏖️  [VACATION-PAYOUT] Payout ID: ${payoutRows[0].id}`);
+    console.log(`🏖️  [VACATION-PAYOUT] ${data.vacation_hours_paid} hours ($${vacationPayAmount.toFixed(2)})`);
+    console.log('═══════════════════════════════════════════════════════════\n');
 
     res.json(payoutRows[0]);
   } catch (error) {
-    console.error("Error creating vacation payout:", error);
+    const totalTime = Date.now() - startTime;
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error(`❌ [VACATION-PAYOUT] ERROR (${totalTime}ms)`);
+    console.error('❌ [VACATION-PAYOUT] Error:', error.message);
+    console.error('❌ [VACATION-PAYOUT] Stack:', error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
     res.status(500).json({ error: "Failed to create vacation payout: " + error.message });
   }
 });

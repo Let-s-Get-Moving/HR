@@ -25,20 +25,41 @@ export default function Payroll() {
 
   const loadInitialData = async () => {
     try {
-      console.log('🔄 [Payroll] Loading initial data...');
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log('💰 [Frontend-Payroll] LOADING INITIAL DATA');
+      console.log('💰 [Frontend-Payroll] Timestamp:', new Date().toISOString());
       setLoading(true);
 
       // Load available pay periods from payroll-simple
+      console.log('💰 [Frontend-Payroll] Fetching pay periods...');
+      const periodsStartTime = Date.now();
       const periods = await API("/api/payroll-simple/periods");
-      console.log('📅 [Payroll] Periods loaded:', periods.length);
+      const periodsTime = Date.now() - periodsStartTime;
+      console.log(`💰 [Frontend-Payroll] ✅ Periods loaded in ${periodsTime}ms:`, periods.length, 'periods');
+      if (periods.length > 0) {
+        console.log('💰 [Frontend-Payroll] Period list:');
+        periods.slice(0, 3).forEach((p, idx) => {
+          console.log(`   ${idx + 1}. ${p.pay_period_start} to ${p.pay_period_end} (${p.employee_count} employees)`);
+        });
+        if (periods.length > 3) {
+          console.log(`   ... and ${periods.length - 3} more periods`);
+        }
+      }
       setPayPeriods(periods);
 
       if (periods.length > 0) {
-        console.log('📅 [Payroll] Setting default period:', periods[0]);
+        console.log('💰 [Frontend-Payroll] Setting default period:', periods[0]);
         setSelectedPeriod(periods[0]);
+      } else {
+        console.log('⚠️ [Frontend-Payroll] No periods available');
       }
+      console.log('═══════════════════════════════════════════════════════════\n');
     } catch (error) {
-      console.error('❌ [Payroll] Error loading initial data:', error);
+      console.error('\n═══════════════════════════════════════════════════════════');
+      console.error('❌ [Frontend-Payroll] ERROR loading initial data');
+      console.error('❌ [Frontend-Payroll] Error:', error.message);
+      console.error('❌ [Frontend-Payroll] Stack:', error.stack);
+      console.error('═══════════════════════════════════════════════════════════\n');
     } finally {
       setLoading(false);
     }
@@ -48,23 +69,44 @@ export default function Payroll() {
     if (!selectedPeriod) return;
 
     try {
-      console.log('🔄 [Payroll] Loading payroll data for period:', selectedPeriod);
+      console.log('\n═══════════════════════════════════════════════════════════');
+      console.log('💰 [Frontend-Payroll] LOADING PAYROLL DATA');
+      console.log('💰 [Frontend-Payroll] Timestamp:', new Date().toISOString());
+      console.log('💰 [Frontend-Payroll] Selected period:', selectedPeriod);
       setLoading(true);
 
       // Load live payroll calculations from payroll-simple
+      const startTime = Date.now();
       const data = await API(
         `/api/payroll-simple/calculate-live?pay_period_start=${selectedPeriod.pay_period_start}&pay_period_end=${selectedPeriod.pay_period_end}`
       );
+      const loadTime = Date.now() - startTime;
       
-      console.log('✅ [Payroll] Loaded payroll data:', data.length, 'employees');
+      console.log(`💰 [Frontend-Payroll] ✅ Data loaded in ${loadTime}ms`);
+      console.log(`💰 [Frontend-Payroll] Received ${data.length} employees from API`);
       
       // Filter out employees with 0 hours (no timecard data)
       const employeesWithData = data.filter(emp => parseFloat(emp.total_hours || 0) > 0);
-      console.log('✅ [Payroll] Employees with timecard data:', employeesWithData.length);
+      console.log(`💰 [Frontend-Payroll] Employees with hours: ${employeesWithData.length} of ${data.length}`);
+      
+      if (employeesWithData.length > 0) {
+        const totalPay = employeesWithData.reduce((sum, emp) => sum + (emp.net_pay || 0), 0);
+        const totalHours = employeesWithData.reduce((sum, emp) => sum + (emp.total_hours || 0), 0);
+        console.log(`💰 [Frontend-Payroll] Summary: $${totalPay.toFixed(2)} total, ${totalHours.toFixed(2)} hours`);
+        console.log('💰 [Frontend-Payroll] Top employees:');
+        employeesWithData.slice(0, 5).forEach((emp, idx) => {
+          console.log(`   ${idx + 1}. ${emp.first_name} ${emp.last_name}: ${emp.total_hours}h = $${emp.net_pay.toFixed(2)}`);
+        });
+      }
       
       setPayrollData(employeesWithData);
+      console.log('═══════════════════════════════════════════════════════════\n');
     } catch (error) {
-      console.error('❌ [Payroll] Error loading payroll data:', error);
+      console.error('\n═══════════════════════════════════════════════════════════');
+      console.error('❌ [Frontend-Payroll] ERROR loading payroll data');
+      console.error('❌ [Frontend-Payroll] Error:', error.message);
+      console.error('❌ [Frontend-Payroll] Stack:', error.stack);
+      console.error('═══════════════════════════════════════════════════════════\n');
       setPayrollData([]);
     } finally {
       setLoading(false);
@@ -72,6 +114,14 @@ export default function Payroll() {
   };
 
   const handleEmployeeClick = (employee) => {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('👤 [Frontend-Payroll] EMPLOYEE DETAIL CLICKED');
+    console.log('👤 [Frontend-Payroll] Employee:', `${employee.first_name} ${employee.last_name}`);
+    console.log('👤 [Frontend-Payroll] Employee ID:', employee.employee_id);
+    console.log('👤 [Frontend-Payroll] Total hours:', employee.total_hours);
+    console.log('👤 [Frontend-Payroll] Net pay:', `$${employee.net_pay.toFixed(2)}`);
+    console.log('👤 [Frontend-Payroll] Opening detail modal...');
+    console.log('═══════════════════════════════════════════════════════════\n');
     setSelectedEmployee(employee);
     setShowDetailModal(true);
   };

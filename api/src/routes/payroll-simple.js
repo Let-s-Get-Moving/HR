@@ -42,17 +42,28 @@ function getPayPeriod(basePayday = '2025-09-26') {
  * Sums ALL timecard entries where work_date falls in the pay period
  */
 r.get("/calculate-live", async (req, res) => {
+  const startTime = Date.now();
   try {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('💰 [PAYROLL] Calculate Live - Request received');
+    console.log('💰 [PAYROLL] Timestamp:', new Date().toISOString());
+    
     let { pay_period_start, pay_period_end } = req.query;
+    console.log('💰 [PAYROLL] Query params:', { pay_period_start, pay_period_end });
     
     // If no dates provided, use next pay period
     if (!pay_period_start || !pay_period_end) {
       const period = getPayPeriod();
       pay_period_start = period.period_start;
       pay_period_end = period.period_end;
+      console.log('💰 [PAYROLL] No dates provided, using calculated period:', period);
     }
     
+    console.log('💰 [PAYROLL] Period:', `${pay_period_start} to ${pay_period_end}`);
+    console.log('💰 [PAYROLL] Fetching employee timecard data...');
+    
     // Get all employees with their timecard data for the period
+    const queryStartTime = Date.now();
     const { rows: payrolls } = await q(`
       SELECT 
         e.id as employee_id,
@@ -97,6 +108,11 @@ r.get("/calculate-live", async (req, res) => {
       ORDER BY e.last_name, e.first_name
     `, [pay_period_start, pay_period_end]);
     
+    const queryTime = Date.now() - queryStartTime;
+    console.log(`💰 [PAYROLL] Query completed in ${queryTime}ms`);
+    console.log(`💰 [PAYROLL] Found ${payrolls.length} active employees`);
+    
+    console.log('💰 [PAYROLL] Calculating pay for each employee...');
     // Calculate pay for each employee
     const results = payrolls.map(emp => {
       const totalHours = parseFloat(emp.total_hours || 0);
@@ -135,9 +151,29 @@ r.get("/calculate-live", async (req, res) => {
       };
     }).filter(p => p.total_hours > 0); // Only show employees with hours
     
+    const employeesWithHours = results.length;
+    const totalGrossPay = results.reduce((sum, emp) => sum + emp.gross_pay, 0);
+    const totalNetPay = results.reduce((sum, emp) => sum + emp.net_pay, 0);
+    const totalHours = results.reduce((sum, emp) => sum + emp.total_hours, 0);
+    const totalOvertimeHours = results.reduce((sum, emp) => sum + emp.overtime_hours, 0);
+    
+    const totalTime = Date.now() - startTime;
+    console.log(`💰 [PAYROLL] ✅ Calculations complete!`);
+    console.log(`💰 [PAYROLL] Total time: ${totalTime}ms`);
+    console.log(`💰 [PAYROLL] Employees with hours: ${employeesWithHours} of ${payrolls.length}`);
+    console.log(`💰 [PAYROLL] Total hours: ${totalHours.toFixed(2)} (${totalOvertimeHours.toFixed(2)} OT)`);
+    console.log(`💰 [PAYROLL] Total gross pay: $${totalGrossPay.toFixed(2)}`);
+    console.log(`💰 [PAYROLL] Total net pay: $${totalNetPay.toFixed(2)}`);
+    console.log('═══════════════════════════════════════════════════════════\n');
+    
     res.json(results);
   } catch (error) {
-    console.error("Error calculating live payroll:", error);
+    const totalTime = Date.now() - startTime;
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error(`❌ [PAYROLL] ERROR in calculate-live (${totalTime}ms)`);
+    console.error('❌ [PAYROLL] Error:', error.message);
+    console.error('❌ [PAYROLL] Stack:', error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
     res.status(500).json({ error: "Failed to calculate payroll: " + error.message });
   }
 });
@@ -147,8 +183,14 @@ r.get("/calculate-live", async (req, res) => {
  * Groups by 2-week periods ending on Friday
  */
 r.get("/periods", async (req, res) => {
+  const startTime = Date.now();
   try {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('📅 [PAYROLL-PERIODS] Request received');
+    console.log('📅 [PAYROLL-PERIODS] Timestamp:', new Date().toISOString());
+    
     // Get all timecard dates (no approval filter - if timecards exist, they count)
+    console.log('📅 [PAYROLL-PERIODS] Fetching all timecard dates...');
     const { rows: dates } = await q(`
       SELECT DISTINCT work_date
       FROM timecard_entries te
@@ -156,9 +198,13 @@ r.get("/periods", async (req, res) => {
       ORDER BY work_date DESC
     `);
     
+    console.log(`📅 [PAYROLL-PERIODS] Found ${dates.length} unique work dates`);
+    
+    console.log('📅 [PAYROLL-PERIODS] Grouping dates into 2-week pay periods...');
     // Group into 2-week pay periods (Saturday to Friday)
     const periods = [];
     const basePayday = new Date('2025-09-26');
+    console.log('📅 [PAYROLL-PERIODS] Base payday:', basePayday.toISOString().split('T')[0]);
     
     dates.forEach(row => {
       const workDate = new Date(row.work_date);
@@ -189,6 +235,9 @@ r.get("/periods", async (req, res) => {
       }
     });
     
+    console.log(`📅 [PAYROLL-PERIODS] Grouped into ${periods.length} unique pay periods`);
+    console.log('📅 [PAYROLL-PERIODS] Fetching employee counts for each period...');
+    
     // Get employee counts for each period
     const periodsWithCounts = await Promise.all(
       periods.map(async (period) => {
@@ -207,11 +256,32 @@ r.get("/periods", async (req, res) => {
       })
     );
     
-    res.json(periodsWithCounts.sort((a, b) => 
+    const sortedPeriods = periodsWithCounts.sort((a, b) => 
       new Date(b.pay_date) - new Date(a.pay_date)
-    ));
+    );
+    
+    const totalTime = Date.now() - startTime;
+    console.log(`📅 [PAYROLL-PERIODS] ✅ Complete in ${totalTime}ms`);
+    console.log(`📅 [PAYROLL-PERIODS] Returning ${sortedPeriods.length} periods`);
+    if (sortedPeriods.length > 0) {
+      console.log('📅 [PAYROLL-PERIODS] Period summary:');
+      sortedPeriods.slice(0, 5).forEach((p, idx) => {
+        console.log(`   ${idx + 1}. ${p.pay_period_start} to ${p.pay_period_end} (${p.employee_count} employees)`);
+      });
+      if (sortedPeriods.length > 5) {
+        console.log(`   ... and ${sortedPeriods.length - 5} more periods`);
+      }
+    }
+    console.log('═══════════════════════════════════════════════════════════\n');
+    
+    res.json(sortedPeriods);
   } catch (error) {
-    console.error("Error fetching pay periods:", error);
+    const totalTime = Date.now() - startTime;
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error(`❌ [PAYROLL-PERIODS] ERROR (${totalTime}ms)`);
+    console.error('❌ [PAYROLL-PERIODS] Error:', error.message);
+    console.error('❌ [PAYROLL-PERIODS] Stack:', error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
     res.status(500).json({ error: "Failed to fetch pay periods" });
   }
 });
@@ -221,10 +291,24 @@ r.get("/periods", async (req, res) => {
  */
 r.get("/next-period", async (req, res) => {
   try {
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('📆 [PAYROLL-NEXT] Request received');
+    console.log('📆 [PAYROLL-NEXT] Timestamp:', new Date().toISOString());
+    
     const period = getPayPeriod();
+    
+    console.log('📆 [PAYROLL-NEXT] ✅ Next pay period calculated:');
+    console.log(`   Period: ${period.period_start} to ${period.period_end}`);
+    console.log(`   Pay Date: ${period.pay_date}`);
+    console.log('═══════════════════════════════════════════════════════════\n');
+    
     res.json(period);
   } catch (error) {
-    console.error("Error getting next pay period:", error);
+    console.error('\n═══════════════════════════════════════════════════════════');
+    console.error('❌ [PAYROLL-NEXT] ERROR getting next pay period');
+    console.error('❌ [PAYROLL-NEXT] Error:', error.message);
+    console.error('❌ [PAYROLL-NEXT] Stack:', error.stack);
+    console.error('═══════════════════════════════════════════════════════════\n');
     res.status(500).json({ error: "Failed to get next pay period" });
   }
 });
