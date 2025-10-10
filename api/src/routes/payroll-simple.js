@@ -210,11 +210,18 @@ r.get("/periods", async (req, res) => {
       const workDate = new Date(row.work_date);
       
       // Find which pay period this date belongs to
-      // Paydays are every 2 weeks (14 days apart)
-      const daysSinceBase = Math.floor((workDate - basePayday) / (1000 * 60 * 60 * 24));
-      const periodsSinceBase = Math.floor((daysSinceBase + 7) / 14); // +7 to account for work week offset
+      // Work weeks end on Friday, pay periods are 14 days (Sat-Fri, Sat-Fri)
+      // Payday is 7 days after period ends
       
-      // Calculate the payday for this work date
+      // Calculate days from base payday
+      const daysSinceBase = Math.floor((workDate - basePayday) / (1000 * 60 * 60 * 24));
+      
+      // Work date is in period that ends 7 days before its payday
+      // So add 7 to workDate to get conceptual payday, then round to nearest 14-day cycle
+      const daysToConceptualPayday = daysSinceBase + 7;
+      const periodsSinceBase = Math.floor(daysToConceptualPayday / 14);
+      
+      // Calculate the actual payday for this work date
       const payday = new Date(basePayday);
       payday.setDate(basePayday.getDate() + periodsSinceBase * 14);
       
