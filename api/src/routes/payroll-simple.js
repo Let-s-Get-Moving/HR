@@ -5,10 +5,10 @@ const r = express.Router();
 
 /**
  * Calculate next pay period based on Friday payday schedule
- * - Week runs Saturday to Friday (Friday is end of week)
- * - Payday is Friday of week 3
- * - Covers weeks 1 & 2 (14 days, Saturday to Friday)
- * - Base: Sep 26, 2025 payday covered Sep 8-19
+ * - Pay periods: Saturday to Friday (14 days)
+ * - Payday is Friday, 7 days after period ends
+ * - Example: Sep 26 payday covers Sep 6-19 work period
+ * - Base paydays: Sep 12, Sep 26, Oct 10, Oct 24...
  */
 function getPayPeriod(basePayday = '2025-09-26') {
   const base = new Date(basePayday);
@@ -18,17 +18,17 @@ function getPayPeriod(basePayday = '2025-09-26') {
   const daysSinceBase = Math.floor((today - base) / (1000 * 60 * 60 * 24));
   const weeksSinceBase = Math.floor(daysSinceBase / 7);
   
-  // Calculate next payday (always a Friday)
+  // Calculate next payday (always a Friday, every 2 weeks)
   const nextPayday = new Date(base);
-  nextPayday.setDate(base.getDate() + (weeksSinceBase + 1) * 7);
+  nextPayday.setDate(base.getDate() + (weeksSinceBase + 1) * 14);
   
-  // Pay period ends 2 weeks before payday (Friday before payday - 14 days)
+  // Period ends 7 days before payday (Friday of Week 2)
   const periodEnd = new Date(nextPayday);
-  periodEnd.setDate(nextPayday.getDate() - 8); // Friday of week 2
+  periodEnd.setDate(nextPayday.getDate() - 7);
   
-  // Pay period starts 14 days before period end (Saturday)
+  // Period starts 13 days before period end (Saturday of Week 0/1)
   const periodStart = new Date(periodEnd);
-  periodStart.setDate(periodEnd.getDate() - 13); // Saturday of week 1
+  periodStart.setDate(periodEnd.getDate() - 13);
   
   return {
     period_start: periodStart.toISOString().split('T')[0],
@@ -210,16 +210,19 @@ r.get("/periods", async (req, res) => {
       const workDate = new Date(row.work_date);
       
       // Find which pay period this date belongs to
+      // Paydays are every 2 weeks (14 days apart)
       const daysSinceBase = Math.floor((workDate - basePayday) / (1000 * 60 * 60 * 24));
-      const weeksSinceBase = Math.floor(daysSinceBase / 7);
+      const periodsSinceBase = Math.floor((daysSinceBase + 7) / 14); // +7 to account for work week offset
       
-      // Calculate the pay period for this date
+      // Calculate the payday for this work date
       const payday = new Date(basePayday);
-      payday.setDate(basePayday.getDate() + weeksSinceBase * 7);
+      payday.setDate(basePayday.getDate() + periodsSinceBase * 14);
       
+      // Period ends 7 days before payday (Friday of Week 2)
       const periodEnd = new Date(payday);
-      periodEnd.setDate(payday.getDate() - 8);
+      periodEnd.setDate(payday.getDate() - 7);
       
+      // Period starts 13 days before period end (Saturday of Week 0/1)
       const periodStart = new Date(periodEnd);
       periodStart.setDate(periodEnd.getDate() - 13);
       
