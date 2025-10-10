@@ -385,12 +385,21 @@ r.get("/hourly-payouts", async (req, res) => {
 r.get("/periods", async (req, res) => {
   try {
     const result = await q(`
-      SELECT DISTINCT period_month, 
-             TO_CHAR(period_month::date, 'Month YYYY') as period_label,
+      SELECT DISTINCT 
+             period_start,
+             period_end,
+             payday_1,
+             payday_2,
+             period_month,
+             TO_CHAR(period_start::date, 'Mon DD') as period_start_label,
+             TO_CHAR(period_end::date, 'Mon DD') as period_end_label,
+             TO_CHAR(payday_1::date, 'Mon DD, YYYY') as payday_1_label,
+             TO_CHAR(payday_2::date, 'Mon DD, YYYY') as payday_2_label,
              COUNT(*) as employee_count
-      FROM employee_commission_monthly 
-      GROUP BY period_month
-      ORDER BY period_month DESC
+      FROM employee_commission_monthly
+      WHERE period_start IS NOT NULL
+      GROUP BY period_start, period_end, payday_1, payday_2, period_month
+      ORDER BY period_start DESC
     `);
     
     res.json(result.rows);
