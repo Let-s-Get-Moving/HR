@@ -126,6 +126,13 @@ export default function PayrollV2() {
     await loadData();
   };
 
+  // Format hours as HH:MM
+  const formatHours = (hours) => {
+    const h = Math.floor(hours || 0);
+    const m = Math.round(((hours || 0) - h) * 60);
+    return `${h}:${m.toString().padStart(2, '0')}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-neutral-950 text-white p-6">
@@ -342,7 +349,7 @@ export default function PayrollV2() {
                           </td>
                           <td className="px-6 py-4 text-right">${parseFloat(emp.hourly_rate || 0).toFixed(2)}</td>
                           <td className="px-6 py-4 text-right">
-                            {parseFloat(emp.vacation_hours_balance || 0).toFixed(2)} hrs
+                            {formatHours(parseFloat(emp.vacation_hours_balance || 0))}
                           </td>
                           <td className="px-6 py-4 text-right font-semibold text-green-400">
                             ${parseFloat(emp.vacation_pay_balance || 0).toFixed(2)}
@@ -467,11 +474,11 @@ export default function PayrollV2() {
                             {new Date(payroll.pay_date).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 text-right text-sm">
-                            {parseFloat(payroll.regular_hours || 0).toFixed(2)}
+                            {formatHours(parseFloat(payroll.regular_hours || 0))}
                             {parseFloat(payroll.overtime_hours || 0) > 0 && (
                               <span className="text-yellow-400">
                                 {" "}
-                                +{parseFloat(payroll.overtime_hours).toFixed(2)} OT
+                                +{formatHours(parseFloat(payroll.overtime_hours))} OT
                               </span>
                             )}
                           </td>
@@ -517,7 +524,7 @@ export default function PayrollV2() {
                     <div>
                       <div className="text-neutral-400">Available Hours</div>
                       <div className="text-lg font-semibold">
-                        {parseFloat(selectedEmployee.vacation_hours_balance || 0).toFixed(2)}
+                        {formatHours(parseFloat(selectedEmployee.vacation_hours_balance || 0))}
                       </div>
                     </div>
                     <div>
@@ -544,7 +551,7 @@ export default function PayrollV2() {
                     placeholder="0.00"
                   />
                   <div className="text-xs text-neutral-400 mt-1">
-                    Max: {parseFloat(selectedEmployee.vacation_hours_balance || 0).toFixed(2)} hours
+                    Max: {formatHours(parseFloat(selectedEmployee.vacation_hours_balance || 0))}
                   </div>
                 </div>
               </div>

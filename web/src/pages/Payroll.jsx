@@ -135,7 +135,9 @@ export default function Payroll() {
   };
 
   const formatHours = (hours) => {
-    return (hours || 0).toFixed(2);
+    const h = Math.floor(hours || 0);
+    const m = Math.round(((hours || 0) - h) * 60);
+    return `${h}:${m.toString().padStart(2, '0')}`;
   };
 
   if (loading && payrollData.length === 0) {
