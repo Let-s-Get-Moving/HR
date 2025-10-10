@@ -1296,7 +1296,7 @@ export default function BonusesCommissions() {
               <tbody>
                 {analyticsMonthly.length > 0 ? analyticsMonthly.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
+                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
                     <td className="py-2 px-3">${record.hourly_rate || 0}</td>
                     <td className="py-2 px-3">${(record.rev_sm_all_locations || 0).toLocaleString()}</td>
                     <td className="py-2 px-3">${(record.rev_add_ons || 0).toLocaleString()}</td>
@@ -1355,7 +1355,7 @@ export default function BonusesCommissions() {
               <tbody>
                 {analyticsAgents.length > 0 ? analyticsAgents.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
+                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
                     <td className="py-2 px-3">${(record.total_us_revenue || 0).toLocaleString()}</td>
                     <td className="py-2 px-3">{(record.commission_pct || 0)}%</td>
                     <td className="py-2 px-3 text-green-400 font-semibold">${(record.commission_earned || 0).toLocaleString()}</td>
@@ -1401,7 +1401,7 @@ export default function BonusesCommissions() {
                   const periods = record.date_periods || [];
                   return (
                     <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                      <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.name_raw}</td>
+                      <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
                       {periods.map((period, pIdx) => (
                         <td key={pIdx} className="py-2 px-3 text-blue-400">
                           ${(period.amount || 0).toLocaleString()}
