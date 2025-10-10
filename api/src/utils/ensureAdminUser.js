@@ -10,13 +10,13 @@ export async function ensureAdminUser() {
     const client = await pool.connect();
     
     try {
-        console.log('🔐 Checking admin user...');
+        console.log('🔐 Checking manager user (Avneet)...');
         
-        // Fixed credentials
+        // Fixed credentials - Avneet as Manager
         const username = 'Avneet';
         const password = 'password123';
         const email = 'avneet@hr.local';
-        const role = 'Admin';
+        const role = 'manager';
         
         // Check if admin user exists
         const existing = await client.query(`
@@ -29,63 +29,63 @@ export async function ensureAdminUser() {
         
         if (existing.rows.length > 0) {
             const user = existing.rows[0];
-            console.log(`✅ Admin user exists: ${user.full_name} (${user.email})`);
+            console.log(`✅ Manager user exists: ${user.full_name} (${user.email})`);
             
-            // Verify role is correct - check if role_id points to Admin role
-            const adminRole = await client.query(`
+            // Verify role is correct - check if role_id points to manager role
+            const managerRole = await client.query(`
                 SELECT id FROM hr_roles WHERE role_name = $1
             `, [role]);
             
-            if (adminRole.rows.length > 0) {
-                const adminRoleId = adminRole.rows[0].id;
+            if (managerRole.rows.length > 0) {
+                const managerRoleId = managerRole.rows[0].id;
                 await client.query(`
                     UPDATE users 
-                    SET role_id = $1 
-                    WHERE id = $2
-                `, [adminRoleId, user.id]);
-                console.log(`✅ Updated admin role_id to ${adminRoleId}`);
+                    SET role_id = $1, username = $2
+                    WHERE id = $3
+                `, [managerRoleId, username, user.id]);
+                console.log(`✅ Updated user to manager role (ID: ${managerRoleId})`);
             }
             
             return;
         }
         
-        // Admin user doesn't exist - create it
-        console.log('⚠️ Admin user not found - creating...');
+        // Manager user doesn't exist - create it
+        console.log('⚠️ Manager user not found - creating...');
         
-        // First, ensure Admin role exists
-        const adminRole = await client.query(`
+        // First, ensure manager role exists
+        const managerRole = await client.query(`
             SELECT id FROM hr_roles WHERE role_name = $1
         `, [role]);
         
-        let adminRoleId;
-        if (adminRole.rows.length === 0) {
-            // Create Admin role if it doesn't exist
+        let managerRoleId;
+        if (managerRole.rows.length === 0) {
+            // Create manager role if it doesn't exist (should exist from migration)
             const newRole = await client.query(`
                 INSERT INTO hr_roles (role_name, display_name, description, permissions)
                 VALUES ($1, $2, $3, $4)
                 RETURNING id
-            `, [role, 'Administrator', 'Full system access', '{"all": true}']);
-            adminRoleId = newRole.rows[0].id;
-            console.log(`✅ Created Admin role with ID: ${adminRoleId}`);
+            `, [role, 'Manager', 'Full system access', '{"all": true}']);
+            managerRoleId = newRole.rows[0].id;
+            console.log(`✅ Created manager role with ID: ${managerRoleId}`);
         } else {
-            adminRoleId = adminRole.rows[0].id;
-            console.log(`✅ Found Admin role with ID: ${adminRoleId}`);
+            managerRoleId = managerRole.rows[0].id;
+            console.log(`✅ Found manager role with ID: ${managerRoleId}`);
         }
         
         const passwordHash = await bcrypt.hash(password, 10);
         
         await client.query(`
-            INSERT INTO users (email, full_name, role_id, password_hash, is_active)
-            VALUES ($1, $2, $3, $4, $5)
-        `, [email, username, adminRoleId, passwordHash, true]);
+            INSERT INTO users (email, full_name, username, role_id, password_hash, is_active)
+            VALUES ($1, $2, $3, $4, $5, $6)
+        `, [email, username, username, managerRoleId, passwordHash, true]);
         
-        console.log(`✅ Admin user created successfully`);
+        console.log(`✅ Manager user (Avneet) created successfully`);
         console.log(`   Username: ${username}`);
         console.log(`   Password: ${password}`);
         console.log(`   Email: ${email}`);
         
     } catch (error) {
-        console.error('❌ Error ensuring admin user:', error.message);
+        console.error('❌ Error ensuring manager user:', error.message);
         // Don't throw - let the server start anyway
     } finally {
         client.release();

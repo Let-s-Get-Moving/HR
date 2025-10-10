@@ -1,166 +1,127 @@
-// Role-Based Access Control (RBAC) Middleware
+// Simplified 3-Role RBAC Middleware
+// Roles: admin, manager, user
 import { q } from "../db.js";
 
-// Define roles and their permissions
+// Define the 3 roles
 export const ROLES = {
-  SUPER_ADMIN: 'super_admin',
-  HR_ADMIN: 'hr_admin',
-  HR_MANAGER: 'hr_manager',
-  HR_SPECIALIST: 'hr_specialist',
+  ADMIN: 'admin',
   MANAGER: 'manager',
-  EMPLOYEE: 'employee',
-  VIEWER: 'viewer'
+  USER: 'user'
 };
 
+// Define permissions structure
 export const PERMISSIONS = {
   // Employee Management
-  EMPLOYEES_VIEW: 'employees:view',
+  EMPLOYEES_VIEW: 'employees:read',
   EMPLOYEES_CREATE: 'employees:create',
   EMPLOYEES_UPDATE: 'employees:update',
   EMPLOYEES_DELETE: 'employees:delete',
   
   // Payroll
-  PAYROLL_VIEW: 'payroll:view',
+  PAYROLL_VIEW: 'payroll:read',
   PAYROLL_CREATE: 'payroll:create',
   PAYROLL_UPDATE: 'payroll:update',
   PAYROLL_DELETE: 'payroll:delete',
   
   // Time Tracking
-  TIME_VIEW: 'time:view',
-  TIME_CREATE: 'time:create',
-  TIME_UPDATE: 'time:update',
-  TIME_DELETE: 'time:delete',
+  TIME_VIEW: 'timecards:read',
+  TIME_CREATE: 'timecards:create',
+  TIME_UPDATE: 'timecards:update',
+  TIME_DELETE: 'timecards:delete',
   
   // Leave Management
-  LEAVE_VIEW: 'leave:view',
+  LEAVE_VIEW: 'leave:read',
   LEAVE_CREATE: 'leave:create',
   LEAVE_UPDATE: 'leave:update',
   LEAVE_APPROVE: 'leave:approve',
   LEAVE_DELETE: 'leave:delete',
   
-  // Recruiting
-  RECRUITING_VIEW: 'recruiting:view',
-  RECRUITING_CREATE: 'recruiting:create',
-  RECRUITING_UPDATE: 'recruiting:update',
-  RECRUITING_DELETE: 'recruiting:delete',
-  
-  // Performance
-  PERFORMANCE_VIEW: 'performance:view',
-  PERFORMANCE_CREATE: 'performance:create',
-  PERFORMANCE_UPDATE: 'performance:update',
-  PERFORMANCE_DELETE: 'performance:delete',
-  
-  // Benefits
-  BENEFITS_VIEW: 'benefits:view',
-  BENEFITS_CREATE: 'benefits:create',
-  BENEFITS_UPDATE: 'benefits:update',
-  BENEFITS_DELETE: 'benefits:delete',
-  
   // Bonuses & Commissions
-  BONUSES_VIEW: 'bonuses:view',
+  BONUSES_VIEW: 'bonuses:read',
   BONUSES_CREATE: 'bonuses:create',
   BONUSES_UPDATE: 'bonuses:update',
   BONUSES_APPROVE: 'bonuses:approve',
   BONUSES_DELETE: 'bonuses:delete',
   
-  // Compliance
-  COMPLIANCE_VIEW: 'compliance:view',
-  COMPLIANCE_CREATE: 'compliance:create',
-  COMPLIANCE_UPDATE: 'compliance:update',
-  COMPLIANCE_DELETE: 'compliance:delete',
+  COMMISSIONS_VIEW: 'commissions:read',
+  COMMISSIONS_CREATE: 'commissions:create',
+  COMMISSIONS_UPDATE: 'commissions:update',
+  COMMISSIONS_DELETE: 'commissions:delete',
+  
+  // Settings
+  SETTINGS_VIEW: 'settings:read',
+  SETTINGS_UPDATE: 'settings:update',
   
   // Analytics & Reports
-  ANALYTICS_VIEW: 'analytics:view',
-  REPORTS_VIEW: 'reports:view',
+  ANALYTICS_VIEW: 'analytics:read',
+  REPORTS_VIEW: 'reports:read',
   REPORTS_EXPORT: 'reports:export',
   
+  // Recruiting
+  RECRUITING_VIEW: 'recruiting:read',
+  RECRUITING_CREATE: 'recruiting:create',
+  RECRUITING_UPDATE: 'recruiting:update',
+  RECRUITING_DELETE: 'recruiting:delete',
+  
+  // Performance
+  PERFORMANCE_VIEW: 'performance:read',
+  PERFORMANCE_CREATE: 'performance:create',
+  PERFORMANCE_UPDATE: 'performance:update',
+  PERFORMANCE_DELETE: 'performance:delete',
+  
+  // Benefits
+  BENEFITS_VIEW: 'benefits:read',
+  BENEFITS_CREATE: 'benefits:create',
+  BENEFITS_UPDATE: 'benefits:update',
+  BENEFITS_DELETE: 'benefits:delete',
+  
   // System Administration
-  SYSTEM_ADMIN: 'system:admin',
-  USER_MANAGEMENT: 'users:manage',
-  ROLE_MANAGEMENT: 'roles:manage'
+  SYSTEM_ADMIN: 'system:manage',
+  USER_MANAGEMENT: 'users:manage'
 };
 
 // Role-Permission mapping
 export const ROLE_PERMISSIONS = {
-  [ROLES.SUPER_ADMIN]: Object.values(PERMISSIONS),
+  // Admin and Manager have full access
+  [ROLES.ADMIN]: Object.values(PERMISSIONS),
+  [ROLES.MANAGER]: Object.values(PERMISSIONS),
   
-  [ROLES.HR_ADMIN]: [
-    PERMISSIONS.EMPLOYEES_VIEW, PERMISSIONS.EMPLOYEES_CREATE, PERMISSIONS.EMPLOYEES_UPDATE, PERMISSIONS.EMPLOYEES_DELETE,
-    PERMISSIONS.PAYROLL_VIEW, PERMISSIONS.PAYROLL_CREATE, PERMISSIONS.PAYROLL_UPDATE, PERMISSIONS.PAYROLL_DELETE,
-    PERMISSIONS.TIME_VIEW, PERMISSIONS.TIME_CREATE, PERMISSIONS.TIME_UPDATE, PERMISSIONS.TIME_DELETE,
-    PERMISSIONS.LEAVE_VIEW, PERMISSIONS.LEAVE_CREATE, PERMISSIONS.LEAVE_UPDATE, PERMISSIONS.LEAVE_APPROVE, PERMISSIONS.LEAVE_DELETE,
-    PERMISSIONS.RECRUITING_VIEW, PERMISSIONS.RECRUITING_CREATE, PERMISSIONS.RECRUITING_UPDATE, PERMISSIONS.RECRUITING_DELETE,
-    PERMISSIONS.PERFORMANCE_VIEW, PERMISSIONS.PERFORMANCE_CREATE, PERMISSIONS.PERFORMANCE_UPDATE, PERMISSIONS.PERFORMANCE_DELETE,
-    PERMISSIONS.BENEFITS_VIEW, PERMISSIONS.BENEFITS_CREATE, PERMISSIONS.BENEFITS_UPDATE, PERMISSIONS.BENEFITS_DELETE,
-    PERMISSIONS.BONUSES_VIEW, PERMISSIONS.BONUSES_CREATE, PERMISSIONS.BONUSES_UPDATE, PERMISSIONS.BONUSES_APPROVE, PERMISSIONS.BONUSES_DELETE,
-    PERMISSIONS.COMPLIANCE_VIEW, PERMISSIONS.COMPLIANCE_CREATE, PERMISSIONS.COMPLIANCE_UPDATE, PERMISSIONS.COMPLIANCE_DELETE,
-    PERMISSIONS.ANALYTICS_VIEW, PERMISSIONS.REPORTS_VIEW, PERMISSIONS.REPORTS_EXPORT,
-    PERMISSIONS.USER_MANAGEMENT, PERMISSIONS.ROLE_MANAGEMENT
-  ],
-  
-  [ROLES.HR_MANAGER]: [
-    PERMISSIONS.EMPLOYEES_VIEW, PERMISSIONS.EMPLOYEES_CREATE, PERMISSIONS.EMPLOYEES_UPDATE,
-    PERMISSIONS.PAYROLL_VIEW, PERMISSIONS.PAYROLL_CREATE, PERMISSIONS.PAYROLL_UPDATE,
-    PERMISSIONS.TIME_VIEW, PERMISSIONS.TIME_CREATE, PERMISSIONS.TIME_UPDATE,
-    PERMISSIONS.LEAVE_VIEW, PERMISSIONS.LEAVE_CREATE, PERMISSIONS.LEAVE_UPDATE, PERMISSIONS.LEAVE_APPROVE,
-    PERMISSIONS.RECRUITING_VIEW, PERMISSIONS.RECRUITING_CREATE, PERMISSIONS.RECRUITING_UPDATE,
-    PERMISSIONS.PERFORMANCE_VIEW, PERMISSIONS.PERFORMANCE_CREATE, PERMISSIONS.PERFORMANCE_UPDATE,
-    PERMISSIONS.BENEFITS_VIEW, PERMISSIONS.BENEFITS_CREATE, PERMISSIONS.BENEFITS_UPDATE,
-    PERMISSIONS.BONUSES_VIEW, PERMISSIONS.BONUSES_CREATE, PERMISSIONS.BONUSES_UPDATE, PERMISSIONS.BONUSES_APPROVE,
-    PERMISSIONS.COMPLIANCE_VIEW, PERMISSIONS.COMPLIANCE_CREATE, PERMISSIONS.COMPLIANCE_UPDATE,
-    PERMISSIONS.ANALYTICS_VIEW, PERMISSIONS.REPORTS_VIEW, PERMISSIONS.REPORTS_EXPORT
-  ],
-  
-  [ROLES.HR_SPECIALIST]: [
-    PERMISSIONS.EMPLOYEES_VIEW, PERMISSIONS.EMPLOYEES_CREATE, PERMISSIONS.EMPLOYEES_UPDATE,
-    PERMISSIONS.TIME_VIEW, PERMISSIONS.TIME_CREATE, PERMISSIONS.TIME_UPDATE,
-    PERMISSIONS.LEAVE_VIEW, PERMISSIONS.LEAVE_CREATE, PERMISSIONS.LEAVE_UPDATE,
-    PERMISSIONS.RECRUITING_VIEW, PERMISSIONS.RECRUITING_CREATE, PERMISSIONS.RECRUITING_UPDATE,
-    PERMISSIONS.PERFORMANCE_VIEW, PERMISSIONS.PERFORMANCE_CREATE, PERMISSIONS.PERFORMANCE_UPDATE,
-    PERMISSIONS.BENEFITS_VIEW, PERMISSIONS.BENEFITS_CREATE, PERMISSIONS.BENEFITS_UPDATE,
-    PERMISSIONS.BONUSES_VIEW, PERMISSIONS.BONUSES_CREATE, PERMISSIONS.BONUSES_UPDATE,
-    PERMISSIONS.COMPLIANCE_VIEW, PERMISSIONS.COMPLIANCE_CREATE, PERMISSIONS.COMPLIANCE_UPDATE,
-    PERMISSIONS.ANALYTICS_VIEW, PERMISSIONS.REPORTS_VIEW
-  ],
-  
-  [ROLES.MANAGER]: [
-    PERMISSIONS.EMPLOYEES_VIEW, PERMISSIONS.EMPLOYEES_UPDATE,
-    PERMISSIONS.TIME_VIEW, PERMISSIONS.TIME_CREATE, PERMISSIONS.TIME_UPDATE,
-    PERMISSIONS.LEAVE_VIEW, PERMISSIONS.LEAVE_CREATE, PERMISSIONS.LEAVE_APPROVE,
-    PERMISSIONS.PERFORMANCE_VIEW, PERMISSIONS.PERFORMANCE_CREATE, PERMISSIONS.PERFORMANCE_UPDATE,
-    PERMISSIONS.ANALYTICS_VIEW, PERMISSIONS.REPORTS_VIEW
-  ],
-  
-  [ROLES.EMPLOYEE]: [
-    PERMISSIONS.EMPLOYEES_VIEW,
-    PERMISSIONS.TIME_VIEW, PERMISSIONS.TIME_CREATE, PERMISSIONS.TIME_UPDATE,
-    PERMISSIONS.LEAVE_VIEW, PERMISSIONS.LEAVE_CREATE,
-    PERMISSIONS.PERFORMANCE_VIEW,
-    PERMISSIONS.BENEFITS_VIEW,
-    PERMISSIONS.BONUSES_VIEW
-  ],
-  
-  [ROLES.VIEWER]: [
-    PERMISSIONS.EMPLOYEES_VIEW,
-    PERMISSIONS.ANALYTICS_VIEW,
-    PERMISSIONS.REPORTS_VIEW
+  // User has limited access - only own data
+  [ROLES.USER]: [
+    PERMISSIONS.TIME_VIEW,
+    PERMISSIONS.TIME_CREATE,
+    PERMISSIONS.TIME_UPDATE,
+    PERMISSIONS.LEAVE_VIEW,
+    PERMISSIONS.LEAVE_CREATE,
+    PERMISSIONS.PAYROLL_VIEW,
+    PERMISSIONS.BONUSES_VIEW,
+    PERMISSIONS.COMMISSIONS_VIEW,
+    PERMISSIONS.SETTINGS_VIEW
   ]
 };
 
-// Get user role from database
+// Get user role and info from database
 export const getUserRole = async (userId) => {
   try {
     const { rows } = await q(`
-      SELECT r.role_name 
+      SELECT r.role_name, r.permissions->>'scope' as scope, u.employee_id
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
       WHERE u.id = $1
     `, [userId]);
     
-    return rows[0]?.role_name || ROLES.EMPLOYEE;
+    if (rows.length === 0) {
+      return { role: ROLES.USER, scope: 'own', employeeId: null };
+    }
+    
+    return {
+      role: rows[0].role_name || ROLES.USER,
+      scope: rows[0].scope || 'own',
+      employeeId: rows[0].employee_id
+    };
   } catch (error) {
     console.error('Error getting user role:', error);
-    return ROLES.EMPLOYEE;
+    return { role: ROLES.USER, scope: 'own', employeeId: null };
   }
 };
 
@@ -178,17 +139,21 @@ export const requirePermission = (permission) => {
         return res.status(401).json({ error: 'Authentication required' });
       }
       
-      const userRole = await getUserRole(req.user.id);
+      const userInfo = await getUserRole(req.user.id);
       
-      if (!hasPermission(userRole, permission)) {
+      if (!hasPermission(userInfo.role, permission)) {
         return res.status(403).json({ 
           error: 'Insufficient permissions',
           required: permission,
-          userRole: userRole
+          userRole: userInfo.role
         });
       }
       
-      req.userRole = userRole;
+      // Attach role info to request
+      req.userRole = userInfo.role;
+      req.userScope = userInfo.scope;
+      req.employeeId = userInfo.employeeId;
+      
       next();
     } catch (error) {
       console.error('RBAC middleware error:', error);
@@ -197,7 +162,7 @@ export const requirePermission = (permission) => {
   };
 };
 
-// Multiple permissions middleware
+// Multiple permissions middleware (user needs ANY of the permissions)
 export const requireAnyPermission = (permissions) => {
   return async (req, res, next) => {
     try {
@@ -205,21 +170,24 @@ export const requireAnyPermission = (permissions) => {
         return res.status(401).json({ error: 'Authentication required' });
       }
       
-      const userRole = await getUserRole(req.user.id);
+      const userInfo = await getUserRole(req.user.id);
       
       const hasAnyPermission = permissions.some(permission => 
-        hasPermission(userRole, permission)
+        hasPermission(userInfo.role, permission)
       );
       
       if (!hasAnyPermission) {
         return res.status(403).json({ 
           error: 'Insufficient permissions',
           required: permissions,
-          userRole: userRole
+          userRole: userInfo.role
         });
       }
       
-      req.userRole = userRole;
+      req.userRole = userInfo.role;
+      req.userScope = userInfo.scope;
+      req.employeeId = userInfo.employeeId;
+      
       next();
     } catch (error) {
       console.error('RBAC middleware error:', error);
@@ -238,21 +206,63 @@ export const requireRole = (roles) => {
         return res.status(401).json({ error: 'Authentication required' });
       }
       
-      const userRole = await getUserRole(req.user.id);
+      const userInfo = await getUserRole(req.user.id);
       
-      if (!roleArray.includes(userRole)) {
+      if (!roleArray.includes(userInfo.role)) {
         return res.status(403).json({ 
           error: 'Insufficient role',
           required: roleArray,
-          userRole: userRole
+          userRole: userInfo.role
         });
       }
       
-      req.userRole = userRole;
+      req.userRole = userInfo.role;
+      req.userScope = userInfo.scope;
+      req.employeeId = userInfo.employeeId;
+      
       next();
     } catch (error) {
       console.error('Role middleware error:', error);
       res.status(500).json({ error: 'Role check failed' });
     }
   };
+};
+
+// Data scope filtering middleware
+// For 'user' role, filter queries to only show their own data
+export const applyScopeFilter = async (req, res, next) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    
+    const userInfo = await getUserRole(req.user.id);
+    
+    req.userRole = userInfo.role;
+    req.userScope = userInfo.scope;
+    req.employeeId = userInfo.employeeId;
+    
+    // If user role, they can only access their own data
+    if (userInfo.scope === 'own' && !userInfo.employeeId) {
+      return res.status(403).json({ 
+        error: 'No employee record linked to this user account'
+      });
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Scope filter middleware error:', error);
+    res.status(500).json({ error: 'Scope filter failed' });
+  }
+};
+
+// Helper to build WHERE clause for scope filtering
+export const buildScopeFilter = (req, employeeIdColumn = 'employee_id') => {
+  if (req.userScope === 'own' && req.employeeId) {
+    return {
+      clause: `${employeeIdColumn} = $`,
+      value: req.employeeId
+    };
+  }
+  return null;
 };
