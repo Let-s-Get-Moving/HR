@@ -1,6 +1,6 @@
 // Hook to get current user role
 import { useState, useEffect } from 'react';
-import { sessionManager } from './sessionManager';
+import { sessionManager } from '../utils/sessionManager.js';
 
 export function useUserRole() {
   const [userRole, setUserRole] = useState(null);
