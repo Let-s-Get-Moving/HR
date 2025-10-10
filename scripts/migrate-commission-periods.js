@@ -50,13 +50,14 @@ function calculatePeriodFromPayday(paydayDate) {
  * Based on the payday schedule: Jun 6, Jun 20, Jul 4, Jul 18, Aug 1, Aug 15, Aug 29, Sep 12, Sep 26, Oct 10
  */
 function getPaydayForPeriod(periodMonth) {
-  // Extract year and month from period_month (format: YYYY-MM-01)
-  const date = new Date(periodMonth);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1; // 1-12
+  // Extract year and month from period_month (can be Date object or string)
+  const date = periodMonth instanceof Date ? periodMonth : new Date(periodMonth);
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + 1; // 1-12
   
   // Map months to their second payday (the 4-week period is named after where it ends)
   const paydayMap = {
+    '2025-05': '2025-06-06',  // May period ends with Jun 6 payday (May 19-Jun 1 & Jun 2-Jun 15 -> Jun 6 & Jun 20)
     '2025-06': '2025-06-20',  // June period ends with Jun 20 payday
     '2025-07': '2025-07-18',  // July period ends with Jul 18 payday
     '2025-08': '2025-08-29',  // August period ends with Aug 29 payday
