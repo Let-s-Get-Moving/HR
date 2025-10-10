@@ -9,10 +9,10 @@ const pool = new Pool({
 const COMMISSION_TO_EMPLOYEE_MAPPINGS = {
   // Already matched - List 1 (36 employees)
   'Akash': null, // Will match to Aakash Navaney
-  'Alexander E': 498,
-  'alexander fraser': 498,
-  'Ander g': 498,
-  'Ander G': 498,
+  'Alexander E': 530, // Alexander E (SEPARATE person)
+  'alexander fraser': 529, // Alexander Fraser (SEPARATE person)
+  'Ander g': 498, // Ander Guillen Villlanueva
+  'Ander G': 498, // Ander Guillen Villlanueva
   'andres I': 101,
   'Andres I': 101,
   'Christian,  Colin Prafullchandra': 96,
