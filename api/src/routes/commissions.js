@@ -141,7 +141,11 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
 
 // Get monthly commission data
 r.get("/monthly", async (req, res) => {
+  const startTime = Date.now();
   try {
+    console.log('📊 [COMMISSIONS] GET /monthly - Request received');
+    console.log('📊 [COMMISSIONS] Query params:', req.query);
+    
     const { period_month, employee_id } = req.query;
     
     let whereClause = "WHERE 1=1";
@@ -150,11 +154,13 @@ r.get("/monthly", async (req, res) => {
     if (period_month) {
       params.push(period_month);
       whereClause += ` AND ecm.period_month = $${params.length}`;
+      console.log('📊 [COMMISSIONS] Filter by period_month:', period_month);
     }
     
     if (employee_id) {
       params.push(employee_id);
       whereClause += ` AND ecm.employee_id = $${params.length}`;
+      console.log('📊 [COMMISSIONS] Filter by employee_id:', employee_id);
     }
     
     const { rows } = await q(`
@@ -167,6 +173,8 @@ r.get("/monthly", async (req, res) => {
       ${whereClause}
       ORDER BY ecm.period_month DESC, COALESCE(e.first_name, ecm.name_raw), e.last_name
     `, params);
+    
+    console.log(`📊 [COMMISSIONS] Found ${rows.length} monthly commission records`);
     
     const formattedRows = rows.map(row => ({
       ...row,
@@ -185,14 +193,21 @@ r.get("/monthly", async (req, res) => {
       remaining_amount: formatCurrency(row.remaining_amount)
     }));
     
+    const elapsed = Date.now() - startTime;
+    console.log(`✅ [COMMISSIONS] GET /monthly completed in ${elapsed}ms`);
+    
     res.json(formattedRows);
   } catch (error) {
-    console.error("Error fetching monthly commissions:", error);
+    const elapsed = Date.now() - startTime;
+    console.error(`❌ [COMMISSIONS] GET /monthly failed after ${elapsed}ms:`, error);
+    console.error('❌ [COMMISSIONS] Error stack:', error.stack);
+    
     // If tables don't exist yet, return empty array
     if (error.message.includes('does not exist')) {
+      console.log('⚠️  [COMMISSIONS] Table does not exist, returning empty array');
       res.json([]);
     } else {
-      res.status(500).json({ error: "Failed to fetch monthly commissions" });
+      res.status(500).json({ error: "Failed to fetch monthly commissions", details: error.message });
     }
   }
 });
@@ -383,7 +398,10 @@ r.get("/hourly-payouts", async (req, res) => {
 
 // Get available periods
 r.get("/periods", async (req, res) => {
+  const startTime = Date.now();
   try {
+    console.log('📊 [COMMISSIONS] GET /periods - Request received');
+    
     const result = await q(`
       SELECT DISTINCT 
              period_start,
@@ -401,13 +419,25 @@ r.get("/periods", async (req, res) => {
       ORDER BY COALESCE(period_start, period_month) DESC
     `);
     
+    console.log(`📊 [COMMISSIONS] Found ${result.rows.length} periods`);
+    console.log('📊 [COMMISSIONS] Periods:', JSON.stringify(result.rows, null, 2));
+    
+    const elapsed = Date.now() - startTime;
+    console.log(`✅ [COMMISSIONS] GET /periods completed in ${elapsed}ms`);
+    
     res.json(result.rows);
   } catch (error) {
-    console.error("Error fetching periods:", error);
+    const elapsed = Date.now() - startTime;
+    console.error(`❌ [COMMISSIONS] GET /periods failed after ${elapsed}ms`);
+    console.error('❌ [COMMISSIONS] Error:', error);
+    console.error('❌ [COMMISSIONS] Error message:', error.message);
+    console.error('❌ [COMMISSIONS] Error stack:', error.stack);
+    
     if (error.message.includes('does not exist')) {
+      console.log('⚠️  [COMMISSIONS] Table does not exist, returning empty array');
       res.json([]);
     } else {
-      res.status(500).json({ error: "Failed to fetch periods" });
+      res.status(500).json({ error: "Failed to fetch periods", details: error.message });
     }
   }
 });
