@@ -22,6 +22,7 @@ export default function TimeTracking() {
   const [selectedDate, setSelectedDate] = useState("");
   const [dayViewData, setDayViewData] = useState([]);
   const [availableDates, setAvailableDates] = useState([]);
+  const [dayViewSearch, setDayViewSearch] = useState("");
   
   // Upload viewing
   const [uploads, setUploads] = useState([]);
@@ -543,6 +544,8 @@ export default function TimeTracking() {
             availableDates={availableDates}
             loading={loading}
             loadDayViewData={loadDayViewData}
+            searchQuery={dayViewSearch}
+            onSearchChange={setDayViewSearch}
           />
         )}
         {view === "uploads" && (
@@ -1048,7 +1051,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 }
 
 // Day View Component
-function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData }) {
+function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData, searchQuery, onSearchChange }) {
   const [editingEntryId, setEditingEntryId] = React.useState(null);
   const [editForm, setEditForm] = React.useState({});
   const [saving, setSaving] = React.useState(false);
@@ -1136,6 +1139,24 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
     return a.last_name.localeCompare(b.last_name);
   });
 
+  // Filter employees based on search query
+  const filteredEmployees = searchQuery.trim() 
+    ? employees.filter(employee => {
+        const searchTerm = searchQuery.toLowerCase();
+        const searchableFields = [
+          employee.first_name,
+          employee.last_name,
+          `${employee.first_name} ${employee.last_name}`,
+          employee.email,
+          employee.work_email,
+          employee.department
+        ];
+        return searchableFields.some(field => 
+          field && field.toString().toLowerCase().includes(searchTerm)
+        );
+      })
+    : employees;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -1145,8 +1166,8 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
     >
       {/* Date Selector */}
       <div className="card p-6">
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex-1 w-full sm:w-auto">
             <label className="block text-sm font-medium mb-2 text-primary">Select Date</label>
             <input
               type="date"
@@ -1156,14 +1177,57 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
             />
           </div>
           <div className="text-sm text-secondary">
-            {employees.length} employees • {dayViewData.length} entries
+            {filteredEmployees.length} of {employees.length} employees • {dayViewData.length} entries
           </div>
         </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="card p-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by employee name, department, or email..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+          />
+          {searchQuery && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <button
+                onClick={() => onSearchChange("")}
+                className="text-neutral-400 hover:text-primary transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+        {searchQuery && (
+          <div className="mt-2 text-sm text-secondary">
+            Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
+          </div>
+        )}
       </div>
 
       {/* Day View Data */}
       {loading ? (
         <div className="text-center py-12 text-secondary">Loading...</div>
+      ) : filteredEmployees.length === 0 && searchQuery ? (
+        <div className="card p-12 text-center">
+          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <h3 className="text-lg font-medium text-primary mb-2">No employees found</h3>
+          <p className="text-secondary">Try adjusting your search terms or clear the search to see all employees.</p>
+        </div>
       ) : employees.length === 0 ? (
         <div className="card p-12 text-center">
           <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1174,7 +1238,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {employees.map((employee) => (
+          {filteredEmployees.map((employee) => (
             <div key={employee.employee_id} className="card overflow-hidden">
               {/* Employee Header */}
               <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">

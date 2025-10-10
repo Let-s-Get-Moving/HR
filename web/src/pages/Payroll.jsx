@@ -10,6 +10,8 @@ export default function Payroll() {
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPayrollData, setFilteredPayrollData] = useState([]);
 
   // Load initial data
   useEffect(() => {
@@ -22,6 +24,33 @@ export default function Payroll() {
       loadPayrollData();
     }
   }, [selectedPeriod]);
+
+  // Filter payroll data when search query or payrollData changes
+  useEffect(() => {
+    handleSearch(searchQuery);
+  }, [payrollData, searchQuery]);
+
+  const handleSearch = (query) => {
+    if (!query.trim()) {
+      setFilteredPayrollData(payrollData);
+      return;
+    }
+
+    const searchTerm = query.toLowerCase();
+    const filtered = payrollData.filter(employee => {
+      const searchableFields = [
+        employee.first_name,
+        employee.last_name,
+        `${employee.first_name} ${employee.last_name}`,
+        employee.department
+      ];
+      return searchableFields.some(field => 
+        field && field.toString().toLowerCase().includes(searchTerm)
+      );
+    });
+
+    setFilteredPayrollData(filtered);
+  };
 
   const loadInitialData = async () => {
     try {
@@ -100,6 +129,7 @@ export default function Payroll() {
       }
       
       setPayrollData(employeesWithData);
+      setFilteredPayrollData(employeesWithData);
       console.log('═══════════════════════════════════════════════════════════\n');
     } catch (error) {
       console.error('\n═══════════════════════════════════════════════════════════');
@@ -205,7 +235,7 @@ export default function Payroll() {
                 <div>
                   <div className="text-xs text-secondary uppercase">Employees</div>
                   <div className="text-lg font-semibold text-primary">
-                    {payrollData.length}
+                    {filteredPayrollData.length} of {payrollData.length}
                   </div>
                 </div>
               </div>
@@ -214,14 +244,50 @@ export default function Payroll() {
         </div>
           </div>
 
+      {/* Search Bar */}
+      <div className="card p-4 mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            placeholder="Search by employee name or department..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+          />
+          {searchQuery && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <button
+                onClick={() => setSearchQuery("")}
+                className="text-neutral-400 hover:text-primary transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+        {searchQuery && (
+          <div className="mt-2 text-sm text-secondary">
+            Found {filteredPayrollData.length} employee{filteredPayrollData.length !== 1 ? 's' : ''} matching "{searchQuery}"
+          </div>
+        )}
+      </div>
+
       {/* Period View - Employee Grid */}
       <AnimatePresence mode="wait">
         <PeriodView 
-          payrollData={payrollData}
+          payrollData={filteredPayrollData}
           loading={loading}
           onEmployeeClick={handleEmployeeClick}
           formatCurrency={formatCurrency}
           formatHours={formatHours}
+          searchQuery={searchQuery}
         />
       </AnimatePresence>
 
@@ -242,9 +308,21 @@ export default function Payroll() {
 }
 
 // Period View Component - Shows all employees in grid
-function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, formatHours }) {
+function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, formatHours, searchQuery }) {
   if (loading) {
     return <div className="text-center py-12 text-secondary">Loading...</div>;
+  }
+
+  if (payrollData.length === 0 && searchQuery) {
+    return (
+      <div className="card p-12 text-center">
+        <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <h3 className="text-lg font-medium text-primary mb-2">No employees found</h3>
+        <p className="text-secondary">Try adjusting your search terms or clear the search to see all employees.</p>
+      </div>
+    );
   }
 
   if (payrollData.length === 0) {

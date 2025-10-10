@@ -107,6 +107,12 @@ export default function BonusesCommissions() {
   const [analyticsAgents, setAnalyticsAgents] = useState([]);
   const [analyticsHourly, setAnalyticsHourly] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
+  
+  // Search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredMonthly, setFilteredMonthly] = useState([]);
+  const [filteredAgents, setFilteredAgents] = useState([]);
+  const [filteredHourly, setFilteredHourly] = useState([]);
 
   const tabs = [
     { id: "import", name: "Excel Import", icon: "📥" },
@@ -122,6 +128,44 @@ export default function BonusesCommissions() {
       loadAnalyticsData();
     }
   }, [selectedPeriod]);
+
+  // Filter analytics data when search query changes
+  useEffect(() => {
+    handleSearch(searchQuery);
+  }, [analyticsMonthly, analyticsAgents, analyticsHourly, searchQuery]);
+
+  const handleSearch = (query) => {
+    if (!query.trim()) {
+      setFilteredMonthly(analyticsMonthly);
+      setFilteredAgents(analyticsAgents);
+      setFilteredHourly(analyticsHourly);
+      return;
+    }
+
+    const searchTerm = query.toLowerCase();
+    
+    // Filter monthly commissions by employee name
+    const filteredM = analyticsMonthly.filter(item => {
+      const name = `${item.first_name || ''} ${item.last_name || ''}`.toLowerCase();
+      return name.includes(searchTerm);
+    });
+    
+    // Filter agents by employee name
+    const filteredA = analyticsAgents.filter(item => {
+      const name = `${item.first_name || ''} ${item.last_name || ''}`.toLowerCase();
+      return name.includes(searchTerm);
+    });
+    
+    // Filter hourly payouts by employee name
+    const filteredH = analyticsHourly.filter(item => {
+      const name = `${item.first_name || ''} ${item.last_name || ''}`.toLowerCase();
+      return name.includes(searchTerm);
+    });
+
+    setFilteredMonthly(filteredM);
+    setFilteredAgents(filteredA);
+    setFilteredHourly(filteredH);
+  };
 
   // Close calendar when clicking outside
   useEffect(() => {
@@ -226,6 +270,9 @@ export default function BonusesCommissions() {
       setAnalyticsMonthly(monthly);
       setAnalyticsAgents(agents);
       setAnalyticsHourly(hourly);
+      setFilteredMonthly(monthly);
+      setFilteredAgents(agents);
+      setFilteredHourly(hourly);
       console.log('✅ [Frontend Commissions] State updated');
       console.log('═══════════════════════════════════════════════════════════\n');
       
@@ -1181,6 +1228,41 @@ export default function BonusesCommissions() {
           </div>
         </div>
 
+        {/* Search Bar */}
+        <div className="card p-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search by employee name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+            />
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="text-neutral-400 hover:text-primary transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
+          {searchQuery && (
+            <div className="mt-2 text-sm text-secondary">
+              Found {filteredMonthly.length + filteredAgents.length + filteredHourly.length} result{(filteredMonthly.length + filteredAgents.length + filteredHourly.length) !== 1 ? 's' : ''} matching "{searchQuery}"
+            </div>
+          )}
+        </div>
+
         {/* Summary Cards */}
         {analyticsData && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -1225,7 +1307,7 @@ export default function BonusesCommissions() {
         {/* Monthly Commissions Table - Dynamic Columns */}
         <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
-            📋 Monthly Commissions ({analyticsMonthly.length})
+            📋 Monthly Commissions ({filteredMonthly.length})
           </h4>
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
@@ -1260,7 +1342,7 @@ export default function BonusesCommissions() {
                 </tr>
               </thead>
               <tbody>
-                {analyticsMonthly.length > 0 ? analyticsMonthly.map((record, idx) => (
+                {filteredMonthly.length > 0 ? filteredMonthly.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
                     <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
                     <td className="py-2 px-3">${record.hourly_rate || 0}</td>
@@ -1304,7 +1386,7 @@ export default function BonusesCommissions() {
         {/* Agent US Commissions Table - All Columns */}
         <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
-            🇺🇸 Agent US Commissions ({analyticsAgents.length})
+            🇺🇸 Agent US Commissions ({filteredAgents.length})
           </h4>
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
@@ -1319,7 +1401,7 @@ export default function BonusesCommissions() {
                 </tr>
               </thead>
               <tbody>
-                {analyticsAgents.length > 0 ? analyticsAgents.map((record, idx) => (
+                {filteredAgents.length > 0 ? filteredAgents.map((record, idx) => (
                   <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
                     <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
                     <td className="py-2 px-3">${(record.total_us_revenue || 0).toLocaleString()}</td>
@@ -1343,7 +1425,7 @@ export default function BonusesCommissions() {
         {/* Hourly Payouts Table - Dynamic Date Columns */}
       <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
-            ⏰ Hourly Payouts ({analyticsHourly.length})
+            ⏰ Hourly Payouts ({filteredHourly.length})
           </h4>
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <table className="w-full text-sm">
@@ -1351,7 +1433,7 @@ export default function BonusesCommissions() {
               <tr className="border-b border-neutral-700">
                   <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
                   {/* Dynamically render date period columns from first record */}
-                  {analyticsHourly.length > 0 && analyticsHourly[0].date_periods && 
+                  {filteredHourly.length > 0 && filteredHourly[0].date_periods && 
                     analyticsHourly[0].date_periods.map((period, idx) => (
                       <th key={idx} className="text-left py-2 px-3 bg-neutral-900">
                         {period.label}
@@ -1363,7 +1445,7 @@ export default function BonusesCommissions() {
               </tr>
             </thead>
             <tbody>
-                {analyticsHourly.length > 0 ? analyticsHourly.map((record, idx) => {
+                {filteredHourly.length > 0 ? filteredHourly.map((record, idx) => {
                   const periods = record.date_periods || [];
                   return (
                     <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
@@ -1371,7 +1453,7 @@ export default function BonusesCommissions() {
                       {periods.map((period, pIdx) => (
                         <td key={pIdx} className="py-2 px-3 text-blue-400">
                           ${(period.amount || 0).toLocaleString()}
-                          {period.cash_paid && <span className="ml-1 text-xs text-green-400">✓</span>}
+                          {period.cash_paid && <span className="ml-1 text-xs text-green-400">💵</span>}
                         </td>
                       ))}
                       <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_for_month || 0).toLocaleString()}</td>
