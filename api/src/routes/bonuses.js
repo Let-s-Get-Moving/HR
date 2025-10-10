@@ -2,8 +2,12 @@ import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
 import { formatCurrency } from "../utils/formatting.js";
+import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = Router();
+
+// Apply scope filter to all bonus routes
+r.use(applyScopeFilter);
 
 // Bonus schema for creation
 const bonusSchema = z.object({

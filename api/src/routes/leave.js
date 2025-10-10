@@ -9,78 +9,149 @@ const r = Router();
 r.use(applyScopeFilter);
 
 // Get all leave requests
-r.get("/requests", async (_req, res) => {
-  const { rows } = await q(`
-    SELECT lr.*, e.first_name, e.last_name, e.email, lt.name as leave_type_name
-    FROM leave_requests lr
-    JOIN employees e ON lr.employee_id = e.id
-    JOIN leave_types lt ON lr.leave_type_id = lt.id
-    ORDER BY lr.requested_at DESC
-  `);
-  res.json(rows);
+r.get("/requests", async (req, res) => {
+  try {
+    let query = `
+      SELECT lr.*, e.first_name, e.last_name, e.email, lt.name as leave_type_name
+      FROM leave_requests lr
+      JOIN employees e ON lr.employee_id = e.id
+      JOIN leave_types lt ON lr.leave_type_id = lt.id
+    `;
+    
+    const params = [];
+    
+    // RBAC: Users can only see their own leave requests
+    if (req.userScope === 'own' && req.employeeId) {
+      query += ` WHERE lr.employee_id = $1`;
+      params.push(req.employeeId);
+      console.log(`🔒 [RBAC] Filtering leave requests for employee ${req.employeeId}`);
+    }
+    
+    query += ` ORDER BY lr.requested_at DESC`;
+    
+    const { rows } = await q(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error getting leave requests:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Get employee leave requests
 r.get("/employee/:id", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await q(`
-    SELECT lr.*, lt.name as leave_type_name
-    FROM leave_requests lr
-    JOIN leave_types lt ON lr.leave_type_id = lt.id
-    WHERE lr.employee_id = $1
-    ORDER BY lr.requested_at DESC
-  `, [id]);
-  res.json(rows);
+  try {
+    const { id } = req.params;
+    
+    // RBAC: Users can only view their own leave requests
+    if (req.userScope === 'own' && req.employeeId && parseInt(id) !== req.employeeId) {
+      console.log(`🚫 [RBAC] User tried to access another employee's leave: ${id}`);
+      return res.status(403).json({ error: 'You can only view your own leave requests' });
+    }
+    
+    const { rows } = await q(`
+      SELECT lr.*, lt.name as leave_type_name
+      FROM leave_requests lr
+      JOIN leave_types lt ON lr.leave_type_id = lt.id
+      WHERE lr.employee_id = $1
+      ORDER BY lr.requested_at DESC
+    `, [id]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error getting employee leave requests:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Get leave balances for all employees
-r.get("/balances", async (_req, res) => {
-  const { rows } = await q(`
-    SELECT lb.*, lt.name as leave_type_name, e.first_name, e.last_name
-    FROM leave_balances lb
-    JOIN leave_types lt ON lb.leave_type_id = lt.id
-    JOIN employees e ON lb.employee_id = e.id
-    ORDER BY e.first_name, lt.name
-  `);
-  res.json(rows);
+r.get("/balances", async (req, res) => {
+  try {
+    let query = `
+      SELECT lb.*, lt.name as leave_type_name, e.first_name, e.last_name
+      FROM leave_balances lb
+      JOIN leave_types lt ON lb.leave_type_id = lt.id
+      JOIN employees e ON lb.employee_id = e.id
+    `;
+    
+    const params = [];
+    
+    // RBAC: Users can only see their own balance
+    if (req.userScope === 'own' && req.employeeId) {
+      query += ` WHERE lb.employee_id = $1`;
+      params.push(req.employeeId);
+      console.log(`🔒 [RBAC] Filtering leave balances for employee ${req.employeeId}`);
+    }
+    
+    query += ` ORDER BY e.first_name, lt.name`;
+    
+    const { rows } = await q(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error getting leave balances:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Get leave balances for specific employee
 r.get("/balances/:id", async (req, res) => {
-  const { id } = req.params;
-  const { rows } = await q(`
-    SELECT lb.*, lt.name as leave_type_name
-    FROM leave_balances lb
-    JOIN leave_types lt ON lb.leave_type_id = lt.id
-    WHERE lb.employee_id = $1
-    ORDER BY lt.name
-  `, [id]);
-  res.json(rows);
+  try {
+    const { id } = req.params;
+    
+    // RBAC: Users can only view their own balance
+    if (req.userScope === 'own' && req.employeeId && parseInt(id) !== req.employeeId) {
+      console.log(`🚫 [RBAC] User tried to access another employee's balance: ${id}`);
+      return res.status(403).json({ error: 'You can only view your own leave balance' });
+    }
+    
+    const { rows } = await q(`
+      SELECT lb.*, lt.name as leave_type_name
+      FROM leave_balances lb
+      JOIN leave_types lt ON lb.leave_type_id = lt.id
+      WHERE lb.employee_id = $1
+      ORDER BY lt.name
+    `, [id]);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error getting employee leave balance:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Get leave calendar
 r.get("/calendar", async (req, res) => {
-  const { start_date, end_date } = req.query;
-  
-  // Use current year if no dates provided
-  const currentYear = new Date().getFullYear();
-  const defaultStart = `${currentYear}-01-01`;
-  const defaultEnd = `${currentYear}-12-31`;
-  
-  const { rows } = await q(`
-    SELECT lr.*, e.first_name, e.last_name, lt.name as leave_type_name, lt.color
-    FROM leave_requests lr
-    JOIN employees e ON lr.employee_id = e.id
-    JOIN leave_types lt ON lr.leave_type_id = lt.id
-    WHERE lr.status = 'Approved'
-    AND (
-      -- Leave overlaps with the requested period
-      (lr.start_date <= $2 AND lr.end_date >= $1)
-    )
-    ORDER BY lr.start_date
-  `, [start_date || defaultStart, end_date || defaultEnd]);
-  
-  res.json(rows);
+  try {
+    const { start_date, end_date } = req.query;
+    
+    // Use current year if no dates provided
+    const currentYear = new Date().getFullYear();
+    const defaultStart = `${currentYear}-01-01`;
+    const defaultEnd = `${currentYear}-12-31`;
+    
+    let query = `
+      SELECT lr.*, e.first_name, e.last_name, lt.name as leave_type_name, lt.color
+      FROM leave_requests lr
+      JOIN employees e ON lr.employee_id = e.id
+      JOIN leave_types lt ON lr.leave_type_id = lt.id
+      WHERE lr.status = 'Approved'
+      AND (lr.start_date <= $2 AND lr.end_date >= $1)
+    `;
+    
+    const params = [start_date || defaultStart, end_date || defaultEnd];
+    
+    // RBAC: Users can only see their own leave on calendar
+    if (req.userScope === 'own' && req.employeeId) {
+      query += ` AND lr.employee_id = $3`;
+      params.push(req.employeeId);
+      console.log(`🔒 [RBAC] Filtering calendar for employee ${req.employeeId}`);
+    }
+    
+    query += ` ORDER BY lr.start_date`;
+    
+    const { rows } = await q(query, params);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error getting leave calendar:', error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Create leave request
@@ -100,6 +171,18 @@ const leaveRequestSchema = z.object({
 r.post("/requests", async (req, res) => {
   try {
     const data = leaveRequestSchema.parse(req.body);
+    
+    // RBAC: Users can only create leave requests for themselves
+    if (req.userScope === 'own' && req.employeeId && data.employee_id !== req.employeeId) {
+      console.log(`🚫 [RBAC] User tried to create leave for another employee: ${data.employee_id}`);
+      return res.status(403).json({ error: 'You can only create leave requests for yourself' });
+    }
+    
+    // RBAC: Users cannot approve their own leave - force to Pending
+    if (req.userScope === 'own') {
+      data.status = 'Pending';
+      console.log(`🔒 [RBAC] Forcing leave status to Pending for user`);
+    }
     
     // Start transaction
     await q('BEGIN');
@@ -183,6 +266,12 @@ r.post("/requests", async (req, res) => {
 r.put("/requests/:id/status", async (req, res) => {
   const { id } = req.params;
   const { status, approved_by, notes } = req.body;
+  
+  // RBAC: Only managers/admins can approve leave
+  if (req.userScope === 'own') {
+    console.log(`🚫 [RBAC] User role cannot approve leave requests`);
+    return res.status(403).json({ error: 'Only managers can approve leave requests' });
+  }
   
   try {
     await q('BEGIN');

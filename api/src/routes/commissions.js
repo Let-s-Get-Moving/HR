@@ -4,8 +4,12 @@ import { q } from "../db.js";
 import { z } from "zod";
 import { formatCurrency, formatNumber } from "../utils/formatting.js";
 import { importCommissionsFromExcel } from "../utils/commissionImporter.js";
+import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = Router();
+
+// Apply scope filter to all commission routes
+r.use(applyScopeFilter);
 
 // Configure multer for file uploads (memory storage for Excel files)
 const upload = multer({ 

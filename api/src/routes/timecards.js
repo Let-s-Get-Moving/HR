@@ -19,6 +19,7 @@ r.get("/", async (req, res) => {
     
     console.log('\n═══════════════════════════════════════════════════════════');
     console.log(`📊 [Timecards GET] Request received at ${new Date().toISOString()}`);
+    console.log(`📊 [Timecards GET] User role: ${req.userRole}, scope: ${req.userScope}`);
     console.log(`📊 [Timecards GET] Filters:`, { employee_id, pay_period_start, pay_period_end, status });
     
     // SIMPLIFIED QUERY: No complex OR logic, just match exactly what we need
@@ -38,7 +39,13 @@ r.get("/", async (req, res) => {
     const params = [];
     let paramCount = 1;
     
-    if (employee_id) {
+    // RBAC: Users can only see their own timecards
+    if (req.userScope === 'own' && req.employeeId) {
+      query += ` AND t.employee_id = $${paramCount}`;
+      params.push(req.employeeId);
+      console.log(`🔒 [RBAC] Filtering timecards for employee ${req.employeeId}`);
+      paramCount++;
+    } else if (employee_id) {
       query += ` AND t.employee_id = $${paramCount}`;
       params.push(employee_id);
       console.log(`📊 [Timecards GET] Added employee_id filter: ${employee_id}`);

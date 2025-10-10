@@ -1,7 +1,11 @@
 import express from "express";
 import { q } from "../db.js";
+import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = express.Router();
+
+// Apply scope filter to all payroll routes
+r.use(applyScopeFilter);
 
 /**
  * Calculate next pay period based on Friday payday schedule
