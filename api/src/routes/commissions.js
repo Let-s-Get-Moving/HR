@@ -149,22 +149,29 @@ r.get("/monthly", async (req, res) => {
   try {
     console.log('📊 [COMMISSIONS] GET /monthly - Request received');
     console.log('📊 [COMMISSIONS] Query params:', req.query);
+    console.log('📊 [RBAC] User scope:', req.userScope, 'Employee ID:', req.employeeId);
     
     const { period_month, employee_id } = req.query;
     
     let whereClause = "WHERE 1=1";
     const params = [];
     
+    // RBAC: Users can only see their own commissions
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      whereClause += ` AND ecm.employee_id = $${params.length}`;
+      console.log('🔒 [RBAC] Filtering commissions for employee:', req.employeeId);
+    } else if (employee_id) {
+      // Managers/admins can filter by specific employee
+      params.push(employee_id);
+      whereClause += ` AND ecm.employee_id = $${params.length}`;
+      console.log('📊 [COMMISSIONS] Filter by employee_id:', employee_id);
+    }
+    
     if (period_month) {
       params.push(period_month);
       whereClause += ` AND ecm.period_month = $${params.length}`;
       console.log('📊 [COMMISSIONS] Filter by period_month:', period_month);
-    }
-    
-    if (employee_id) {
-      params.push(employee_id);
-      whereClause += ` AND ecm.employee_id = $${params.length}`;
-      console.log('📊 [COMMISSIONS] Filter by employee_id:', employee_id);
     }
     
     const { rows } = await q(`
@@ -220,18 +227,25 @@ r.get("/monthly", async (req, res) => {
 r.get("/agents-us", async (req, res) => {
   try {
     const { period_month, employee_id } = req.query;
+    console.log('📊 [RBAC] User scope:', req.userScope, 'Employee ID:', req.employeeId);
     
     let whereClause = "WHERE 1=1";
     const params = [];
     
+    // RBAC: Users can only see their own commissions
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      whereClause += ` AND acu.employee_id = $${params.length}`;
+      console.log('🔒 [RBAC] Filtering agent US commissions for employee:', req.employeeId);
+    } else if (employee_id) {
+      // Managers/admins can filter by specific employee
+      params.push(employee_id);
+      whereClause += ` AND acu.employee_id = $${params.length}`;
+    }
+    
     if (period_month) {
       params.push(period_month);
       whereClause += ` AND acu.period_month = $${params.length}`;
-    }
-    
-    if (employee_id) {
-      params.push(employee_id);
-      whereClause += ` AND acu.employee_id = $${params.length}`;
     }
     
     const { rows } = await q(`
@@ -275,6 +289,7 @@ r.get("/hourly-payouts", async (req, res) => {
     console.log('\n═══════════════════════════════════════════════════════════');
     console.log(`💰 [Hourly Payouts GET] Request received at ${new Date().toISOString()}`);
     console.log(`💰 [Hourly Payouts GET] Filters:`, { period_month, employee_id });
+    console.log('📊 [RBAC] User scope:', req.userScope, 'Employee ID:', req.employeeId);
     
     // DIAGNOSTICS: Check table state first
     console.log('🔍 [Hourly Payouts GET] Running diagnostics...');
@@ -304,16 +319,22 @@ r.get("/hourly-payouts", async (req, res) => {
     let whereClause = "WHERE 1=1";
     const params = [];
     
+    // RBAC: Users can only see their own hourly payouts
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      whereClause += ` AND hp.employee_id = $${params.length}`;
+      console.log('🔒 [RBAC] Filtering hourly payouts for employee:', req.employeeId);
+    } else if (employee_id) {
+      // Managers/admins can filter by specific employee
+      params.push(employee_id);
+      whereClause += ` AND hp.employee_id = $${params.length}`;
+      console.log(`💰 [Hourly Payouts GET] Added employee filter: ${employee_id}`);
+    }
+    
     if (period_month) {
       params.push(period_month);
       whereClause += ` AND hp.period_month = $${params.length}`;
       console.log(`💰 [Hourly Payouts GET] Added period filter: ${period_month}`);
-    }
-    
-    if (employee_id) {
-      params.push(employee_id);
-      whereClause += ` AND hp.employee_id = $${params.length}`;
-      console.log(`💰 [Hourly Payouts GET] Added employee filter: ${employee_id}`);
     }
     
     console.log(`💰 [Hourly Payouts GET] Query params:`, params);
@@ -405,6 +426,17 @@ r.get("/periods", async (req, res) => {
   const startTime = Date.now();
   try {
     console.log('📊 [COMMISSIONS] GET /periods - Request received');
+    console.log('📊 [RBAC] User scope:', req.userScope, 'Employee ID:', req.employeeId);
+    
+    let whereClause = '';
+    const params = [];
+    
+    // RBAC: Users can only see periods where they have commissions
+    if (req.userScope === 'own' && req.employeeId) {
+      whereClause = 'WHERE employee_id = $1';
+      params.push(req.employeeId);
+      console.log('🔒 [RBAC] Filtering periods for employee:', req.employeeId);
+    }
     
     const result = await q(`
       SELECT DISTINCT 
@@ -419,9 +451,10 @@ r.get("/periods", async (req, res) => {
              CASE WHEN payday_2 IS NOT NULL THEN TO_CHAR(payday_2, 'Mon DD, YYYY') ELSE NULL END as payday_2_label,
              COUNT(*) as employee_count
       FROM employee_commission_monthly
+      ${whereClause}
       GROUP BY period_start, period_end, payday_1, payday_2, period_month
       ORDER BY period_start DESC NULLS LAST, period_month DESC
-    `);
+    `, params);
     
     console.log(`📊 [COMMISSIONS] Found ${result.rows.length} periods`);
     console.log('📊 [COMMISSIONS] Periods:', JSON.stringify(result.rows, null, 2));
@@ -450,9 +483,20 @@ r.get("/periods", async (req, res) => {
 r.get("/summary", async (req, res) => {
   try {
     const { period_month } = req.query;
+    console.log('📊 [RBAC] User scope:', req.userScope, 'Employee ID:', req.employeeId);
     
     if (!period_month) {
       return res.status(400).json({ error: "period_month parameter is required" });
+    }
+    
+    let whereClause = 'WHERE ecm.period_month = $1';
+    const params = [period_month];
+    
+    // RBAC: Users can only see their own summary
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      whereClause += ` AND ecm.employee_id = $${params.length}`;
+      console.log('🔒 [RBAC] Filtering summary for employee:', req.employeeId);
     }
     
     const { rows } = await q(`
@@ -465,8 +509,8 @@ r.get("/summary", async (req, res) => {
         SUM(ecm.remaining_amount) as total_remaining,
         AVG(ecm.commission_pct) as avg_commission_rate
       FROM employee_commission_monthly ecm
-      WHERE ecm.period_month = $1
-    `, [period_month]);
+      ${whereClause}
+    `, params);
     
     const summary = rows[0];
     
