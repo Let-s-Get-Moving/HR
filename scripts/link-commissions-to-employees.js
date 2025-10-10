@@ -25,23 +25,24 @@ const COMMISSION_TO_EMPLOYEE_MAPPINGS = {
   'Darrius S': 27,
   'Gambhir,  Rachit': 35,
   'Guerrero Guevara,  Paula Andrea': 495,
+  'Jamie S': 94, // Jamie Serieux
   'John M': 499,
   'john madas': 499,
   'Josephine O': 28,
   'Josephine Orji': 28,
-  'Josh S': 497,
-  'josh smith': 497,
+  'Josh S': 497, // Josh Smith
+  'josh smith': 497, // Josh Smith (NOT Onwugbonu or Sanchez Trejo!)
   'Kalyan,  Rhythm': 49, // Using Rhythm Kalyan
   'Lawrence': 97,
   'Lawrence W': 97,
   'Muskan A.': 174,
   'Nambuya,  Gloria': 45,
   'Navaney,  Aakash': 40,
-  'Onwugbonu,  Joshua': 497, // Mapping to Joshua Smith
+  'Onwugbonu,  Joshua': 527, // SEPARATE from Josh Smith!
   'Rhona D': 21,
   'Rhythm K': 49,
   'Sam L': 13, // Using Sam Lopka
-  'Sanchez Trejo,  Joshua': 497,
+  'Sanchez Trejo,  Joshua': 528, // SEPARATE from Josh Smith and Onwugbonu!
   'Sebastian': 16,
   'Sebastian DL': 16,
   'Tiwari,  Vanshika': 98,
@@ -102,7 +103,14 @@ async function linkCommissionsToEmployees() {
         WHERE name_raw = $2 AND employee_id IS NULL
       `, [employeeId, commissionName]);
       
-      const totalUpdated = result1.rowCount + result2.rowCount;
+      // Update hourly_payout
+      const result3 = await client.query(`
+        UPDATE hourly_payout
+        SET employee_id = $1, updated_at = NOW()
+        WHERE name_raw = $2 AND employee_id IS NULL
+      `, [employeeId, commissionName]);
+      
+      const totalUpdated = result1.rowCount + result2.rowCount + result3.rowCount;
       if (totalUpdated > 0) {
         console.log(`✅ Linked "${commissionName}" to employee ID ${employeeId} (${totalUpdated} records)`);
         linkedCount++;
@@ -163,7 +171,13 @@ async function linkCommissionsToEmployees() {
         WHERE name_raw = $2 AND employee_id IS NULL
       `, [employeeId, emp.name_raw]);
       
-      const totalUpdated = result1.rowCount + result2.rowCount;
+      const result3 = await client.query(`
+        UPDATE hourly_payout
+        SET employee_id = $1, updated_at = NOW()
+        WHERE name_raw = $2 AND employee_id IS NULL
+      `, [employeeId, emp.name_raw]);
+      
+      const totalUpdated = result1.rowCount + result2.rowCount + result3.rowCount;
       if (totalUpdated > 0) {
         console.log(`   → Linked ${totalUpdated} commission records to this employee`);
       }
@@ -189,7 +203,13 @@ async function linkCommissionsToEmployees() {
       WHERE name_raw = 'Akash' AND employee_id IS NULL
     `);
     
-    const akashTotal = akashResult1.rowCount + akashResult2.rowCount;
+    const akashResult3 = await client.query(`
+      UPDATE hourly_payout
+      SET employee_id = 40, updated_at = NOW()
+      WHERE name_raw = 'Akash' AND employee_id IS NULL
+    `);
+    
+    const akashTotal = akashResult1.rowCount + akashResult2.rowCount + akashResult3.rowCount;
     if (akashTotal > 0) {
       console.log(`✅ Linked "Akash" to Aakash Navaney (ID: 40) - ${akashTotal} records`);
     }
@@ -206,8 +226,11 @@ async function linkCommissionsToEmployees() {
         (SELECT COUNT(*) FROM agent_commission_us WHERE employee_id IS NULL) as agent_unlinked,
         (SELECT COUNT(*) FROM employee_commission_monthly WHERE employee_id IS NOT NULL) as monthly_linked,
         (SELECT COUNT(*) FROM employee_commission_monthly WHERE employee_id IS NULL) as monthly_unlinked,
+        (SELECT COUNT(*) FROM hourly_payout WHERE employee_id IS NOT NULL) as hourly_linked,
+        (SELECT COUNT(*) FROM hourly_payout WHERE employee_id IS NULL) as hourly_unlinked,
         (SELECT COUNT(DISTINCT employee_id) FROM agent_commission_us WHERE employee_id IS NOT NULL) as unique_agents,
-        (SELECT COUNT(DISTINCT employee_id) FROM employee_commission_monthly WHERE employee_id IS NOT NULL) as unique_monthly
+        (SELECT COUNT(DISTINCT employee_id) FROM employee_commission_monthly WHERE employee_id IS NOT NULL) as unique_monthly,
+        (SELECT COUNT(DISTINCT employee_id) FROM hourly_payout WHERE employee_id IS NOT NULL) as unique_hourly
     `);
     
     const stats = verification.rows[0];
@@ -219,7 +242,11 @@ async function linkCommissionsToEmployees() {
     console.log(`  employee_commission_monthly:`);
     console.log(`    - Linked: ${stats.monthly_linked}`);
     console.log(`    - Unlinked: ${stats.monthly_unlinked}`);
-    console.log(`    - Unique employees: ${stats.unique_monthly}\n`);
+    console.log(`    - Unique employees: ${stats.unique_monthly}`);
+    console.log(`  hourly_payout:`);
+    console.log(`    - Linked: ${stats.hourly_linked}`);
+    console.log(`    - Unlinked: ${stats.hourly_unlinked}`);
+    console.log(`    - Unique employees: ${stats.unique_hourly}\n`);
     
     await client.query('COMMIT');
     
