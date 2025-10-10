@@ -209,7 +209,11 @@ r.get("/periods", async (req, res) => {
     console.log('📅 [PAYROLL-PERIODS] Base payday:', basePayday.toISOString().split('T')[0]);
     
     dates.forEach(row => {
-      const workDate = new Date(row.work_date + 'T00:00:00Z');
+      // Handle both string and Date object formats
+      const workDateStr = typeof row.work_date === 'string' 
+        ? row.work_date 
+        : row.work_date.toISOString().split('T')[0];
+      const workDate = new Date(workDateStr + 'T00:00:00Z');
       
       // Find which pay period this date belongs to
       // Work weeks end on Friday, pay periods are 14 days (Sat-Fri, Sat-Fri)
