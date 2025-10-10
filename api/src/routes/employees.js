@@ -117,11 +117,19 @@ r.put("/:id", async (req, res) => {
   const nullIfEmpty = (value) => (value === '' || value === undefined) ? null : value;
   
   try {
-    // Validate required fields
-    if (!data.first_name || !data.last_name || !data.email || !data.hire_date || !data.employment_type || !data.status) {
+    // Validate required fields (email can be null, but work_email OR email must exist)
+    if (!data.first_name || !data.last_name || !data.hire_date || !data.employment_type || !data.status) {
       return res.status(400).json({ 
         error: "Missing required fields", 
-        details: "first_name, last_name, email, hire_date, employment_type, and status are required" 
+        details: "first_name, last_name, hire_date, employment_type, and status are required" 
+      });
+    }
+    
+    // At least one email should be provided
+    if (!data.work_email && !data.email) {
+      return res.status(400).json({ 
+        error: "Missing required fields", 
+        details: "Either work_email or email must be provided" 
       });
     }
     
