@@ -57,8 +57,8 @@ function getPaydayForPeriod(periodMonth) {
   
   // Map months to their second payday (the 4-week period is named after where it ends)
   const paydayMap = {
-    '2025-05': '2025-06-06',  // May period ends with Jun 6 payday (May 19-Jun 1 & Jun 2-Jun 15 -> Jun 6 & Jun 20)
-    '2025-06': '2025-06-20',  // June period ends with Jun 20 payday
+    '2025-05': '2025-05-23',  // May period: Apr 21-May 4 & May 5-May 18 -> Paydays May 9 & May 23
+    '2025-06': '2025-06-20',  // June period: May 19-Jun 1 & Jun 2-Jun 15 -> Paydays Jun 6 & Jun 20
     '2025-07': '2025-07-18',  // July period ends with Jul 18 payday
     '2025-08': '2025-08-29',  // August period ends with Aug 29 payday
     '2025-09': '2025-09-26',  // September period ends with Sep 26 payday
