@@ -163,28 +163,30 @@ export default function Payroll() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Pay Period Filter */}
           <div>
-            <label className="block text-sm font-medium mb-2 text-primary">Pay Period</label>
+            <label className="block text-sm font-medium mb-2 text-primary">Pay Date</label>
             <select
-              value={selectedPeriod ? `${selectedPeriod.pay_period_start}_${selectedPeriod.pay_period_end}` : ""}
+              value={selectedPeriod ? selectedPeriod.pay_date : ""}
               onChange={(e) => {
-                const [start, end] = e.target.value.split('_');
-                const period = payPeriods.find(p => 
-                  p.pay_period_start === start && p.pay_period_end === end
-                );
+                const period = payPeriods.find(p => p.pay_date === e.target.value);
                 setSelectedPeriod(period);
               }}
               className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
             >
-              <option value="">Select period...</option>
-              {payPeriods.map((period) => (
-                <option 
-                  key={`${period.pay_period_start}_${period.pay_period_end}`} 
-                  value={`${period.pay_period_start}_${period.pay_period_end}`}
-                >
-                  {new Date(period.pay_period_start).toLocaleDateString()} - {new Date(period.pay_period_end).toLocaleDateString()} 
-                  ({period.employee_count} employees)
-                </option>
-              ))}
+              <option value="">Select pay date...</option>
+              {payPeriods.map((period) => {
+                const payDate = new Date(period.pay_date);
+                const formattedDate = payDate.toLocaleDateString('en-US', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                }).toUpperCase();
+                
+                return (
+                  <option key={period.pay_date} value={period.pay_date}>
+                    {formattedDate}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -193,9 +195,9 @@ export default function Payroll() {
             <div className="flex items-end">
               <div className="grid grid-cols-2 gap-4 w-full">
                 <div>
-                  <div className="text-xs text-secondary uppercase">Pay Date</div>
-                  <div className="text-lg font-semibold text-primary">
-                    {new Date(selectedPeriod.pay_date).toLocaleDateString()}
+                  <div className="text-xs text-secondary uppercase">Work Period</div>
+                  <div className="text-sm font-medium text-primary">
+                    {new Date(selectedPeriod.pay_period_start).toLocaleDateString()} - {new Date(selectedPeriod.pay_period_end).toLocaleDateString()}
                   </div>
                 </div>
                 <div>
