@@ -66,7 +66,19 @@ r.get("/calculate-live", async (req, res) => {
     }
     
     console.log('💰 [PAYROLL] Period:', `${pay_period_start} to ${pay_period_end}`);
+    console.log('💰 [PAYROLL] RBAC - User Role:', req.userRole, 'Scope:', req.userScope, 'Employee ID:', req.employeeId);
     console.log('💰 [PAYROLL] Fetching employee timecard data...');
+    
+    // Build WHERE clause with RBAC filtering
+    let whereClause = "WHERE e.status = 'Active'";
+    const queryParams = [pay_period_start, pay_period_end];
+    
+    // RBAC: Users can only see their own payroll
+    if (req.userScope === 'own' && req.employeeId) {
+      queryParams.push(req.employeeId);
+      whereClause += ` AND e.id = $${queryParams.length}`;
+      console.log(`🔒 [RBAC] Filtering payroll for employee ${req.employeeId}`);
+    }
     
     // Get all employees with their timecard data for the period
     const queryStartTime = Date.now();
@@ -110,9 +122,9 @@ r.get("/calculate-live", async (req, res) => {
         
       FROM employees e
       LEFT JOIN departments d ON e.department_id = d.id
-      WHERE e.status = 'Active'
+      ${whereClause}
       ORDER BY e.last_name, e.first_name
-    `, [pay_period_start, pay_period_end]);
+    `, queryParams);
     
     const queryTime = Date.now() - queryStartTime;
     console.log(`💰 [PAYROLL] Query completed in ${queryTime}ms`);
