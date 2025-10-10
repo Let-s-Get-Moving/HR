@@ -112,3 +112,6 @@ Thumbs.db
 build/
 dist/
 *.xlsx
+
+# Maintenance/utility scripts (one-time migrations, not production code)
+maintenance-scripts/
