@@ -94,7 +94,7 @@ const pages = {
   employees: { name: "Employees", component: Employees, icon: Icons.employees },
   timeTracking: { name: "Time Tracking", component: TimeTracking, icon: Icons.timeTracking },
   leave: { name: "Leave Management", component: LeaveManagement, icon: Icons.leave },
-  payroll: { name: "Payroll", component: PayrollV2, icon: Icons.payroll },
+  payroll: { name: "Payroll", component: Payroll, icon: Icons.payroll },
   performance: { name: "Performance", component: Performance, icon: Icons.performance },
   recruiting: { name: "Recruiting", component: Recruiting, icon: Icons.recruiting },
   compliance: { name: "Compliance", component: Compliance, icon: Icons.compliance },
