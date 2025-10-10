@@ -104,7 +104,7 @@ export const ROLE_PERMISSIONS = {
 export const getUserRole = async (userId) => {
   try {
     const { rows } = await q(`
-      SELECT r.role_name, r.permissions->>'scope' as scope
+      SELECT r.role_name, r.permissions->>'scope' as scope, u.employee_id
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
       WHERE u.id = $1
@@ -117,13 +117,14 @@ export const getUserRole = async (userId) => {
     
     const userRole = rows[0].role_name || ROLES.USER;
     const scope = rows[0].scope || 'own';
+    const employeeId = rows[0].employee_id;
     
-    console.log(`✅ [RBAC] User ${userId} has role: ${userRole}, scope: ${scope}`);
+    console.log(`✅ [RBAC] User ${userId} has role: ${userRole}, scope: ${scope}, employeeId: ${employeeId}`);
     
     return {
       role: userRole,
       scope: scope,
-      employeeId: null // We'll add employee_id column support later
+      employeeId: employeeId
     };
   } catch (error) {
     console.error('❌ [RBAC] Error getting user role:', error);
