@@ -32,8 +32,9 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     
     // Check if user exists
     const userResult = await q(`
-      SELECT u.id, u.email, u.full_name, u.password_hash, u.is_active,
-             r.role_name, r.display_name as role_display_name
+      SELECT u.id, u.email, u.full_name, u.password_hash, u.is_active, u.employee_id,
+             r.role_name, r.display_name as role_display_name,
+             r.permissions->>'scope' as scope
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
       WHERE (u.username = $1 OR u.full_name = $1 OR u.email = $1) AND u.is_active = true
@@ -240,7 +241,9 @@ r.post("/login", checkAccountLockout, async (req, res) => {
         username: user.full_name,
         email: user.email,
         role: user.role_name,
-        roleDisplayName: user.role_display_name
+        roleDisplayName: user.role_display_name,
+        scope: user.scope || 'own',
+        employeeId: user.employee_id
       },
       sessionId,
       csrfToken
