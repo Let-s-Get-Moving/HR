@@ -1254,9 +1254,6 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                             {entry.hours_worked && !isNaN(entry.hours_worked) 
                               ? formatHoursAsTime(parseFloat(entry.hours_worked)) 
                               : "—"}
-                            {entry.is_overtime && entry.hours_worked && !isNaN(entry.hours_worked) && (
-                              <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">OT</span>
-                            )}
                           </td>
                           <td className="px-6 py-3">
                             {isEditing ? (
