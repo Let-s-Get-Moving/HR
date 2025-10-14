@@ -1,5 +1,5 @@
 import express from "express";
-import { q } from "../db.js";
+import { primaryPool as pool } from "../db/pools.js";
 import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = express.Router();
@@ -82,7 +82,7 @@ r.get("/calculate-live", async (req, res) => {
     
     // Get all employees with their timecard data for the period
     const queryStartTime = Date.now();
-    const { rows: payrolls } = await q(`
+    const { rows: payrolls } = await pool.query(`
       SELECT 
         e.id as employee_id,
         e.first_name,
@@ -206,15 +206,28 @@ r.get("/periods", async (req, res) => {
     console.log('\n═══════════════════════════════════════════════════════════');
     console.log('📅 [PAYROLL-PERIODS] Request received');
     console.log('📅 [PAYROLL-PERIODS] Timestamp:', new Date().toISOString());
+    console.log('📅 [PAYROLL-PERIODS] RBAC - User Role:', req.userRole, 'Scope:', req.userScope, 'Employee ID:', req.employeeId);
+    
+    // Build WHERE clause with RBAC filtering
+    let whereClause = "";
+    const queryParams = [];
+    
+    // RBAC: Users can only see their own timecard periods
+    if (req.userScope === 'own' && req.employeeId) {
+      queryParams.push(req.employeeId);
+      whereClause = `WHERE t.employee_id = $${queryParams.length}`;
+      console.log(`🔒 [RBAC] Filtering periods for employee ${req.employeeId}`);
+    }
     
     // Get all timecard dates (no approval filter - if timecards exist, they count)
     console.log('📅 [PAYROLL-PERIODS] Fetching all timecard dates...');
-    const { rows: dates } = await q(`
+    const { rows: dates } = await pool.query(`
       SELECT DISTINCT work_date
       FROM timecard_entries te
       JOIN timecards t ON te.timecard_id = t.id
+      ${whereClause}
       ORDER BY work_date DESC
-    `);
+    `, queryParams);
     
     console.log(`📅 [PAYROLL-PERIODS] Found ${dates.length} unique work dates`);
     
@@ -273,13 +286,22 @@ r.get("/periods", async (req, res) => {
     // Get employee counts for each period
     const periodsWithCounts = await Promise.all(
       periods.map(async (period) => {
-        const { rows } = await q(`
+        // Build WHERE clause with RBAC filtering
+        let whereClause = "WHERE te.work_date >= $1::date AND te.work_date <= $2::date";
+        const queryParams = [period.pay_period_start, period.pay_period_end];
+        
+        // RBAC: Users can only see their own timecard periods
+        if (req.userScope === 'own' && req.employeeId) {
+          queryParams.push(req.employeeId);
+          whereClause += ` AND t.employee_id = $${queryParams.length}`;
+        }
+        
+        const { rows } = await pool.query(`
           SELECT COUNT(DISTINCT t.employee_id) as employee_count
           FROM timecard_entries te
           JOIN timecards t ON te.timecard_id = t.id
-          WHERE te.work_date >= $1::date
-            AND te.work_date <= $2::date
-        `, [period.pay_period_start, period.pay_period_end]);
+          ${whereClause}
+        `, queryParams);
         
         return {
           ...period,
