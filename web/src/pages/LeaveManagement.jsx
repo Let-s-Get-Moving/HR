@@ -244,7 +244,6 @@ export default function LeaveManagement() {
     { id: "calendar", name: "Leave Calendar", icon: "📅" }
   ] : [
     { id: "approvals", name: "Leave Requests", icon: "📋" },
-    { id: "requests", name: "Record Leave", icon: "📝" },
     { id: "calendar", name: "Leave Calendar", icon: "📅" },
     { id: "balances", name: "Leave Balances", icon: "💰" },
     { id: "analytics", name: "Analytics", icon: "📊" }
