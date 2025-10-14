@@ -361,7 +361,7 @@ export default function App() {
             transition={{ duration: 0.3 }}
             className="h-full"
           >
-            <CurrentComponent onNavigate={setCurrentPage} />
+            <CurrentComponent onNavigate={setCurrentPage} user={user} />
           </motion.div>
         </main>
       </div>

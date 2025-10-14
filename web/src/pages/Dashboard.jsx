@@ -6,7 +6,7 @@ import Donut from "../components/Donut.jsx";
 import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import { API } from '../config/api.js';
 
-export default function Dashboard({ onNavigate }) {
+export default function Dashboard({ onNavigate, user }) {
   const [analytics, setAnalytics] = useState(null);
   const [wf, setWf] = useState(null);
   const [att, setAtt] = useState(null);
@@ -16,6 +16,29 @@ export default function Dashboard({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState('month');
+  
+  // Extract first name from user data
+  const getUserFirstName = () => {
+    if (!user) return 'User';
+    
+    // If full_name exists, extract first name
+    if (user.full_name) {
+      return user.full_name.split(' ')[0];
+    }
+    
+    // If username exists, use it (but try to extract first part if it's like "JohnDoe")
+    if (user.username) {
+      // Check if username is in format "FirstnameLast name" (no space)
+      // Look for capital letter that's not at the start
+      const match = user.username.match(/^([A-Z][a-z]+)/);
+      if (match) {
+        return match[1];
+      }
+      return user.username;
+    }
+    
+    return 'User';
+  };
 
   useEffect(() => {
     loadData();
@@ -142,7 +165,7 @@ export default function Dashboard({ onNavigate }) {
       {/* Header with Refresh and Time Range */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <Greeting name="Avneet" />
+          <Greeting name={getUserFirstName()} />
           <p className="text-neutral-400 mt-2">Here's what's happening in your organization</p>
         </div>
         
