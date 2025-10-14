@@ -117,11 +117,9 @@ router.get('/', async (req, res) => {
     } else {
       // HR role - all requests
       query = `
-        SELECT lr.*, e.first_name, e.last_name, e.email,
-               u.username as reviewed_by_name
+        SELECT lr.*, e.first_name, e.last_name, e.email
         FROM leave_requests lr
         JOIN employees e ON lr.employee_id = e.id
-        LEFT JOIN users u ON lr.reviewed_by = u.id
         ORDER BY lr.requested_at DESC
       `;
       params = [];
