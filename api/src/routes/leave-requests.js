@@ -229,12 +229,20 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
     if (status === 'Approved') {
       const leaveRequest = result.rows[0];
       
+      console.log(`📅 Processing approved leave request ${id}:`, {
+        leave_type: leaveRequest.leave_type,
+        leave_type_id: leaveRequest.leave_type_id,
+        employee_id: leaveRequest.employee_id
+      });
+      
       // If leave_type is set (new system) but leave_type_id is not (old system requirement)
       if (leaveRequest.leave_type && !leaveRequest.leave_type_id) {
         // Map leave_type string to leave_type_id
         const leaveTypeMapping = await q(`
-          SELECT id FROM leave_types WHERE name = $1
+          SELECT id, name FROM leave_types WHERE name = $1
         `, [leaveRequest.leave_type]);
+        
+        console.log(`🔍 Leave type mapping for "${leaveRequest.leave_type}":`, leaveTypeMapping.rows);
         
         if (leaveTypeMapping.rows.length > 0) {
           await q(`
@@ -243,8 +251,12 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
             WHERE id = $2
           `, [leaveTypeMapping.rows[0].id, id]);
           
-          console.log(`✅ Approved leave request ${id} - set leave_type_id for calendar integration`);
+          console.log(`✅ Approved leave request ${id} - set leave_type_id=${leaveTypeMapping.rows[0].id} for calendar integration`);
+        } else {
+          console.error(`❌ Could not find leave_type_id for "${leaveRequest.leave_type}"`);
         }
+      } else if (leaveRequest.leave_type_id) {
+        console.log(`✅ Leave request ${id} already has leave_type_id=${leaveRequest.leave_type_id}`);
       }
     }
 
