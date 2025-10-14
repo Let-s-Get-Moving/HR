@@ -36,12 +36,12 @@ export default function Testing() {
         "Recent activity",
         "Performance reviews",
         "Benefits enrollments",
-        "Bonuses (monthly)",
+        "Bonuses (root /)",
         "Commissions (monthly)",
         "System settings",
         "Training records",
         "Job postings",
-        "Timecard uploads"
+        "Timecard uploads (/uploads)"
       ]
     },
     {
@@ -224,12 +224,12 @@ export default function Testing() {
       { name: 7, url: "/api/analytics/recent-activity", method: "GET", expectedType: "array", description: "Recent activity" },
       { name: 8, url: "/api/performance/reviews", method: "GET", expectedType: "array", description: "Performance reviews" },
       { name: 9, url: "/api/benefits/enrollments", method: "GET", expectedType: "array", description: "Benefits enrollments" },
-      { name: 10, url: "/api/bonuses/monthly", method: "GET", expectedType: "array", description: "Bonuses (monthly)" },
+      { name: 10, url: "/api/bonuses/", method: "GET", expectedType: "array", description: "Bonuses (all)" },
       { name: 11, url: "/api/commissions/monthly", method: "GET", expectedType: "array", description: "Commissions (monthly)" },
       { name: 12, url: "/api/settings/system", method: "GET", expectedType: "array", description: "System settings" },
       { name: 13, url: "/api/compliance/training-records", method: "GET", expectedType: "array", description: "Training records" },
       { name: 14, url: "/api/recruiting/job-postings", method: "GET", expectedType: "array", description: "Job postings" },
-      { name: 15, url: "/api/timecard-uploads", method: "GET", expectedType: "array", description: "Timecard uploads" }
+      { name: 15, url: "/api/timecard-uploads/uploads", method: "GET", expectedType: "array", description: "Timecard uploads" }
     ];
     
     for (const endpoint of endpoints) {
