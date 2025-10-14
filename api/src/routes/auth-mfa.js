@@ -818,7 +818,7 @@ r.post('/create-user', requireAuth, async (req, res) => {
     
     // Create user
     const userResult = await q(`
-      INSERT INTO users (username, password, full_name, email, role_id, employee_id, created_at)
+      INSERT INTO users (username, password_hash, full_name, email, role_id, employee_id, created_at)
       VALUES ($1, $2, $3, $4, $5, $6, NOW())
       RETURNING id, username, full_name, email, role_id, employee_id
     `, [username, hashedPassword, full_name, email, role_id, employee_id]);

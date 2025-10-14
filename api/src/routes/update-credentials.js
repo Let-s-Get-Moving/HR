@@ -56,7 +56,7 @@ router.post('/update-all-credentials', async (req, res) => {
         await q(`
           UPDATE users 
           SET username = $1, 
-              password = $2, 
+              password_hash = $2, 
               full_name = $3,
               email = COALESCE($4, email),
               role_id = $5
@@ -69,7 +69,7 @@ router.post('/update-all-credentials', async (req, res) => {
       } else {
         // Create new user account
         await q(`
-          INSERT INTO users (username, password, full_name, email, role_id, employee_id, created_at)
+          INSERT INTO users (username, password_hash, full_name, email, role_id, employee_id, created_at)
           VALUES ($1, $2, $3, $4, $5, $6, NOW())
         `, [username, hashedPassword, full_name, work_email || email, userRoleId, id]);
         
