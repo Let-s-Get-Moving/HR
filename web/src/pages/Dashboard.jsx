@@ -219,12 +219,12 @@ export default function Dashboard({ onNavigate }) {
           transition={{ delay: 0.3 }}
         >
           <MetricCard 
-            label="Employee Satisfaction" 
-            value={`${employeeSatisfaction}%`}
-            icon="😊"
-            trend=""
-            trendUp={false}
-            sub="Based on recent surveys"
+            label="Turnover Rate" 
+            value={analytics?.turnoverRate ? `${analytics.turnoverRate}%` : '0%'}
+            icon="📊"
+            trend={analytics?.turnoverRate < 5 ? "Low turnover" : analytics?.turnoverRate > 15 ? "High turnover" : "Moderate"}
+            trendUp={analytics?.turnoverRate < 10}
+            sub={`${getTimeRangeLabel(selectedTimeRange)}`}
           />
         </motion.div>
         
@@ -234,12 +234,12 @@ export default function Dashboard({ onNavigate }) {
           transition={{ delay: 0.4 }}
         >
           <MetricCard 
-            label="Training Completion" 
-            value={`${trainingCompletion}%`}
-            icon="🎓"
+            label="Avg Hours Worked" 
+            value={avgHoursPerEmployee > 0 ? `${avgHoursPerEmployee}h` : 'N/A'}
+            icon="⏱️"
             trend=""
             trendUp={false}
-            sub="Required courses completed"
+            sub={avgHoursPerEmployee > 0 ? `Per week (${getTimeRangeLabel(selectedTimeRange)})` : "Upload timecards to track"}
           />
         </motion.div>
       </div>
@@ -256,26 +256,34 @@ export default function Dashboard({ onNavigate }) {
             <h3 className="text-lg font-semibold text-white">Payroll Overview</h3>
             <div className="text-2xl">💰</div>
           </div>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Total Payroll</span>
-              <span className="text-2xl font-bold text-green-400">
-                ${totalPayroll.toLocaleString()}
-              </span>
+          {totalPayroll > 0 ? (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Total Payroll</span>
+                <span className="text-2xl font-bold text-green-400">
+                  ${totalPayroll.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Avg per Employee</span>
+                <span className="text-lg text-white">
+                  ${wf?.total ? (totalPayroll / wf.total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Period</span>
+                <span className="text-sm text-indigo-400">
+                  {getTimeRangeLabel(selectedTimeRange)}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Avg per Employee</span>
-              <span className="text-lg text-white">
-                ${wf?.total ? (totalPayroll / wf.total).toLocaleString() : '0'}
-              </span>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-3">📊</div>
+              <p className="text-neutral-400 text-sm mb-2">No payroll data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
+              <p className="text-neutral-500 text-xs">Upload timecards to generate payroll</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Payroll Submissions</span>
-              <span className="text-lg text-white">
-                {analytics?.payrollStats?.totalCalculations || 0} entries
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="card p-6">
@@ -283,26 +291,34 @@ export default function Dashboard({ onNavigate }) {
             <h3 className="text-lg font-semibold text-white">Attendance Metrics</h3>
             <div className="text-2xl">⏰</div>
           </div>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Avg Hours/Week</span>
-              <span className="text-2xl font-bold text-blue-400">
-                {avgHoursPerEmployee}h
-              </span>
+          {avgHoursPerEmployee > 0 || att?.employees_tracked > 0 ? (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Avg Hours/Week</span>
+                <span className="text-2xl font-bold text-blue-400">
+                  {avgHoursPerEmployee > 0 ? `${avgHoursPerEmployee}h` : 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Employees Tracked</span>
+                <span className="text-lg text-white">
+                  {att?.employees_tracked || 0}
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-neutral-400">Period</span>
+                <span className="text-sm text-indigo-400">
+                  {getTimeRangeLabel(selectedTimeRange)}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Absenteeism Rate</span>
-              <span className="text-lg text-white">
-                {att?.absenteeism_rate || 0}%
-              </span>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-3">📅</div>
+              <p className="text-neutral-400 text-sm mb-2">No attendance data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
+              <p className="text-neutral-500 text-xs">Upload timecards to track attendance</p>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Late Arrivals</span>
-              <span className="text-lg text-white">
-                {att?.late_arrivals || 0}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         <div className="card p-6">
@@ -313,20 +329,20 @@ export default function Dashboard({ onNavigate }) {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-neutral-400">Contracts Signed</span>
-              <span className="text-2xl font-bold text-green-400">
-                {cmp?.contracts_signed_pct || 0}%
+              <span className={`text-2xl font-bold ${(cmp?.contracts_signed_pct || 0) >= 50 ? 'text-green-400' : 'text-yellow-400'}`}>
+                {cmp?.contracts_signed_pct ? `${cmp.contracts_signed_pct}%` : 'N/A'}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">WHMIS Valid</span>
+              <span className="text-neutral-400">Active Employees</span>
               <span className="text-lg text-white">
-                {cmp?.whmis_valid_pct || 0}%
+                {analytics?.workforceOverview?.total_active_employees || 0}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Training Complete</span>
+              <span className="text-neutral-400">Training Enrolled</span>
               <span className="text-lg text-white">
-                {trainingCompletion}%
+                {trainingCompletion > 0 ? `${trainingCompletion}%` : 'N/A'}
               </span>
             </div>
           </div>
