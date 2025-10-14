@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
 
 export default function LeaveManagement() {
+  const { userRole } = useUserRole();
   const [requests, setRequests] = useState([]);
   const [balances, setBalances] = useState([]);
   const [calendar, setCalendar] = useState([]);
@@ -234,9 +236,12 @@ export default function LeaveManagement() {
 
   const tabs = [
     { id: "requests", name: "Record Leave", icon: "📝" },
-    { id: "balances", name: "Leave Balances", icon: "💰" },
     { id: "calendar", name: "Leave Calendar", icon: "📅" },
-    { id: "analytics", name: "Analytics", icon: "📊" }
+    // Hide balances and analytics for user role
+    ...(userRole !== 'user' ? [
+      { id: "balances", name: "Leave Balances", icon: "💰" },
+      { id: "analytics", name: "Analytics", icon: "📊" }
+    ] : [])
   ];
 
   if (loading) {
@@ -659,8 +664,8 @@ export default function LeaveManagement() {
         </motion.div>
       )}
 
-      {/* Leave Balances Tab */}
-      {activeTab === "balances" && (
+      {/* Leave Balances Tab - Hidden for user role */}
+      {userRole !== 'user' && activeTab === "balances" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="space-y-6">
             {/* Summary Cards */}
@@ -1005,8 +1010,8 @@ export default function LeaveManagement() {
         </motion.div>
       )}
 
-      {/* Analytics Tab */}
-      {activeTab === "analytics" && (
+      {/* Analytics Tab - Hidden for user role */}
+      {userRole !== 'user' && activeTab === "analytics" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {analytics && (

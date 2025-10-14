@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
 
 export default function BonusesCommissions() {
+  const { userRole } = useUserRole();
   const [activeTab, setActiveTab] = useState("analytics");
   const [employees, setEmployees] = useState([]);
   const [bonuses, setBonuses] = useState([]);
@@ -115,7 +117,8 @@ export default function BonusesCommissions() {
   const [filteredHourly, setFilteredHourly] = useState([]);
 
   const tabs = [
-    { id: "import", name: "Excel Import", icon: "📥" },
+    // Hide import tab for user role
+    ...(userRole !== 'user' ? [{ id: "import", name: "Excel Import", icon: "📥" }] : []),
     { id: "analytics", name: "Analytics", icon: "📊" }
   ];
 
@@ -1523,7 +1526,7 @@ export default function BonusesCommissions() {
 
       {/* Tab Content */}
       <div className="space-y-6">
-        {activeTab === "import" && renderImport()}
+        {userRole !== 'user' && activeTab === "import" && renderImport()}
         {activeTab === "analytics" && renderAnalytics()}
       </div>
 

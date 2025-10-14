@@ -3,10 +3,12 @@ import { motion } from "framer-motion";
 import EmployeeOnboarding from "../components/EmployeeOnboarding.jsx";
 import EmployeeOffboarding from "../components/EmployeeOffboarding.jsx";
 import EmployeeProfile from "./EmployeeProfile.jsx";
+import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
 
 export default function Employees() {
+  const { userRole } = useUserRole();
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -172,49 +174,51 @@ export default function Employees() {
         </motion.button>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        {/* Status Filter Dropdown */}
-        <div className="w-full sm:w-64">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
-          >
-            <option value="active">Active Employees</option>
-            <option value="terminated">Terminated Employees</option>
-          </select>
-        </div>
-        
-        {/* Search Bar */}
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+      {/* Filter and Search Bar - Hidden for user role */}
+      {userRole !== 'user' && (
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          {/* Status Filter Dropdown */}
+          <div className="w-full sm:w-64">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
+            >
+              <option value="active">Active Employees</option>
+              <option value="terminated">Terminated Employees</option>
+            </select>
           </div>
-          <input
-            type="text"
-            placeholder={`Search ${filterStatus === "terminated" ? "terminated" : "active"} employees...`}
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="block w-full pl-10 pr-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
-          />
-          {searchQuery && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <button
-                onClick={() => handleSearch("")}
-                className="text-neutral-400 hover:text-white transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          
+          {/* Search Bar */}
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </div>
-          )}
+            <input
+              type="text"
+              placeholder={`Search ${filterStatus === "terminated" ? "terminated" : "active"} employees...`}
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="block w-full pl-10 pr-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+            />
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  onClick={() => handleSearch("")}
+                  className="text-neutral-400 hover:text-white transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-      {searchQuery && (
+      )}
+      {userRole !== 'user' && searchQuery && (
         <div className="mb-4 text-sm text-neutral-400">
           Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
         </div>

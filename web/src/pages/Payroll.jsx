@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API } from '../config/api.js';
+import { useUserRole } from '../hooks/useUserRole.js';
 
 export default function Payroll() {
+  const { userRole } = useUserRole();
   const [view, setView] = useState("period-view");
   const [payPeriods, setPayPeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState(null);
@@ -244,40 +246,42 @@ export default function Payroll() {
         </div>
           </div>
 
-      {/* Search Bar */}
-      <div className="card p-4 mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+      {/* Search Bar - Hidden for user role */}
+      {userRole !== 'user' && (
+        <div className="card p-4 mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search by employee name or department..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+            />
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="text-neutral-400 hover:text-primary transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
-          <input
-            type="text"
-            placeholder="Search by employee name or department..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
-          />
           {searchQuery && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <button
-                onClick={() => setSearchQuery("")}
-                className="text-neutral-400 hover:text-primary transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div className="mt-2 text-sm text-secondary">
+              Found {filteredPayrollData.length} employee{filteredPayrollData.length !== 1 ? 's' : ''} matching "{searchQuery}"
             </div>
           )}
         </div>
-        {searchQuery && (
-          <div className="mt-2 text-sm text-secondary">
-            Found {filteredPayrollData.length} employee{filteredPayrollData.length !== 1 ? 's' : ''} matching "{searchQuery}"
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Period View - Employee Grid */}
       <AnimatePresence mode="wait">

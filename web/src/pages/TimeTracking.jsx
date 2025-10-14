@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API } from '../config/api.js';
+import { useUserRole } from '../hooks/useUserRole.js';
 import { 
   UploadsListView, 
   UploadDetailView, 
@@ -8,6 +9,7 @@ import {
 } from '../components/TimecardUploadViewer.jsx';
 
 export default function TimeTracking() {
+  const { userRole } = useUserRole();
   const [view, setView] = useState("day-view"); // uploads, main, individual, upload-detail, day-view, employee-timecard
   const [timecards, setTimecards] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -423,21 +425,24 @@ export default function TimeTracking() {
             Day View
           </div>
         </button>
-        <button
-          onClick={() => setView("uploads")}
-          className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
-            view === "uploads" || view === "upload-detail" || view === "employee-timecard"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            Timecard Uploads
-          </div>
-        </button>
+        {/* Hide uploads tab for user role */}
+        {userRole !== 'user' && (
+          <button
+            onClick={() => setView("uploads")}
+            className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
+              view === "uploads" || view === "upload-detail" || view === "employee-timecard"
+                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
+                : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              Timecard Uploads
+            </div>
+          </button>
+        )}
         {/* Removed All Timecards (Old) tab - no longer needed */}
         {view === "individual" && (
           <button
