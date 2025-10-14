@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useUserRole } from '../hooks/useUserRole.js';
+import LeaveRequestForm from '../components/LeaveRequestForm.jsx';
+import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
 
 import { API } from '../config/api.js';
 
@@ -10,7 +12,7 @@ export default function LeaveManagement() {
   const [balances, setBalances] = useState([]);
   const [calendar, setCalendar] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  const [activeTab, setActiveTab] = useState("requests");
+  const [activeTab, setActiveTab] = useState(userRole === 'user' ? "request" : "requests");
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -21,6 +23,7 @@ export default function LeaveManagement() {
   const [employees, setEmployees] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [selectedEmployeeBalance, setSelectedEmployeeBalance] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [newRequest, setNewRequest] = useState({
     employee_id: "",
     leave_type_id: "",
@@ -234,14 +237,15 @@ export default function LeaveManagement() {
     return colors[leaveType] || 'bg-gray-500 text-white';
   };
 
-  const tabs = [
+  const tabs = userRole === 'user' ? [
+    { id: "request", name: "Submit Request", icon: "📝" },
+    { id: "my-requests", name: "My Requests", icon: "📋" },
+    { id: "calendar", name: "Leave Calendar", icon: "📅" }
+  ] : [
     { id: "requests", name: "Record Leave", icon: "📝" },
     { id: "calendar", name: "Leave Calendar", icon: "📅" },
-    // Hide balances and analytics for user role
-    ...(userRole !== 'user' ? [
-      { id: "balances", name: "Leave Balances", icon: "💰" },
-      { id: "analytics", name: "Analytics", icon: "📊" }
-    ] : [])
+    { id: "balances", name: "Leave Balances", icon: "💰" },
+    { id: "analytics", name: "Analytics", icon: "📊" }
   ];
 
   if (loading) {
@@ -284,8 +288,18 @@ export default function LeaveManagement() {
       </div>
 
 
-      {/* Leave Requests Tab */}
-      {activeTab === "requests" && (
+      {/* Submit Request Tab - User Role Only */}
+      {userRole === 'user' && activeTab === "request" && (
+        <LeaveRequestForm onRequestSubmitted={() => setRefreshTrigger(prev => prev + 1)} />
+      )}
+
+      {/* My Requests Tab - User Role Only */}
+      {userRole === 'user' && activeTab === "my-requests" && (
+        <MyLeaveRequests refreshTrigger={refreshTrigger} />
+      )}
+
+      {/* Leave Requests Tab - HR Role Only */}
+      {userRole !== 'user' && activeTab === "requests" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Record Leave Entry Form */}

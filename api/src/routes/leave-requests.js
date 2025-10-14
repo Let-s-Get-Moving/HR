@@ -1,0 +1,265 @@
+const express = require('express');
+const { requireAuth } = require('../middleware/security');
+const { applyScopeFilter, requirePermission } = require('../middleware/rbac');
+const { pool } = require('../db/pools');
+
+const router = express.Router();
+
+// Apply authentication and RBAC to all routes
+router.use(requireAuth);
+router.use(applyScopeFilter);
+
+// Submit a new leave request (user role only)
+router.post('/', async (req, res) => {
+  try {
+    const { leave_type, start_date, end_date, reason } = req.body;
+    const employee_id = req.employeeId;
+
+    // Validate required fields
+    if (!leave_type || !start_date || !end_date) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Leave type, start date, and end date are required' 
+      });
+    }
+
+    // Validate leave type
+    const validLeaveTypes = ['Vacation', 'Sick Leave', 'Personal Leave', 'Bereavement', 'Parental Leave', 'Jury Duty', 'Military Leave'];
+    if (!validLeaveTypes.includes(leave_type)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Invalid leave type' 
+      });
+    }
+
+    // Validate dates
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+    
+    if (startDate >= endDate) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'End date must be after start date' 
+      });
+    }
+
+    if (startDate < new Date()) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cannot request leave for past dates' 
+      });
+    }
+
+    // Check for overlapping requests
+    const overlapQuery = `
+      SELECT id FROM leave_requests 
+      WHERE employee_id = $1 
+        AND status = 'Pending'
+        AND (
+          (start_date <= $2 AND end_date >= $2) OR
+          (start_date <= $3 AND end_date >= $3) OR
+          (start_date >= $2 AND end_date <= $3)
+        )
+    `;
+    const overlapResult = await pool.query(overlapQuery, [employee_id, start_date, end_date]);
+    
+    if (overlapResult.rows.length > 0) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'You have a pending leave request that overlaps with these dates' 
+      });
+    }
+
+    // Insert the leave request
+    const insertQuery = `
+      INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, reason, status)
+      VALUES ($1, $2, $3, $4, $5, 'Pending')
+      RETURNING *
+    `;
+    
+    const result = await pool.query(insertQuery, [employee_id, leave_type, start_date, end_date, reason]);
+    
+    res.json({
+      success: true,
+      message: 'Leave request submitted successfully',
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error submitting leave request:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to submit leave request',
+      error: error.message 
+    });
+  }
+});
+
+// Get leave requests (filtered by role)
+router.get('/', async (req, res) => {
+  try {
+    let query, params;
+    
+    if (req.userScope === 'own') {
+      // User role - only their own requests
+      query = `
+        SELECT lr.*, e.first_name, e.last_name, e.email
+        FROM leave_requests lr
+        JOIN employees e ON lr.employee_id = e.id
+        WHERE lr.employee_id = $1
+        ORDER BY lr.requested_at DESC
+      `;
+      params = [req.employeeId];
+    } else {
+      // HR role - all requests
+      query = `
+        SELECT lr.*, e.first_name, e.last_name, e.email,
+               u.username as reviewed_by_name
+        FROM leave_requests lr
+        JOIN employees e ON lr.employee_id = e.id
+        LEFT JOIN users u ON lr.reviewed_by = u.id
+        ORDER BY lr.requested_at DESC
+      `;
+      params = [];
+    }
+
+    const result = await pool.query(query, params);
+    
+    res.json({
+      success: true,
+      data: result.rows
+    });
+
+  } catch (error) {
+    console.error('Error fetching leave requests:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch leave requests',
+      error: error.message 
+    });
+  }
+});
+
+// Get pending requests (HR role only)
+router.get('/pending', requirePermission('LEAVE_APPROVE'), async (req, res) => {
+  try {
+    const query = `
+      SELECT lr.*, e.first_name, e.last_name, e.email,
+             e.leave_balance_vacation, e.leave_balance_sick, e.leave_balance_personal
+      FROM leave_requests lr
+      JOIN employees e ON lr.employee_id = e.id
+      WHERE lr.status = 'Pending'
+      ORDER BY lr.requested_at ASC
+    `;
+    
+    const result = await pool.query(query);
+    
+    res.json({
+      success: true,
+      data: result.rows
+    });
+
+  } catch (error) {
+    console.error('Error fetching pending requests:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch pending requests',
+      error: error.message 
+    });
+  }
+});
+
+// Approve or reject a leave request (HR role only)
+router.put('/:id/status', requirePermission('LEAVE_APPROVE'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, review_notes } = req.body;
+    const reviewed_by = req.user.id;
+
+    // Validate status
+    if (!['Approved', 'Rejected'].includes(status)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Status must be either Approved or Rejected' 
+      });
+    }
+
+    // Update the leave request
+    const updateQuery = `
+      UPDATE leave_requests 
+      SET status = $1, review_notes = $2, reviewed_by = $3, reviewed_at = CURRENT_TIMESTAMP
+      WHERE id = $4
+      RETURNING *
+    `;
+    
+    const result = await pool.query(updateQuery, [status, review_notes, reviewed_by, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Leave request not found' 
+      });
+    }
+
+    // If approved, we might want to add it to the leave calendar
+    // This would integrate with the existing leave system
+    if (status === 'Approved') {
+      // TODO: Add to leave calendar/leave_entries table
+      console.log('Leave request approved - should integrate with calendar');
+    }
+
+    res.json({
+      success: true,
+      message: `Leave request ${status.toLowerCase()} successfully`,
+      data: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('Error updating leave request status:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to update leave request status',
+      error: error.message 
+    });
+  }
+});
+
+// Get leave request statistics (HR role only)
+router.get('/stats', requirePermission('LEAVE_VIEW'), async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM leave_requests
+      GROUP BY status
+    `;
+    
+    const result = await pool.query(query);
+    
+    const stats = {
+      pending: 0,
+      approved: 0,
+      rejected: 0
+    };
+    
+    result.rows.forEach(row => {
+      stats[row.status.toLowerCase()] = parseInt(row.count);
+    });
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error('Error fetching leave request stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch leave request statistics',
+      error: error.message 
+    });
+  }
+});
+
+module.exports = router;
