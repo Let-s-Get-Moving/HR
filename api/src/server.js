@@ -38,6 +38,7 @@ import timecards from "./routes/timecards.js";
 import timecardUploads from "./routes/timecardUploads.js";
 import employeeMatching from "./routes/employee-matching.js";
 import adminCleanup from "./routes/admin-cleanup.js";
+import diagnostic from "./routes/diagnostic.js";
 import logger from "./utils/logger.js";
 
 const app = express();
@@ -306,6 +307,7 @@ app.use("/api/timecards", requireAuth, timecards);
 app.use("/api/timecard-uploads", requireAuth, timecardUploads);
 app.use("/api/employee-matching", requireAuth, employeeMatching);
 app.use("/api/admin-cleanup", requireAuth, adminCleanup);
+app.use("/api/diagnostic", diagnostic); // Diagnostic endpoint for checking user status
 
 // Emergency database migration endpoint
 app.post("/api/migrate-db", async (req, res) => {
