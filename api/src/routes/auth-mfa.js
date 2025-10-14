@@ -813,7 +813,7 @@ r.post('/create-user', requireAuth, async (req, res) => {
     const role_id = roleResult.rows[0].id;
     
     // Hash password
-    const bcrypt = await import('bcrypt');
+    const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Create user
