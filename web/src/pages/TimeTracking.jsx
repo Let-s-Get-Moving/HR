@@ -490,51 +490,53 @@ export default function TimeTracking() {
               </select>
             </div>
 
-            {/* Employee Search */}
-            <div>
-              <label className="block text-sm font-medium mb-2 text-primary">Search Employee</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <input
-            type="text"
-                  placeholder="Search by name or email..."
-                  value={employeeSearch}
-                  onChange={(e) => setEmployeeSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                />
-                {employeeSearch && (
-              <button
-                    onClick={() => setEmployeeSearch("")}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-secondary hover:text-primary"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            {/* Employee Search - Hidden for user role */}
+            {userRole !== 'user' && (
+              <div>
+                <label className="block text-sm font-medium mb-2 text-primary">Search Employee</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+                    placeholder="Search by name or email..."
+                    value={employeeSearch}
+                    onChange={(e) => setEmployeeSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                  />
+                  {employeeSearch && (
+                <button
+                      onClick={() => setEmployeeSearch("")}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-secondary hover:text-primary"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                  )}
+                </div>
+                {/* Autocomplete dropdown */}
+                {employeeSearch && filteredEmployees.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {filteredEmployees.slice(0, 10).map((emp) => (
+                      <button
+                        key={emp.id}
+                        onClick={() => {
+                          setEmployeeSearch(`${emp.first_name} ${emp.last_name}`);
+                        }}
+                        className="w-full px-4 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-primary"
+                      >
+                        <div className="font-medium">{emp.first_name} {emp.last_name}</div>
+                        <div className="text-sm text-secondary">{emp.email}</div>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
-              {/* Autocomplete dropdown */}
-              {employeeSearch && filteredEmployees.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg max-h-60 overflow-auto">
-                  {filteredEmployees.slice(0, 10).map((emp) => (
-                    <button
-                      key={emp.id}
-                      onClick={() => {
-                        setEmployeeSearch(`${emp.first_name} ${emp.last_name}`);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-primary"
-                    >
-                      <div className="font-medium">{emp.first_name} {emp.last_name}</div>
-                      <div className="text-sm text-secondary">{emp.email}</div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -554,6 +556,7 @@ export default function TimeTracking() {
             loadDayViewData={loadDayViewData}
             searchQuery={dayViewSearch}
             onSearchChange={setDayViewSearch}
+            userRole={userRole}
           />
         )}
         {view === "uploads" && (
@@ -1059,7 +1062,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 }
 
 // Day View Component
-function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData, searchQuery, onSearchChange }) {
+function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData, searchQuery, onSearchChange, userRole }) {
   const [editingEntryId, setEditingEntryId] = React.useState(null);
   const [editForm, setEditForm] = React.useState({});
   const [saving, setSaving] = React.useState(false);
@@ -1190,40 +1193,42 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
         </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="card p-4">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+      {/* Search Bar - Hidden for user role */}
+      {userRole !== 'user' && (
+        <div className="card p-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              type="text"
+              placeholder="Search by employee name, department, or email..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+            />
+            {searchQuery && (
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <button
+                  onClick={() => onSearchChange("")}
+                  className="text-neutral-400 hover:text-primary transition-colors"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
-          <input
-            type="text"
-            placeholder="Search by employee name, department, or email..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
-          />
           {searchQuery && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <button
-                onClick={() => onSearchChange("")}
-                className="text-neutral-400 hover:text-primary transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+            <div className="mt-2 text-sm text-secondary">
+              Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
             </div>
           )}
         </div>
-        {searchQuery && (
-          <div className="mt-2 text-sm text-secondary">
-            Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Day View Data */}
       {loading ? (
