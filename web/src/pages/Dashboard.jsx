@@ -448,7 +448,13 @@ export default function Dashboard({ onNavigate }) {
                   <div className="w-2 h-2 bg-indigo-400 rounded-full mt-2"></div>
                   <div className="flex-1">
                     <p className="text-sm text-white">{activity.description}</p>
-                    <p className="text-xs text-neutral-400 mt-1">{activity.timestamp}</p>
+                    <p className="text-xs text-neutral-400 mt-1">
+                      {activity.timestamp ? new Date(activity.timestamp).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      }) : 'Unknown date'}
+                    </p>
                   </div>
                 </div>
               ))
