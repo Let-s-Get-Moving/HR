@@ -24,41 +24,48 @@ export default function Dashboard({ onNavigate }) {
   const loadData = async () => {
     try {
       setRefreshing(true);
-      const [analyticsData, activityData, attendanceData] = await Promise.all([
+      const [analyticsData, activityData] = await Promise.all([
         API(`/api/analytics/dashboard?timeRange=${selectedTimeRange}`).catch(() => null),
-        API("/api/analytics/recent-activity").catch(() => []),
-        API("/api/metrics/attendance").catch(() => null)
+        API("/api/analytics/recent-activity").catch(() => [])
       ]);
+      
+      console.log('📊 [Dashboard] Analytics data:', analyticsData);
       
       setAnalytics(analyticsData);
       setRecentActivity(activityData || []);
       
-      // Set other data from analytics response
+      // Set data from real analytics response
       if (analyticsData) {
+        // Workforce data from workforceOverview
         setWf({
-          total: analyticsData.totalEmployees,
+          total: analyticsData.workforceOverview.total_active_employees,
           breakdown: {
-            full_time: Math.floor(analyticsData.totalEmployees * 0.67), // 67% full-time
-            part_time: Math.floor(analyticsData.totalEmployees * 0.17), // 17% part-time
-            contract: Math.floor(analyticsData.totalEmployees * 0.16)   // 16% contract
+            full_time: analyticsData.workforceOverview.full_time,
+            part_time: analyticsData.workforceOverview.part_time,
+            contract: analyticsData.workforceOverview.contract
           }
         });
         
-        // Use real attendance data from API
-        setAtt(attendanceData || {
-          absenteeism_rate: 0,
-          avg_hours_week: 0,
-          late_arrivals: 0,
-          early_leaves: 0
+        // Real attendance data from attendanceMetrics
+        setAtt({
+          avg_hours_week: analyticsData.attendanceMetrics.avg_hours_per_week,
+          absenteeism_rate: 0, // Can calculate later if needed
+          late_arrivals: 0,    // Can add from time tracking data
+          early_leaves: 0,
+          employees_tracked: analyticsData.attendanceMetrics.employees_tracked,
+          total_work_days: analyticsData.attendanceMetrics.total_work_days
         });
         
+        // Real compliance data
         setCmp({
-          contracts_signed: 0,
-          whmis_valid: 0,
-          training_complete: 92
+          contracts_signed: analyticsData.complianceStats.contracts_signed,
+          contracts_signed_pct: analyticsData.complianceStats.contracts_signed_pct,
+          whmis_valid_pct: 0, // Can add if you track WHMIS certifications
+          training_complete: analyticsData.trainingStats.completion_rate
         });
         
-        setPayroll(analyticsData.payrollStats || {});
+        // Payroll data
+        setPayroll(analyticsData.payrollStats);
       }
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -124,11 +131,11 @@ export default function Dashboard({ onNavigate }) {
     );
   }
 
-  // Calculate additional metrics
+  // Calculate additional metrics from real data
   const totalPayroll = analytics?.payrollStats?.totalPayrollAmount ? parseFloat(analytics.payrollStats.totalPayrollAmount) : 0;
   const avgHoursPerEmployee = att?.avg_hours_week || 0;
-  const employeeSatisfaction = 0; // No survey data yet
-  const trainingCompletion = 0; // No training data yet
+  const employeeSatisfaction = 0; // Placeholder - can add survey functionality later
+  const trainingCompletion = cmp?.training_complete || 0;
 
   return (
     <div className="dashboard-container p-6 max-w-7xl mx-auto">
