@@ -108,7 +108,7 @@ import { useUserRole, canAccessPage } from './hooks/useUserRole.js';
 
 export default function App() {
   const [user, setUser] = useState(null);
-  const [currentPage, setCurrentPage] = useState("dashboard");
+  const [currentPage, setCurrentPage] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { userRole } = useUserRole();
   
@@ -120,6 +120,16 @@ export default function App() {
       Object.entries(pages).filter(([key]) => canAccessPage(userRole, key))
     );
   }, [user, userRole]);
+
+  // Redirect to first allowed page if current page is not accessible
+  useEffect(() => {
+    if (user && userRole && allowedPages && !canAccessPage(userRole, currentPage)) {
+      const firstAllowedPage = Object.keys(allowedPages)[0];
+      if (firstAllowedPage) {
+        setCurrentPage(firstAllowedPage);
+      }
+    }
+  }, [user, userRole, allowedPages, currentPage]);
   const [passwordWarning, setPasswordWarning] = useState(null);
 
   useEffect(() => {
