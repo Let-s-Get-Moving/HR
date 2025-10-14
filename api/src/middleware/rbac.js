@@ -135,7 +135,9 @@ export const getUserRole = async (userId) => {
 // Check if user has permission
 export const hasPermission = (userRole, permission) => {
   const rolePermissions = ROLE_PERMISSIONS[userRole] || [];
-  return rolePermissions.includes(permission);
+  const hasIt = rolePermissions.includes(permission);
+  console.log(`🔍 [RBAC] hasPermission check:`, { userRole, permission, rolePermissions: rolePermissions.length, hasIt });
+  return hasIt;
 };
 
 // RBAC middleware factory
