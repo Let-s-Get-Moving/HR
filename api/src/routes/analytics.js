@@ -14,7 +14,7 @@ r.get("/recent-activity", async (_req, res) => {
   try {
     // Get real recent activity from database - only use tables that exist
     const [recentHires, recentPayroll] = await Promise.all([
-      // Recent hires
+      // Recent hires - exclude terminated/deleted employees
       q(`
         SELECT 
           'hire' as type,
@@ -23,6 +23,7 @@ r.get("/recent-activity", async (_req, res) => {
           id
         FROM employees 
         WHERE hire_date >= CURRENT_DATE - INTERVAL '30 days'
+          AND status = 'Active'
         ORDER BY hire_date DESC
         LIMIT 5
       `),
