@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { q } from "../db.js";
+import { primaryPool as pool } from "../db/pools.js";
 import { z } from "zod";
 import { applyScopeFilter } from "../middleware/rbac.js";
 
@@ -29,12 +29,12 @@ r.get("/", async (req, res) => {
   
   query += ` ORDER BY e.first_name, e.last_name`;
   
-  const { rows } = await q(query, params);
+  const { rows } = await pool.query(query, params);
   res.json(rows);
 });
 
 r.get("/terminated", async (_req, res) => {
-  const { rows } = await q(
+  const { rows } = await pool.query(
     `SELECT e.*, 
      e.first_name || ' ' || e.last_name AS name,
      d.name AS department, 
@@ -49,17 +49,17 @@ r.get("/terminated", async (_req, res) => {
 });
 
 r.get("/departments", async (_req, res) => {
-  const { rows } = await q(`SELECT * FROM departments ORDER BY name`);
+  const { rows } = await pool.query(`SELECT * FROM departments ORDER BY name`);
   res.json(rows);
 });
 
 r.get("/locations", async (_req, res) => {
-  const { rows } = await q(`SELECT * FROM locations WHERE is_active = true ORDER BY name`);
+  const { rows } = await pool.query(`SELECT * FROM locations WHERE is_active = true ORDER BY name`);
   res.json(rows);
 });
 
 r.get("/time-entries", async (_req, res) => {
-  const { rows } = await q(
+  const { rows } = await pool.query(
     `SELECT * FROM time_entries ORDER BY work_date DESC, employee_id`
   );
   res.json(rows);
@@ -94,7 +94,7 @@ const employeeSchema = z.object({
 r.post("/", async (req, res) => {
   try {
     const data = employeeSchema.parse(req.body);
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `INSERT INTO employees
        (first_name,last_name,work_email,email,phone,gender,birth_date,hire_date,employment_type,department_id,location_id,role_title,probation_end,hourly_rate,full_address,sin_number,sin_expiry_date,bank_name,bank_account_number,bank_transit_number,emergency_contact_name,emergency_contact_phone)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
@@ -118,7 +118,7 @@ r.post("/", async (req, res) => {
 });
 
 r.delete("/:id", async (req, res) => {
-  await q(`UPDATE employees SET status='Terminated', termination_date=CURRENT_DATE, termination_reason='Terminated via HR system' WHERE id=$1`, [req.params.id]);
+  await pool.query(`UPDATE employees SET status='Terminated', termination_date=CURRENT_DATE, termination_reason='Terminated via HR system' WHERE id=$1`, [req.params.id]);
   res.sendStatus(204);
 });
 
@@ -147,7 +147,7 @@ r.put("/:id", async (req, res) => {
       });
     }
     
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `UPDATE employees 
        SET first_name = $1, last_name = $2, email = $3, work_email = $4, phone = $5, 
            role_title = $6, hourly_rate = $7, employment_type = $8,
@@ -207,7 +207,7 @@ r.put("/:id", async (req, res) => {
 r.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `SELECT e.*, d.name as department_name, l.name as location_name,
               COALESCE(e.hourly_rate, comp.regular_rate) AS hourly_rate
        FROM employees e 
@@ -237,7 +237,7 @@ r.get("/:id", async (req, res) => {
 r.get("/:id/time-entries", async (req, res) => {
   try {
     const { id } = req.params;
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `SELECT 
          te.id,
          te.employee_id,
@@ -284,7 +284,7 @@ r.get("/:id/documents", async (req, res) => {
   try {
     const { id } = req.params;
     console.log(`📄 [API] Fetching documents for employee ${id}`);
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `SELECT id, employee_id, doc_type, file_name, uploaded_on, signed, 
               file_url, file_size, mime_type, document_category, notes,
               CASE WHEN file_data IS NOT NULL THEN true ELSE false END as has_file_data
@@ -340,7 +340,7 @@ r.post("/:id/documents", async (req, res) => {
     
     console.log(`💾 [API] Inserting into database...`);
     // Insert document
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `INSERT INTO documents (
         employee_id, doc_type, file_name, file_data, file_size, mime_type,
         document_category, notes, signed, uploaded_on, uploaded_by
@@ -388,7 +388,7 @@ r.get("/:id/documents/:docId/download", async (req, res) => {
     
     console.log(`📥 [API] Download request for document ${docId} of employee ${id}`);
     
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `SELECT file_data, file_name, mime_type, file_url
        FROM documents 
        WHERE id = $1 AND employee_id = $2`,
@@ -448,7 +448,7 @@ r.delete("/:id/documents/:docId", async (req, res) => {
     
     console.log(`🗑️ [API] Delete request for document ${docId} of employee ${id}`);
     
-    const { rowCount } = await q(
+    const { rowCount } = await pool.query(
       `DELETE FROM documents WHERE id = $1 AND employee_id = $2`,
       [docId, id]
     );
@@ -475,7 +475,7 @@ r.delete("/:id/documents/:docId", async (req, res) => {
 r.get("/:id/training-records", async (req, res) => {
   try {
     const { id } = req.params;
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `SELECT tr.*, t.name as training_name, t.validity_months 
        FROM training_records tr 
        JOIN trainings t ON tr.training_id = t.id 
@@ -493,7 +493,7 @@ r.get("/:id/training-records", async (req, res) => {
 r.get("/:id/payroll-history", async (req, res) => {
   try {
     const { id } = req.params;
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `SELECT 
          pc.id,
          pp.start_date AS pay_period_start,

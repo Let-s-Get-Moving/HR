@@ -217,8 +217,6 @@ r.get("/periods", async (req, res) => {
       queryParams.push(req.employeeId);
       whereClause = `WHERE t.employee_id = $${queryParams.length}`;
       console.log(`🔒 [RBAC] Filtering periods for employee ${req.employeeId}`);
-    } else {
-      whereClause = "";
     }
     
     // Get all timecard dates (no approval filter - if timecards exist, they count)
