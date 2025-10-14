@@ -1,7 +1,7 @@
-const express = require('express');
-const { requireAuth } = require('../middleware/security');
-const { applyScopeFilter, requirePermission } = require('../middleware/rbac');
-const { pool } = require('../db/pools');
+import express from 'express';
+import { requireAuth } from '../middleware/security.js';
+import { applyScopeFilter, requirePermission } from '../middleware/rbac.js';
+import { pool } from '../db/pools.js';
 
 const router = express.Router();
 
@@ -262,4 +262,4 @@ router.get('/stats', requirePermission('LEAVE_VIEW'), async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
