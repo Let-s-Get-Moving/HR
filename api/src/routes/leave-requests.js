@@ -148,8 +148,29 @@ router.get('/', async (req, res) => {
 router.get('/pending', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (req, res) => {
   try {
     const query = `
-      SELECT lr.*, e.first_name, e.last_name, e.email,
-             e.leave_balance_vacation, e.leave_balance_sick, e.leave_balance_personal
+      SELECT 
+        lr.*,
+        e.first_name, 
+        e.last_name, 
+        e.email,
+        (SELECT COALESCE(SUM(entitled_days - used_days + carried_over_days), 0) 
+         FROM leave_balances lb 
+         JOIN leave_types lt ON lb.leave_type_id = lt.id 
+         WHERE lb.employee_id = e.id 
+           AND lt.name = 'Vacation' 
+           AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)) as vacation_balance,
+        (SELECT COALESCE(SUM(entitled_days - used_days + carried_over_days), 0) 
+         FROM leave_balances lb 
+         JOIN leave_types lt ON lb.leave_type_id = lt.id 
+         WHERE lb.employee_id = e.id 
+           AND lt.name = 'Sick Leave' 
+           AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)) as sick_balance,
+        (SELECT COALESCE(SUM(entitled_days - used_days + carried_over_days), 0) 
+         FROM leave_balances lb 
+         JOIN leave_types lt ON lb.leave_type_id = lt.id 
+         WHERE lb.employee_id = e.id 
+           AND lt.name = 'Personal Leave' 
+           AND lb.year = EXTRACT(YEAR FROM CURRENT_DATE)) as personal_balance
       FROM leave_requests lr
       JOIN employees e ON lr.employee_id = e.id
       WHERE lr.status = 'Pending'
