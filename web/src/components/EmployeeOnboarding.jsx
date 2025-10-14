@@ -21,9 +21,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
     hire_date: "",
     employment_type: "Full-time",
     department_id: "",
-    location_id: "",
-    role_title: "",
-    user_role: "user",  // New: Default to "user" role
+    user_role: "user",  // System Access Role - determines RBAC permissions
     probation_end: "",
     hourly_rate: 25,
     
@@ -84,8 +82,6 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
           hire_date: formData.hire_date,
           employment_type: formData.employment_type,
           department_id: formData.department_id || null,
-          location_id: formData.location_id || null,
-          role_title: formData.role_title,
           probation_end: formData.probation_end,
           hourly_rate: formData.hourly_rate,
           // Step 3 data
@@ -293,32 +289,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Location (HR will assign)</label>
-                <select
-                  value={formData.location_id}
-                  onChange={(e) => setFormData({...formData, location_id: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                >
-                  <option value="">Select Location</option>
-                  {locations.map(loc => (
-                    <option key={loc.id} value={loc.id}>{loc.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Role Title</label>
-                <input
-                  type="text"
-                  value={formData.role_title}
-                  onChange={(e) => setFormData({...formData, role_title: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium mb-2">
-                  User Role <span className="text-indigo-400">(System Access)</span>
+                  System Access Role * <span className="text-indigo-400">(Determines permissions)</span>
                 </label>
                 <select
                   value={formData.user_role}
@@ -327,12 +299,13 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 >
                   <option value="user">User (Employee Access)</option>
                   <option value="manager">Manager (HR Access)</option>
-                  <option value="admin">Admin (Full Access)</option>
                 </select>
                 <p className="text-xs text-neutral-400 mt-1">
-                  Determines what this employee can access in the system
+                  User: Can only view their own data | Manager: Full HR access to all employees
                 </p>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Hourly Rate ($)</label>
                 <input
@@ -342,18 +315,18 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Probation End Date (Auto-calculated)</label>
+                <input
+                  type="date"
+                  value={formData.probation_end}
+                  onChange={(e) => setFormData({...formData, probation_end: e.target.value})}
+                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  readOnly
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Probation End Date (Auto-calculated: 3 months)</label>
-              <input
-                type="date"
-                value={formData.probation_end}
-                onChange={(e) => setFormData({...formData, probation_end: e.target.value})}
-                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                readOnly
-              />
-              <p className="text-xs text-neutral-400 mt-1">Standard 3-month probation period for all employees</p>
-            </div>
+            <p className="text-xs text-neutral-400">Standard 3-month probation period for all employees</p>
           </motion.div>
         );
 
@@ -491,10 +464,9 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <div className="space-y-2 text-sm">
                     <div><span className="text-neutral-400">Hire Date:</span> {formData.hire_date}</div>
                     <div><span className="text-neutral-400">Type:</span> {formData.employment_type}</div>
-                    <div><span className="text-neutral-400">Role:</span> {formData.role_title || 'Not specified'}</div>
                     <div><span className="text-neutral-400">Department:</span> {departments.find(d => d.id == formData.department_id)?.name || 'None'}</div>
-                    <div><span className="text-neutral-400">Location:</span> {locations.find(l => l.id == formData.location_id)?.name || 'None'}</div>
                     <div><span className="text-neutral-400">Hourly Rate:</span> ${formData.hourly_rate}/hr</div>
+                    <div><span className="text-neutral-400">System Access:</span> <span className="text-indigo-400">{formData.user_role === 'user' ? 'User (Employee)' : 'Manager (HR)'}</span></div>
                   </div>
                 </div>
               </div>
