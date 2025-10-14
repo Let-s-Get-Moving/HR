@@ -110,7 +110,9 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { userRole } = useUserRole();
+  
+  // Get user role directly from user state (updates immediately on login)
+  const userRole = user?.role || null;
   
   // Filter pages based on user role
   const allowedPages = useMemo(() => {
