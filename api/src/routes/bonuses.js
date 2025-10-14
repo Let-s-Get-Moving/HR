@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { q } from "../db.js";
+import { primaryPool as pool } from "../db/pools.js";
 import { z } from "zod";
 import { formatCurrency } from "../utils/formatting.js";
 import { applyScopeFilter } from "../middleware/rbac.js";
@@ -49,7 +49,7 @@ const bonusUpdateSchema = z.object({
 // Get all bonuses
 r.get("/", async (req, res) => {
   try {
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT 
         b.*,
         e.first_name || ' ' || e.last_name as employee_name,
@@ -78,7 +78,7 @@ r.post("/", async (req, res) => {
   try {
     const validatedData = bonusSchema.parse(req.body);
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       INSERT INTO bonuses (
         employee_id, bonus_type, amount, period, criteria, status, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
@@ -136,7 +136,7 @@ r.put("/:id", async (req, res) => {
     updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
     values.push(id);
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       UPDATE bonuses 
       SET ${updateFields.join(', ')}
       WHERE id = $${paramCount}
@@ -163,7 +163,7 @@ r.put("/:id", async (req, res) => {
 // Get bonus structures
 r.get("/structures", async (req, res) => {
   try {
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT 
         bs.*,
         d.name as department_name
@@ -189,7 +189,7 @@ r.post("/structures", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       INSERT INTO bonus_structures (name, base_amount, criteria, calculation_method, effective_date, department_id)
       VALUES ($1, $2, $3, $4, $5, (SELECT id FROM departments WHERE name = $6 LIMIT 1))
       RETURNING *
@@ -211,7 +211,7 @@ r.put("/structures/:id", async (req, res) => {
     const { id } = req.params;
     const { name, base_amount, criteria, calculation_method, effective_date } = req.body;
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       UPDATE bonus_structures 
       SET name = $1, base_amount = $2, criteria = $3, calculation_method = $4, effective_date = $5
       WHERE id = $6
@@ -235,7 +235,7 @@ r.put("/structures/:id", async (req, res) => {
 // Get commission structures
 r.get("/commission-structures", async (req, res) => {
   try {
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT 
         cs.*,
         d.name as department_name
@@ -261,7 +261,7 @@ r.post("/commission-structures", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       INSERT INTO commission_structures (name, commission_rate, base_amount, criteria, calculation_method, effective_date, department_id)
       VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM departments WHERE name = $7 LIMIT 1))
       RETURNING *
@@ -283,7 +283,7 @@ r.post("/fix-schema", async (req, res) => {
     console.log('🔧 Fixing bonus schema...');
     
     // Add approval fields
-    await q(`
+    await pool.query(`
       ALTER TABLE bonuses 
       ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255),
       ADD COLUMN IF NOT EXISTS approval_notes TEXT,
@@ -292,7 +292,7 @@ r.post("/fix-schema", async (req, res) => {
     console.log('✅ Approval fields added');
 
     // Add rejection fields  
-    await q(`
+    await pool.query(`
       ALTER TABLE bonuses 
       ADD COLUMN IF NOT EXISTS rejected_by VARCHAR(255),
       ADD COLUMN IF NOT EXISTS rejection_reason VARCHAR(255),
@@ -301,20 +301,20 @@ r.post("/fix-schema", async (req, res) => {
     console.log('✅ Rejection fields added');
 
     // Add updated_at column if it doesn't exist
-    await q(`
+    await pool.query(`
       ALTER TABLE bonuses 
       ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     `);
     console.log('✅ Updated_at column added');
 
     // Create indexes for better performance
-    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status)`);
-    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id)`);
-    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_created_at ON bonuses(created_at)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bonuses_created_at ON bonuses(created_at)`);
     console.log('✅ Performance indexes created');
     
     // Test the new columns
-    await q(`
+    await pool.query(`
       UPDATE bonuses 
       SET approved_by = 'System Admin', 
           approval_notes = 'Schema migration test',
@@ -324,7 +324,7 @@ r.post("/fix-schema", async (req, res) => {
     console.log('✅ Test update successful');
     
     // Verify the schema
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT column_name, data_type, is_nullable
       FROM information_schema.columns 
       WHERE table_name = 'bonuses' 
@@ -372,7 +372,7 @@ r.get("/quick-fix", async (req, res) => {
     
     for (let i = 0; i < commands.length; i++) {
       try {
-        await q(commands[i]);
+        await pool.query(commands[i]);
         console.log(`✅ Command ${i + 1}/${commands.length} executed successfully`);
       } catch (cmdError) {
         console.log(`⚠️  Command ${i + 1} warning:`, cmdError.message);
@@ -380,7 +380,7 @@ r.get("/quick-fix", async (req, res) => {
     }
     
     // Test the new columns
-    await q(`
+    await pool.query(`
       UPDATE bonuses 
       SET approved_by = 'Quick Fix Admin', 
           approval_notes = 'Quick fix test',
@@ -411,29 +411,29 @@ r.get("/immediate-fix", async (req, res) => {
     console.log('🚀 IMMEDIATE FIX: Adding missing columns...');
     
     // Step 1: Add approval fields
-    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255)`);
-    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approval_notes TEXT`);
-    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS payment_date DATE`);
+    await pool.query(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255)`);
+    await pool.query(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS approval_notes TEXT`);
+    await pool.query(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS payment_date DATE`);
     console.log('✅ Approval fields added');
 
     // Step 2: Add rejection fields  
-    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejected_by VARCHAR(255)`);
-    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_reason VARCHAR(255)`);
-    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_notes TEXT`);
+    await pool.query(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejected_by VARCHAR(255)`);
+    await pool.query(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_reason VARCHAR(255)`);
+    await pool.query(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS rejection_notes TEXT`);
     console.log('✅ Rejection fields added');
 
     // Step 3: Add updated_at column
-    await q(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP`);
+    await pool.query(`ALTER TABLE bonuses ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP`);
     console.log('✅ Updated_at column added');
 
     // Step 4: Create indexes
-    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status)`);
-    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id)`);
-    await q(`CREATE INDEX IF NOT EXISTS idx_bonuses_created_at ON bonuses(created_at)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bonuses_status ON bonuses(status)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bonuses_employee_id ON bonuses(employee_id)`);
+    await pool.query(`CREATE INDEX IF NOT EXISTS idx_bonuses_created_at ON bonuses(created_at)`);
     console.log('✅ Performance indexes created');
     
     // Step 5: Test the new columns
-    await q(`
+    await pool.query(`
       UPDATE bonuses 
       SET approved_by = 'Immediate Fix Admin', 
           approval_notes = 'Immediate fix test',
@@ -443,7 +443,7 @@ r.get("/immediate-fix", async (req, res) => {
     console.log('✅ Test update successful');
     
     // Step 6: Test approve functionality
-    await q(`
+    await pool.query(`
       UPDATE bonuses 
       SET status = 'Approved', 
           approved_by = 'Test Admin',
@@ -454,7 +454,7 @@ r.get("/immediate-fix", async (req, res) => {
     console.log('✅ Approve test successful');
     
     // Step 7: Test reject functionality
-    await q(`
+    await pool.query(`
       UPDATE bonuses 
       SET status = 'Rejected', 
           rejected_by = 'Test Admin',
@@ -492,15 +492,15 @@ r.get("/constraint-fix", async (req, res) => {
     console.log('🔧 CONSTRAINT FIX: Updating status constraint...');
     
     // Drop the existing constraint
-    await q(`ALTER TABLE bonuses DROP CONSTRAINT IF EXISTS bonuses_status_check`);
+    await pool.query(`ALTER TABLE bonuses DROP CONSTRAINT IF EXISTS bonuses_status_check`);
     console.log('✅ Old constraint dropped');
     
     // Add new constraint with Rejected status
-    await q(`ALTER TABLE bonuses ADD CONSTRAINT bonuses_status_check CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Paid'))`);
+    await pool.query(`ALTER TABLE bonuses ADD CONSTRAINT bonuses_status_check CHECK (status IN ('Pending', 'Approved', 'Rejected', 'Paid'))`);
     console.log('✅ New constraint added with Rejected status');
     
     // Test reject functionality
-    await q(`
+    await pool.query(`
       UPDATE bonuses 
       SET status = 'Rejected', 
           rejected_by = 'Constraint Fix Admin',

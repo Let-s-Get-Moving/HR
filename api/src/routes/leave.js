@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { q } from "../db.js";
+import { primaryPool as pool } from "../db/pools.js";
 import { z } from "zod";
 import { applyScopeFilter } from "../middleware/rbac.js";
 
@@ -29,7 +29,7 @@ r.get("/requests", async (req, res) => {
     
     query += ` ORDER BY lr.requested_at DESC`;
     
-    const { rows } = await q(query, params);
+    const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Error getting leave requests:', error);
@@ -48,7 +48,7 @@ r.get("/employee/:id", async (req, res) => {
       return res.status(403).json({ error: 'You can only view your own leave requests' });
     }
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT lr.*, lt.name as leave_type_name
       FROM leave_requests lr
       JOIN leave_types lt ON lr.leave_type_id = lt.id
@@ -83,7 +83,7 @@ r.get("/balances", async (req, res) => {
     
     query += ` ORDER BY e.first_name, lt.name`;
     
-    const { rows } = await q(query, params);
+    const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Error getting leave balances:', error);
@@ -102,7 +102,7 @@ r.get("/balances/:id", async (req, res) => {
       return res.status(403).json({ error: 'You can only view your own leave balance' });
     }
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT lb.*, lt.name as leave_type_name
       FROM leave_balances lb
       JOIN leave_types lt ON lb.leave_type_id = lt.id
@@ -146,7 +146,7 @@ r.get("/calendar", async (req, res) => {
     
     query += ` ORDER BY lr.start_date`;
     
-    const { rows } = await q(query, params);
+    const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (error) {
     console.error('Error getting leave calendar:', error);
@@ -185,10 +185,10 @@ r.post("/requests", async (req, res) => {
     }
     
     // Start transaction
-    await q('BEGIN');
+    await pool.query('BEGIN');
     
     // Insert leave request
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       INSERT INTO leave_requests 
       (employee_id, leave_type_id, start_date, end_date, total_days, reason, notes, status, request_method, approved_by, requested_at, approved_at)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_TIMESTAMP, 
@@ -214,7 +214,7 @@ r.post("/requests", async (req, res) => {
       const year = new Date(data.start_date).getFullYear();
       
       // Create or update leave balance
-      await q(`
+      await pool.query(`
         INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
         VALUES ($1, $2, $3, 
                 (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
@@ -235,11 +235,11 @@ r.post("/requests", async (req, res) => {
       };
       
       // Get leave type name and map it
-      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [data.leave_type_id])).rows[0]?.name || 'Other';
+      const leaveTypeName = (await pool.query('SELECT name FROM leave_types WHERE id = $1', [data.leave_type_id])).rows[0]?.name || 'Other';
       const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
       
       // Also create record in leaves table for backwards compatibility
-      await q(`
+      await pool.query(`
         INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
         VALUES ($1, $2, $3, $4, $5, $6)
       `, [
@@ -252,11 +252,11 @@ r.post("/requests", async (req, res) => {
       ]);
     }
     
-    await q('COMMIT');
+    await pool.query('COMMIT');
     
     res.status(201).json(leaveRequest);
   } catch (error) {
-    await q('ROLLBACK');
+    await pool.query('ROLLBACK');
     console.error('Error creating leave request:', error);
     res.status(400).json({ error: error.message });
   }
@@ -274,19 +274,19 @@ r.put("/requests/:id/status", async (req, res) => {
   }
   
   try {
-    await q('BEGIN');
+    await pool.query('BEGIN');
     
     // Get the leave request details first
-    const { rows: lrRows } = await q('SELECT * FROM leave_requests WHERE id = $1', [id]);
+    const { rows: lrRows } = await pool.query('SELECT * FROM leave_requests WHERE id = $1', [id]);
     if (lrRows.length === 0) {
-      await q('ROLLBACK');
+      await pool.query('ROLLBACK');
       return res.status(404).json({ error: "Leave request not found" });
     }
     
     const oldStatus = lrRows[0].status;
     
     // Update leave request status
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       UPDATE leave_requests 
       SET status = $1, approved_by = $2, approved_at = CASE WHEN $1 = 'Approved' THEN CURRENT_TIMESTAMP ELSE approved_at END, 
           notes = COALESCE($3, notes)
@@ -300,7 +300,7 @@ r.put("/requests/:id/status", async (req, res) => {
     // Handle status changes and update leave balances accordingly
     if (status === 'Approved' && oldStatus !== 'Approved') {
       // Add to used days when approving
-      await q(`
+      await pool.query(`
         INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
         VALUES ($1, $2, $3, 
                 (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
@@ -321,11 +321,11 @@ r.put("/requests/:id/status", async (req, res) => {
       };
       
       // Get leave type name and map it
-      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [lr.leave_type_id])).rows[0]?.name || 'Other';
+      const leaveTypeName = (await pool.query('SELECT name FROM leave_types WHERE id = $1', [lr.leave_type_id])).rows[0]?.name || 'Other';
       const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
       
       // Create leave record
-      await q(`
+      await pool.query(`
         INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
         VALUES ($1, $2, $3, $4, $5, $6)
         ON CONFLICT DO NOTHING
@@ -339,23 +339,23 @@ r.put("/requests/:id/status", async (req, res) => {
       ]);
     } else if (status !== 'Approved' && oldStatus === 'Approved') {
       // Subtract from used days when un-approving (rejecting or cancelling previously approved leave)
-      await q(`
+      await pool.query(`
         UPDATE leave_balances
         SET used_days = GREATEST(0, used_days - $1)
         WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
       `, [lr.total_days, lr.employee_id, lr.leave_type_id, year]);
       
       // Delete leave record
-      await q(`
+      await pool.query(`
         DELETE FROM leaves 
         WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
       `, [lr.employee_id, lr.start_date, lr.end_date]);
     }
     
-    await q('COMMIT');
+    await pool.query('COMMIT');
     res.json(rows[0]);
   } catch (error) {
-    await q('ROLLBACK');
+    await pool.query('ROLLBACK');
     console.error('Error updating leave request status:', error);
     res.status(500).json({ error: error.message });
   }

@@ -1,6 +1,6 @@
 import express from "express";
 import { z } from "zod";
-import { q } from "../db.js";
+import { primaryPool as pool } from "../db/pools.js";
 import multer from "multer";
 import { importTimecardsFromExcel } from "../utils/timecardImporter.js";
 import { applyScopeFilter } from "../middleware/rbac.js";
@@ -83,7 +83,7 @@ r.get("/", async (req, res) => {
     console.log(`📊 [Timecards GET] Final query params:`, params);
     
     const queryStart = Date.now();
-    const { rows } = await q(query, params);
+    const { rows } = await pool.query(query, params);
     const queryTime = Date.now() - queryStart;
     
     console.log(`📊 [Timecards GET] ✅ Query executed in ${queryTime}ms`);
@@ -93,7 +93,7 @@ r.get("/", async (req, res) => {
     if (rows.length === 0 && pay_period_start && pay_period_end) {
       console.log(`⚠️ [Timecards GET] No results found - running diagnostics...`);
       
-      const debugCheck = await q(`
+      const debugCheck = await pool.query(`
         SELECT COUNT(*) as count, 
                MIN(pay_period_start) as min_start, 
                MAX(pay_period_end) as max_end 
@@ -101,7 +101,7 @@ r.get("/", async (req, res) => {
       `);
       console.log(`🔍 [Timecards GET] Total timecards in DB:`, debugCheck.rows[0]);
       
-      const periodCheck = await q(`
+      const periodCheck = await pool.query(`
         SELECT COUNT(*) as count 
         FROM timecards 
         WHERE pay_period_start::TEXT LIKE $1 AND pay_period_end::TEXT LIKE $2
@@ -109,7 +109,7 @@ r.get("/", async (req, res) => {
       console.log(`🔍 [Timecards GET] Fuzzy match count:`, periodCheck.rows[0].count);
       
       // Check exact date values in DB
-      const sampleCheck = await q(`
+      const sampleCheck = await pool.query(`
         SELECT DISTINCT 
           pay_period_start::TEXT as start_text, 
           pay_period_end::TEXT as end_text
@@ -155,7 +155,7 @@ r.get("/day-view/:date", async (req, res) => {
       console.log(`🔒 [RBAC] Filtering day-view for employee ${req.employeeId}`);
     }
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT 
         e.id as employee_id,
         e.first_name,
@@ -208,7 +208,7 @@ r.get("/dates-with-data", async (req, res) => {
       console.log(`🔒 [RBAC] Filtering dates for employee ${req.employeeId}`);
     }
     
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       SELECT DISTINCT work_date::date
       FROM timecard_entries te
       ${whereClause}
@@ -237,7 +237,7 @@ r.get("/:id", async (req, res) => {
     const { id } = req.params;
     
     // Get timecard details
-    const { rows: timecards } = await q(
+    const { rows: timecards } = await pool.query(
       `SELECT 
         t.*,
         e.first_name,
@@ -256,7 +256,7 @@ r.get("/:id", async (req, res) => {
     }
     
     // Get all entries for this timecard
-    const { rows: entries } = await q(
+    const { rows: entries } = await pool.query(
       `SELECT * FROM timecard_entries 
        WHERE timecard_id = $1 
        ORDER BY work_date, clock_in`,
@@ -283,7 +283,7 @@ r.get("/employee/:employee_id/period", async (req, res) => {
       return res.status(400).json({ error: "pay_period_start and pay_period_end required" });
     }
     
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `SELECT 
         t.*,
         e.first_name,
@@ -303,7 +303,7 @@ r.get("/employee/:employee_id/period", async (req, res) => {
     }
     
     // Get entries
-    const { rows: entries } = await q(
+    const { rows: entries } = await pool.query(
       `SELECT * FROM timecard_entries 
        WHERE timecard_id = $1 
        ORDER BY work_date, clock_in`,
@@ -330,7 +330,7 @@ r.get("/stats/summary", async (req, res) => {
     }
     
     // Get totals by employee
-    const { rows: employeeTotals } = await q(
+    const { rows: employeeTotals } = await pool.query(
       `SELECT 
         e.id as employee_id,
         CONCAT(e.first_name, ' ', e.last_name) as employee_name,
@@ -411,7 +411,7 @@ r.get("/periods/list", async (req, res) => {
       ORDER BY pay_period_start DESC`;
     }
     
-    const { rows } = await q(query, params);
+    const { rows } = await pool.query(query, params);
     
     const totalTime = Date.now() - startTime;
     console.log(`📅 [Periods LIST] ✅ Query executed in ${totalTime}ms`);
@@ -428,7 +428,7 @@ r.get("/periods/list", async (req, res) => {
       console.log(`⚠️ [Periods LIST] WARNING: No periods found in timecard_uploads table`);
       
       // Check if there are ANY uploads at all
-      const uploadCheck = await q(`SELECT COUNT(*) as count, status FROM timecard_uploads GROUP BY status`);
+      const uploadCheck = await pool.query(`SELECT COUNT(*) as count, status FROM timecard_uploads GROUP BY status`);
       console.log(`🔍 [Periods LIST] Upload status breakdown:`, uploadCheck.rows);
     }
     
@@ -506,7 +506,7 @@ r.post("/entries", async (req, res) => {
     let timecard_id = data.timecard_id;
     if (!timecard_id) {
       // Try to find existing timecard or create one
-      const { rows: existingTimecard } = await q(
+      const { rows: existingTimecard } = await pool.query(
         `SELECT id FROM timecards 
          WHERE employee_id = $1 
            AND $2 BETWEEN pay_period_start AND pay_period_end`,
@@ -523,7 +523,7 @@ r.post("/entries", async (req, res) => {
       }
     }
     
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `INSERT INTO timecard_entries 
        (timecard_id, employee_id, work_date, clock_in, clock_out, hours_worked, notes)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -546,7 +546,7 @@ r.delete("/entries/:id", async (req, res) => {
   try {
     const { id } = req.params;
     
-    const { rows } = await q(
+    const { rows } = await pool.query(
       `DELETE FROM timecard_entries WHERE id = $1 RETURNING *`,
       [id]
     );
@@ -650,7 +650,7 @@ r.put("/entries/:id", async (req, res) => {
     
     // Update the entry
     console.log(`   Executing UPDATE query...`);
-    const { rows } = await q(`
+    const { rows } = await pool.query(`
       UPDATE timecard_entries
       SET 
         clock_in = $1,
