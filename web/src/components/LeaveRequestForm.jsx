@@ -42,8 +42,8 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
     const startDate = new Date(formData.start_date);
     const endDate = new Date(formData.end_date);
     
-    if (startDate >= endDate) {
-      setMessage({ type: 'error', text: 'End date must be after start date' });
+    if (startDate > endDate) {
+      setMessage({ type: 'error', text: 'End date cannot be before start date' });
       return;
     }
 
