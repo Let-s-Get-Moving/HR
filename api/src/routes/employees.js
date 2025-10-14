@@ -131,21 +131,42 @@ r.put("/:id", async (req, res) => {
   const nullIfEmpty = (value) => (value === '' || value === undefined) ? null : value;
   
   try {
-    // Validate required fields (email can be null, but work_email OR email must exist)
-    if (!data.first_name || !data.last_name || !data.hire_date || !data.employment_type || !data.status) {
-      return res.status(400).json({ 
-        error: "Missing required fields", 
-        details: "first_name, last_name, hire_date, employment_type, and status are required" 
-      });
+    // First, get the existing employee to preserve required fields if not provided
+    const existingResult = await q(`SELECT * FROM employees WHERE id = $1`, [id]);
+    if (existingResult.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
     }
+    const existing = existingResult.rows[0];
     
-    // At least one email should be provided
-    if (!data.work_email && !data.email) {
-      return res.status(400).json({ 
-        error: "Missing required fields", 
-        details: "Either work_email or email must be provided" 
-      });
-    }
+    // Merge with existing data, preferring new data when provided
+    const mergedData = {
+      first_name: data.first_name || existing.first_name,
+      last_name: data.last_name || existing.last_name,
+      work_email: data.work_email || existing.work_email, // Preserve existing if not provided
+      email: data.email !== undefined ? (data.email || null) : existing.email,
+      phone: data.phone !== undefined ? (data.phone || null) : existing.phone,
+      role_title: data.role_title !== undefined ? (data.role_title || null) : existing.role_title,
+      hourly_rate: data.hourly_rate !== undefined ? (data.hourly_rate || 25) : (existing.hourly_rate || 25),
+      employment_type: data.employment_type || existing.employment_type,
+      department_id: data.department_id !== undefined ? (data.department_id || null) : existing.department_id,
+      location_id: data.location_id !== undefined ? (data.location_id || null) : existing.location_id,
+      hire_date: data.hire_date || existing.hire_date,
+      gender: data.gender !== undefined ? (data.gender || null) : existing.gender,
+      birth_date: data.birth_date !== undefined ? (data.birth_date || null) : existing.birth_date,
+      status: data.status || existing.status,
+      probation_end: data.probation_end !== undefined ? (data.probation_end || null) : existing.probation_end,
+      full_address: data.full_address !== undefined ? (data.full_address || null) : existing.full_address,
+      emergency_contact_name: data.emergency_contact_name !== undefined ? (data.emergency_contact_name || null) : existing.emergency_contact_name,
+      emergency_contact_phone: data.emergency_contact_phone !== undefined ? (data.emergency_contact_phone || null) : existing.emergency_contact_phone,
+      sin_number: data.sin_number !== undefined ? (data.sin_number || null) : existing.sin_number,
+      sin_expiry_date: data.sin_expiry_date !== undefined ? (data.sin_expiry_date || null) : existing.sin_expiry_date,
+      bank_name: data.bank_name !== undefined ? (data.bank_name || null) : existing.bank_name,
+      bank_transit_number: data.bank_transit_number !== undefined ? (data.bank_transit_number || null) : existing.bank_transit_number,
+      bank_account_number: data.bank_account_number !== undefined ? (data.bank_account_number || null) : existing.bank_account_number,
+      contract_status: data.contract_status !== undefined ? (data.contract_status || null) : existing.contract_status,
+      contract_signed_date: data.contract_signed_date !== undefined ? (data.contract_signed_date || null) : existing.contract_signed_date,
+      gift_card_sent: data.gift_card_sent !== undefined ? data.gift_card_sent : (existing.gift_card_sent || false)
+    };
     
     const { rows } = await q(
       `UPDATE employees 
@@ -160,33 +181,32 @@ r.put("/:id", async (req, res) => {
        WHERE id = $27
        RETURNING *`,
       [
-        data.first_name,
-        data.last_name,
-        nullIfEmpty(data.email),
-        nullIfEmpty(data.work_email),
-        nullIfEmpty(data.phone),
-        nullIfEmpty(data.role_title),
-        data.hourly_rate || 25,
-        data.employment_type,
-        nullIfEmpty(data.department_id),
-        nullIfEmpty(data.location_id),
-        data.hire_date, // Required field - don't null it
-        nullIfEmpty(data.gender),
-        nullIfEmpty(data.birth_date),
-        data.status, // Required field - don't null it
-        nullIfEmpty(data.probation_end),
-        // New onboarding fields
-        nullIfEmpty(data.full_address),
-        nullIfEmpty(data.emergency_contact_name),
-        nullIfEmpty(data.emergency_contact_phone),
-        nullIfEmpty(data.sin_number),
-        nullIfEmpty(data.sin_expiry_date),
-        nullIfEmpty(data.bank_name),
-        nullIfEmpty(data.bank_transit_number),
-        nullIfEmpty(data.bank_account_number),
-        nullIfEmpty(data.contract_status),
-        nullIfEmpty(data.contract_signed_date),
-        data.gift_card_sent || false,
+        mergedData.first_name,
+        mergedData.last_name,
+        mergedData.email,
+        mergedData.work_email,
+        mergedData.phone,
+        mergedData.role_title,
+        mergedData.hourly_rate,
+        mergedData.employment_type,
+        mergedData.department_id,
+        mergedData.location_id,
+        mergedData.hire_date,
+        mergedData.gender,
+        mergedData.birth_date,
+        mergedData.status,
+        mergedData.probation_end,
+        mergedData.full_address,
+        mergedData.emergency_contact_name,
+        mergedData.emergency_contact_phone,
+        mergedData.sin_number,
+        mergedData.sin_expiry_date,
+        mergedData.bank_name,
+        mergedData.bank_transit_number,
+        mergedData.bank_account_number,
+        mergedData.contract_status,
+        mergedData.contract_signed_date,
+        mergedData.gift_card_sent,
         id
       ]
     );
