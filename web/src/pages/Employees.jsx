@@ -164,14 +164,17 @@ export default function Employees() {
           <h1 className="text-2xl sm:text-3xl font-bold">Employee Management</h1>
           <p className="text-neutral-400 mt-1">Manage your workforce and employee records</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowOnboarding(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 px-4 sm:px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
-        >
-          + Add Employee
-        </motion.button>
+        {/* Hide Add Employee button for user role */}
+        {userRole !== 'user' && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowOnboarding(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 px-4 sm:px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
+          >
+            + Add Employee
+          </motion.button>
+        )}
       </div>
 
       {/* Filter and Search Bar - Hidden for user role */}
