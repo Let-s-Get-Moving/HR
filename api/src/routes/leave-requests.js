@@ -36,19 +36,23 @@ router.post('/', async (req, res) => {
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
     
-    if (startDate >= endDate) {
+    if (startDate > endDate) {
       return res.status(400).json({ 
         success: false, 
-        message: 'End date must be after start date' 
+        message: 'End date cannot be before start date' 
       });
     }
 
-    if (startDate < new Date()) {
+    if (startDate < new Date(new Date().setHours(0, 0, 0, 0))) {
       return res.status(400).json({ 
         success: false, 
         message: 'Cannot request leave for past dates' 
       });
     }
+
+    // Calculate total days (inclusive of both start and end date)
+    const diffTime = Math.abs(endDate - startDate);
+    const total_days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
     // Check for overlapping requests
     const overlapQuery = `
@@ -72,12 +76,12 @@ router.post('/', async (req, res) => {
 
     // Insert the leave request
     const insertQuery = `
-      INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, reason, status)
-      VALUES ($1, $2, $3, $4, $5, 'Pending')
+      INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, reason, status, total_days)
+      VALUES ($1, $2, $3, $4, $5, 'Pending', $6)
       RETURNING *
     `;
     
-    const result = await q(insertQuery, [employee_id, leave_type, start_date, end_date, reason]);
+    const result = await q(insertQuery, [employee_id, leave_type, start_date, end_date, reason, total_days]);
     
     res.json({
       success: true,
