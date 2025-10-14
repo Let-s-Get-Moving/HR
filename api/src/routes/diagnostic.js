@@ -8,7 +8,7 @@ const router = express.Router();
  * Diagnostic endpoint to check user account status
  * GET /api/diagnostic/user-status?name=test
  */
-router.get('/user-status', requireAuth, async (req, res) => {
+router.get('/user-status', async (req, res) => {
   try {
     const searchName = req.query.name || '';
     
