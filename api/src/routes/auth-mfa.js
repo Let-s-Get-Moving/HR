@@ -13,6 +13,7 @@ import { MFAService } from "../services/mfa.js";
 import { UserManagementService } from "../services/user-management.js";
 import { TrustedDeviceService } from "../services/trusted-devices.js";
 import { requireAuth } from "../session.js";
+import bcrypt from "bcryptjs";
 
 const r = express.Router();
 
@@ -813,7 +814,6 @@ r.post('/create-user', requireAuth, async (req, res) => {
     const role_id = roleResult.rows[0].id;
     
     // Hash password
-    const bcrypt = await import('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
     
     // Create user
