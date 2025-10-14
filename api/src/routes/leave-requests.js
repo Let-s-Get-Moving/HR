@@ -224,11 +224,28 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
       });
     }
 
-    // If approved, we might want to add it to the leave calendar
-    // This would integrate with the existing leave system
+    // If approved, set the leave_type_id so it shows on the calendar
+    // The calendar uses leave_type_id to join with leave_types table
     if (status === 'Approved') {
-      // TODO: Add to leave calendar/leave_entries table
-      console.log('Leave request approved - should integrate with calendar');
+      const leaveRequest = result.rows[0];
+      
+      // If leave_type is set (new system) but leave_type_id is not (old system requirement)
+      if (leaveRequest.leave_type && !leaveRequest.leave_type_id) {
+        // Map leave_type string to leave_type_id
+        const leaveTypeMapping = await q(`
+          SELECT id FROM leave_types WHERE name = $1
+        `, [leaveRequest.leave_type]);
+        
+        if (leaveTypeMapping.rows.length > 0) {
+          await q(`
+            UPDATE leave_requests 
+            SET leave_type_id = $1 
+            WHERE id = $2
+          `, [leaveTypeMapping.rows[0].id, id]);
+          
+          console.log(`✅ Approved leave request ${id} - set leave_type_id for calendar integration`);
+        }
+      }
     }
 
     res.json({
