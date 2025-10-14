@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useUserRole } from '../hooks/useUserRole.js';
 import LeaveRequestForm from '../components/LeaveRequestForm.jsx';
 import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
+import LeaveRequestApproval from '../components/LeaveRequestApproval.jsx';
 
 import { API } from '../config/api.js';
 
@@ -12,7 +13,7 @@ export default function LeaveManagement() {
   const [balances, setBalances] = useState([]);
   const [calendar, setCalendar] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  const [activeTab, setActiveTab] = useState(userRole === 'user' ? "request" : "requests");
+  const [activeTab, setActiveTab] = useState(userRole === 'user' ? "request" : "approvals");
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -242,6 +243,7 @@ export default function LeaveManagement() {
     { id: "my-requests", name: "My Requests", icon: "📋" },
     { id: "calendar", name: "Leave Calendar", icon: "📅" }
   ] : [
+    { id: "approvals", name: "Leave Requests", icon: "📋" },
     { id: "requests", name: "Record Leave", icon: "📝" },
     { id: "calendar", name: "Leave Calendar", icon: "📅" },
     { id: "balances", name: "Leave Balances", icon: "💰" },
@@ -296,6 +298,11 @@ export default function LeaveManagement() {
       {/* My Requests Tab - User Role Only */}
       {userRole === 'user' && activeTab === "my-requests" && (
         <MyLeaveRequests refreshTrigger={refreshTrigger} />
+      )}
+
+      {/* Leave Request Approvals Tab - HR Role Only */}
+      {userRole !== 'user' && activeTab === "approvals" && (
+        <LeaveRequestApproval />
       )}
 
       {/* Leave Requests Tab - HR Role Only */}
