@@ -1,5 +1,5 @@
 import express from 'express';
-import { requireAuth } from '../middleware/security.js';
+import { requireAuth } from '../session.js';
 import { applyScopeFilter, requirePermission } from '../middleware/rbac.js';
 import { primaryPool as pool } from '../db/pools.js';
 
