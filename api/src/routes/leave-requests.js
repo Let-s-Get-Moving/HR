@@ -197,7 +197,7 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
   try {
     const { id } = req.params;
     const { status, review_notes } = req.body;
-    const reviewed_by = req.user.id;
+    const approved_by = req.user.id;
 
     // Validate status
     if (!['Approved', 'Rejected'].includes(status)) {
@@ -207,15 +207,15 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
       });
     }
 
-    // Update the leave request
+    // Update the leave request - using old schema column names
     const updateQuery = `
       UPDATE leave_requests 
-      SET status = $1, review_notes = $2, reviewed_by = $3, reviewed_at = CURRENT_TIMESTAMP
+      SET status = $1, notes = $2, approved_by = $3, approved_at = CURRENT_TIMESTAMP
       WHERE id = $4
       RETURNING *
     `;
     
-    const result = await q(updateQuery, [status, review_notes, reviewed_by, id]);
+    const result = await q(updateQuery, [status, review_notes, approved_by, id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ 
