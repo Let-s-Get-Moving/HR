@@ -1,5 +1,5 @@
 import express from "express";
-import { primaryPool as pool } from "../db/pools.js";
+import { q } from "../db.js";
 import { applyScopeFilter } from "../middleware/rbac.js";
 
 const r = express.Router();
@@ -82,7 +82,7 @@ r.get("/calculate-live", async (req, res) => {
     
     // Get all employees with their timecard data for the period
     const queryStartTime = Date.now();
-    const { rows: payrolls } = await pool.query(`
+    const { rows: payrolls } = await q(`
       SELECT 
         e.id as employee_id,
         e.first_name,
@@ -221,7 +221,7 @@ r.get("/periods", async (req, res) => {
     
     // Get all timecard dates (no approval filter - if timecards exist, they count)
     console.log('📅 [PAYROLL-PERIODS] Fetching all timecard dates...');
-    const { rows: dates } = await pool.query(`
+    const { rows: dates } = await q(`
       SELECT DISTINCT work_date
       FROM timecard_entries te
       JOIN timecards t ON te.timecard_id = t.id
@@ -296,7 +296,7 @@ r.get("/periods", async (req, res) => {
           whereClause += ` AND t.employee_id = $${queryParams.length}`;
         }
         
-        const { rows } = await pool.query(`
+        const { rows } = await q(`
           SELECT COUNT(DISTINCT t.employee_id) as employee_count
           FROM timecard_entries te
           JOIN timecards t ON te.timecard_id = t.id

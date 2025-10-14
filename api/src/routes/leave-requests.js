@@ -1,7 +1,7 @@
 import express from 'express';
 import { requireAuth } from '../session.js';
 import { applyScopeFilter, requirePermission } from '../middleware/rbac.js';
-import { primaryPool as pool } from '../db/pools.js';
+import { q } from '../db.js';
 
 const router = express.Router();
 
@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
           (start_date >= $2 AND end_date <= $3)
         )
     `;
-    const overlapResult = await pool.query(overlapQuery, [employee_id, start_date, end_date]);
+    const overlapResult = await q(overlapQuery, [employee_id, start_date, end_date]);
     
     if (overlapResult.rows.length > 0) {
       return res.status(400).json({ 
@@ -77,7 +77,7 @@ router.post('/', async (req, res) => {
       RETURNING *
     `;
     
-    const result = await pool.query(insertQuery, [employee_id, leave_type, start_date, end_date, reason]);
+    const result = await q(insertQuery, [employee_id, leave_type, start_date, end_date, reason]);
     
     res.json({
       success: true,
@@ -123,7 +123,7 @@ router.get('/', async (req, res) => {
       params = [];
     }
 
-    const result = await pool.query(query, params);
+    const result = await q(query, params);
     
     res.json({
       success: true,
@@ -152,7 +152,7 @@ router.get('/pending', requirePermission('LEAVE_APPROVE'), async (req, res) => {
       ORDER BY lr.requested_at ASC
     `;
     
-    const result = await pool.query(query);
+    const result = await q(query);
     
     res.json({
       success: true,
@@ -192,7 +192,7 @@ router.put('/:id/status', requirePermission('LEAVE_APPROVE'), async (req, res) =
       RETURNING *
     `;
     
-    const result = await pool.query(updateQuery, [status, review_notes, reviewed_by, id]);
+    const result = await q(updateQuery, [status, review_notes, reviewed_by, id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ 
@@ -235,7 +235,7 @@ router.get('/stats', requirePermission('LEAVE_VIEW'), async (req, res) => {
       GROUP BY status
     `;
     
-    const result = await pool.query(query);
+    const result = await q(query);
     
     const stats = {
       pending: 0,

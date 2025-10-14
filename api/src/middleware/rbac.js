@@ -1,6 +1,6 @@
 // Simplified 3-Role RBAC Middleware
 // Roles: admin, manager, user
-import { primaryPool as pool } from "../db/pools.js";
+import { q } from "../db.js";
 
 // Define the 3 roles
 export const ROLES = {
@@ -103,7 +103,7 @@ export const ROLE_PERMISSIONS = {
 // Get user role and info from database
 export const getUserRole = async (userId) => {
   try {
-    const { rows } = await pool.query(`
+    const { rows } = await q(`
       SELECT r.role_name, r.permissions->>'scope' as scope, u.employee_id
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id

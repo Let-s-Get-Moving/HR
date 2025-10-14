@@ -1,6 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
-import { primaryPool as pool } from "../db/pools.js";
+import { q } from "../db.js";
 import { z } from "zod";
 import { formatCurrency, formatNumber } from "../utils/formatting.js";
 import { importCommissionsFromExcel } from "../utils/commissionImporter.js";
@@ -174,7 +174,7 @@ r.get("/monthly", async (req, res) => {
       console.log('📊 [COMMISSIONS] Filter by period_month:', period_month);
     }
     
-    const { rows } = await pool.query(`
+    const { rows } = await q(`
       SELECT 
         ecm.*,
         COALESCE(e.first_name || ' ' || e.last_name, ecm.name_raw) as employee_name,
@@ -248,7 +248,7 @@ r.get("/agents-us", async (req, res) => {
       whereClause += ` AND acu.period_month = $${params.length}`;
     }
     
-    const { rows } = await pool.query(`
+    const { rows } = await q(`
       SELECT 
         acu.*,
         COALESCE(e.first_name || ' ' || e.last_name, acu.name_raw) as employee_name,
@@ -341,7 +341,7 @@ r.get("/hourly-payouts", async (req, res) => {
     
     // Query the table
     const queryStart = Date.now();
-    const { rows } = await pool.query(`
+    const { rows } = await q(`
       SELECT 
         hp.id,
         hp.employee_id,
@@ -438,7 +438,7 @@ r.get("/periods", async (req, res) => {
       console.log('🔒 [RBAC] Filtering periods for employee:', req.employeeId);
     }
     
-    const result = await pool.query(`
+    const result = await q(`
       SELECT DISTINCT 
              period_start,
              period_end,
@@ -499,7 +499,7 @@ r.get("/summary", async (req, res) => {
       console.log('🔒 [RBAC] Filtering summary for employee:', req.employeeId);
     }
     
-    const { rows } = await pool.query(`
+    const { rows } = await q(`
       SELECT 
         COUNT(DISTINCT ecm.employee_id) as total_employees,
         SUM(ecm.commission_earned) as total_commission_earned,
