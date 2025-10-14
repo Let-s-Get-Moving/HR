@@ -288,14 +288,14 @@ app.use("/api/payroll-v2", requireAuth, payrollV2);
 app.use("/api/payroll-simple", requireAuth, payrollSimple);
 app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);
-app.use("/api/leave-requests", leaveRequests);
-app.use("/api/admin", updateCredentials); // One-time credential update endpoint
+app.use("/api/leave-requests", requireAuth, leaveRequests); // Protected
+app.use("/api/admin/update-all-credentials", requireAuth, updateCredentials); // Protected - one-time credential update
 app.use("/api/performance", requireAuth, performance);
 app.use("/api/analytics", requireAuth, analytics);
 app.use("/api/metrics", requireAuth, metrics);
-app.use("/api/settings", settings); // Settings routes handle auth per-endpoint
-app.use("/api/migrate", migrate); // Database migration endpoint
-app.use("/api/trusted-devices", trustedDevices); // Trusted devices for MFA bypass
+app.use("/api/settings", requireAuth, settings); // Protected
+app.use("/api/migrate", requireAuth, migrate); // Protected - database migration
+app.use("/api/trusted-devices", trustedDevices); // Has own auth (login flow)
 app.use("/api/termination", requireAuth, termination);
 app.use("/api/bonuses", requireAuth, bonuses);
 app.use("/api/commissions", requireAuth, commissions);
@@ -307,7 +307,7 @@ app.use("/api/timecards", requireAuth, timecards);
 app.use("/api/timecard-uploads", requireAuth, timecardUploads);
 app.use("/api/employee-matching", requireAuth, employeeMatching);
 app.use("/api/admin-cleanup", requireAuth, adminCleanup);
-app.use("/api/diagnostic", diagnostic); // Diagnostic endpoint for checking user status
+app.use("/api/diagnostic", requireAuth, diagnostic); // Protected - diagnostic endpoint
 
 // Emergency database migration endpoint
 app.post("/api/migrate-db", async (req, res) => {
