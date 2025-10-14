@@ -8,7 +8,7 @@ const router = express.Router();
  * Diagnostic endpoint to check user account status
  * GET /api/diagnostic/user-status?name=test
  */
-router.get('/user-status', async (req, res) => {
+router.get('/user-status', requireAuth, async (req, res) => {
   try {
     const searchName = req.query.name || '';
     
@@ -21,12 +21,12 @@ router.get('/user-status', async (req, res) => {
     // Check employees table
     const employeeQuery = `
       SELECT id, first_name, last_name, work_email, hire_date, employment_type, 
-             department_id, status, created_at
+             department_id, status
       FROM employees
       WHERE LOWER(first_name) LIKE LOWER($1) 
          OR LOWER(last_name) LIKE LOWER($1)
          OR LOWER(first_name || ' ' || last_name) LIKE LOWER($1)
-      ORDER BY created_at DESC
+      ORDER BY id DESC
       LIMIT 10
     `;
     const employees = await q(employeeQuery, [`%${searchName}%`]);
@@ -60,7 +60,6 @@ router.get('/user-status', async (req, res) => {
           email: emp.work_email,
           hire_date: emp.hire_date,
           status: emp.status,
-          created_at: emp.created_at,
           user_account: matchingUser ? {
             user_id: matchingUser.id,
             username: matchingUser.username,
