@@ -13,7 +13,7 @@ export default function LeaveManagement() {
   const [balances, setBalances] = useState([]);
   const [calendar, setCalendar] = useState([]);
   const [analytics, setAnalytics] = useState(null);
-  const [activeTab, setActiveTab] = useState(userRole === 'user' ? "request" : "approvals");
+  const [activeTab, setActiveTab] = useState("calendar"); // Default to calendar for all roles
   const [loading, setLoading] = useState(true);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
