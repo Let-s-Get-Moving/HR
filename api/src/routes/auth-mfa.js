@@ -780,5 +780,61 @@ r.get("/session", async (req, res) => {
   }
 });
 
+/**
+ * Create User Account (for employee onboarding)
+ * Creates a new user with hashed password and assigned role
+ */
+r.post('/create-user', requireAuth, async (req, res) => {
+  try {
+    const { username, password, full_name, email, role, employee_id } = req.body;
+    
+    // Validate required fields
+    if (!username || !password || !role) {
+      return res.status(400).json({ error: 'Username, password, and role are required' });
+    }
+    
+    // Validate role
+    const validRoles = ['admin', 'manager', 'user'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Must be: admin, manager, or user' });
+    }
+    
+    // Check if username already exists
+    const existingUser = await q('SELECT id FROM users WHERE username = $1', [username]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    
+    // Get role_id from hr_roles table
+    const roleResult = await q('SELECT id FROM hr_roles WHERE role_name = $1', [role]);
+    if (roleResult.rows.length === 0) {
+      return res.status(500).json({ error: 'Role not found in system' });
+    }
+    const role_id = roleResult.rows[0].id;
+    
+    // Hash password
+    const bcrypt = await import('bcrypt');
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create user
+    const userResult = await q(`
+      INSERT INTO users (username, password, full_name, email, role_id, employee_id, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      RETURNING id, username, full_name, email, role_id, employee_id
+    `, [username, hashedPassword, full_name, email, role_id, employee_id]);
+    
+    console.log(`✅ Created user account: ${username} (${role}) for employee_id: ${employee_id}`);
+    
+    res.status(201).json({
+      success: true,
+      message: 'User account created successfully',
+      user: userResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Failed to create user account', details: error.message });
+  }
+});
+
 export default r;
 

@@ -23,6 +23,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
     department_id: "",
     location_id: "",
     role_title: "",
+    user_role: "user",  // New: Default to "user" role
     probation_end: "",
     hourly_rate: 25,
     
@@ -100,7 +101,34 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
       });
 
       console.log('✅ [Onboarding] Employee created successfully:', employeeResponse);
-      alert(`Employee ${formData.first_name} ${formData.last_name} created successfully! Documents can be uploaded through their profile.`);
+      
+      // Auto-create user account with generated credentials
+      const username = `${formData.first_name}${formData.last_name}`; // FirstnameLastname format
+      const password = 'password123';
+      
+      try {
+        console.log(`👤 [Onboarding] Creating user account for ${username} with role: ${formData.user_role}`);
+        
+        await API("/api/auth/create-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: username,
+            password: password,
+            full_name: `${formData.first_name} ${formData.last_name}`,
+            email: formData.work_email,
+            role: formData.user_role,
+            employee_id: employeeResponse.id
+          })
+        });
+        
+        console.log(`✅ [Onboarding] User account created successfully`);
+        alert(`Employee ${formData.first_name} ${formData.last_name} created successfully!\n\nLogin Credentials:\nUsername: ${username}\nPassword: ${password}\n\nRole: ${formData.user_role}`);
+      } catch (userError) {
+        console.error("⚠️ [Onboarding] Error creating user account:", userError);
+        alert(`Employee created, but failed to create user account: ${userError.message}\nPlease create user account manually.`);
+      }
+      
       onSuccess();
       onClose();
     } catch (error) {
@@ -287,6 +315,23 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   onChange={(e) => setFormData({...formData, role_title: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  User Role <span className="text-indigo-400">(System Access)</span>
+                </label>
+                <select
+                  value={formData.user_role}
+                  onChange={(e) => setFormData({...formData, user_role: e.target.value})}
+                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="user">User (Employee Access)</option>
+                  <option value="manager">Manager (HR Access)</option>
+                  <option value="admin">Admin (Full Access)</option>
+                </select>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Determines what this employee can access in the system
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Hourly Rate ($)</label>
