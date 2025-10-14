@@ -9,10 +9,18 @@ CREATE TABLE IF NOT EXISTS application_settings (
     type VARCHAR(20) NOT NULL CHECK (type IN ('text', 'number', 'boolean', 'select', 'textarea')),
     category VARCHAR(50) NOT NULL CHECK (category IN ('system', 'preferences', 'notifications', 'security', 'maintenance')),
     description TEXT,
-    default_value TEXT,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_by INTEGER REFERENCES users(id)
 );
+
+-- Add default_value column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                   WHERE table_name='application_settings' AND column_name='default_value') THEN
+        ALTER TABLE application_settings ADD COLUMN default_value TEXT;
+    END IF;
+END $$;
 
 -- Create trigger to update updated_at
 CREATE OR REPLACE FUNCTION update_settings_timestamp()

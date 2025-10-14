@@ -50,7 +50,8 @@ CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON alerts(resolved);
 
 -- Users optimization
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+-- Users don't have a 'role' column anymore, they have 'role_id'
+-- CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 
 -- Add constraints for data integrity
 ALTER TABLE employees ADD CONSTRAINT chk_hire_termination 
