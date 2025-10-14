@@ -210,7 +210,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     }
     
     const sessionId = generateSecureSessionId();
-    const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8 hours
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     
     await q(`
       INSERT INTO user_sessions (id, user_id, expires_at)
@@ -228,7 +228,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
       httpOnly: true,
       secure: true, // Required for sameSite: 'none'
       sameSite: 'none', // Allow cross-origin cookies
-      maxAge: 8 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/'
     });
     
@@ -318,7 +318,7 @@ r.post("/verify-mfa", async (req, res) => {
     
     // Create real session
     const sessionId = generateSecureSessionId();
-    const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     
     await q(`
       INSERT INTO user_sessions (id, user_id, expires_at)
@@ -362,8 +362,21 @@ r.post("/verify-mfa", async (req, res) => {
     // Update last login
     await UserManagementService.updateLastLogin(userId);
     
-    // Get user details
-    const user = await UserManagementService.getUserById(userId);
+    // Get user details with role and scope
+    const userResult = await q(`
+      SELECT u.id, u.email, u.full_name, u.employee_id,
+             r.role_name, r.display_name as role_display_name,
+             r.permissions->>'scope' as scope
+      FROM users u
+      LEFT JOIN hr_roles r ON u.role_id = r.id
+      WHERE u.id = $1
+    `, [userId]);
+    
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    const user = userResult.rows[0];
     
     // Check password expiry status
     const passwordCheckResult = await q(`
@@ -403,7 +416,7 @@ r.post("/verify-mfa", async (req, res) => {
       httpOnly: true,
       secure: true, // Required for sameSite: 'none'
       sameSite: 'none', // Allow cross-origin cookies
-      maxAge: 8 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/'
     });
     
@@ -416,7 +429,9 @@ r.post("/verify-mfa", async (req, res) => {
         username: user.full_name,
         email: user.email,
         role: user.role_name,
-        roleDisplayName: user.role_display_name
+        roleDisplayName: user.role_display_name,
+        scope: user.scope || 'own',
+        employeeId: user.employee_id
       },
       sessionId,
       csrfToken
