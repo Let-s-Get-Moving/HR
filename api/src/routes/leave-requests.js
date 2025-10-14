@@ -1,6 +1,6 @@
 import express from 'express';
 import { requireAuth } from '../session.js';
-import { applyScopeFilter, requirePermission } from '../middleware/rbac.js';
+import { applyScopeFilter, requirePermission, PERMISSIONS } from '../middleware/rbac.js';
 import { q } from '../db.js';
 
 const router = express.Router();
@@ -145,7 +145,7 @@ router.get('/', async (req, res) => {
 });
 
 // Get pending requests (HR role only)
-router.get('/pending', requirePermission('LEAVE_APPROVE'), async (req, res) => {
+router.get('/pending', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (req, res) => {
   try {
     const query = `
       SELECT lr.*, e.first_name, e.last_name, e.email,
@@ -174,7 +174,7 @@ router.get('/pending', requirePermission('LEAVE_APPROVE'), async (req, res) => {
 });
 
 // Approve or reject a leave request (HR role only)
-router.put('/:id/status', requirePermission('LEAVE_APPROVE'), async (req, res) => {
+router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (req, res) => {
   try {
     const { id } = req.params;
     const { status, review_notes } = req.body;
@@ -229,7 +229,7 @@ router.put('/:id/status', requirePermission('LEAVE_APPROVE'), async (req, res) =
 });
 
 // Get leave request statistics (HR role only)
-router.get('/stats', requirePermission('LEAVE_VIEW'), async (req, res) => {
+router.get('/stats', requirePermission(PERMISSIONS.LEAVE_VIEW), async (req, res) => {
   try {
     const query = `
       SELECT 
