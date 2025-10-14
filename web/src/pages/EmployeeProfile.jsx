@@ -1534,97 +1534,165 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         >
           <div className="bg-neutral-800 p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">Identifiers</h3>
-            <div className="space-y-2">
-              {/* Show SIN from employee data */}
-              {employee.sin_number && (
-                <div className="flex justify-between text-sm">
-                  <span>SIN</span>
-                  <span className="font-mono text-indigo-400">
-                    {employee.sin_number}
-                    {employee.sin_expiry_date && (
-                      <span className="ml-2 text-neutral-400">
-                        (exp {(() => {
-                          try {
-                            const dateStr = employee.sin_expiry_date.includes('T') 
-                              ? employee.sin_expiry_date.split('T')[0] 
-                              : employee.sin_expiry_date;
-                            const date = new Date(dateStr + 'T00:00:00');
-                            return date.toLocaleDateString();
-                          } catch (e) {
-                            return 'Invalid';
-                          }
-                        })()})
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
-              {(hrDetails.identifiers || []).map((idn) => (
-                <div key={idn.id} className="flex justify-between text-sm">
-                  <span>{idn.id_type}</span>
-                  <span>{idn.id_value}{idn.expires_on ? ` (exp ${new Date(idn.expires_on).toLocaleDateString()})` : ''}</span>
-                </div>
-              ))}
-              {!employee.sin_number && (!hrDetails.identifiers || hrDetails.identifiers.length === 0) && (
-                <div className="text-neutral-400 text-sm">No identifiers on file</div>
-              )}
+            <div className="space-y-4">
+              {/* SIN Number */}
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">SIN Number</div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.sin_number || ''}
+                    onChange={(e) => setEditData({...editData, sin_number: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="XXX-XXX-XXX"
+                  />
+                ) : (
+                  <div className="font-mono text-indigo-400">
+                    {employee.sin_number || '—'}
+                  </div>
+                )}
+              </div>
+              
+              {/* SIN Expiry Date */}
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">SIN Expiry Date</div>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={editData.sin_expiry_date ? editData.sin_expiry_date.split('T')[0] : ''}
+                    onChange={(e) => setEditData({...editData, sin_expiry_date: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                  />
+                ) : (
+                  <div>
+                    {employee.sin_expiry_date ? (() => {
+                      try {
+                        const dateStr = employee.sin_expiry_date.includes('T') 
+                          ? employee.sin_expiry_date.split('T')[0] 
+                          : employee.sin_expiry_date;
+                        const date = new Date(dateStr + 'T00:00:00');
+                        return date.toLocaleDateString();
+                      } catch (e) {
+                        return 'Invalid';
+                      }
+                    })() : '—'}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Bank Accounts</h3>
-            <div className="space-y-2">
-              {/* Show bank info from employee data */}
-              {employee.bank_name && (
-                <div className="flex justify-between text-sm">
-                  <span>{employee.bank_name} {employee.bank_transit_number && `(${employee.bank_transit_number})`}</span>
-                  <span className="font-mono">Acct: {employee.bank_account_number || '—'}</span>
-                </div>
-              )}
-              {(hrDetails.bank_accounts || []).map((ba) => (
-                <div key={ba.id} className="flex justify-between text-sm">
-                  <span>{ba.bank_name || 'Bank'} ({ba.transit_number || '—'})</span>
-                  <span>Acct: {ba.account_number || '—'}{ba.is_primary ? ' • Primary' : ''}</span>
-                </div>
-              ))}
-              {!employee.bank_name && (!hrDetails.bank_accounts || hrDetails.bank_accounts.length === 0) && (
-                <div className="text-neutral-400 text-sm">No bank info</div>
-              )}
+            <h3 className="text-lg font-semibold mb-4">Bank Account</h3>
+            <div className="space-y-4">
+              {/* Bank Name */}
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">Bank Name</div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.bank_name || ''}
+                    onChange={(e) => setEditData({...editData, bank_name: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="e.g., TD Bank"
+                  />
+                ) : (
+                  <div>{employee.bank_name || '—'}</div>
+                )}
+              </div>
+              
+              {/* Transit Number */}
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">Transit Number</div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.bank_transit_number || ''}
+                    onChange={(e) => setEditData({...editData, bank_transit_number: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="XXXXX"
+                  />
+                ) : (
+                  <div>{employee.bank_transit_number || '—'}</div>
+                )}
+              </div>
+              
+              {/* Account Number */}
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">Account Number</div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.bank_account_number || ''}
+                    onChange={(e) => setEditData({...editData, bank_account_number: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Account number"
+                  />
+                ) : (
+                  <div className="font-mono">{employee.bank_account_number || '—'}</div>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Addresses</h3>
-            <div className="space-y-2">
-              {/* Show address from employee data */}
-              {employee.full_address && (
-                <div className="text-sm">
-                  <div>{employee.full_address}</div>
-                </div>
-              )}
-              {(hrDetails.addresses || []).map((ad) => (
-                <div key={ad.id} className="text-sm">
-                  <div>{ad.line1}{ad.line2 ? `, ${ad.line2}` : ''}</div>
-                  <div className="text-neutral-400">{[ad.city, ad.province, ad.postal_code, ad.country].filter(Boolean).join(', ')}</div>
-                </div>
-              ))}
-              {!employee.full_address && (!hrDetails.addresses || hrDetails.addresses.length === 0) && (
-                <div className="text-neutral-400 text-sm">No address on file</div>
-              )}
+            <h3 className="text-lg font-semibold mb-4">Address</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">Full Address</div>
+                {isEditing ? (
+                  <textarea
+                    value={editData.full_address || ''}
+                    onChange={(e) => setEditData({...editData, full_address: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Street address, city, province, postal code"
+                    rows={3}
+                  />
+                ) : (
+                  <div>{employee.full_address || '—'}</div>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Emergency Contacts</h3>
-            <div className="space-y-2">
-              {/* Show emergency contact from employee data */}
-              {employee.emergency_contact_name && (
-                <div className="flex justify-between text-sm">
-                  <span>{employee.emergency_contact_name}</span>
-                  <span>{employee.emergency_contact_phone || '—'}</span>
-                </div>
-              )}
-              {(hrDetails.emergency_contacts || []).map((ec) => (
+            <h3 className="text-lg font-semibold mb-4">Emergency Contact</h3>
+            <div className="space-y-4">
+              {/* Contact Name */}
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">Contact Name</div>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editData.emergency_contact_name || ''}
+                    onChange={(e) => setEditData({...editData, emergency_contact_name: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="Full name"
+                  />
+                ) : (
+                  <div>{employee.emergency_contact_name || '—'}</div>
+                )}
+              </div>
+              
+              {/* Contact Phone */}
+              <div>
+                <div className="text-xs text-neutral-500 mb-1">Contact Phone</div>
+                {isEditing ? (
+                  <input
+                    type="tel"
+                    value={editData.emergency_contact_phone || ''}
+                    onChange={(e) => setEditData({...editData, emergency_contact_phone: e.target.value})}
+                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    placeholder="(XXX) XXX-XXXX"
+                  />
+                ) : (
+                  <div>{employee.emergency_contact_phone || '—'}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
                 <div key={ec.id} className="flex justify-between text-sm">
                   <span>{ec.contact_name || 'Contact'}{ec.relationship ? ` (${ec.relationship})` : ''}</span>
                   <span>{ec.contact_phone || '—'}</span>
