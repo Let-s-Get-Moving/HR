@@ -1,7 +1,7 @@
 import express from 'express';
 import { requireAuth } from '../middleware/security.js';
 import { applyScopeFilter, requirePermission } from '../middleware/rbac.js';
-import { pool } from '../db/pools.js';
+import { primaryPool as pool } from '../db/pools.js';
 
 const router = express.Router();
 
