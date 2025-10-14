@@ -19,6 +19,7 @@ import payrollSimple from "./routes/payroll-simple.js";
 import compliance from "./routes/compliance.js";
 import leave from "./routes/leave.js";
 import leaveRequests from "./routes/leave-requests.js";
+import updateCredentials from "./routes/update-credentials.js";
 import performance from "./routes/performance.js";
 import analytics from "./routes/analytics.js";
 import metrics from "./routes/metrics.js";
@@ -287,6 +288,7 @@ app.use("/api/payroll-simple", requireAuth, payrollSimple);
 app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);
 app.use("/api/leave-requests", leaveRequests);
+app.use("/api/admin", updateCredentials); // One-time credential update endpoint
 app.use("/api/performance", requireAuth, performance);
 app.use("/api/analytics", requireAuth, analytics);
 app.use("/api/metrics", requireAuth, metrics);
