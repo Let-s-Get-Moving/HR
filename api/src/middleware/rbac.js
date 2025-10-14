@@ -134,9 +134,21 @@ export const getUserRole = async (userId) => {
 
 // Check if user has permission
 export const hasPermission = (userRole, permission) => {
+  console.log(`🔍 [RBAC] hasPermission called with:`, { userRole, permission });
+  console.log(`🔍 [RBAC] ROLE_PERMISSIONS keys:`, Object.keys(ROLE_PERMISSIONS));
+  console.log(`🔍 [RBAC] Looking up ROLE_PERMISSIONS['${userRole}']:`, ROLE_PERMISSIONS[userRole]?.slice(0, 5));
+  
   const rolePermissions = ROLE_PERMISSIONS[userRole] || [];
   const hasIt = rolePermissions.includes(permission);
-  console.log(`🔍 [RBAC] hasPermission check:`, { userRole, permission, rolePermissions: rolePermissions.length, hasIt });
+  
+  console.log(`🔍 [RBAC] hasPermission result:`, { 
+    userRole, 
+    permission, 
+    rolePermissionsCount: rolePermissions.length, 
+    hasPermission: hasIt,
+    allPermissions: rolePermissions
+  });
+  
   return hasIt;
 };
 
