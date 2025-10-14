@@ -222,8 +222,8 @@ export default function Dashboard({ onNavigate }) {
             label="Turnover Rate" 
             value={analytics?.turnoverRate ? `${analytics.turnoverRate}%` : '0%'}
             icon="📊"
-            trend={analytics?.turnoverRate < 5 ? "Low turnover" : analytics?.turnoverRate > 15 ? "High turnover" : "Moderate"}
-            trendUp={analytics?.turnoverRate < 10}
+            trend=""
+            trendUp={false}
             sub={`${getTimeRangeLabel(selectedTimeRange)}`}
           />
         </motion.div>
