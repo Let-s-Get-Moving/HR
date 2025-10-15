@@ -105,17 +105,23 @@ export default function Dashboard({ onNavigate, user }) {
   const handleQuickAction = (action) => {
     if (onNavigate) {
       switch (action) {
-        case 'add-employee':
-          onNavigate('employees');
-          break;
-        case 'leave-request':
+        case 'approve-leave':
           onNavigate('leave');
+          break;
+        case 'view-timecards':
+          onNavigate('timeTracking');
           break;
         case 'process-payroll':
           onNavigate('payroll');
           break;
-        case 'view-reports':
-          onNavigate('compliance');
+        case 'view-employees':
+          onNavigate('employees');
+          break;
+        case 'upload-bonuses':
+          onNavigate('bonuses');
+          break;
+        case 'system-settings':
+          onNavigate('settings');
           break;
         default:
           break;
@@ -499,32 +505,46 @@ export default function Dashboard({ onNavigate, user }) {
           <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-3">
             <button 
-              onClick={() => handleQuickAction('add-employee')}
-              className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-center transition-colors hover:scale-105"
+              onClick={() => handleQuickAction('approve-leave')}
+              className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
-              <div className="text-2xl mb-2">👤</div>
-              <div className="text-sm font-medium">Add Employee</div>
+              <div className="text-2xl mb-2">✅</div>
+              <div className="text-sm font-medium">Approve Leave</div>
             </button>
             <button 
-              onClick={() => handleQuickAction('leave-request')}
-              className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-colors hover:scale-105"
+              onClick={() => handleQuickAction('view-timecards')}
+              className="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
-              <div className="text-2xl mb-2">📝</div>
-              <div className="text-sm font-medium">New Leave Request</div>
+              <div className="text-2xl mb-2">⏰</div>
+              <div className="text-sm font-medium">View Timecards</div>
             </button>
             <button 
               onClick={() => handleQuickAction('process-payroll')}
-              className="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-center transition-colors hover:scale-105"
+              className="p-4 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
               <div className="text-2xl mb-2">💰</div>
               <div className="text-sm font-medium">Process Payroll</div>
             </button>
             <button 
-              onClick={() => handleQuickAction('view-reports')}
-              className="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-center transition-colors hover:scale-105"
+              onClick={() => handleQuickAction('view-employees')}
+              className="p-4 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
-              <div className="text-2xl mb-2">📊</div>
-              <div className="text-sm font-medium">View Reports</div>
+              <div className="text-2xl mb-2">👥</div>
+              <div className="text-sm font-medium">View Employees</div>
+            </button>
+            <button 
+              onClick={() => handleQuickAction('upload-bonuses')}
+              className="p-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
+            >
+              <div className="text-2xl mb-2">⭐</div>
+              <div className="text-sm font-medium">Upload Bonuses</div>
+            </button>
+            <button 
+              onClick={() => handleQuickAction('system-settings')}
+              className="p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
+            >
+              <div className="text-2xl mb-2">⚙️</div>
+              <div className="text-sm font-medium">Settings</div>
             </button>
           </div>
         </motion.div>
