@@ -12,7 +12,7 @@ import { CSRFProtection } from "../middleware/csrf.js";
 import { MFAService } from "../services/mfa.js";
 import { UserManagementService } from "../services/user-management.js";
 import { TrustedDeviceService } from "../services/trusted-devices.js";
-import { requireAuth } from "../session.js";
+import { requireAuth, optionalAuth } from "../session.js";
 import bcrypt from "bcryptjs";
 
 const r = express.Router();
@@ -596,7 +596,7 @@ r.delete("/mfa/trusted-devices/:deviceId", requireAuth, async (req, res) => {
  * Change Password
  * Can be used with tempToken (for forced password change) or with authenticated session
  */
-r.post("/change-password", async (req, res) => {
+r.post("/change-password", optionalAuth, async (req, res) => {
   try {
     const { tempToken, currentPassword, newPassword } = req.body;
     
