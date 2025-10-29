@@ -214,7 +214,7 @@ export const requireAuth = async (req, res, next) => {
 };
 
 // Optional auth middleware
-export const optionalAuth = (req, res, next) => {
+export const optionalAuth = async (req, res, next) => {
   // Check cookies FIRST (standard for web apps), then headers (for API clients)
   const sessionId = req.cookies?.sessionId ||
                    req.headers['x-session-id'] ||
@@ -222,10 +222,56 @@ export const optionalAuth = (req, res, next) => {
                    req.headers.authorization?.replace('Bearer ', '');
   
   if (sessionId) {
-    const session = SessionManager.getSession(sessionId);
-    if (session) {
-      req.session = session;
-      req.user = { id: session.userId, username: session.username };
+    try {
+      // Check database first (like requireAuth)
+      const sessionResult = await q(`
+        SELECT 
+          s.id, 
+          s.user_id, 
+          s.expires_at, 
+          u.email, 
+          u.username,
+          COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
+          COALESCE(r.role_name, 'user') as role
+        FROM user_sessions s
+        JOIN users u ON s.user_id = u.id
+        LEFT JOIN hr_roles r ON u.role_id = r.id
+        WHERE s.id = $1 AND s.expires_at > NOW()
+      `, [sessionId]);
+      
+      if (sessionResult.rows.length > 0) {
+        const dbSession = sessionResult.rows[0];
+        
+        // Update last activity
+        await q(`
+          UPDATE user_sessions 
+          SET last_activity = NOW() 
+          WHERE id = $1
+        `, [sessionId]);
+        
+        req.session = {
+          id: dbSession.id,
+          userId: dbSession.user_id,
+          username: dbSession.username || dbSession.full_name
+        };
+        req.user = { 
+          id: dbSession.user_id, 
+          username: dbSession.username,
+          full_name: dbSession.full_name,
+          email: dbSession.email,
+          role: dbSession.role
+        };
+      } else {
+        // Try memory as fallback
+        const memorySession = SessionManager.getSession(sessionId);
+        if (memorySession) {
+          req.session = memorySession;
+          req.user = { id: memorySession.userId, username: memorySession.username };
+        }
+      }
+    } catch (error) {
+      console.error('Optional auth error:', error);
+      // Don't fail, just continue without auth
     }
   }
   
