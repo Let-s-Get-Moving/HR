@@ -5,6 +5,7 @@ import MetricCard from "../components/MetricCard.jsx";
 import Donut from "../components/Donut.jsx";
 import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 export default function Dashboard({ onNavigate, user }) {
   const [analytics, setAnalytics] = useState(null);
@@ -472,11 +473,7 @@ export default function Dashboard({ onNavigate, user }) {
                   <div className="flex-1">
                     <p className="text-sm text-white">{activity.description}</p>
                     <p className="text-xs text-neutral-400 mt-1">
-                      {activity.timestamp ? new Date(activity.timestamp).toLocaleDateString('en-US', { 
-                        year: 'numeric', 
-                        month: 'short', 
-                        day: 'numeric' 
-                      }) : 'Unknown date'}
+                      {activity.timestamp ? formatShortDate(activity.timestamp) : 'Unknown date'}
                     </p>
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 
@@ -7,6 +8,7 @@ import { API } from '../config/api.js';
 // This component was causing accidental data deletion and has been permanently removed
 
 export default function Settings() {
+  const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("system");
 
   const handleTabChange = (tabId) => {
@@ -210,9 +212,9 @@ export default function Settings() {
     document.documentElement.lang = language;
     // Save to localStorage for persistence
     localStorage.setItem('user_language', language);
+    // Change language in i18n immediately (no reload needed)
+    i18n.changeLanguage(language);
     console.log(`✅ Language changed to: ${language}`);
-    // Reload the page to apply new language (i18n will pick it up from localStorage)
-    window.location.reload();
   };
 
   const applyTimezone = (timezone) => {

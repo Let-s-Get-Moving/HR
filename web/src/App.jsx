@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import Login from "./components/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Employees from "./pages/Employees.jsx";
@@ -77,28 +78,33 @@ const Icons = {
   )
 };
 
-const pages = {
-  dashboard: { name: "Dashboard", component: Dashboard, icon: Icons.dashboard },
-  employees: { name: "Employees", component: Employees, icon: Icons.employees },
-  timeTracking: { name: "Time Tracking", component: TimeTracking, icon: Icons.timeTracking },
-  leave: { name: "Leave Management", component: LeaveManagement, icon: Icons.leave },
-  payroll: { name: "Payroll", component: Payroll, icon: Icons.payroll },
-  compliance: { name: "Compliance", component: Compliance, icon: Icons.compliance },
-  benefits: { name: "Benefits", component: Benefits, icon: Icons.benefits },
-  bonuses: { name: "Bonuses & Commissions", component: BonusesCommissions, icon: Icons.bonuses },
+// Define pages configuration (will be translated dynamically)
+const getPagesConfig = (t) => ({
+  dashboard: { name: t('nav.dashboard'), component: Dashboard, icon: Icons.dashboard },
+  employees: { name: t('nav.employees'), component: Employees, icon: Icons.employees },
+  timeTracking: { name: t('nav.timeTracking'), component: TimeTracking, icon: Icons.timeTracking },
+  leave: { name: t('nav.leave'), component: LeaveManagement, icon: Icons.leave },
+  payroll: { name: t('nav.payroll'), component: Payroll, icon: Icons.payroll },
+  compliance: { name: t('nav.compliance'), component: Compliance, icon: Icons.compliance },
+  benefits: { name: t('nav.benefits'), component: Benefits, icon: Icons.benefits },
+  bonuses: { name: t('nav.bonuses'), component: BonusesCommissions, icon: Icons.bonuses },
   testing: { name: "Testing", component: Testing, icon: Icons.testing },
-  settings: { name: "Settings", component: Settings, icon: Icons.settings }
-};
+  settings: { name: t('nav.settings'), component: Settings, icon: Icons.settings }
+});
 
 import { useUserRole, canAccessPage } from './hooks/useUserRole.js';
 
 export default function App() {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Get user role directly from user state (updates immediately on login)
   const userRole = user?.role || null;
+  
+  // Get pages with translations
+  const pages = getPagesConfig(t);
   
   // Filter pages based on user role
   const allowedPages = useMemo(() => {
@@ -107,7 +113,7 @@ export default function App() {
     return Object.fromEntries(
       Object.entries(pages).filter(([key]) => canAccessPage(userRole, key))
     );
-  }, [user, userRole]);
+  }, [user, userRole, pages]);
 
   // Redirect to first allowed page if current page is not accessible
   useEffect(() => {

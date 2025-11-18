@@ -6,6 +6,7 @@ import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
 import LeaveRequestApproval from '../components/LeaveRequestApproval.jsx';
 
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 export default function LeaveManagement() {
   const { userRole } = useUserRole();
@@ -526,7 +527,7 @@ export default function LeaveManagement() {
                         </span>
                       </div>
                       <p className="text-sm text-secondary mb-2">
-                        {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
+                        {formatShortDate(request.start_date)} - {formatShortDate(request.end_date)}
                       </p>
                       {request.reason && (
                         <p className="text-sm text-secondary mb-3">{request.reason}</p>
@@ -597,7 +598,7 @@ export default function LeaveManagement() {
                                 </span>
                               </div>
                               <p className="text-sm text-secondary mb-2">
-                                {new Date(request.start_date).toLocaleDateString()} - {new Date(request.end_date).toLocaleDateString()}
+                                {formatShortDate(request.start_date)} - {formatShortDate(request.end_date)}
                               </p>
                               {request.reason && (
                                 <p className="text-sm text-secondary mb-3">{request.reason}</p>
@@ -1010,7 +1011,7 @@ export default function LeaveManagement() {
                             {leave.leave_type_name}
                           </div>
                           <div className="text-xs text-neutral-500 mt-1">
-                            {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                            {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
                           </div>
                           {leave.reason && (
                             <div className="text-xs text-neutral-500 mt-1">
