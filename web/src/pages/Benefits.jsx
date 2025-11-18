@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 
 export default function Benefits() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("enrollment");
   const [employees, setEmployees] = useState([]);
   const [benefits, setBenefits] = useState([]);

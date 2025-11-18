@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { useUserRole } from '../hooks/useUserRole.js';
 import { 
@@ -9,6 +10,7 @@ import {
 } from '../components/TimecardUploadViewer.jsx';
 
 export default function TimeTracking() {
+  const { t } = useTranslation();
   const { userRole } = useUserRole();
   const [view, setView] = useState("day-view"); // uploads, main, individual, upload-detail, day-view, employee-timecard
   const [timecards, setTimecards] = useState([]);

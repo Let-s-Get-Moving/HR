@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 export default function BonusesCommissions() {
+  const { t } = useTranslation();
   const { userRole } = useUserRole();
   const [activeTab, setActiveTab] = useState("analytics");
   const [employees, setEmployees] = useState([]);

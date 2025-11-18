@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 export default function Compliance() {
+  const { t } = useTranslation();
   const [alerts, setAlerts] = useState([]);
   const [dashboard, setDashboard] = useState(null);
   const [activeTab, setActiveTab] = useState("alerts");

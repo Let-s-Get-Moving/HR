@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 import { useUserRole } from '../hooks/useUserRole.js';
 
 export default function Payroll() {
+  const { t } = useTranslation();
   const { userRole } = useUserRole();
   const [view, setView] = useState("period-view");
   const [payPeriods, setPayPeriods] = useState([]);
