@@ -128,12 +128,12 @@ export default function Dashboard({ onNavigate, user }) {
 
   const getTimeRangeLabel = (range) => {
     const labels = {
-      'week': 'This Week',
-      'month': 'This Month',
-      'quarter': 'This Quarter',
-      'year': 'This Year'
+      'week': t('dashboard.thisWeek'),
+      'month': t('dashboard.thisMonth'),
+      'quarter': t('dashboard.thisQuarter'),
+      'year': t('dashboard.thisYear')
     };
-    return labels[range] || 'This Month';
+    return labels[range] || t('dashboard.thisMonth');
   };
 
   if (loading) {
@@ -141,8 +141,8 @@ export default function Dashboard({ onNavigate, user }) {
       <div className="dashboard-container p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Dashboard</h1>
-            <p className="text-neutral-400">Loading your HR insights...</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('dashboard.title')}</h1>
+            <p className="text-neutral-400">{t('dashboard.loadingInsights')}</p>
           </div>
         </div>
         
@@ -169,22 +169,22 @@ export default function Dashboard({ onNavigate, user }) {
       <div className="flex items-center justify-between mb-8">
         <div>
           <Greeting name={getUserFirstName()} />
-          <p className="text-neutral-400 mt-2">Here's what's happening in your organization</p>
+          <p className="text-neutral-400 mt-2">{t('dashboard.happeningInOrg')}</p>
         </div>
         
         <div className="flex items-center space-x-4">
           {/* Time Range Selector */}
           <div className="flex items-center space-x-2">
-            <label className="text-sm text-neutral-400">Time Range:</label>
+            <label className="text-sm text-neutral-400">{t('dashboard.timeRange')}:</label>
             <select
               value={selectedTimeRange}
               onChange={(e) => setSelectedTimeRange(e.target.value)}
               className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
             >
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-              <option value="year">This Year</option>
+              <option value="week">{t('dashboard.thisWeek')}</option>
+              <option value="month">{t('dashboard.thisMonth')}</option>
+              <option value="quarter">{t('dashboard.thisQuarter')}</option>
+              <option value="year">{t('dashboard.thisYear')}</option>
             </select>
           </div>
           
@@ -202,7 +202,7 @@ export default function Dashboard({ onNavigate, user }) {
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            <span>{refreshing ? 'Refreshing...' : 'Refresh'}</span>
+            <span>{refreshing ? t('dashboard.refreshing') : t('dashboard.refresh')}</span>
           </button>
         </div>
       </div>
@@ -220,7 +220,7 @@ export default function Dashboard({ onNavigate, user }) {
             icon="👥"
             trend=""
             trendUp={false}
-            sub={`${wf?.breakdown?.full_time || 0} full-time, ${wf?.breakdown?.part_time || 0} part-time`}
+            sub={`${wf?.breakdown?.full_time || 0} ${t('dashboard.fullTime').toLowerCase()}, ${wf?.breakdown?.part_time || 0} ${t('dashboard.partTime').toLowerCase()}`}
           />
         </motion.div>
         
@@ -230,7 +230,7 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.2 }}
         >
           <MetricCard 
-            label="New Hires (This Month)" 
+            label={t('dashboard.newHiresThisMonth')} 
             value={analytics?.newHiresThisMonth ?? 0}
             icon="🎉"
             trend=""
@@ -245,7 +245,7 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.3 }}
         >
           <MetricCard 
-            label="Turnover Rate" 
+            label={t('dashboard.turnoverRate')} 
             value={analytics?.turnoverRate ? `${analytics.turnoverRate}%` : '0%'}
             icon="📊"
             trend=""
@@ -260,12 +260,12 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.4 }}
         >
           <MetricCard 
-            label="Avg Hours Worked" 
+            label={t('dashboard.avgHoursWorked')} 
             value={avgHoursPerEmployee > 0 ? `${avgHoursPerEmployee}h` : 'N/A'}
             icon="⏱️"
             trend=""
             trendUp={false}
-            sub={avgHoursPerEmployee > 0 ? `Per week (${getTimeRangeLabel(selectedTimeRange)})` : "Upload timecards to track"}
+            sub={avgHoursPerEmployee > 0 ? `${t('dashboard.perWeek')} (${getTimeRangeLabel(selectedTimeRange)})` : t('dashboard.uploadTimecardsToTrack')}
           />
         </motion.div>
       </div>
@@ -279,7 +279,7 @@ export default function Dashboard({ onNavigate, user }) {
       >
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Payroll Overview</h3>
+            <h3 className="text-lg font-semibold text-white">{t('dashboard.payrollOverview')}</h3>
             <div className="text-2xl">💰</div>
           </div>
           {totalPayroll > 0 ? (
@@ -291,7 +291,7 @@ export default function Dashboard({ onNavigate, user }) {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">Avg per Employee</span>
+                <span className="text-neutral-400">{t('dashboard.avgPerEmployee')}</span>
                 <span className="text-lg text-white">
                   ${wf?.total ? (totalPayroll / wf.total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A'}
                 </span>
@@ -383,7 +383,7 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.6 }}
           className="card p-6"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Employment Mix</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('dashboard.employmentMix')}</h3>
           {wf && (
             <div className="flex items-center gap-6">
               <Donut
@@ -397,22 +397,22 @@ export default function Dashboard({ onNavigate, user }) {
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-indigo-400"></div>
                   <div>
-                    <div className="text-white font-medium">Full-time</div>
-                    <div className="text-neutral-400">{wf.breakdown.full_time || 0} employees</div>
+                    <div className="text-white font-medium">{t('dashboard.fullTime')}</div>
+                    <div className="text-neutral-400">{wf.breakdown.full_time || 0} {t('dashboard.employees')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-green-400"></div>
                   <div>
-                    <div className="text-white font-medium">Part-time</div>
-                    <div className="text-neutral-400">{wf.breakdown.part_time || 0} employees</div>
+                    <div className="text-white font-medium">{t('dashboard.partTime')}</div>
+                    <div className="text-neutral-400">{wf.breakdown.part_time || 0} {t('dashboard.employees')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-pink-400"></div>
                   <div>
-                    <div className="text-white font-medium">Contract</div>
-                    <div className="text-neutral-400">{wf.breakdown.contract || 0} employees</div>
+                    <div className="text-white font-medium">{t('dashboard.contract')}</div>
+                    <div className="text-neutral-400">{wf.breakdown.contract || 0} {t('dashboard.employees')}</div>
                   </div>
                 </div>
               </div>
@@ -426,7 +426,7 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.7 }}
           className="card p-6"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Department Distribution</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('dashboard.departmentDistribution')}</h3>
           {analytics?.departmentDistribution && analytics.departmentDistribution.length > 0 ? (
             <div className="space-y-3">
               {analytics.departmentDistribution.map((dept, index) => (
@@ -452,7 +452,7 @@ export default function Dashboard({ onNavigate, user }) {
           ) : (
             <div className="text-center text-neutral-400 py-8">
               <div className="text-4xl mb-2">📊</div>
-              <p>No department data available</p>
+              <p>{t('dashboard.noDepartmentData')}</p>
             </div>
           )}
         </motion.div>
@@ -495,35 +495,35 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.9 }}
           className="card p-6"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('dashboard.quickActions')}</h3>
           <div className="grid grid-cols-2 gap-3">
             <button 
               onClick={() => handleQuickAction('upload-timecards')}
               className="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
               <div className="text-2xl mb-2">⏰</div>
-              <div className="text-sm font-medium">Upload Timecards</div>
+              <div className="text-sm font-medium">{t('dashboard.uploadTimecards')}</div>
             </button>
             <button 
               onClick={() => handleQuickAction('upload-bonuses')}
               className="p-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
               <div className="text-2xl mb-2">⭐</div>
-              <div className="text-sm font-medium">Upload Bonuses</div>
+              <div className="text-sm font-medium">{t('dashboard.uploadBonuses')}</div>
             </button>
             <button 
               onClick={() => handleQuickAction('manage-leave')}
               className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
               <div className="text-2xl mb-2">🏖️</div>
-              <div className="text-sm font-medium">Leave & Requests</div>
+              <div className="text-sm font-medium">{t('dashboard.leaveRequests')}</div>
             </button>
             <button 
               onClick={() => handleQuickAction('view-payroll')}
               className="p-4 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
             >
               <div className="text-2xl mb-2">💰</div>
-              <div className="text-sm font-medium">Payroll</div>
+              <div className="text-sm font-medium">{t('dashboard.payroll')}</div>
             </button>
           </div>
         </motion.div>

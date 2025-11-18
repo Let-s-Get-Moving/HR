@@ -88,7 +88,7 @@ const getPagesConfig = (t) => ({
   compliance: { name: t('nav.compliance'), component: Compliance, icon: Icons.compliance },
   benefits: { name: t('nav.benefits'), component: Benefits, icon: Icons.benefits },
   bonuses: { name: t('nav.bonuses'), component: BonusesCommissions, icon: Icons.bonuses },
-  testing: { name: "Testing", component: Testing, icon: Icons.testing },
+  testing: { name: t('nav.testing'), component: Testing, icon: Icons.testing },
   settings: { name: t('nav.settings'), component: Settings, icon: Icons.settings }
 });
 
@@ -228,15 +228,15 @@ export default function App() {
                   <span className="text-white font-bold text-lg">HR</span>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-primary">HR Management System</h1>
-                  <p className="text-xs text-secondary">Professional HR Solutions</p>
+                  <h1 className="text-xl font-bold text-primary">{t('app.title')}</h1>
+                  <p className="text-xs text-secondary">{t('app.subtitle')}</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block text-sm">
-                <div className="text-primary font-medium">Welcome, {user.username}</div>
-                <div className="text-xs text-secondary">Last login: {new Date().toLocaleDateString()}</div>
+                <div className="text-primary font-medium">{t('app.welcome')}, {user.username}</div>
+                <div className="text-xs text-secondary">{t('app.lastLogin')}: {new Date().toLocaleDateString()}</div>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -245,7 +245,7 @@ export default function App() {
                 className="flex items-center space-x-2 px-4 py-2 text-secondary hover:text-primary hover:bg-hover dark:hover:bg-slate-700/50 rounded-lg transition-colors"
               >
                 <Icons.logout />
-                <span className="hidden sm:inline font-medium">Logout</span>
+                <span className="hidden sm:inline font-medium">{t('nav.logout')}</span>
               </motion.button>
             </div>
           </div>
@@ -266,7 +266,7 @@ export default function App() {
                 <div>
                   <p className="font-semibold">{passwordWarning.message}</p>
                   <p className="text-sm opacity-90">
-                    Please change your password soon to avoid being locked out.
+                    {t('app.pleaseChangePassword')}
                   </p>
                 </div>
               </div>
@@ -275,7 +275,7 @@ export default function App() {
                   onClick={() => setCurrentPage('settings')}
                   className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-90 transition-opacity"
                 >
-                  Change Password
+                  {t('app.changePassword')}
                 </button>
                 <button
                   onClick={() => {
@@ -283,7 +283,7 @@ export default function App() {
                     localStorage.removeItem('passwordWarning');
                   }}
                   className="p-2 hover:bg-black hover:bg-opacity-10 rounded-lg transition-colors"
-                  title="Dismiss"
+                  title={t('app.dismiss')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -302,7 +302,7 @@ export default function App() {
         }`}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-6 lg:hidden">
-              <h2 className="text-lg font-semibold text-primary">Navigation</h2>
+              <h2 className="text-lg font-semibold text-primary">{t('nav.navigation')}</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="p-2 rounded-lg hover:bg-hover dark:hover:bg-slate-700/50 transition-colors"

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { sessionManager } from '../utils/sessionManager.js';
 
 export default function Login({ onLogin }) {
+  const { t } = useTranslation();
   const [credentials, setCredentials] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -266,9 +268,9 @@ export default function Login({ onLogin }) {
       >
         <div className="card-lg backdrop-blur-md border border-primary/20 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2 text-primary">C&C HR</h1>
-            <p className="text-secondary">Command & Control Logistics</p>
-            <p className="text-sm text-tertiary mt-2">Developed by Udi Shkolnik</p>
+            <h1 className="text-3xl font-bold mb-2 text-primary">{t('login.title')}</h1>
+            <p className="text-secondary">{t('login.subtitle')}</p>
+            <p className="text-sm text-tertiary mt-2">{t('login.developer')}</p>
           </div>
 
           {/* Password Change Screen */}
@@ -276,12 +278,12 @@ export default function Login({ onLogin }) {
             <form onSubmit={handlePasswordChangeSubmit} className="space-y-6">
               <div className="text-center mb-6">
                 <div className="text-5xl mb-4">🔒</div>
-                <h2 className="text-xl font-bold mb-2">Password Change Required</h2>
+                <h2 className="text-xl font-bold mb-2">{t('login.passwordChangeRequired')}</h2>
                 <p className="text-sm text-secondary">{passwordChangeReason}</p>
               </div>
 
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">New Password</label>
+                <label className="block text-sm font-medium mb-2 text-primary">{t('login.newPassword')}</label>
                 <input
                   type="password"
                   value={passwordChangeData.newPassword}
@@ -298,7 +300,7 @@ export default function Login({ onLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">Confirm Password</label>
+                <label className="block text-sm font-medium mb-2 text-primary">{t('login.confirmPassword')}</label>
                 <input
                   type="password"
                   value={passwordChangeData.confirmPassword}
@@ -320,7 +322,7 @@ export default function Login({ onLogin }) {
                 disabled={loading}
                 className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
               >
-                {loading ? "Changing Password..." : "Change Password"}
+                {loading ? t('login.changingPassword') : t('login.changePassword')}
               </button>
 
               <div className="mt-4 text-center text-xs text-tertiary">
@@ -332,9 +334,9 @@ export default function Login({ onLogin }) {
             <form onSubmit={handleMFAVerify} className="space-y-6">
               <div className="text-center mb-6">
                 <div className="text-5xl mb-4">🔐</div>
-                <h2 className="text-xl font-bold mb-2">Two-Factor Authentication</h2>
+                <h2 className="text-xl font-bold mb-2">{t('login.mfaTitle')}</h2>
                 <p className="text-sm text-secondary">
-                  Enter the 6-digit code from your authenticator app
+                  {t('login.mfaDescription')}
                 </p>
               </div>
 
@@ -383,7 +385,7 @@ export default function Login({ onLogin }) {
                 disabled={loading || mfaCode.length !== 6}
                 className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
               >
-                {loading ? "Verifying..." : "Verify Code"}
+                {loading ? t('login.verifying') : t('login.verifyCode')}
               </button>
 
               <button
@@ -396,7 +398,7 @@ export default function Login({ onLogin }) {
                 }}
                 className="w-full text-secondary hover:text-primary text-sm"
               >
-                ← Back to login
+                {t('login.backToLogin')}
               </button>
 
               <div className="mt-4 text-center text-xs text-tertiary">
@@ -407,7 +409,7 @@ export default function Login({ onLogin }) {
             /* Regular Login Form */
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">Username</label>
+                <label className="block text-sm font-medium mb-2 text-primary">{t('login.username')}</label>
                 <input
                   type="text"
                   value={credentials.username}
@@ -419,7 +421,7 @@ export default function Login({ onLogin }) {
               </div>
 
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">Password</label>
+                <label className="block text-sm font-medium mb-2 text-primary">{t('login.password')}</label>
                 <input
                   type="password"
                   value={credentials.password}
@@ -445,7 +447,7 @@ export default function Login({ onLogin }) {
                 disabled={loading}
                 className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? t('login.signingIn') : t('login.signIn')}
               </button>
             </form>
           )}
@@ -459,8 +461,8 @@ export default function Login({ onLogin }) {
               </div>
 
               <div className="mt-4 text-center text-xs text-tertiary">
-                <p>Session timeout: 30 minutes</p>
-                <p>Auto-logout on inactivity</p>
+                <p>{t('login.sessionTimeout')}</p>
+                <p>{t('login.autoLogout')}</p>
               </div>
             </>
           )}
