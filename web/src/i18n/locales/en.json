@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "employees": "Employees",
+    "timeTracking": "Time Tracking",
+    "leave": "Leave Management",
+    "payroll": "Payroll",
+    "compliance": "Compliance",
+    "benefits": "Benefits",
+    "bonuses": "Bonuses & Commissions",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "overview": "Overview",
+    "employees": "Employees",
+    "activeEmployees": "Active Employees",
+    "totalPayroll": "Total Payroll",
+    "pendingLeave": "Pending Leave Requests"
+  },
+  "employees": {
+    "title": "Employees",
+    "addEmployee": "Add Employee",
+    "searchPlaceholder": "Search employees...",
+    "name": "Name",
+    "email": "Email",
+    "department": "Department",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "settings": {
+    "title": "Settings",
+    "preferences": "User Preferences",
+    "notifications": "Notifications",
+    "security": "Security",
+    "theme": "Theme",
+    "language": "Language",
+    "timezone": "Timezone",
+    "dark": "Dark",
+    "light": "Light",
+    "emailNotifications": "Email Notifications",
+    "pushNotifications": "Push Notifications"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "back": "Back",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  }
+}
+

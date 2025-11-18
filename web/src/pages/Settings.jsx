@@ -63,7 +63,6 @@ export default function Settings() {
     theme: ["dark", "light"],
     language: ["en", "es", "fr"],
     timezone: ["UTC", "EST", "PST", "CST", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"],
-    dashboard_layout: ["grid", "list"],
     
     // Security
     password_requirements: ["weak", "medium", "strong"],
@@ -121,7 +120,6 @@ export default function Settings() {
       theme: true,
       language: true,
       timezone: true,
-      dashboard_layout: true,
       password_requirements: true,
       backup_frequency: true,
       date_format: true,
@@ -210,8 +208,11 @@ export default function Settings() {
   const applyLanguage = (language) => {
     // Set the document language
     document.documentElement.lang = language;
-    console.log(`Language changed to: ${language}`);
-    // In a real app, you might trigger a re-render with new translations
+    // Save to localStorage for persistence
+    localStorage.setItem('user_language', language);
+    console.log(`✅ Language changed to: ${language}`);
+    // Reload the page to apply new language (i18n will pick it up from localStorage)
+    window.location.reload();
   };
 
   const applyTimezone = (timezone) => {
@@ -255,14 +256,12 @@ export default function Settings() {
       const defaultPreferences = [
         { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
         { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
-        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] },
-        { key: "dashboard_layout", label: "Dashboard Layout", type: "select", value: "grid", options: ["grid", "list"] }
+        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] }
       ];
 
       const defaultNotifications = [
         { key: "email_notifications", label: "Email Notifications", type: "boolean", value: "true" },
-        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" },
-        { key: "sms_notifications", label: "SMS Notifications", type: "boolean", value: "false" }
+        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" }
       ];
 
       const defaultSecurity = [
@@ -273,8 +272,7 @@ export default function Settings() {
 
       const defaultMaintenance = [
         { key: "auto_backup", label: "Automatic Backup", type: "boolean", value: "true" },
-        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] },
-        { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
+        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] }
       ];
 
       // Check if user is authenticated before trying authenticated endpoints

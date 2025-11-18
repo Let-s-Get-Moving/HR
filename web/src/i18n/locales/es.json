@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "employees": "Empleados",
+    "timeTracking": "Control de Tiempo",
+    "leave": "Gestión de Permisos",
+    "payroll": "Nómina",
+    "compliance": "Cumplimiento",
+    "benefits": "Beneficios",
+    "bonuses": "Bonos y Comisiones",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión"
+  },
+  "dashboard": {
+    "title": "Panel",
+    "welcome": "Bienvenido de nuevo",
+    "overview": "Resumen",
+    "employees": "Empleados",
+    "activeEmployees": "Empleados Activos",
+    "totalPayroll": "Nómina Total",
+    "pendingLeave": "Solicitudes de Permiso Pendientes"
+  },
+  "employees": {
+    "title": "Empleados",
+    "addEmployee": "Agregar Empleado",
+    "searchPlaceholder": "Buscar empleados...",
+    "name": "Nombre",
+    "email": "Correo",
+    "department": "Departamento",
+    "status": "Estado",
+    "actions": "Acciones"
+  },
+  "settings": {
+    "title": "Configuración",
+    "preferences": "Preferencias de Usuario",
+    "notifications": "Notificaciones",
+    "security": "Seguridad",
+    "theme": "Tema",
+    "language": "Idioma",
+    "timezone": "Zona Horaria",
+    "dark": "Oscuro",
+    "light": "Claro",
+    "emailNotifications": "Notificaciones por Correo",
+    "pushNotifications": "Notificaciones Push"
+  },
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "back": "Volver",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito"
+  }
+}
+

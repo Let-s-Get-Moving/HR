@@ -1,0 +1,58 @@
+{
+  "nav": {
+    "dashboard": "Tableau de Bord",
+    "employees": "Employés",
+    "timeTracking": "Suivi du Temps",
+    "leave": "Gestion des Congés",
+    "payroll": "Paie",
+    "compliance": "Conformité",
+    "benefits": "Avantages",
+    "bonuses": "Primes et Commissions",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "dashboard": {
+    "title": "Tableau de Bord",
+    "welcome": "Bon retour",
+    "overview": "Aperçu",
+    "employees": "Employés",
+    "activeEmployees": "Employés Actifs",
+    "totalPayroll": "Masse Salariale Totale",
+    "pendingLeave": "Demandes de Congé en Attente"
+  },
+  "employees": {
+    "title": "Employés",
+    "addEmployee": "Ajouter un Employé",
+    "searchPlaceholder": "Rechercher des employés...",
+    "name": "Nom",
+    "email": "Courriel",
+    "department": "Département",
+    "status": "Statut",
+    "actions": "Actions"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "preferences": "Préférences Utilisateur",
+    "notifications": "Notifications",
+    "security": "Sécurité",
+    "theme": "Thème",
+    "language": "Langue",
+    "timezone": "Fuseau Horaire",
+    "dark": "Sombre",
+    "light": "Clair",
+    "emailNotifications": "Notifications par Courriel",
+    "pushNotifications": "Notifications Push"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "back": "Retour",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès"
+  }
+}
+
