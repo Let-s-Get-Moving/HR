@@ -18,7 +18,8 @@
     "employees": "Employees",
     "activeEmployees": "Active Employees",
     "totalPayroll": "Total Payroll",
-    "pendingLeave": "Pending Leave Requests"
+    "pendingLeave": "Pending Leave Requests",
+    "recentActivity": "Recent Activity"
   },
   "employees": {
     "title": "Employees",
@@ -28,13 +29,19 @@
     "email": "Email",
     "department": "Department",
     "status": "Status",
-    "actions": "Actions"
+    "actions": "Actions",
+    "active": "Active",
+    "terminated": "Terminated",
+    "onLeave": "On Leave",
+    "all": "All"
   },
   "settings": {
     "title": "Settings",
     "preferences": "User Preferences",
     "notifications": "Notifications",
     "security": "Security",
+    "maintenance": "Maintenance",
+    "system": "System Settings",
     "theme": "Theme",
     "language": "Language",
     "timezone": "Timezone",
@@ -52,7 +59,9 @@
     "back": "Back",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "close": "Close",
+    "confirm": "Confirm"
   }
 }
 

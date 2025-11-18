@@ -18,7 +18,8 @@
     "employees": "Empleados",
     "activeEmployees": "Empleados Activos",
     "totalPayroll": "Nómina Total",
-    "pendingLeave": "Solicitudes de Permiso Pendientes"
+    "pendingLeave": "Solicitudes de Permiso Pendientes",
+    "recentActivity": "Actividad Reciente"
   },
   "employees": {
     "title": "Empleados",
@@ -28,13 +29,19 @@
     "email": "Correo",
     "department": "Departamento",
     "status": "Estado",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "active": "Activo",
+    "terminated": "Terminado",
+    "onLeave": "De Permiso",
+    "all": "Todos"
   },
   "settings": {
     "title": "Configuración",
     "preferences": "Preferencias de Usuario",
     "notifications": "Notificaciones",
     "security": "Seguridad",
+    "maintenance": "Mantenimiento",
+    "system": "Configuración del Sistema",
     "theme": "Tema",
     "language": "Idioma",
     "timezone": "Zona Horaria",
@@ -52,7 +59,9 @@
     "back": "Volver",
     "loading": "Cargando...",
     "error": "Error",
-    "success": "Éxito"
+    "success": "Éxito",
+    "close": "Cerrar",
+    "confirm": "Confirmar"
   }
 }
 

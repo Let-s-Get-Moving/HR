@@ -18,7 +18,8 @@
     "employees": "Employés",
     "activeEmployees": "Employés Actifs",
     "totalPayroll": "Masse Salariale Totale",
-    "pendingLeave": "Demandes de Congé en Attente"
+    "pendingLeave": "Demandes de Congé en Attente",
+    "recentActivity": "Activité Récente"
   },
   "employees": {
     "title": "Employés",
@@ -28,13 +29,19 @@
     "email": "Courriel",
     "department": "Département",
     "status": "Statut",
-    "actions": "Actions"
+    "actions": "Actions",
+    "active": "Actif",
+    "terminated": "Terminé",
+    "onLeave": "En Congé",
+    "all": "Tous"
   },
   "settings": {
     "title": "Paramètres",
     "preferences": "Préférences Utilisateur",
     "notifications": "Notifications",
     "security": "Sécurité",
+    "maintenance": "Maintenance",
+    "system": "Paramètres Système",
     "theme": "Thème",
     "language": "Langue",
     "timezone": "Fuseau Horaire",
@@ -52,7 +59,9 @@
     "back": "Retour",
     "loading": "Chargement...",
     "error": "Erreur",
-    "success": "Succès"
+    "success": "Succès",
+    "close": "Fermer",
+    "confirm": "Confirmer"
   }
 }
 
