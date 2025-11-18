@@ -175,7 +175,7 @@ export default function Employees() {
             onClick={() => setShowOnboarding(true)}
             className="bg-indigo-600 hover:bg-indigo-700 px-4 sm:px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
           >
-            + Add Employee
+            + {t('employees.addEmployee')}
           </motion.button>
         )}
       </div>
@@ -190,8 +190,8 @@ export default function Employees() {
               onChange={(e) => setFilterStatus(e.target.value)}
               className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
             >
-              <option value="active">Active Employees</option>
-              <option value="terminated">Terminated Employees</option>
+              <option value="active">{t('employees.active')} {t('employees.title')}</option>
+              <option value="terminated">{t('employees.terminated')} {t('employees.title')}</option>
             </select>
           </div>
           
