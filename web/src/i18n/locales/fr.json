@@ -6,18 +6,18 @@
     "leave": "Gestion des Congés",
     "payroll": "Paie",
     "compliance": "Conformité",
-    "benefits": "Avantages",
+    "benefits": "Avantages Sociaux",
     "bonuses": "Primes et Commissions",
     "settings": "Paramètres",
     "logout": "Déconnexion"
   },
   "dashboard": {
     "title": "Tableau de Bord",
-    "welcome": "Bienvenue",
-    "overview": "Aperçu",
+    "welcome": "Bienvenue de retour",
+    "overview": "Vue d'ensemble",
     "employees": "Employés",
     "activeEmployees": "Employés Actifs",
-    "totalPayroll": "Paie Totale",
+    "totalPayroll": "Masse Salariale Totale",
     "pendingLeave": "Demandes de Congé en Attente",
     "recentActivity": "Activité Récente",
     "noActivity": "Aucune activité récente"
@@ -27,15 +27,15 @@
     "addEmployee": "Ajouter un Employé",
     "searchPlaceholder": "Rechercher des employés...",
     "name": "Nom",
-    "email": "Email",
+    "email": "Courriel",
     "department": "Département",
     "position": "Poste",
     "hireDate": "Date d'Embauche",
-    "terminationDate": "Date de Fin",
+    "terminationDate": "Date de Fin de Contrat",
     "status": "Statut",
     "actions": "Actions",
     "active": "Actif",
-    "terminated": "Terminé",
+    "terminated": "Licencié",
     "onLeave": "En Congé",
     "all": "Tous",
     "employeeDetails": "Détails de l'Employé",
@@ -43,10 +43,11 @@
     "employmentInfo": "Informations d'Emploi",
     "viewProfile": "Voir le Profil",
     "editEmployee": "Modifier l'Employé",
-    "terminateEmployee": "Terminer l'Employé",
+    "terminateEmployee": "Licencier l'Employé",
     "noEmployees": "Aucun employé trouvé",
-    "employmentType": "Type d'Emploi",
-    "loading": "Chargement des employés..."
+    "employmentType": "Type de Contrat",
+    "loading": "Chargement des employés...",
+    "description": "Gérer votre personnel et les dossiers des employés"
   },
   "leave": {
     "title": "Gestion des Congés",
@@ -57,7 +58,7 @@
     "leaveType": "Type de Congé",
     "startDate": "Date de Début",
     "endDate": "Date de Fin",
-    "reason": "Raison",
+    "reason": "Motif",
     "notes": "Notes",
     "status": "Statut",
     "pending": "En Attente",
@@ -68,11 +69,20 @@
     "duration": "Durée",
     "days": "jours",
     "submittedOn": "Soumis le",
-    "noRequests": "Aucune demande de congé"
+    "noRequests": "Aucune demande de congé",
+    "types": {
+      "vacation": "Vacances",
+      "sickLeave": "Congé Maladie",
+      "personalLeave": "Congé Personnel",
+      "bereavement": "Congé de Deuil",
+      "parentalLeave": "Congé Parental",
+      "juryDuty": "Service de Jury",
+      "militaryLeave": "Congé Militaire"
+    }
   },
   "payroll": {
     "title": "Paie",
-    "overview": "Aperçu",
+    "overview": "Vue d'ensemble",
     "payPeriod": "Période de Paie",
     "payDate": "Date de Paie",
     "totalAmount": "Montant Total",
@@ -88,12 +98,12 @@
   },
   "timeTracking": {
     "title": "Suivi du Temps",
-    "clockIn": "Pointer à l'Entrée",
-    "clockOut": "Pointer à la Sortie",
+    "clockIn": "Pointer à l'Arrivée",
+    "clockOut": "Pointer au Départ",
     "totalHours": "Total des Heures",
     "weeklyHours": "Heures Hebdomadaires",
     "timesheets": "Feuilles de Temps",
-    "viewTimecard": "Voir la Carte de Temps"
+    "viewTimecard": "Voir la Fiche de Temps"
   },
   "compliance": {
     "title": "Conformité",
@@ -104,7 +114,7 @@
     "status": "Statut"
   },
   "benefits": {
-    "title": "Avantages",
+    "title": "Avantages Sociaux",
     "healthInsurance": "Assurance Santé",
     "retirement": "Retraite",
     "paidTimeOff": "Congés Payés",
@@ -133,7 +143,7 @@
     "timezone": "Fuseau Horaire",
     "dark": "Sombre",
     "light": "Clair",
-    "emailNotifications": "Notifications par Email",
+    "emailNotifications": "Notifications par Courriel",
     "pushNotifications": "Notifications Push",
     "twoFactorAuth": "Authentification à Deux Facteurs",
     "sessionTimeout": "Délai d'Expiration de Session",
