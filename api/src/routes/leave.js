@@ -2,6 +2,7 @@ import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
 import { applyScopeFilter } from "../middleware/rbac.js";
+import { notificationService } from "../services/notifications.js";
 
 const r = Router();
 
@@ -254,6 +255,11 @@ r.post("/requests", async (req, res) => {
     
     await q('COMMIT');
     
+    // Send email notification to HR (non-blocking)
+    notificationService.notifyLeaveRequestSubmitted(leaveRequest.id).catch(err => 
+      console.error('Failed to send leave notification:', err)
+    );
+    
     res.status(201).json(leaveRequest);
   } catch (error) {
     await q('ROLLBACK');
@@ -353,6 +359,13 @@ r.put("/requests/:id/status", async (req, res) => {
     }
     
     await q('COMMIT');
+    
+    // Send email to employee (non-blocking)
+    const approverName = req.user?.full_name || approved_by || 'HR';
+    notificationService.notifyLeaveRequestDecision(id, status, approverName).catch(err =>
+      console.error('Failed to send decision notification:', err)
+    );
+    
     res.json(rows[0]);
   } catch (error) {
     await q('ROLLBACK');
