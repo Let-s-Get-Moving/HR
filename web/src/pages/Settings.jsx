@@ -131,27 +131,43 @@ export default function Settings() {
     };
     
     return settings.map(setting => {
-      // Force type to 'select' for known select fields (fixes theme showing as text input)
-      if (FORCE_SELECT_TYPES[setting.key] && setting.type !== 'select') {
+      // Determine the correct type (force to select if needed)
+      const correctType = (FORCE_SELECT_TYPES[setting.key] && setting.type !== 'select') 
+        ? 'select' 
+        : setting.type;
+      
+      // Log if we're forcing the type
+      if (correctType !== setting.type) {
         console.warn(`⚠️ [Settings] Forcing type to 'select' for "${setting.key}" (was "${setting.type}")`);
-        setting.type = 'select';
       }
       
       // If it's a select type and we have options for it, add them
-      if (setting.type === 'select' && SETTING_OPTIONS[setting.key]) {
+      if (correctType === 'select' && SETTING_OPTIONS[setting.key]) {
         return {
           ...setting,
+          type: correctType,
           options: SETTING_OPTIONS[setting.key]
         };
       }
-      // If it's a select type but no options mapping exists, try to preserve existing options
-      if (setting.type === 'select' && !setting.options) {
-        // Fallback: if we have a default, use it, otherwise empty array
+      
+      // If it's a select type but no options mapping exists
+      if (correctType === 'select' && !setting.options) {
         return {
           ...setting,
+          type: correctType,
           options: SETTING_OPTIONS[setting.key] || []
         };
       }
+      
+      // For non-select types, just ensure type is correct
+      if (correctType !== setting.type) {
+        return {
+          ...setting,
+          type: correctType
+        };
+      }
+      
+      // Return unchanged if nothing needs updating
       return setting;
     });
   };
@@ -304,6 +320,21 @@ export default function Settings() {
       const enrichedNotifications = enrichSettingsWithOptions(notifs || defaultNotifications);
       const enrichedSecurity = enrichSettingsWithOptions(sec || defaultSecurity);
       const enrichedMaintenance = enrichSettingsWithOptions(maint || defaultMaintenance);
+      
+      // Debug logging to verify options are present
+      console.log('🔍 [Debug] Enriched preferences:', enrichedPreferences);
+      enrichedPreferences.forEach(s => {
+        if (s.type === 'select') {
+          console.log(`  - ${s.key}: type=${s.type}, options=${s.options?.length || 0}`, s.options);
+        }
+      });
+      
+      console.log('🔍 [Debug] Enriched maintenance:', enrichedMaintenance);
+      enrichedMaintenance.forEach(s => {
+        if (s.type === 'select') {
+          console.log(`  - ${s.key}: type=${s.type}, options=${s.options?.length || 0}`, s.options);
+        }
+      });
       
       // Set all settings regardless of whether they came from API or defaults
       console.log('✅ [Settings] Setting state with preferences:', enrichedPreferences?.length);
