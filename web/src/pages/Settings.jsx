@@ -821,15 +821,7 @@ export default function Settings() {
 
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">{title}</h3>
-          <button
-            onClick={() => window.open(`/api/settings/export`, '_blank')}
-            className="bg-primary hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            Export Settings
-          </button>
-        </div>
+        <h3 className="text-lg font-semibold">{title}</h3>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {settings.map((setting, index) => (

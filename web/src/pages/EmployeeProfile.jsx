@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const [employee, setEmployee] = useState(null);
@@ -599,7 +600,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
               />
             ) : (
-              <div className="font-medium">{new Date(employee.hire_date).toLocaleDateString()}</div>
+              <div className="font-medium">{formatShortDate(employee.hire_date)}</div>
             )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
@@ -753,7 +754,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 ? employee.birth_date.split('T')[0] 
                                 : employee.birth_date;
                               const date = new Date(dateStr + 'T00:00:00');
-                              return date.toLocaleDateString();
+                              return formatShortDate(date);
                             } catch (e) {
                               console.error('❌ [EmployeeProfile] Error parsing birth date:', employee.birth_date, e);
                               return 'Invalid Date';
@@ -779,7 +780,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     />
                   ) : (
-                    <span>{employee.hire_date ? new Date(employee.hire_date).toLocaleDateString() : 'Not set'}</span>
+                    <span>{employee.hire_date ? formatShortDate(employee.hire_date) : 'Not set'}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
@@ -846,7 +847,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     />
                   ) : (
-                    <span>{employee.probation_end ? new Date(employee.probation_end).toLocaleDateString() : 'Not set'}</span>
+                    <span>{employee.probation_end ? formatShortDate(employee.probation_end) : 'Not set'}</span>
                   )}
                 </div>
               </div>
@@ -894,7 +895,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                       />
                     ) : (
-                      <span>{new Date(employee.contract_signed_date).toLocaleDateString()}</span>
+                      <span>{formatShortDate(employee.contract_signed_date)}</span>
                     )}
                   </div>
                 )}
@@ -956,7 +957,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="space-y-3">
                 {(timeEntries || []).slice(0, 5).map((entry) => (
                   <div key={entry.id} className="flex justify-between text-sm">
-                    <span>{new Date(entry.work_date).toLocaleDateString()}</span>
+                    <span>{formatShortDate(entry.work_date)}</span>
                     <span>{formatHoursAsTime(entry.hours_worked)}</span>
                   </div>
                 ))}
@@ -1108,7 +1109,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 <tbody>
                   {(payrollHistory || []).map((payroll) => (
                     <tr key={payroll.id} className="border-b border-neutral-700">
-                      <td className="py-2">{new Date(payroll.pay_period_start).toLocaleDateString()} - {new Date(payroll.pay_period_end).toLocaleDateString()}</td>
+                      <td className="py-2">{formatShortDate(payroll.pay_period_start)} - {formatShortDate(payroll.pay_period_end)}</td>
                       <td className="py-2">{payroll.total_hours}</td>
                       <td className="py-2">${payroll.hourly_rate}</td>
                       <td className="py-2">${payroll.gross_pay}</td>
@@ -1165,10 +1166,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       return dayEntries.map((entry, idx) => (
                         <tr key={entry.id} className="border-b border-neutral-700">
                           <td className="py-2 font-medium">
-                            {idx === 0 ? new Date(entry.work_date).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() : ''}
+                            {idx === 0 ? formatShortDate(entry.work_date) : ''}
                           </td>
                           <td className="py-2">
-                            {idx === 0 ? new Date(entry.work_date).toLocaleDateString() : ''}
+                            {idx === 0 ? formatShortDate(entry.work_date) : ''}
                           </td>
                           <td className="py-2">{entry.clock_in ? (typeof entry.clock_in === 'string' && entry.clock_in.length <= 8 ? entry.clock_in.slice(0, 5) : new Date(entry.clock_in).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})) : '-'}</td>
                           <td className="py-2">{entry.clock_out ? (typeof entry.clock_out === 'string' && entry.clock_out.length <= 8 ? entry.clock_out.slice(0, 5) : new Date(entry.clock_out).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})) : '-'}</td>
@@ -1238,7 +1239,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  Uploaded: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
@@ -1283,7 +1284,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  Uploaded: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
@@ -1328,7 +1329,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  Uploaded: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
@@ -1373,7 +1374,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {new Date(doc.uploaded_on).toLocaleDateString()}
+                                  Uploaded: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                                 {doc.notes && (
@@ -1702,7 +1703,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 <tbody>
                   {(hrDetails.compensation_history || []).map(ch => (
                     <tr key={ch.id} className="border-b border-neutral-700">
-                      <td className="py-2">{new Date(ch.effective_date).toLocaleDateString()}</td>
+                      <td className="py-2">{formatShortDate(ch.effective_date)}</td>
                       <td className="py-2">{ch.rate_type}</td>
                       <td className="py-2">${ch.regular_rate}</td>
                       <td className="py-2">{ch.hours_biweekly ?? '—'}</td>
@@ -1722,7 +1723,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               {(hrDetails.status_history || []).map(sh => (
                 <div key={sh.id} className="flex justify-between text-sm">
                   <span>{sh.status}</span>
-                  <span>{new Date(sh.status_date).toLocaleDateString()}</span>
+                  <span>{formatShortDate(sh.status_date)}</span>
                 </div>
               ))}
               {(!hrDetails.status_history || hrDetails.status_history.length === 0) && (
@@ -1747,7 +1748,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 <div key={record.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg">
                   <div>
                     <div className="font-medium">{record.training_name}</div>
-                    <div className="text-sm text-neutral-400">Completed: {new Date(record.completed_on).toLocaleDateString()}</div>
+                    <div className="text-sm text-neutral-400">Completed: {formatShortDate(record.completed_on)}</div>
                     <div className="text-xs text-neutral-500">Valid for {record.validity_months} months</div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -1781,7 +1782,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <div className="text-sm text-neutral-400">Termination Date</div>
-                <div className="font-medium text-lg">{terminationDetails.termination_date ? new Date(terminationDetails.termination_date).toLocaleDateString() : 'N/A'}</div>
+                <div className="font-medium text-lg">{terminationDetails.termination_date ? formatShortDate(terminationDetails.termination_date) : 'N/A'}</div>
               </div>
               <div>
                 <div className="text-sm text-neutral-400">Termination Type</div>
@@ -1813,7 +1814,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <div>
                   <div className="text-sm text-neutral-400">Last Working Day</div>
-                  <div className="font-medium">{terminationDetails.last_working_day ? new Date(terminationDetails.last_working_day).toLocaleDateString() : 'N/A'}</div>
+                  <div className="font-medium">{terminationDetails.last_working_day ? formatShortDate(terminationDetails.last_working_day) : 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -1831,11 +1832,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <div>
                   <div className="text-sm text-neutral-400">Final Pay Date</div>
-                  <div className="font-medium">{terminationDetails.final_pay_date ? new Date(terminationDetails.final_pay_date).toLocaleDateString() : 'N/A'}</div>
+                  <div className="font-medium">{terminationDetails.final_pay_date ? formatShortDate(terminationDetails.final_pay_date) : 'N/A'}</div>
                 </div>
                 <div>
                   <div className="text-sm text-neutral-400">Benefits End Date</div>
-                  <div className="font-medium">{terminationDetails.benefits_end_date ? new Date(terminationDetails.benefits_end_date).toLocaleDateString() : 'N/A'}</div>
+                  <div className="font-medium">{terminationDetails.benefits_end_date ? formatShortDate(terminationDetails.benefits_end_date) : 'N/A'}</div>
                 </div>
               </div>
             </div>
@@ -1855,7 +1856,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
                 <div className="text-sm text-neutral-400">Interview Date</div>
-                <div className="font-medium">{terminationDetails.exit_interview_date ? new Date(terminationDetails.exit_interview_date).toLocaleDateString() : 'Not conducted'}</div>
+                <div className="font-medium">{terminationDetails.exit_interview_date ? formatShortDate(terminationDetails.exit_interview_date) : 'Not conducted'}</div>
               </div>
               <div>
                 <div className="text-sm text-neutral-400">Conducted By</div>
@@ -1882,7 +1883,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {terminationDetails.equipment_return_date && (
                   <div>
                     <div className="text-sm text-neutral-400">Return Date</div>
-                    <div className="font-medium">{new Date(terminationDetails.equipment_return_date).toLocaleDateString()}</div>
+                    <div className="font-medium">{formatShortDate(terminationDetails.equipment_return_date)}</div>
                   </div>
                 )}
                 {terminationDetails.equipment_return_notes && (
@@ -1905,7 +1906,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {terminationDetails.access_revoked_date && (
                   <div>
                     <div className="text-sm text-neutral-400">Revoked Date</div>
-                    <div className="font-medium">{new Date(terminationDetails.access_revoked_date).toLocaleDateString()}</div>
+                    <div className="font-medium">{formatShortDate(terminationDetails.access_revoked_date)}</div>
                   </div>
                 )}
               </div>

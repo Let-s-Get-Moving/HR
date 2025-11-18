@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 export default function Compliance() {
   const [alerts, setAlerts] = useState([]);
@@ -165,7 +166,7 @@ export default function Compliance() {
                             <strong>{alert.first_name} {alert.last_name}</strong> - {alert.department}
                           </p>
                           <p className="text-sm text-secondary mb-3">
-                            Due: {new Date(alert.due_date).toLocaleDateString()}
+                            Due: {formatShortDate(alert.due_date)}
                           </p>
                           {alert.notes && (
                             <p className="text-sm text-secondary mb-3">{alert.notes}</p>

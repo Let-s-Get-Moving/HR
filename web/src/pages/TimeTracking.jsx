@@ -876,7 +876,7 @@ function IndividualView({ timecard, onBack }) {
             <h2 className="text-2xl font-bold text-primary">{timecard.employee_name}</h2>
             <p className="text-secondary">{timecard.email}</p>
             <p className="text-sm text-secondary mt-1">
-              Period: {new Date(timecard.pay_period_start).toLocaleDateString()} - {new Date(timecard.pay_period_end).toLocaleDateString()}
+              Period: {formatShortDate(timecard.pay_period_start)} - {formatShortDate(timecard.pay_period_end)}
             </p>
           </div>
           <div className="text-right">
@@ -915,8 +915,8 @@ function IndividualView({ timecard, onBack }) {
                     <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                       {idx === 0 && (
                         <td rowSpan={entries.length} className="px-6 py-4 font-medium text-primary border-r border-slate-200 dark:border-slate-700">
-                          <div>{new Date(date).toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                          <div className="text-sm">{new Date(date).toLocaleDateString()}</div>
+                          <div>{formatShortDate(date)}</div>
+                          <div className="text-sm">{formatShortDate(date)}</div>
                         </td>
                       )}
                       <td className="px-6 py-4 text-sm text-primary">

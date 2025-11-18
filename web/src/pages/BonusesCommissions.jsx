@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 export default function BonusesCommissions() {
   const { userRole } = useUserRole();
@@ -2169,7 +2170,7 @@ export default function BonusesCommissions() {
                     'bg-yellow-900 text-yellow-300'
                   }`}>{actionBonus.status}</span></p>
                   <p><strong>Approved by:</strong> {actionBonus.approved_by || 'Pending'}</p>
-                  <p><strong>Created:</strong> {new Date(actionBonus.created_at).toLocaleDateString()}</p>
+                  <p><strong>Created:</strong> {formatShortDate(actionBonus.created_at)}</p>
                 </div>
                 <div className="p-4 bg-neutral-800 rounded-lg">
                   <h4 className="font-medium mb-2 text-indigo-400">Criteria & Notes</h4>

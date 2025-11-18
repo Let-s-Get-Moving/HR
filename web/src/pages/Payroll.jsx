@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 import { useUserRole } from '../hooks/useUserRole.js';
 
 export default function Payroll() {
@@ -208,12 +209,7 @@ export default function Payroll() {
               {payPeriods.map((period) => {
                 // Parse date as UTC to avoid timezone shifts
                 const payDate = new Date(period.pay_date + 'T00:00:00Z');
-                const formattedDate = payDate.toLocaleDateString('en-US', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                  timeZone: 'UTC'
-                }).toUpperCase();
+                const formattedDate = formatShortDate(payDate).toUpperCase();
                 
                 return (
                   <option key={period.pay_date} value={period.pay_date}>
@@ -231,7 +227,7 @@ export default function Payroll() {
                 <div>
                   <div className="text-xs text-secondary uppercase">Work Period</div>
                   <div className="text-sm font-medium text-primary">
-                    {new Date(selectedPeriod.pay_period_start + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(selectedPeriod.pay_period_end + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })}
+                    {formatShortDate(new Date(selectedPeriod.pay_period_start + 'T00:00:00Z'))} - {formatShortDate(new Date(selectedPeriod.pay_period_end + 'T00:00:00Z'))}
                   </div>
                 </div>
                 <div>
@@ -462,10 +458,10 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
                 <p className="text-sm text-secondary mt-1">Department: {employee.department}</p>
               )}
               <p className="text-sm text-secondary">
-                Pay Period: {new Date(employee.pay_period_start + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(employee.pay_period_end + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })}
+                Pay Period: {formatShortDate(new Date(employee.pay_period_start + 'T00:00:00Z'))} - {formatShortDate(new Date(employee.pay_period_end + 'T00:00:00Z'))}
               </p>
               <p className="text-sm text-secondary">
-                Pay Date: {new Date(employee.pay_date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC' })}
+                Pay Date: {formatShortDate(new Date(employee.pay_date + 'T00:00:00Z'))}
               </p>
             </div>
             <button
