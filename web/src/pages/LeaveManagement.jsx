@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import { useUserRole } from '../hooks/useUserRole.js';
 import LeaveRequestForm from '../components/LeaveRequestForm.jsx';
 import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
@@ -9,6 +10,7 @@ import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 export default function LeaveManagement() {
+  const { t } = useTranslation();
   const { userRole } = useUserRole();
   const [requests, setRequests] = useState([]);
   const [balances, setBalances] = useState([]);
@@ -69,13 +71,13 @@ export default function LeaveManagement() {
       
       // Set leave types from first request or default
       setLeaveTypes([
-        { id: 1, name: 'Vacation' },
-        { id: 2, name: 'Sick Leave' },
-        { id: 3, name: 'Personal Leave' },
-        { id: 4, name: 'Bereavement' },
-        { id: 5, name: 'Parental Leave' },
-        { id: 6, name: 'Jury Duty' },
-        { id: 7, name: 'Military Leave' }
+        { id: 1, name: t('leave.types.vacation', 'Vacation') },
+        { id: 2, name: t('leave.types.sickLeave', 'Sick Leave') },
+        { id: 3, name: t('leave.types.personalLeave', 'Personal Leave') },
+        { id: 4, name: t('leave.types.bereavement', 'Bereavement') },
+        { id: 5, name: t('leave.types.parentalLeave', 'Parental Leave') },
+        { id: 6, name: t('leave.types.juryDuty', 'Jury Duty') },
+        { id: 7, name: t('leave.types.militaryLeave', 'Military Leave') }
       ]);
     } catch (error) {
       console.error("Error loading leave data:", error);
