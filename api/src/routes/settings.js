@@ -124,6 +124,7 @@ r.put("/preferences/:key", requireAuth, async (req, res) => {
   
   try {
     console.log(`💾 Updating preference ${key} = ${value} for user ${userId}`);
+    console.log(`📊 User ID type: ${typeof userId}, value: ${userId}`);
     
     // Get the setting type and description from defaults or existing setting
     const defaultSetting = await q(`
@@ -133,14 +134,19 @@ r.put("/preferences/:key", requireAuth, async (req, res) => {
       LIMIT 1
     `, [key]).catch(() => ({ rows: [] }));
     
-    const settingType = defaultSetting.rows[0]?.type || 'text';
+    console.log(`📊 Default setting found: ${defaultSetting.rows.length > 0}`);
+    
+    const settingType = defaultSetting.rows[0]?.type || 'select';
     const description = defaultSetting.rows[0]?.description || '';
     
+    console.log(`📊 Type: ${settingType}, Description: ${description}`);
+    
     // Use INSERT ... ON CONFLICT to create or update per-user setting
+    // ON CONFLICT must match the partial unique index with WHERE clause
     const result = await q(`
       INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
       VALUES ($1, $2, $3, 'preferences', $4, $5, NOW())
-      ON CONFLICT (key, user_id) 
+      ON CONFLICT (key, user_id) WHERE user_id IS NOT NULL
       DO UPDATE SET 
         value = EXCLUDED.value,
         updated_at = NOW()
@@ -154,8 +160,13 @@ r.put("/preferences/:key", requireAuth, async (req, res) => {
       setting: result.rows[0]
     });
   } catch (error) {
-    console.error("Error updating user preference:", error);
-    res.status(500).json({ error: "Failed to update user preference" });
+    console.error("❌ Error updating user preference:", error);
+    console.error("❌ Error details:", error.message);
+    console.error("❌ Stack:", error.stack);
+    res.status(500).json({ 
+      error: "Failed to update user preference",
+      details: error.message 
+    });
   }
 });
 
@@ -216,6 +227,7 @@ r.put("/notifications/:key", requireAuth, async (req, res) => {
   
   try {
     console.log(`💾 Updating notification ${key} = ${value} for user ${userId}`);
+    console.log(`📊 User ID type: ${typeof userId}, value: ${userId}`);
     
     // Get the setting type and description from defaults or existing setting
     const defaultSetting = await q(`
@@ -225,14 +237,19 @@ r.put("/notifications/:key", requireAuth, async (req, res) => {
       LIMIT 1
     `, [key]).catch(() => ({ rows: [] }));
     
+    console.log(`📊 Default setting found: ${defaultSetting.rows.length > 0}`);
+    
     const settingType = defaultSetting.rows[0]?.type || 'boolean';
     const description = defaultSetting.rows[0]?.description || '';
     
+    console.log(`📊 Type: ${settingType}, Description: ${description}`);
+    
     // Use INSERT ... ON CONFLICT to create or update per-user setting
+    // ON CONFLICT must match the partial unique index with WHERE clause
     const result = await q(`
       INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
       VALUES ($1, $2, $3, 'notifications', $4, $5, NOW())
-      ON CONFLICT (key, user_id) 
+      ON CONFLICT (key, user_id) WHERE user_id IS NOT NULL
       DO UPDATE SET 
         value = EXCLUDED.value,
         updated_at = NOW()
@@ -246,8 +263,13 @@ r.put("/notifications/:key", requireAuth, async (req, res) => {
       setting: result.rows[0]
     });
   } catch (error) {
-    console.error("Error updating notification setting:", error);
-    res.status(500).json({ error: "Failed to update notification setting" });
+    console.error("❌ Error updating notification setting:", error);
+    console.error("❌ Error details:", error.message);
+    console.error("❌ Stack:", error.stack);
+    res.status(500).json({ 
+      error: "Failed to update notification setting",
+      details: error.message 
+    });
   }
 });
 
@@ -375,6 +397,7 @@ r.put("/security/:key", requireAuth, async (req, res) => {
     
     // Generic handler for other security settings - save per-user where applicable
     console.log(`💾 Updating security setting ${key} = ${value} for user ${userId}`);
+    console.log(`📊 User ID type: ${typeof userId}, value: ${userId}`);
     
     // Get the setting type and description from system defaults
     const defaultSetting = await q(`
@@ -384,15 +407,20 @@ r.put("/security/:key", requireAuth, async (req, res) => {
       LIMIT 1
     `, [key]).catch(() => ({ rows: [] }));
     
+    console.log(`📊 Default setting found: ${defaultSetting.rows.length > 0}`);
+    
     const settingType = defaultSetting.rows[0]?.type || 'text';
     const description = defaultSetting.rows[0]?.description || '';
     
+    console.log(`📊 Type: ${settingType}, Description: ${description}`);
+    
     // Save as per-user setting (some security settings can be per-user)
     // Note: two_factor_auth is handled separately via MFA service
+    // ON CONFLICT must match the partial unique index with WHERE clause
     const result = await q(`
       INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
       VALUES ($1, $2, $3, 'security', $4, $5, NOW())
-      ON CONFLICT (key, user_id) 
+      ON CONFLICT (key, user_id) WHERE user_id IS NOT NULL
       DO UPDATE SET 
         value = EXCLUDED.value,
         updated_at = NOW()
@@ -406,8 +434,13 @@ r.put("/security/:key", requireAuth, async (req, res) => {
       setting: result.rows[0]
     });
   } catch (error) {
-    console.error("Error updating security setting:", error);
-    res.status(500).json({ error: "Failed to update security setting" });
+    console.error("❌ Error updating security setting:", error);
+    console.error("❌ Error details:", error.message);
+    console.error("❌ Stack:", error.stack);
+    res.status(500).json({ 
+      error: "Failed to update security setting",
+      details: error.message 
+    });
   }
 });
 
@@ -468,6 +501,7 @@ r.put("/maintenance/:key", requireAuth, async (req, res) => {
   
   try {
     console.log(`💾 Updating maintenance setting ${key} = ${value} for user ${userId}`);
+    console.log(`📊 User ID type: ${typeof userId}, value: ${userId}`);
     
     // Get the setting type and description from defaults
     const defaultSetting = await q(`
@@ -477,14 +511,19 @@ r.put("/maintenance/:key", requireAuth, async (req, res) => {
       LIMIT 1
     `, [key]).catch(() => ({ rows: [] }));
     
+    console.log(`📊 Default setting found: ${defaultSetting.rows.length > 0}`);
+    
     const settingType = defaultSetting.rows[0]?.type || 'boolean';
     const description = defaultSetting.rows[0]?.description || '';
     
+    console.log(`📊 Type: ${settingType}, Description: ${description}`);
+    
     // Use INSERT ... ON CONFLICT to create or update per-user setting
+    // ON CONFLICT must match the partial unique index with WHERE clause
     const result = await q(`
       INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
       VALUES ($1, $2, $3, 'maintenance', $4, $5, NOW())
-      ON CONFLICT (key, user_id) 
+      ON CONFLICT (key, user_id) WHERE user_id IS NOT NULL
       DO UPDATE SET 
         value = EXCLUDED.value,
         updated_at = NOW()
@@ -498,8 +537,13 @@ r.put("/maintenance/:key", requireAuth, async (req, res) => {
       setting: result.rows[0]
     });
   } catch (error) {
-    console.error("Error updating maintenance setting:", error);
-    res.status(500).json({ error: "Failed to update maintenance setting" });
+    console.error("❌ Error updating maintenance setting:", error);
+    console.error("❌ Error details:", error.message);
+    console.error("❌ Stack:", error.stack);
+    res.status(500).json({ 
+      error: "Failed to update maintenance setting",
+      details: error.message 
+    });
   }
 });
 
