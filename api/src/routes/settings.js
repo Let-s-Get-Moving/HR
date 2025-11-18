@@ -66,33 +66,37 @@ r.put("/system/:key", async (req, res) => {
   }
 });
 
-// Get user preferences (from database) - per-user settings
+// Get user preferences (from database) - per-user settings with system defaults fallback
 r.get("/preferences", optionalAuth, async (req, res) => {
   try {
     const userId = req.user?.id || null;
     
-    // Get user-specific preferences if logged in, otherwise return defaults
-    let rows;
+    // Get system defaults (user_id IS NULL) - these are the base settings
+    const systemDefaults = await q(`
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'preferences' AND user_id IS NULL
+      ORDER BY key
+    `).catch(() => ({ rows: [] }));
+    
+    let rows = systemDefaults.rows;
+    
+    // If user is logged in, get their overrides and merge with system defaults
     if (userId) {
-      rows = await q(`
+      const userOverrides = await q(`
         SELECT key, value, type, description
         FROM application_settings
         WHERE category = 'preferences' AND user_id = $1
         ORDER BY key
-      `, [userId]);
+      `, [userId]).catch(() => ({ rows: [] }));
       
-      // If user has no preferences yet, return defaults (will be created on first save)
-      if (rows.length === 0) {
-        // Return default preferences structure
-        rows = [
-          { key: 'theme', value: 'dark', type: 'select', description: 'UI theme (light/dark)' },
-          { key: 'language', value: 'en', type: 'select', description: 'Interface language' },
-          { key: 'timezone', value: 'UTC', type: 'select', description: 'User timezone' },
-          { key: 'dashboard_layout', value: 'grid', type: 'select', description: 'Dashboard layout preference' }
-        ];
-      }
-    } else {
-      // Not logged in - return defaults
+      // Merge: user-specific settings override system defaults
+      const userSettingsMap = new Map(userOverrides.rows.map(s => [s.key, s]));
+      rows = systemDefaults.rows.map(s => userSettingsMap.get(s.key) || s);
+    }
+    
+    // If no settings exist at all, return hardcoded defaults
+    if (rows.length === 0) {
       rows = [
         { key: 'theme', value: 'dark', type: 'select', description: 'UI theme (light/dark)' },
         { key: 'language', value: 'en', type: 'select', description: 'Interface language' },
@@ -155,30 +159,37 @@ r.put("/preferences/:key", requireAuth, async (req, res) => {
   }
 });
 
-// Get notification settings (from database) - per-user settings
+// Get notification settings (from database) - per-user settings with system defaults fallback
 r.get("/notifications", optionalAuth, async (req, res) => {
   try {
     const userId = req.user?.id || null;
     
-    let rows;
+    // Get system defaults (user_id IS NULL)
+    const systemDefaults = await q(`
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'notifications' AND user_id IS NULL
+      ORDER BY key
+    `).catch(() => ({ rows: [] }));
+    
+    let rows = systemDefaults.rows;
+    
+    // If user is logged in, get their overrides and merge with system defaults
     if (userId) {
-      rows = await q(`
+      const userOverrides = await q(`
         SELECT key, value, type, description
         FROM application_settings
         WHERE category = 'notifications' AND user_id = $1
         ORDER BY key
-      `, [userId]);
+      `, [userId]).catch(() => ({ rows: [] }));
       
-      // If user has no notification settings, return defaults
-      if (rows.length === 0) {
-        rows = [
-          { key: 'email_notifications', value: 'true', type: 'boolean', description: 'Enable email notifications' },
-          { key: 'push_notifications', value: 'false', type: 'boolean', description: 'Enable push notifications' },
-          { key: 'sms_notifications', value: 'false', type: 'boolean', description: 'Enable SMS notifications' }
-        ];
-      }
-    } else {
-      // Not logged in - return defaults
+      // Merge: user-specific settings override system defaults
+      const userSettingsMap = new Map(userOverrides.rows.map(s => [s.key, s]));
+      rows = systemDefaults.rows.map(s => userSettingsMap.get(s.key) || s);
+    }
+    
+    // If no settings exist at all, return hardcoded defaults
+    if (rows.length === 0) {
       rows = [
         { key: 'email_notifications', value: 'true', type: 'boolean', description: 'Enable email notifications' },
         { key: 'push_notifications', value: 'false', type: 'boolean', description: 'Enable push notifications' },
@@ -400,30 +411,37 @@ r.put("/security/:key", requireAuth, async (req, res) => {
   }
 });
 
-// Get backup and maintenance settings (from database) - per-user settings
+// Get backup and maintenance settings (from database) - per-user settings with system defaults fallback
 r.get("/maintenance", optionalAuth, async (req, res) => {
   try {
     const userId = req.user?.id || null;
     
-    let rows;
+    // Get system defaults (user_id IS NULL)
+    const systemDefaults = await q(`
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'maintenance' AND user_id IS NULL
+      ORDER BY key
+    `).catch(() => ({ rows: [] }));
+    
+    let rows = systemDefaults.rows;
+    
+    // If user is logged in, get their overrides and merge with system defaults
     if (userId) {
-      rows = await q(`
+      const userOverrides = await q(`
         SELECT key, value, type, description
         FROM application_settings
         WHERE category = 'maintenance' AND user_id = $1
         ORDER BY key
-      `, [userId]);
+      `, [userId]).catch(() => ({ rows: [] }));
       
-      // If user has no maintenance settings, return defaults
-      if (rows.length === 0) {
-        rows = [
-          { key: 'auto_backup', value: 'true', type: 'boolean', description: 'Enable automatic backups' },
-          { key: 'backup_frequency', value: 'daily', type: 'select', description: 'Backup frequency' },
-          { key: 'maintenance_mode', value: 'false', type: 'boolean', description: 'Enable maintenance mode' }
-        ];
-      }
-    } else {
-      // Not logged in - return defaults
+      // Merge: user-specific settings override system defaults
+      const userSettingsMap = new Map(userOverrides.rows.map(s => [s.key, s]));
+      rows = systemDefaults.rows.map(s => userSettingsMap.get(s.key) || s);
+    }
+    
+    // If no settings exist at all, return hardcoded defaults
+    if (rows.length === 0) {
       rows = [
         { key: 'auto_backup', value: 'true', type: 'boolean', description: 'Enable automatic backups' },
         { key: 'backup_frequency', value: 'daily', type: 'select', description: 'Backup frequency' },
