@@ -66,15 +66,40 @@ r.put("/system/:key", async (req, res) => {
   }
 });
 
-// Get user preferences (from database)
+// Get user preferences (from database) - per-user settings
 r.get("/preferences", optionalAuth, async (req, res) => {
   try {
-    const { rows } = await q(`
-      SELECT key, value, type, description
-      FROM application_settings
-      WHERE category = 'preferences'
-      ORDER BY key
-    `);
+    const userId = req.user?.id || null;
+    
+    // Get user-specific preferences if logged in, otherwise return defaults
+    let rows;
+    if (userId) {
+      rows = await q(`
+        SELECT key, value, type, description
+        FROM application_settings
+        WHERE category = 'preferences' AND user_id = $1
+        ORDER BY key
+      `, [userId]);
+      
+      // If user has no preferences yet, return defaults (will be created on first save)
+      if (rows.length === 0) {
+        // Return default preferences structure
+        rows = [
+          { key: 'theme', value: 'dark', type: 'select', description: 'UI theme (light/dark)' },
+          { key: 'language', value: 'en', type: 'select', description: 'Interface language' },
+          { key: 'timezone', value: 'UTC', type: 'select', description: 'User timezone' },
+          { key: 'dashboard_layout', value: 'grid', type: 'select', description: 'Dashboard layout preference' }
+        ];
+      }
+    } else {
+      // Not logged in - return defaults
+      rows = [
+        { key: 'theme', value: 'dark', type: 'select', description: 'UI theme (light/dark)' },
+        { key: 'language', value: 'en', type: 'select', description: 'Interface language' },
+        { key: 'timezone', value: 'UTC', type: 'select', description: 'User timezone' },
+        { key: 'dashboard_layout', value: 'grid', type: 'select', description: 'Dashboard layout preference' }
+      ];
+    }
     
     res.json(rows);
   } catch (error) {
@@ -83,26 +108,42 @@ r.get("/preferences", optionalAuth, async (req, res) => {
   }
 });
 
-// Update user preference (saves to database)
-r.put("/preferences/:key", async (req, res) => {
+// Update user preference (saves to database) - per-user settings
+r.put("/preferences/:key", requireAuth, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
+  const userId = req.user?.id;
+  
+  if (!userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
   
   try {
-    console.log(`💾 Updating preference ${key} = ${value}`);
+    console.log(`💾 Updating preference ${key} = ${value} for user ${userId}`);
     
+    // Get the setting type and description from defaults or existing setting
+    const defaultSetting = await q(`
+      SELECT type, description, category
+      FROM application_settings
+      WHERE key = $1 AND category = 'preferences' AND user_id IS NULL
+      LIMIT 1
+    `, [key]).catch(() => ({ rows: [] }));
+    
+    const settingType = defaultSetting.rows[0]?.type || 'text';
+    const description = defaultSetting.rows[0]?.description || '';
+    
+    // Use INSERT ... ON CONFLICT to create or update per-user setting
     const result = await q(`
-      UPDATE application_settings 
-      SET value = $1, updated_at = NOW()
-      WHERE key = $2 AND category = 'preferences'
+      INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
+      VALUES ($1, $2, $3, 'preferences', $4, $5, NOW())
+      ON CONFLICT (key, user_id) 
+      DO UPDATE SET 
+        value = EXCLUDED.value,
+        updated_at = NOW()
       RETURNING *
-    `, [value, key]);
+    `, [key, value, settingType, description, userId]);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Preference not found" });
-    }
-    
-    console.log(`✅ Preference ${key} updated successfully`);
+    console.log(`✅ Preference ${key} saved successfully for user ${userId}`);
     
     res.json({ 
       message: "Preference updated successfully",
@@ -114,15 +155,36 @@ r.put("/preferences/:key", async (req, res) => {
   }
 });
 
-// Get notification settings (from database)
+// Get notification settings (from database) - per-user settings
 r.get("/notifications", optionalAuth, async (req, res) => {
   try {
-    const { rows } = await q(`
-      SELECT key, value, type, description
-      FROM application_settings
-      WHERE category = 'notifications'
-      ORDER BY key
-    `);
+    const userId = req.user?.id || null;
+    
+    let rows;
+    if (userId) {
+      rows = await q(`
+        SELECT key, value, type, description
+        FROM application_settings
+        WHERE category = 'notifications' AND user_id = $1
+        ORDER BY key
+      `, [userId]);
+      
+      // If user has no notification settings, return defaults
+      if (rows.length === 0) {
+        rows = [
+          { key: 'email_notifications', value: 'true', type: 'boolean', description: 'Enable email notifications' },
+          { key: 'push_notifications', value: 'false', type: 'boolean', description: 'Enable push notifications' },
+          { key: 'sms_notifications', value: 'false', type: 'boolean', description: 'Enable SMS notifications' }
+        ];
+      }
+    } else {
+      // Not logged in - return defaults
+      rows = [
+        { key: 'email_notifications', value: 'true', type: 'boolean', description: 'Enable email notifications' },
+        { key: 'push_notifications', value: 'false', type: 'boolean', description: 'Enable push notifications' },
+        { key: 'sms_notifications', value: 'false', type: 'boolean', description: 'Enable SMS notifications' }
+      ];
+    }
     
     res.json(rows);
   } catch (error) {
@@ -131,26 +193,42 @@ r.get("/notifications", optionalAuth, async (req, res) => {
   }
 });
 
-// Update notification setting (saves to database)
-r.put("/notifications/:key", async (req, res) => {
+// Update notification setting (saves to database) - per-user settings
+r.put("/notifications/:key", requireAuth, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
+  const userId = req.user?.id;
+  
+  if (!userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
   
   try {
-    console.log(`💾 Updating notification ${key} = ${value}`);
+    console.log(`💾 Updating notification ${key} = ${value} for user ${userId}`);
     
+    // Get the setting type and description from defaults or existing setting
+    const defaultSetting = await q(`
+      SELECT type, description, category
+      FROM application_settings
+      WHERE key = $1 AND category = 'notifications' AND user_id IS NULL
+      LIMIT 1
+    `, [key]).catch(() => ({ rows: [] }));
+    
+    const settingType = defaultSetting.rows[0]?.type || 'boolean';
+    const description = defaultSetting.rows[0]?.description || '';
+    
+    // Use INSERT ... ON CONFLICT to create or update per-user setting
     const result = await q(`
-      UPDATE application_settings 
-      SET value = $1, updated_at = NOW()
-      WHERE key = $2 AND category = 'notifications'
+      INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
+      VALUES ($1, $2, $3, 'notifications', $4, $5, NOW())
+      ON CONFLICT (key, user_id) 
+      DO UPDATE SET 
+        value = EXCLUDED.value,
+        updated_at = NOW()
       RETURNING *
-    `, [value, key]);
+    `, [key, value, settingType, description, userId]);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Notification setting not found" });
-    }
-    
-    console.log(`✅ Notification ${key} updated successfully`);
+    console.log(`✅ Notification ${key} saved successfully for user ${userId}`);
     
     res.json({ 
       message: "Notification setting updated successfully",
@@ -169,13 +247,29 @@ r.get("/security", requireAuth, async (req, res) => {
     console.log('🔍 [SETTINGS] User ID:', req.user?.id);
     console.log('🔍 [SETTINGS] Username:', req.user?.username);
     
-    // Get settings from database
-    const { rows } = await q(`
+    // Get settings from database - mix of user-specific and system-wide
+    // Some security settings are per-user (like session_timeout), others are system-wide
+    const userId = req.user.id;
+    
+    // Get user-specific security settings
+    const userRows = await q(`
       SELECT key, value, type, description
       FROM application_settings
-      WHERE category = 'security'
+      WHERE category = 'security' AND user_id = $1
       ORDER BY key
-    `);
+    `, [userId]).catch(() => ({ rows: [] }));
+    
+    // Get system-wide security settings (user_id IS NULL) as defaults
+    const systemRows = await q(`
+      SELECT key, value, type, description
+      FROM application_settings
+      WHERE category = 'security' AND user_id IS NULL
+      ORDER BY key
+    `).catch(() => ({ rows: [] }));
+    
+    // Merge: user-specific settings override system defaults
+    const userSettingsMap = new Map(userRows.rows.map(s => [s.key, s]));
+    const rows = systemRows.rows.map(s => userSettingsMap.get(s.key) || s);
     
     // ALWAYS check actual MFA status from database (user is authenticated via requireAuth)
     try {
@@ -268,21 +362,33 @@ r.put("/security/:key", requireAuth, async (req, res) => {
       }
     }
     
-    // Generic handler for other security settings - save to database
-    console.log(`💾 Updating security setting ${key} = ${value}`);
+    // Generic handler for other security settings - save per-user where applicable
+    console.log(`💾 Updating security setting ${key} = ${value} for user ${userId}`);
     
+    // Get the setting type and description from system defaults
+    const defaultSetting = await q(`
+      SELECT type, description, category
+      FROM application_settings
+      WHERE key = $1 AND category = 'security' AND user_id IS NULL
+      LIMIT 1
+    `, [key]).catch(() => ({ rows: [] }));
+    
+    const settingType = defaultSetting.rows[0]?.type || 'text';
+    const description = defaultSetting.rows[0]?.description || '';
+    
+    // Save as per-user setting (some security settings can be per-user)
+    // Note: two_factor_auth is handled separately via MFA service
     const result = await q(`
-      UPDATE application_settings 
-      SET value = $1, updated_at = NOW()
-      WHERE key = $2 AND category = 'security'
+      INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
+      VALUES ($1, $2, $3, 'security', $4, $5, NOW())
+      ON CONFLICT (key, user_id) 
+      DO UPDATE SET 
+        value = EXCLUDED.value,
+        updated_at = NOW()
       RETURNING *
-    `, [value, key]);
+    `, [key, value, settingType, description, userId]);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Security setting not found" });
-    }
-    
-    console.log(`✅ Security setting ${key} updated successfully`);
+    console.log(`✅ Security setting ${key} saved successfully for user ${userId}`);
     
     res.json({ 
       message: "Security setting updated successfully",
@@ -294,15 +400,36 @@ r.put("/security/:key", requireAuth, async (req, res) => {
   }
 });
 
-// Get backup and maintenance settings (from database)
+// Get backup and maintenance settings (from database) - per-user settings
 r.get("/maintenance", optionalAuth, async (req, res) => {
   try {
-    const { rows } = await q(`
-      SELECT key, value, type, description
-      FROM application_settings
-      WHERE category = 'maintenance'
-      ORDER BY key
-    `);
+    const userId = req.user?.id || null;
+    
+    let rows;
+    if (userId) {
+      rows = await q(`
+        SELECT key, value, type, description
+        FROM application_settings
+        WHERE category = 'maintenance' AND user_id = $1
+        ORDER BY key
+      `, [userId]);
+      
+      // If user has no maintenance settings, return defaults
+      if (rows.length === 0) {
+        rows = [
+          { key: 'auto_backup', value: 'true', type: 'boolean', description: 'Enable automatic backups' },
+          { key: 'backup_frequency', value: 'daily', type: 'select', description: 'Backup frequency' },
+          { key: 'maintenance_mode', value: 'false', type: 'boolean', description: 'Enable maintenance mode' }
+        ];
+      }
+    } else {
+      // Not logged in - return defaults
+      rows = [
+        { key: 'auto_backup', value: 'true', type: 'boolean', description: 'Enable automatic backups' },
+        { key: 'backup_frequency', value: 'daily', type: 'select', description: 'Backup frequency' },
+        { key: 'maintenance_mode', value: 'false', type: 'boolean', description: 'Enable maintenance mode' }
+      ];
+    }
     
     res.json(rows);
   } catch (error) {
@@ -311,26 +438,42 @@ r.get("/maintenance", optionalAuth, async (req, res) => {
   }
 });
 
-// Update maintenance setting (saves to database)
+// Update maintenance setting (saves to database) - per-user settings
 r.put("/maintenance/:key", requireAuth, async (req, res) => {
   const { key } = req.params;
   const { value } = req.body;
+  const userId = req.user?.id;
+  
+  if (!userId) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
   
   try {
-    console.log(`💾 Updating maintenance setting ${key} = ${value}`);
+    console.log(`💾 Updating maintenance setting ${key} = ${value} for user ${userId}`);
     
+    // Get the setting type and description from defaults
+    const defaultSetting = await q(`
+      SELECT type, description, category
+      FROM application_settings
+      WHERE key = $1 AND category = 'maintenance' AND user_id IS NULL
+      LIMIT 1
+    `, [key]).catch(() => ({ rows: [] }));
+    
+    const settingType = defaultSetting.rows[0]?.type || 'boolean';
+    const description = defaultSetting.rows[0]?.description || '';
+    
+    // Use INSERT ... ON CONFLICT to create or update per-user setting
     const result = await q(`
-      UPDATE application_settings 
-      SET value = $1, updated_at = NOW()
-      WHERE key = $2 AND category = 'maintenance'
+      INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
+      VALUES ($1, $2, $3, 'maintenance', $4, $5, NOW())
+      ON CONFLICT (key, user_id) 
+      DO UPDATE SET 
+        value = EXCLUDED.value,
+        updated_at = NOW()
       RETURNING *
-    `, [value, key]);
+    `, [key, value, settingType, description, userId]);
     
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Maintenance setting not found" });
-    }
-    
-    console.log(`✅ Maintenance setting ${key} updated successfully`);
+    console.log(`✅ Maintenance setting ${key} saved successfully for user ${userId}`);
     
     res.json({ 
       message: "Maintenance setting updated successfully",

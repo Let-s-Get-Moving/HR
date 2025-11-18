@@ -56,6 +56,31 @@ export default function Settings() {
   // Track if component is mounted (avoid double-loading on first render)
   const isInitialMount = React.useRef(true);
 
+  // Mapping of setting keys to their options arrays (for select-type settings)
+  // This ensures select dropdowns always have their options, even when loaded from database
+  const SETTING_OPTIONS = {
+    // User Preferences
+    theme: ["dark", "light"],
+    language: ["en", "es", "fr"],
+    timezone: ["UTC", "EST", "PST", "CST", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles"],
+    dashboard_layout: ["grid", "list"],
+    
+    // Security
+    password_requirements: ["weak", "medium", "strong"],
+    session_timeout: ["30", "60", "120", "240", "480"], // minutes
+    
+    // Maintenance
+    backup_frequency: ["daily", "weekly", "monthly"],
+    
+    // System (if any select types exist)
+    date_format: ["MM/DD/YYYY", "DD/MM/YYYY", "YYYY-MM-DD"],
+    currency: ["USD", "EUR", "GBP", "CAD", "AUD"],
+    
+    // Notifications
+    notification_frequency: ["immediate", "daily", "weekly"],
+    alert_types: ["all", "critical", "important", "normal"]
+  };
+
   useEffect(() => {
     console.log('🎬 [Settings] useEffect #1 triggered - calling loadSettings()');
     loadSettings();
@@ -84,6 +109,52 @@ export default function Settings() {
       loadLocalSettings();
     }
   }, [userPreferences.length]);
+
+  // Helper function to enrich settings with options from SETTING_OPTIONS mapping
+  // This ensures select-type settings always have their options array, even when loaded from database
+  // Also forces correct types for known select fields (like theme) that might come from DB as 'text'
+  const enrichSettingsWithOptions = (settings) => {
+    if (!Array.isArray(settings)) return settings;
+    
+    // Mapping of setting keys that MUST be select type, regardless of what DB says
+    const FORCE_SELECT_TYPES = {
+      theme: true,
+      language: true,
+      timezone: true,
+      dashboard_layout: true,
+      password_requirements: true,
+      backup_frequency: true,
+      date_format: true,
+      currency: true,
+      notification_frequency: true,
+      alert_types: true
+    };
+    
+    return settings.map(setting => {
+      // Force type to 'select' for known select fields (fixes theme showing as text input)
+      if (FORCE_SELECT_TYPES[setting.key] && setting.type !== 'select') {
+        console.warn(`⚠️ [Settings] Forcing type to 'select' for "${setting.key}" (was "${setting.type}")`);
+        setting.type = 'select';
+      }
+      
+      // If it's a select type and we have options for it, add them
+      if (setting.type === 'select' && SETTING_OPTIONS[setting.key]) {
+        return {
+          ...setting,
+          options: SETTING_OPTIONS[setting.key]
+        };
+      }
+      // If it's a select type but no options mapping exists, try to preserve existing options
+      if (setting.type === 'select' && !setting.options) {
+        // Fallback: if we have a default, use it, otherwise empty array
+        return {
+          ...setting,
+          options: SETTING_OPTIONS[setting.key] || []
+        };
+      }
+      return setting;
+    });
+  };
 
   const loadLocalSettings = () => {
     // ⚠️ CRITICAL CHANGE: NO MORE LOCALSTORAGE CACHING FOR SERVER SETTINGS!
@@ -159,7 +230,7 @@ export default function Settings() {
       
       // Always try to load system settings (no auth required)
       const system = await API("/api/settings/system").catch(() => []);
-      setSystemSettings(system || []);
+      setSystemSettings(enrichSettingsWithOptions(system || []));
 
       // Detect current theme from DOM
       const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
@@ -227,13 +298,20 @@ export default function Settings() {
       console.log('✅ [Settings] Security settings loaded:', sec);
       console.log('🔐 [Settings] MFA toggle value:', sec?.find(s => s.key === 'two_factor_auth')?.value);
       
+      // Enrich all settings with options before setting state
+      // This ensures select dropdowns always have their options, even when loaded from database
+      const enrichedPreferences = enrichSettingsWithOptions(preferences || defaultPreferences);
+      const enrichedNotifications = enrichSettingsWithOptions(notifs || defaultNotifications);
+      const enrichedSecurity = enrichSettingsWithOptions(sec || defaultSecurity);
+      const enrichedMaintenance = enrichSettingsWithOptions(maint || defaultMaintenance);
+      
       // Set all settings regardless of whether they came from API or defaults
-      console.log('✅ [Settings] Setting state with preferences:', preferences?.length);
-      console.log('✅ [Settings] Setting state with security:', sec?.length);
-      setUserPreferences(preferences || defaultPreferences);
-      setNotifications(notifs || defaultNotifications);
-      setSecurity(sec || defaultSecurity);
-      setMaintenance(maint || defaultMaintenance);
+      console.log('✅ [Settings] Setting state with preferences:', enrichedPreferences?.length);
+      console.log('✅ [Settings] Setting state with security:', enrichedSecurity?.length);
+      setUserPreferences(enrichedPreferences);
+      setNotifications(enrichedNotifications);
+      setSecurity(enrichedSecurity);
+      setMaintenance(enrichedMaintenance);
       console.log('✅ [Settings] All settings state updated successfully');
     } catch (error) {
       console.error("❌ [Settings] Error loading settings:", error);
@@ -241,27 +319,32 @@ export default function Settings() {
       setSystemSettings([]);
       // Detect current theme from DOM for error fallback
       const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
-      setUserPreferences([
+      const errorFallbackPreferences = [
         { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
         { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
         { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] },
         { key: "dashboard_layout", label: "Dashboard Layout", type: "select", value: "grid", options: ["grid", "list"] }
-      ]);
-      setNotifications([
+      ];
+      const errorFallbackNotifications = [
         { key: "email_notifications", label: "Email Notifications", type: "boolean", value: "true" },
         { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" },
         { key: "sms_notifications", label: "SMS Notifications", type: "boolean", value: "false" }
-      ]);
-      setSecurity([
+      ];
+      const errorFallbackSecurity = [
         { key: "two_factor_auth", label: "Two-Factor Authentication", type: "boolean", value: "false" },
         { key: "session_timeout", label: "Session Timeout (minutes)", type: "number", value: "120" },
         { key: "password_requirements", label: "Password Requirements", type: "select", value: "strong", options: ["weak", "medium", "strong"] }
-      ]);
-      setMaintenance([
+      ];
+      const errorFallbackMaintenance = [
         { key: "auto_backup", label: "Automatic Backup", type: "boolean", value: "true" },
         { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] },
         { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
-      ]);
+      ];
+      // Enrich error fallback settings with options (though they should already have them)
+      setUserPreferences(enrichSettingsWithOptions(errorFallbackPreferences));
+      setNotifications(enrichSettingsWithOptions(errorFallbackNotifications));
+      setSecurity(enrichSettingsWithOptions(errorFallbackSecurity));
+      setMaintenance(enrichSettingsWithOptions(errorFallbackMaintenance));
     } finally {
       console.log('🏁 [Settings] Finally block reached - setting loading to FALSE');
       setLoading(false);
@@ -600,7 +683,42 @@ export default function Settings() {
         );
         
       case "select":
-        const optionList = Array.isArray(options) ? options : (typeof options === 'string' ? options.split(',') : []);
+        // Ensure we always have options for select fields
+        // First try the setting's options, then check SETTING_OPTIONS mapping, then fallback to empty array
+        let optionList = [];
+        if (Array.isArray(options) && options.length > 0) {
+          optionList = options;
+        } else if (typeof options === 'string' && options.length > 0) {
+          optionList = options.split(',');
+        } else if (SETTING_OPTIONS[key] && Array.isArray(SETTING_OPTIONS[key])) {
+          // Fallback to SETTING_OPTIONS mapping if options are missing
+          optionList = SETTING_OPTIONS[key];
+          console.warn(`⚠️ [Settings] Select field "${key}" missing options, using SETTING_OPTIONS mapping`);
+        } else {
+          console.error(`❌ [Settings] Select field "${key}" has no options available!`);
+          optionList = [];
+        }
+        
+        // If still no options, render a disabled select with a warning
+        if (optionList.length === 0) {
+          return (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </label>
+              {description && <p className="text-xs text-secondary mb-2">{description}</p>}
+              <select
+                value={value || ''}
+                disabled={true}
+                className="w-full px-3 py-2 card border border-red-500 rounded-lg opacity-50 cursor-not-allowed"
+              >
+                <option value="">No options available</option>
+              </select>
+              <p className="text-xs text-red-500 mt-1">⚠️ This setting has no available options</p>
+            </div>
+          );
+        }
+        
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -608,13 +726,15 @@ export default function Settings() {
             </label>
             {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <select
-              value={value}
+              value={value || ''}
               onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
               disabled={saving[key]}
-              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {optionList.map(option => (
-                <option key={option} value={option}>{option}</option>
+                <option key={option} value={option}>
+                  {option.charAt(0).toUpperCase() + option.slice(1)}
+                </option>
               ))}
             </select>
           </div>
