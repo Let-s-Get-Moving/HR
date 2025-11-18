@@ -19,7 +19,8 @@
     "activeEmployees": "Employés Actifs",
     "totalPayroll": "Masse Salariale Totale",
     "pendingLeave": "Demandes de Congé en Attente",
-    "recentActivity": "Activité Récente"
+    "recentActivity": "Activité Récente",
+    "noActivity": "Aucune activité récente"
   },
   "employees": {
     "title": "Employés",
@@ -28,27 +29,57 @@
     "name": "Nom",
     "email": "Courriel",
     "department": "Département",
+    "position": "Poste",
+    "hireDate": "Date d'Embauche",
     "status": "Statut",
     "actions": "Actions",
     "active": "Actif",
     "terminated": "Terminé",
     "onLeave": "En Congé",
-    "all": "Tous"
+    "all": "Tous",
+    "employeeDetails": "Détails de l'Employé",
+    "personalInfo": "Informations Personnelles",
+    "employmentInfo": "Informations d'Emploi"
+  },
+  "leave": {
+    "title": "Gestion des Congés",
+    "myLeaves": "Mes Congés",
+    "pendingApprovals": "Approbations en Attente",
+    "leaveHistory": "Historique des Congés",
+    "requestLeave": "Demander un Congé",
+    "leaveType": "Type de Congé",
+    "startDate": "Date de Début",
+    "endDate": "Date de Fin",
+    "reason": "Raison",
+    "status": "Statut",
+    "pending": "En Attente",
+    "approved": "Approuvé",
+    "rejected": "Rejeté",
+    "approve": "Approuver",
+    "reject": "Rejeter"
   },
   "settings": {
     "title": "Paramètres",
+    "description": "Gérer la configuration du système et les préférences utilisateur",
+    "system": "Paramètres Système",
     "preferences": "Préférences Utilisateur",
     "notifications": "Notifications",
     "security": "Sécurité",
     "maintenance": "Maintenance",
-    "system": "Paramètres Système",
     "theme": "Thème",
     "language": "Langue",
     "timezone": "Fuseau Horaire",
     "dark": "Sombre",
     "light": "Clair",
     "emailNotifications": "Notifications par Courriel",
-    "pushNotifications": "Notifications Push"
+    "pushNotifications": "Notifications Push",
+    "twoFactorAuth": "Authentification à Deux Facteurs",
+    "sessionTimeout": "Délai d'Expiration de Session",
+    "passwordRequirements": "Exigences de Mot de Passe",
+    "automaticBackup": "Sauvegarde Automatique",
+    "backupFrequency": "Fréquence de Sauvegarde",
+    "dateFormat": "Format de Date",
+    "currency": "Devise"
   },
   "common": {
     "save": "Enregistrer",
@@ -61,7 +92,15 @@
     "error": "Erreur",
     "success": "Succès",
     "close": "Fermer",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "refresh": "Actualiser",
+    "add": "Ajouter",
+    "update": "Mettre à Jour",
+    "submit": "Soumettre",
+    "reset": "Réinitialiser"
   }
 }
-

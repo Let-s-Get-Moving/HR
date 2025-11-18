@@ -48,11 +48,11 @@ export default function Settings() {
   const [loadingDevices, setLoadingDevices] = useState(false);
 
   const tabs = [
-    { id: "system", name: "System Settings", icon: "⚙️" },
-    { id: "preferences", name: "User Preferences", icon: "👤" },
-    { id: "notifications", name: "Notifications", icon: "🔔" },
-    { id: "security", name: "Security", icon: "🔒" },
-    { id: "maintenance", name: "Maintenance", icon: "🛠️" }
+    { id: "system", name: t('settings.system'), icon: "⚙️" },
+    { id: "preferences", name: t('settings.preferences'), icon: "👤" },
+    { id: "notifications", name: t('settings.notifications'), icon: "🔔" },
+    { id: "security", name: t('settings.security'), icon: "🔒" },
+    { id: "maintenance", name: t('settings.maintenance'), icon: "🛠️" }
   ];
 
   // Track if component is mounted (avoid double-loading on first render)
@@ -896,8 +896,8 @@ export default function Settings() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-        <p className="text-secondary mt-1">Manage system configuration and user preferences</p>
+        <h1 className="text-2xl sm:text-3xl font-bold">{t('settings.title')}</h1>
+        <p className="text-secondary mt-1">{t('settings.description')}</p>
       </div>
 
       {/* Tab Navigation */}

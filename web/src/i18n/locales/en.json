@@ -19,7 +19,8 @@
     "activeEmployees": "Active Employees",
     "totalPayroll": "Total Payroll",
     "pendingLeave": "Pending Leave Requests",
-    "recentActivity": "Recent Activity"
+    "recentActivity": "Recent Activity",
+    "noActivity": "No recent activity"
   },
   "employees": {
     "title": "Employees",
@@ -28,27 +29,57 @@
     "name": "Name",
     "email": "Email",
     "department": "Department",
+    "position": "Position",
+    "hireDate": "Hire Date",
     "status": "Status",
     "actions": "Actions",
     "active": "Active",
     "terminated": "Terminated",
     "onLeave": "On Leave",
-    "all": "All"
+    "all": "All",
+    "employeeDetails": "Employee Details",
+    "personalInfo": "Personal Information",
+    "employmentInfo": "Employment Information"
+  },
+  "leave": {
+    "title": "Leave Management",
+    "myLeaves": "My Leaves",
+    "pendingApprovals": "Pending Approvals",
+    "leaveHistory": "Leave History",
+    "requestLeave": "Request Leave",
+    "leaveType": "Leave Type",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "reason": "Reason",
+    "status": "Status",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "approve": "Approve",
+    "reject": "Reject"
   },
   "settings": {
     "title": "Settings",
+    "description": "Manage system configuration and user preferences",
+    "system": "System Settings",
     "preferences": "User Preferences",
     "notifications": "Notifications",
     "security": "Security",
     "maintenance": "Maintenance",
-    "system": "System Settings",
     "theme": "Theme",
     "language": "Language",
     "timezone": "Timezone",
     "dark": "Dark",
     "light": "Light",
     "emailNotifications": "Email Notifications",
-    "pushNotifications": "Push Notifications"
+    "pushNotifications": "Push Notifications",
+    "twoFactorAuth": "Two-Factor Authentication",
+    "sessionTimeout": "Session Timeout",
+    "passwordRequirements": "Password Requirements",
+    "automaticBackup": "Automatic Backup",
+    "backupFrequency": "Backup Frequency",
+    "dateFormat": "Date Format",
+    "currency": "Currency"
   },
   "common": {
     "save": "Save",
@@ -61,7 +92,15 @@
     "error": "Error",
     "success": "Success",
     "close": "Close",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "refresh": "Refresh",
+    "add": "Add",
+    "update": "Update",
+    "submit": "Submit",
+    "reset": "Reset"
   }
 }
-

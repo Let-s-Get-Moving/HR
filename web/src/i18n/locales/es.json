@@ -19,7 +19,8 @@
     "activeEmployees": "Empleados Activos",
     "totalPayroll": "Nómina Total",
     "pendingLeave": "Solicitudes de Permiso Pendientes",
-    "recentActivity": "Actividad Reciente"
+    "recentActivity": "Actividad Reciente",
+    "noActivity": "Sin actividad reciente"
   },
   "employees": {
     "title": "Empleados",
@@ -28,27 +29,57 @@
     "name": "Nombre",
     "email": "Correo",
     "department": "Departamento",
+    "position": "Posición",
+    "hireDate": "Fecha de Contratación",
     "status": "Estado",
     "actions": "Acciones",
     "active": "Activo",
     "terminated": "Terminado",
     "onLeave": "De Permiso",
-    "all": "Todos"
+    "all": "Todos",
+    "employeeDetails": "Detalles del Empleado",
+    "personalInfo": "Información Personal",
+    "employmentInfo": "Información Laboral"
+  },
+  "leave": {
+    "title": "Gestión de Permisos",
+    "myLeaves": "Mis Permisos",
+    "pendingApprovals": "Aprobaciones Pendientes",
+    "leaveHistory": "Historial de Permisos",
+    "requestLeave": "Solicitar Permiso",
+    "leaveType": "Tipo de Permiso",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "reason": "Razón",
+    "status": "Estado",
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "rejected": "Rechazado",
+    "approve": "Aprobar",
+    "reject": "Rechazar"
   },
   "settings": {
     "title": "Configuración",
+    "description": "Administrar configuración del sistema y preferencias de usuario",
+    "system": "Configuración del Sistema",
     "preferences": "Preferencias de Usuario",
     "notifications": "Notificaciones",
     "security": "Seguridad",
     "maintenance": "Mantenimiento",
-    "system": "Configuración del Sistema",
     "theme": "Tema",
     "language": "Idioma",
     "timezone": "Zona Horaria",
     "dark": "Oscuro",
     "light": "Claro",
     "emailNotifications": "Notificaciones por Correo",
-    "pushNotifications": "Notificaciones Push"
+    "pushNotifications": "Notificaciones Push",
+    "twoFactorAuth": "Autenticación de Dos Factores",
+    "sessionTimeout": "Tiempo de Espera de Sesión",
+    "passwordRequirements": "Requisitos de Contraseña",
+    "automaticBackup": "Copia de Seguridad Automática",
+    "backupFrequency": "Frecuencia de Copia de Seguridad",
+    "dateFormat": "Formato de Fecha",
+    "currency": "Moneda"
   },
   "common": {
     "save": "Guardar",
@@ -61,7 +92,15 @@
     "error": "Error",
     "success": "Éxito",
     "close": "Cerrar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "export": "Exportar",
+    "import": "Importar",
+    "refresh": "Actualizar",
+    "add": "Agregar",
+    "update": "Actualizar",
+    "submit": "Enviar",
+    "reset": "Restablecer"
   }
 }
-

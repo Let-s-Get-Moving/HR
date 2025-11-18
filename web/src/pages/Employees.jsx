@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import EmployeeOnboarding from "../components/EmployeeOnboarding.jsx";
 import EmployeeOffboarding from "../components/EmployeeOffboarding.jsx";
 import EmployeeProfile from "./EmployeeProfile.jsx";
@@ -9,6 +10,7 @@ import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 export default function Employees() {
+  const { t } = useTranslation();
   const { userRole } = useUserRole();
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);

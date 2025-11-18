@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 import Greeting from "../components/Greeting.jsx";
 import MetricCard from "../components/MetricCard.jsx";
 import Donut from "../components/Donut.jsx";
@@ -8,6 +9,7 @@ import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 export default function Dashboard({ onNavigate, user }) {
+  const { t } = useTranslation();
   const [analytics, setAnalytics] = useState(null);
   const [wf, setWf] = useState(null);
   const [att, setAtt] = useState(null);
@@ -213,7 +215,7 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.1 }}
         >
           <MetricCard 
-            label="Total Active Employees" 
+            label={t('dashboard.activeEmployees')}
             value={analytics?.workforceOverview?.total_active_employees ?? wf?.total ?? "..."}
             icon="👥"
             trend=""
@@ -283,7 +285,7 @@ export default function Dashboard({ onNavigate, user }) {
           {totalPayroll > 0 ? (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">Total Payroll</span>
+                <span className="text-neutral-400">{t('dashboard.totalPayroll')}</span>
                 <span className="text-2xl font-bold text-green-400">
                   ${totalPayroll.toLocaleString()}
                 </span>
@@ -358,7 +360,7 @@ export default function Dashboard({ onNavigate, user }) {
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Active Employees</span>
+              <span className="text-neutral-400">{t('dashboard.activeEmployees')}</span>
               <span className="text-lg text-white">
                 {analytics?.workforceOverview?.total_active_employees || 0}
               </span>
@@ -464,7 +466,7 @@ export default function Dashboard({ onNavigate, user }) {
           transition={{ delay: 0.8 }}
           className="card p-6"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">{t('dashboard.recentActivity')}</h3>
           <div className="space-y-4">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity, index) => (
@@ -481,7 +483,7 @@ export default function Dashboard({ onNavigate, user }) {
             ) : (
               <div className="text-center text-neutral-400 py-8">
                 <div className="text-4xl mb-2">📝</div>
-                <p>No recent activity</p>
+                <p>{t('dashboard.noActivity')}</p>
               </div>
             )}
           </div>
