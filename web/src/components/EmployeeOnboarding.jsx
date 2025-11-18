@@ -279,7 +279,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 <label className="block text-sm font-medium mb-2">Department (HR will assign)</label>
                 <select
                   value={formData.department_id}
-                  onChange={(e) => setFormData({...formData, department_id: e.target.value})}
+                  onChange={(e) => setFormData({...formData, department_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
                   <option value="">None - To be assigned by HR</option>
