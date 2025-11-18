@@ -101,8 +101,8 @@ export default function Compliance() {
       >
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Compliance Management</h1>
-            <p className="text-secondary">Monitor and manage compliance alerts and requirements</p>
+            <h1 className="text-3xl font-bold mb-2">{t('compliance.title')}</h1>
+            <p className="text-secondary">{t('compliance.description')}</p>
           </div>
           <button
             onClick={handleGenerateAlerts}
@@ -138,7 +138,7 @@ export default function Compliance() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="card">
             <div className="p-6 border-b border-primary">
-              <h3 className="text-lg font-semibold">Active Compliance Alerts</h3>
+              <h3 className="text-lg font-semibold">{t('compliance.activeAlerts')}</h3>
               <p className="text-sm text-secondary mt-1">
                 {alerts.length} active alerts requiring attention
               </p>
@@ -148,7 +148,7 @@ export default function Compliance() {
               {alerts.length === 0 ? (
                 <div className="p-8 text-center">
                   <div className="text-4xl mb-4">✅</div>
-                  <h3 className="text-lg font-medium  mb-2">All Clear!</h3>
+                  <h3 className="text-lg font-medium  mb-2">{t('compliance.allClear')}</h3>
                   <p className="text-secondary">No active compliance alerts at this time.</p>
                 </div>
               ) : (
@@ -208,7 +208,7 @@ export default function Compliance() {
                   <div className="flex items-center">
                     <div className="text-2xl mr-3">⚠️</div>
                     <div>
-                      <h3 className="text-lg font-semibold">Total Alerts</h3>
+                      <h3 className="text-lg font-semibold">{t('compliance.totalAlerts')}</h3>
                       <p className="text-3xl font-bold ">{dashboard.total_alerts || 0}</p>
                     </div>
                   </div>
@@ -218,7 +218,7 @@ export default function Compliance() {
                   <div className="flex items-center">
                     <div className="text-2xl mr-3">🚨</div>
                     <div>
-                      <h3 className="text-lg font-semibold">Expiring Soon</h3>
+                      <h3 className="text-lg font-semibold">{t('compliance.expiringSoon')}</h3>
                       <p className="text-3xl font-bold text-error">{dashboard.expiring_soon || 0}</p>
                     </div>
                   </div>
@@ -228,7 +228,7 @@ export default function Compliance() {
                   <div className="flex items-center">
                     <div className="text-2xl mr-3">📄</div>
                     <div>
-                      <h3 className="text-lg font-semibold">Contract Compliance</h3>
+                      <h3 className="text-lg font-semibold">{t('compliance.contractCompliance')}</h3>
                       <p className="text-3xl font-bold text-success">
                         {dashboard.compliance_rate?.contract_compliance || 0}%
                       </p>
@@ -240,7 +240,7 @@ export default function Compliance() {
                   <div className="flex items-center">
                     <div className="text-2xl mr-3">📚</div>
                     <div>
-                      <h3 className="text-lg font-semibold">Training Compliance</h3>
+                      <h3 className="text-lg font-semibold">{t('compliance.trainingCompliance')}</h3>
                       <p className="text-3xl font-bold text-info">
                         {dashboard.compliance_rate?.training_compliance || 0}%
                       </p>
@@ -254,7 +254,7 @@ export default function Compliance() {
           {/* Alerts by Type */}
           {dashboard?.alerts_by_type && (
             <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4">Alerts by Type</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('compliance.alertsByType')}</h3>
               <div className="space-y-3">
                 {dashboard.alerts_by_type.map((alertType) => (
                   <div key={alertType.type} className="flex justify-between items-center">

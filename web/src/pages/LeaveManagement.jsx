@@ -166,7 +166,7 @@ export default function LeaveManagement() {
       loadData();
     } catch (error) {
       console.error("Error submitting request:", error);
-      alert("Error creating leave entry: " + (error.message || "Unknown error"));
+      alert(t('leave.errorCreating') + ": " + (error.message || t('common.unknownError')));
     }
   };
 
@@ -267,8 +267,8 @@ export default function LeaveManagement() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold mb-2">Leave Management</h1>
-        <p className="text-secondary">Manage employee leave requests and balances</p>
+        <h1 className="text-3xl font-bold mb-2">{t('leave.title')}</h1>
+        <p className="text-secondary">{t('leave.description')}</p>
       </motion.div>
 
       {/* Tabs */}
@@ -317,7 +317,7 @@ export default function LeaveManagement() {
                 <span className="text-2xl mr-2">📝</span>
                 Record Leave Entry
               </h3>
-              <p className="text-sm text-neutral-400 mb-6">HR records employee leave communicated via email, phone, or in-person</p>
+              <p className="text-sm text-neutral-400 mb-6">{t('leave.hrRecordsDescription')}</p>
               
               <form onSubmit={(e) => handleSubmitRequest(e, false)} className="space-y-4">
                 {/* Employee Selection with Search */}
@@ -335,7 +335,7 @@ export default function LeaveManagement() {
                       );
                       setNewRequest({...newRequest, employee_id: selectedEmp ? selectedEmp.id.toString() : ''});
                     }}
-                    placeholder="Type to search employee..."
+                    placeholder={t('leave.typeToSearch')}
                     required
                     className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
@@ -370,7 +370,7 @@ export default function LeaveManagement() {
                 {selectedEmployeeBalance && (
                   <div className="bg-neutral-700 border border-neutral-600 rounded p-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">Available Days:</span>
+                      <span className="text-neutral-400">{t('leave.availableDays')}</span>
                       <span className="text-green-400 font-semibold">
                         {(selectedEmployeeBalance.entitled_days + selectedEmployeeBalance.carried_over_days - selectedEmployeeBalance.used_days).toFixed(1)} days
                       </span>
@@ -410,7 +410,7 @@ export default function LeaveManagement() {
                 {newRequest.start_date && newRequest.end_date && (
                   <div className="bg-indigo-900/30 border border-indigo-500/30 rounded p-3 text-sm">
                     <div className="flex justify-between items-center">
-                      <span className="text-neutral-300">Total Days:</span>
+                      <span className="text-neutral-300">{t('leave.totalDays')}</span>
                       <span className="text-indigo-400 font-semibold text-lg">
                         {calculateTotalDays(newRequest.start_date, newRequest.end_date)} days
                       </span>
@@ -466,7 +466,7 @@ export default function LeaveManagement() {
                     value={newRequest.reason}
                     onChange={(e) => setNewRequest({...newRequest, reason: e.target.value})}
                     rows="2"
-                    placeholder="Optional: Why is the employee taking leave?"
+                    placeholder={t('leave.reasonPlaceholder')}
                     className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
@@ -480,7 +480,7 @@ export default function LeaveManagement() {
                     value={newRequest.notes}
                     onChange={(e) => setNewRequest({...newRequest, notes: e.target.value})}
                     rows="2"
-                    placeholder="Optional: Internal notes for HR records..."
+                    placeholder={t('leave.hrNotesPlaceholder')}
                     className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
@@ -508,10 +508,10 @@ export default function LeaveManagement() {
 
             {/* Requests List */}
             <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('leave.pendingRequests')}</h3>
               <div className="space-y-4">
                 {filteredRequests.filter(request => request.status === 'Pending').length === 0 ? (
-                  <p className="text-muted text-center py-8">No pending leave requests found</p>
+                  <p className="text-muted text-center py-8">{t('leave.noPendingRequests')}</p>
                 ) : (
                   filteredRequests.filter(request => request.status === 'Pending').map((request) => (
                     <div key={request.id} className="card p-4">
@@ -560,10 +560,10 @@ export default function LeaveManagement() {
           {/* All Requests History */}
           <div className="mt-8">
             <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4">All Requests History</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('leave.allRequestsHistory')}</h3>
               <div className="space-y-4">
                 {requests.length === 0 ? (
-                  <p className="text-muted text-center py-8">No leave requests found</p>
+                  <p className="text-muted text-center py-8">{t('leave.noRequestsFound')}</p>
                 ) : (
                   (() => {
                     // Pagination logic for history
@@ -701,7 +701,7 @@ export default function LeaveManagement() {
                       </svg>
                     </div>
                     <div className="text-right">
-                      <p className="text-blue-100 text-sm font-medium">Total Available</p>
+                      <p className="text-blue-100 text-sm font-medium">{t('leave.balances.totalAvailable')}</p>
                       <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.available_days || 0), 0)}</p>
                     </div>
                   </div>
@@ -716,7 +716,7 @@ export default function LeaveManagement() {
                       </svg>
                     </div>
                     <div className="text-right">
-                      <p className="text-emerald-100 text-sm font-medium">This Year Used</p>
+                      <p className="text-emerald-100 text-sm font-medium">{t('leave.balances.thisYearUsed')}</p>
                       <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.used_days || 0), 0)}</p>
                     </div>
                   </div>
@@ -731,7 +731,7 @@ export default function LeaveManagement() {
                       </svg>
                     </div>
                     <div className="text-right">
-                      <p className="text-violet-100 text-sm font-medium">Accrual Rate</p>
+                      <p className="text-violet-100 text-sm font-medium">{t('leave.balances.accrualRate')}</p>
                       <p className="text-4xl font-bold tracking-tight">2.5</p>
                     </div>
                   </div>
@@ -746,7 +746,7 @@ export default function LeaveManagement() {
                       </svg>
                     </div>
                     <div className="text-right">
-                      <p className="text-amber-100 text-sm font-medium">Expiring Soon</p>
+                      <p className="text-amber-100 text-sm font-medium">{t('leave.balances.expiringSoon')}</p>
                       <p className="text-4xl font-bold tracking-tight">5</p>
                     </div>
                   </div>
@@ -757,34 +757,34 @@ export default function LeaveManagement() {
             {/* Leave Types Breakdown */}
             <div className="card p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold">Leave Type Breakdown</h3>
+                <h3 className="text-xl font-semibold">{t('leave.balances.breakdown')}</h3>
                 <div className="flex items-center space-x-2 text-sm text-neutral-400">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span>Available</span>
+                  <span>{t('leave.balances.available')}</span>
                   <div className="w-3 h-3 bg-neutral-400 rounded-full ml-4"></div>
-                  <span>Used</span>
+                  <span>{t('leave.balances.used')}</span>
                 </div>
               </div>
               
               {balances.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📊</div>
-                  <h4 className="text-xl font-semibold mb-2 text-white">No Leave Data Available</h4>
-                  <p className="text-neutral-400 mb-6">Leave balances will appear here once employees start using the system.</p>
+                  <h4 className="text-xl font-semibold mb-2 text-white">{t('leave.balances.noDataTitle')}</h4>
+                  <p className="text-neutral-400 mb-6">{t('leave.balances.noDataDescription')}</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🏖️</div>
-                      <h5 className="font-medium text-white">Vacation</h5>
+                      <h5 className="font-medium text-white">{t('leave.types.vacation')}</h5>
                       <p className="text-sm text-neutral-400">20 days/year</p>
                     </div>
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🤒</div>
-                      <h5 className="font-medium text-white">Sick Leave</h5>
+                      <h5 className="font-medium text-white">{t('leave.types.sickLeave')}</h5>
                       <p className="text-sm text-neutral-400">10 days/year</p>
                     </div>
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🎯</div>
-                      <h5 className="font-medium text-white">Personal</h5>
+                      <h5 className="font-medium text-white">{t('leave.types.personalLeave')}</h5>
                       <p className="text-sm text-neutral-400">5 days/year</p>
                     </div>
                   </div>
@@ -820,8 +820,8 @@ export default function LeaveManagement() {
                         
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="text-neutral-300">Used: {balance.used_days || 0} days</span>
-                            <span className="text-neutral-300">Available: {balance.available_days || 0} days</span>
+                            <span className="text-neutral-300">{t('leave.balances.used', { days: balance.used_days || 0 })}</span>
+                            <span className="text-neutral-300">{t('leave.balances.available', { days: balance.available_days || 0 })}</span>
                           </div>
                           
                           <div className="w-full bg-neutral-600 rounded-full h-3 overflow-hidden">
@@ -851,31 +851,31 @@ export default function LeaveManagement() {
 
             {/* HR Management Actions */}
             <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">HR Management Actions</h3>
+              <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.actions')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button 
                   onClick={() => setActiveTab("requests")}
                   className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800"
                 >
                   <div className="text-2xl mb-2">📋</div>
-                  <h4 className="font-medium text-white">Review Requests</h4>
-                  <p className="text-sm text-neutral-400">Approve or reject leave requests</p>
+                  <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
+                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.reviewDescription')}</p>
                 </button>
                 <button 
                   onClick={() => setActiveTab("analytics")}
                   className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800"
                 >
                   <div className="text-2xl mb-2">📊</div>
-                  <h4 className="font-medium text-white">View Analytics</h4>
-                  <p className="text-sm text-neutral-400">Check leave trends and reports</p>
+                  <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
+                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.analyticsDescription')}</p>
                 </button>
                 <button 
                   onClick={() => setShowManagePolicies(true)}
                   className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20"
                 >
                   <div className="text-2xl mb-2">⚙️</div>
-                  <h4 className="font-medium text-white">Manage Policies</h4>
-                  <p className="text-sm text-neutral-400">Configure leave policies and rules</p>
+                  <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
+                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.policiesDescription')}</p>
                 </button>
               </div>
             </div>
@@ -892,7 +892,7 @@ export default function LeaveManagement() {
               <div className="card p-6">
                 {/* Calendar Header */}
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold">Leave Calendar</h3>
+                  <h3 className="text-lg font-semibold">{t('leave.calendar.title')}</h3>
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
@@ -965,23 +965,23 @@ export default function LeaveManagement() {
                 <div className="mt-6 flex flex-wrap gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                    <span>Vacation</span>
+                    <span>{t('leave.calendar.legend.vacation')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-red-500 rounded"></div>
-                    <span>Sick Leave</span>
+                    <span>{t('leave.calendar.legend.sickLeave')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-green-500 rounded"></div>
-                    <span>Personal</span>
+                    <span>{t('leave.calendar.legend.personal')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-purple-500 rounded"></div>
-                    <span>Parental</span>
+                    <span>{t('leave.calendar.legend.parental')}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-gray-500 rounded"></div>
-                    <span>Other</span>
+                    <span>{t('leave.calendar.legend.other')}</span>
                   </div>
                 </div>
               </div>
@@ -1002,7 +1002,7 @@ export default function LeaveManagement() {
                 {selectedDate ? (
                   <div className="space-y-4">
                     {getLeaveForDate(selectedDate).length === 0 ? (
-                      <p className="text-neutral-400 text-sm">No one is on leave this day</p>
+                      <p className="text-neutral-400 text-sm">{t('leave.calendar.noOneOnLeave')}</p>
                     ) : (
                       getLeaveForDate(selectedDate).map((leave, index) => (
                         <div key={index} className="border-l-4 border-indigo-400 pl-4 py-2">
@@ -1025,7 +1025,7 @@ export default function LeaveManagement() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-neutral-400 text-sm">Click on a calendar day to see who's on leave</p>
+                  <p className="text-neutral-400 text-sm">{t('leave.calendar.clickDayPrompt')}</p>
                 )}
               </div>
             </div>
@@ -1040,19 +1040,19 @@ export default function LeaveManagement() {
             {analytics && (
               <>
                 <div className="card p-6">
-                  <h3 className="text-lg font-semibold mb-2">Total Requests</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('leave.analyticsTab.totalRequests')}</h3>
                   <p className="text-3xl font-bold">{analytics.requests?.total_requests || 0}</p>
                 </div>
                 <div className="card p-6">
-                  <h3 className="text-lg font-semibold mb-2">Pending</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('leave.pending')}</h3>
                   <p className="text-3xl font-bold text-warning">{analytics.requests?.pending || 0}</p>
                 </div>
                 <div className="card p-6">
-                  <h3 className="text-lg font-semibold mb-2">Approved</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('leave.approved')}</h3>
                   <p className="text-3xl font-bold text-success">{analytics.requests?.approved || 0}</p>
                 </div>
                 <div className="card p-6">
-                  <h3 className="text-lg font-semibold mb-2">Upcoming</h3>
+                  <h3 className="text-lg font-semibold mb-2">{t('leave.analyticsTab.upcoming')}</h3>
                   <p className="text-3xl font-bold text-info">{analytics.upcoming?.upcoming_leaves || 0}</p>
                 </div>
               </>
@@ -1071,7 +1071,7 @@ export default function LeaveManagement() {
           >
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white">Leave Policy Management</h3>
+                <h3 className="text-2xl font-bold text-white">{t('leave.policyManagement.title')}</h3>
                 <button
                   onClick={() => setShowManagePolicies(false)}
                   className="text-neutral-400 hover:text-white transition-colors"
@@ -1092,19 +1092,19 @@ export default function LeaveManagement() {
                           <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <h4 className="text-lg font-semibold text-white">Vacation Policy</h4>
+                      <h4 className="text-lg font-semibold text-white">{t('leave.policyManagement.vacationPolicy')}</h4>
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-blue-100">Annual Allocation:</span>
+                        <span className="text-blue-100">{t('leave.policyManagement.annualAllocation')}</span>
                         <span className="text-white font-medium">20 days</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-blue-100">Accrual Rate:</span>
+                        <span className="text-blue-100">{t('leave.policyManagement.accrualRate')}</span>
                         <span className="text-white font-medium">1.67 days/month</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-blue-100">Carry Over:</span>
+                        <span className="text-blue-100">{t('leave.policyManagement.carryOver')}</span>
                         <span className="text-white font-medium">5 days max</span>
                       </div>
                     </div>
@@ -1117,20 +1117,20 @@ export default function LeaveManagement() {
                           <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <h4 className="text-lg font-semibold text-white">Sick Leave Policy</h4>
+                      <h4 className="text-lg font-semibold text-white">{t('leave.policyManagement.sickLeavePolicy')}</h4>
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-emerald-100">Annual Allocation:</span>
+                        <span className="text-emerald-100">{t('leave.policyManagement.annualAllocation')}</span>
                         <span className="text-white font-medium">10 days</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-emerald-100">Accrual Rate:</span>
+                        <span className="text-emerald-100">{t('leave.policyManagement.accrualRate')}</span>
                         <span className="text-white font-medium">0.83 days/month</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-emerald-100">Carry Over:</span>
-                        <span className="text-white font-medium">Unlimited</span>
+                        <span className="text-emerald-100">{t('leave.policyManagement.carryOver')}</span>
+                        <span className="text-white font-medium">{t('leave.policyManagement.unlimited')}</span>
                       </div>
                     </div>
                   </div>
@@ -1142,20 +1142,20 @@ export default function LeaveManagement() {
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
                       </div>
-                      <h4 className="text-lg font-semibold text-white">Personal Leave</h4>
+                      <h4 className="text-lg font-semibold text-white">{t('leave.policyManagement.personalLeavePolicy')}</h4>
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="text-violet-100">Annual Allocation:</span>
+                        <span className="text-violet-100">{t('leave.policyManagement.annualAllocation')}</span>
                         <span className="text-white font-medium">5 days</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-violet-100">Accrual Rate:</span>
+                        <span className="text-violet-100">{t('leave.policyManagement.accrualRate')}</span>
                         <span className="text-white font-medium">0.42 days/month</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-violet-100">Carry Over:</span>
-                        <span className="text-white font-medium">No carry over</span>
+                        <span className="text-violet-100">{t('leave.policyManagement.carryOver')}</span>
+                        <span className="text-white font-medium">{t('leave.policyManagement.noCarryOver')}</span>
                       </div>
                     </div>
                   </div>
@@ -1163,18 +1163,18 @@ export default function LeaveManagement() {
 
                 {/* Policy Settings */}
                 <div className="card p-6">
-                  <h4 className="text-lg font-semibold mb-4 text-white">Policy Configuration</h4>
+                  <h4 className="text-lg font-semibold mb-4 text-white">{t('leave.policyManagement.configuration')}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">Accrual Frequency</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.accrualFrequency')}</label>
                       <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
-                        <option>Monthly</option>
-                        <option>Bi-weekly</option>
-                        <option>Quarterly</option>
+                        <option>{t('leave.policyManagement.monthly')}</option>
+                        <option>{t('leave.policyManagement.biweekly')}</option>
+                        <option>{t('leave.policyManagement.quarterly')}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">Fiscal Year Start</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.fiscalYearStart')}</label>
                       <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                         <option>January 1st</option>
                         <option>April 1st</option>
@@ -1183,7 +1183,7 @@ export default function LeaveManagement() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">Minimum Notice Period</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.minimumNoticePeriod')}</label>
                       <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                         <option>24 hours</option>
                         <option>48 hours</option>
@@ -1192,7 +1192,7 @@ export default function LeaveManagement() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">Maximum Consecutive Days</label>
+                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.maxConsecutiveDays')}</label>
                       <input type="number" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" placeholder="30" />
                     </div>
                   </div>

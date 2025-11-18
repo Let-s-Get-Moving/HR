@@ -397,7 +397,7 @@ export default function Settings() {
         return;
       } else {
         // User wants to DISABLE MFA - ask for confirmation
-        if (!confirm('Are you sure you want to disable Two-Factor Authentication? This will make your account less secure.')) {
+        if (!confirm(t('settings.confirmations.disableMFAWarning'))) {
           return; // User cancelled
         }
       }
@@ -479,7 +479,7 @@ export default function Settings() {
       setMfaError(null);
     } catch (error) {
       console.error('MFA setup failed:', error);
-      alert('Failed to initiate MFA setup: ' + error.message);
+      alert(t('settings.mfaSetup.failed') + ': ' + error.message);
     }
   };
   
@@ -555,7 +555,7 @@ export default function Settings() {
   
   // Revoke a specific device
   const revokeDevice = async (deviceId) => {
-    if (!confirm('Are you sure you want to revoke this trusted device? You will need to verify MFA again next time you log in from this device.')) {
+    if (!confirm(t('settings.confirmations.revokeDeviceWarning'))) {
       return;
     }
     
@@ -565,13 +565,13 @@ export default function Settings() {
       loadTrustedDevices(); // Reload list
     } catch (error) {
       console.error('❌ Failed to revoke device:', error);
-      alert('Failed to revoke device: ' + error.message);
+      alert(t('settings.failedToRevokeDevice') + ': ' + error.message);
     }
   };
   
   // Revoke all devices
   const revokeAllDevices = async () => {
-    if (!confirm('⚠️ Are you sure you want to revoke ALL trusted devices? You will need to verify MFA on all your devices next time you log in.')) {
+    if (!confirm(t('settings.confirmations.revokeAllDevicesWarning'))) {
       return;
     }
     
@@ -581,7 +581,7 @@ export default function Settings() {
       loadTrustedDevices(); // Reload list
     } catch (error) {
       console.error('❌ Failed to revoke all devices:', error);
-      alert('Failed to revoke devices: ' + error.message);
+      alert(t('settings.failedToRevokeDevices') + ': ' + error.message);
     }
   };
   
@@ -692,7 +692,7 @@ export default function Settings() {
             </div>
             <div className="flex items-center space-x-3">
               <span className={`text-xs font-medium ${boolValue ? 'text-green-600' : 'text-red-600'}`}>
-                {boolValue ? 'ON' : 'OFF'}
+                {boolValue ? t('common.on') : t('common.off')}
               </span>
               <button
                 onClick={() => handleSettingUpdate(category, key, !boolValue)}
@@ -743,9 +743,9 @@ export default function Settings() {
                 disabled={true}
                 className="w-full px-3 py-2 card border border-red-500 rounded-lg opacity-50 cursor-not-allowed"
               >
-                <option value="">No options available</option>
+                <option value="">{t('settings.noOptionsAvailable')}</option>
               </select>
-              <p className="text-xs text-red-500 mt-1">⚠️ This setting has no available options</p>
+              <p className="text-xs text-red-500 mt-1">{t('settings.noOptionsWarning')}</p>
             </div>
           );
         }
@@ -811,9 +811,9 @@ export default function Settings() {
     if (!Array.isArray(settings) || settings.length === 0) {
       return (
         <div className="text-center py-8">
-          <p className="text-secondary">No {title.toLowerCase()} available</p>
+          <p className="text-secondary">{t('settings.noSettingsAvailable')}</p>
           <p className="text-tertiary text-sm mt-2">
-            {category === "preferences" ? "User preferences will appear here when available" : "Settings will appear here when available"}
+            {t('settings.settingsWillAppearHere')}
           </p>
         </div>
       );
@@ -833,7 +833,7 @@ export default function Settings() {
             >
               {renderSettingField(setting, category)}
               {setting?.key && saving[setting.key] && (
-                <div className="mt-2 text-xs text-indigo-400">Saving...</div>
+                <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
               )}
             </motion.div>
           ))}
@@ -846,7 +846,7 @@ export default function Settings() {
     if (!Array.isArray(systemSettings) || systemSettings.length === 0) {
       return (
         <div className="text-center py-8">
-          <p className="text-secondary">No system settings available</p>
+          <p className="text-secondary">{t('settings.noSystemSettings')}</p>
         </div>
       );
     }
@@ -874,7 +874,7 @@ export default function Settings() {
                 >
                   {renderSettingField(setting, "system")}
                   {saving[setting.key] && (
-                    <div className="mt-2 text-xs text-indigo-400">Saving...</div>
+                    <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
                   )}
                 </motion.div>
               ))}
@@ -888,7 +888,7 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading settings...</div>
+        <div className="text-lg">{t('settings.loadingSettings')}</div>
       </div>
     );
   }
@@ -928,37 +928,37 @@ export default function Settings() {
         
         {activeTab === "preferences" && (
           <div className="card">
-            {renderSettingsSection(userPreferences, "preferences", "User Preferences")}
+            {renderSettingsSection(userPreferences, "preferences", t('settings.userPreferences'))}
           </div>
         )}
         
         {activeTab === "notifications" && (
           <div className="card">
-            {renderSettingsSection(notifications, "notifications", "Notification Settings")}
+            {renderSettingsSection(notifications, "notifications", t('settings.notificationSettings'))}
           </div>
         )}
         
         {activeTab === "security" && (
           <>
             <div className="card">
-              {renderSettingsSection(security, "security", "Security Settings")}
+              {renderSettingsSection(security, "security", t('settings.securitySettings'))}
             </div>
             
             {/* Change Password Section */}
             <div className="card">
               <div className="card-header">
-                <h2 className="text-xl font-semibold">🔐 Change Password</h2>
-                <p className="text-sm text-secondary mt-1">Update your password to keep your account secure</p>
+                <h2 className="text-xl font-semibold">{t('settings.passwordChange.title')}</h2>
+                <p className="text-sm text-secondary mt-1">{t('settings.passwordChange.updatePassword')}</p>
               </div>
               <div className="card-content">
                 <button
                   onClick={openPasswordModal}
                   className="btn-primary px-6 py-2 rounded-lg hover:opacity-90 transition-all"
                 >
-                  Change Password
+                  {t('settings.changePassword')}
                 </button>
                 <p className="text-xs text-tertiary mt-2">
-                  Your password expires every 90 days. Choose a strong password you haven't used before.
+                  {t('settings.passwordChange.expiryNote')}
                 </p>
               </div>
             </div>
@@ -968,15 +968,15 @@ export default function Settings() {
               <div className="card-header">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-xl font-semibold">📱 Trusted Devices</h2>
-                    <p className="text-sm text-secondary mt-1">Manage devices that can bypass MFA for 7 days</p>
+                    <h2 className="text-xl font-semibold">{t('settings.trustedDevicesInfo.title')}</h2>
+                    <p className="text-sm text-secondary mt-1">{t('settings.trustedDevicesInfo.description')}</p>
                   </div>
                   {trustedDevices.length > 0 && (
                     <button
                       onClick={revokeAllDevices}
                       className="btn-danger px-4 py-2 rounded-lg hover:opacity-90 transition-all text-sm"
                     >
-                      Revoke All
+                      {t('settings.revokeAll')}
                     </button>
                   )}
                 </div>
@@ -985,16 +985,16 @@ export default function Settings() {
                 {loadingDevices ? (
                   <div className="text-center py-8">
                     <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
-                    <p className="text-sm text-secondary mt-2">Loading devices...</p>
+                    <p className="text-sm text-secondary mt-2">{t('settings.trustedDevicesInfo.loading')}</p>
                   </div>
                 ) : trustedDevices.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="text-5xl mb-3">🔓</div>
-                    <p className="text-secondary">No trusted devices yet</p>
-                    <p className="text-xs text-tertiary mt-2">
-                      When you check "Trust this device for 7 days" during MFA login, it will appear here
-                    </p>
-                  </div>
+          <div className="text-center py-8">
+            <div className="text-5xl mb-3">🔓</div>
+            <p className="text-secondary">{t('settings.noTrustedDevices')}</p>
+            <p className="text-xs text-tertiary mt-2">
+              {t('settings.trustDeviceNote')}
+            </p>
+          </div>
                 ) : (
                   <div className="space-y-3">
                     {trustedDevices.map((device) => (
@@ -1015,25 +1015,25 @@ export default function Settings() {
                           </div>
                           <div className="text-xs text-tertiary space-y-1">
                             <p>
-                              <span className="inline-block w-20">Browser:</span>
-                              <span className="text-secondary">{device.browser || 'Unknown'}</span>
+                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.browser')}</span>
+                              <span className="text-secondary">{device.browser || t('settings.trustedDevicesInfo.unknown')}</span>
                             </p>
                             <p>
-                              <span className="inline-block w-20">Last used:</span>
+                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.lastUsed')}</span>
                               <span className="text-secondary">
-                                {device.lastUsedAt ? new Date(device.lastUsedAt).toLocaleString() : 'Never'}
+                                {device.lastUsedAt ? new Date(device.lastUsedAt).toLocaleString() : t('settings.trustedDevicesInfo.never')}
                               </span>
                             </p>
                             <p>
-                              <span className="inline-block w-20">Expires in:</span>
+                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.expiresIn')}</span>
                               <span className={device.expiresIn?.includes('1 day') || device.expiresIn?.includes('Less') ? 'text-yellow-500' : 'text-secondary'}>
                                 {device.expiresIn}
                               </span>
                             </p>
                             <p>
-                              <span className="inline-block w-20">IP:</span>
+                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.ip')}</span>
                               <span className="text-secondary font-mono text-xs">
-                                {device.ipLastUsed || device.ipCreated || 'Unknown'}
+                                {device.ipLastUsed || device.ipCreated || t('settings.trustedDevicesInfo.unknown')}
                               </span>
                             </p>
                           </div>
@@ -1041,9 +1041,9 @@ export default function Settings() {
                         <button
                           onClick={() => revokeDevice(device.id)}
                           className="ml-4 px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-20 rounded transition-all"
-                          title="Revoke this device"
+                          title={t('settings.revoke')}
                         >
-                          Revoke
+                          {t('settings.revoke')}
                         </button>
                       </div>
                     ))}
@@ -1057,7 +1057,7 @@ export default function Settings() {
         {activeTab === "maintenance" && (
           <>
             <div className="card">
-              {renderSettingsSection(maintenance, "maintenance", "Maintenance & Backup")}
+              {renderSettingsSection(maintenance, "maintenance", t('settings.maintenanceAndBackup'))}
             </div>
           </>
         )}
@@ -1071,14 +1071,14 @@ export default function Settings() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
           >
-            <h2 className="text-2xl font-bold mb-4">🔐 Enable Two-Factor Authentication</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('settings.mfaSetup.title')}</h2>
             
             <div className="space-y-4">
               {/* Step 1: Scan QR Code */}
               <div>
-                <h3 className="font-semibold mb-2">Step 1: Scan QR Code</h3>
+                <h3 className="font-semibold mb-2">{t('settings.mfaSetup.step1')}</h3>
                 <p className="text-sm text-secondary mb-3">
-                  Open your authenticator app (Google Authenticator, Authy, 1Password, etc.) and scan this QR code:
+                  {t('settings.mfaSetup.step1Description')}
                 </p>
                 <div className="bg-white p-4 rounded-lg flex justify-center">
                   <img src={mfaData.qrCode} alt="MFA QR Code" className="w-48 h-48" />
@@ -1087,7 +1087,7 @@ export default function Settings() {
               
               {/* Manual Entry */}
               <div>
-                <p className="text-sm text-secondary mb-1">Or enter this secret key manually:</p>
+                <p className="text-sm text-secondary mb-1">{t('settings.mfaSetup.orManualEntry')}</p>
                 <div className="bg-neutral-900 p-3 rounded font-mono text-sm break-all">
                   {mfaData.secret}
                 </div>
@@ -1095,16 +1095,16 @@ export default function Settings() {
               
               {/* Step 2: Enter Code */}
               <div>
-                <h3 className="font-semibold mb-2">Step 2: Enter Verification Code</h3>
+                <h3 className="font-semibold mb-2">{t('settings.mfaSetup.step2')}</h3>
                 <p className="text-sm text-secondary mb-3">
-                  Enter the 6-digit code from your authenticator app:
+                  {t('settings.mfaSetup.step2Description')}
                 </p>
                 <input
                   type="text"
                   maxLength="6"
                   value={mfaVerificationCode}
                   onChange={(e) => setMfaVerificationCode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="000000"
+                  placeholder={t('settings.mfaSetup.verificationCode')}
                   className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-center text-2xl tracking-widest font-mono focus:outline-none focus:border-indigo-500"
                   autoFocus
                 />
@@ -1116,9 +1116,9 @@ export default function Settings() {
               {/* Backup Codes */}
               {mfaData.backupCodes && mfaData.backupCodes.length > 0 && (
                 <div className="border border-yellow-600 bg-yellow-900 bg-opacity-20 p-3 rounded">
-                  <h3 className="font-semibold text-yellow-500 mb-2">⚠️ Save These Backup Codes</h3>
+                  <h3 className="font-semibold text-yellow-500 mb-2">{t('settings.mfaSetup.saveBackupCodes')}</h3>
                   <p className="text-sm text-secondary mb-2">
-                    Store these codes in a safe place. You can use them to access your account if you lose your authenticator:
+                    {t('settings.mfaSetup.backupCodesDescription')}
                   </p>
                   <div className="grid grid-cols-2 gap-2 bg-neutral-900 p-3 rounded font-mono text-sm">
                     {mfaData.backupCodes.map((code, index) => (
@@ -1135,14 +1135,14 @@ export default function Settings() {
                   disabled={mfaVerifying}
                   className="flex-1 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  {t('settings.cancel')}
                 </button>
                 <button
                   onClick={verifyMFACode}
                   disabled={mfaVerifying || mfaVerificationCode.length !== 6}
                   className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {mfaVerifying ? 'Verifying...' : 'Enable MFA'}
+                  {mfaVerifying ? t('settings.mfaSetup.verifying') : t('settings.mfaSetup.enableMFA')}
                 </button>
               </div>
             </div>
@@ -1158,48 +1158,48 @@ export default function Settings() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
           >
-            <h2 className="text-2xl font-bold mb-4">🔐 Change Password</h2>
+            <h2 className="text-2xl font-bold mb-4">{t('settings.passwordChange.title')}</h2>
             
             <form onSubmit={handlePasswordChange} className="space-y-4">
               {/* Current Password */}
               <div>
-                <label className="block text-sm font-medium mb-2">Current Password</label>
+                <label className="block text-sm font-medium mb-2">{t('settings.passwordChange.currentPassword')}</label>
                 <input
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
                   className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                  placeholder="Enter your current password"
+                  placeholder={t('settings.passwordChange.enterCurrentPassword')}
                   required
                 />
               </div>
               
               {/* New Password */}
               <div>
-                <label className="block text-sm font-medium mb-2">New Password</label>
+                <label className="block text-sm font-medium mb-2">{t('settings.passwordChange.newPassword')}</label>
                 <input
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
                   className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                  placeholder="Enter your new password (min 8 characters)"
+                  placeholder={t('settings.passwordChange.enterNewPassword')}
                   required
                   minLength="8"
                 />
                 <p className="text-xs text-tertiary mt-1">
-                  Must be at least 8 characters. Cannot reuse your last 5 passwords.
+                  {t('settings.passwordChange.minLengthNote')}
                 </p>
               </div>
               
               {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-medium mb-2">Confirm New Password</label>
+                <label className="block text-sm font-medium mb-2">{t('settings.passwordChange.confirmPassword')}</label>
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
                   className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                  placeholder="Re-enter your new password"
+                  placeholder={t('settings.passwordChange.reenterNewPassword')}
                   required
                 />
               </div>
@@ -1214,7 +1214,7 @@ export default function Settings() {
               {/* Success Message */}
               {passwordSuccess && (
                 <div className="bg-green-900 bg-opacity-20 border border-green-600 p-3 rounded">
-                  <p className="text-green-500 text-sm">✅ Password changed successfully!</p>
+                  <p className="text-green-500 text-sm">{t('settings.passwordChange.passwordChangedSuccess')}</p>
                 </div>
               )}
               
@@ -1226,14 +1226,14 @@ export default function Settings() {
                   className="flex-1 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors"
                   disabled={passwordSuccess}
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={passwordSuccess}
                 >
-                  Change Password
+                  {t('settings.changePassword')}
                 </button>
               </div>
             </form>

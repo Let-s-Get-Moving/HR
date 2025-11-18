@@ -297,7 +297,7 @@ export default function Dashboard({ onNavigate, user }) {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">Period</span>
+                <span className="text-neutral-400">{t('dashboard.period')}</span>
                 <span className="text-sm text-indigo-400">
                   {getTimeRangeLabel(selectedTimeRange)}
                 </span>
@@ -307,32 +307,32 @@ export default function Dashboard({ onNavigate, user }) {
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📊</div>
               <p className="text-neutral-400 text-sm mb-2">No payroll data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
-              <p className="text-neutral-500 text-xs">Upload timecards to generate payroll</p>
+              <p className="text-neutral-500 text-xs">{t('dashboard.uploadTimecardsToGenerate')}</p>
             </div>
           )}
         </div>
 
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Attendance Metrics</h3>
+            <h3 className="text-lg font-semibold text-white">{t('dashboard.attendanceMetrics')}</h3>
             <div className="text-2xl">⏰</div>
           </div>
           {avgHoursPerEmployee > 0 || att?.employees_tracked > 0 ? (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">Avg Hours/Week</span>
+                <span className="text-neutral-400">{t('dashboard.avgHoursWeek')}</span>
                 <span className="text-2xl font-bold text-blue-400">
                   {avgHoursPerEmployee > 0 ? `${avgHoursPerEmployee}h` : 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">Employees Tracked</span>
+                <span className="text-neutral-400">{t('dashboard.employeesTracked')}</span>
                 <span className="text-lg text-white">
                   {att?.employees_tracked || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">Period</span>
+                <span className="text-neutral-400">{t('dashboard.period')}</span>
                 <span className="text-sm text-indigo-400">
                   {getTimeRangeLabel(selectedTimeRange)}
                 </span>
@@ -342,19 +342,19 @@ export default function Dashboard({ onNavigate, user }) {
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📅</div>
               <p className="text-neutral-400 text-sm mb-2">No attendance data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
-              <p className="text-neutral-500 text-xs">Upload timecards to track attendance</p>
+              <p className="text-neutral-500 text-xs">{t('dashboard.uploadTimecardsToTrackAttendance')}</p>
             </div>
           )}
         </div>
 
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">Compliance Status</h3>
+            <h3 className="text-lg font-semibold text-white">{t('dashboard.complianceStatus')}</h3>
             <div className="text-2xl">✅</div>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Contracts Signed</span>
+              <span className="text-neutral-400">{t('dashboard.contractsSigned')}</span>
               <span className={`text-2xl font-bold ${(cmp?.contracts_signed_pct || 0) >= 50 ? 'text-green-400' : 'text-yellow-400'}`}>
                 {cmp?.contracts_signed_pct ? `${cmp.contracts_signed_pct}%` : 'N/A'}
               </span>
@@ -366,7 +366,7 @@ export default function Dashboard({ onNavigate, user }) {
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Training Enrolled</span>
+              <span className="text-neutral-400">{t('dashboard.trainingEnrolled')}</span>
               <span className="text-lg text-white">
                 {trainingCompletion > 0 ? `${trainingCompletion}%` : 'N/A'}
               </span>

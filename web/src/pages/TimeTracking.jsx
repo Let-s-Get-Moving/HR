@@ -383,9 +383,9 @@ export default function TimeTracking() {
 
   if (loading && timecards.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-400">Loading timecards...</div>
-      </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-400">{t('timeTracking.loadingTimecards')}</div>
+        </div>
     );
   }
 
@@ -394,8 +394,8 @@ export default function TimeTracking() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary">Time Tracking</h1>
-          <p className="text-secondary mt-1">Employee timecard management</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary">{t('timeTracking.title')}</h1>
+          <p className="text-secondary mt-1">{t('timeTracking.description')}</p>
         </div>
         {/* Hide upload button for user role */}
         {userRole !== 'user' && (
@@ -408,7 +408,7 @@ export default function TimeTracking() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            Upload Timecards
+            {t('timeTracking.uploadTimecards')}
           </motion.button>
         )}
       </div>
@@ -427,7 +427,7 @@ export default function TimeTracking() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            Day View
+            {t('timeTracking.dayView')}
           </div>
         </button>
         {/* Hide uploads tab for user role */}
@@ -444,7 +444,7 @@ export default function TimeTracking() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-              Timecard Uploads
+              {t('timeTracking.timecardUploads')}
             </div>
           </button>
         )}
@@ -474,7 +474,7 @@ export default function TimeTracking() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Period Filter */}
             <div>
-              <label className="block text-sm font-medium mb-2 text-primary">Period</label>
+              <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.period')}</label>
               <select
                 value={selectedPeriod?.pay_period_start || ""}
                 onChange={(e) => {
@@ -483,10 +483,10 @@ export default function TimeTracking() {
                 }}
                 className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
               >
-                <option value="">Select period...</option>
+                <option value="">{t('timeTracking.selectPeriod')}</option>
                 {payPeriods.map((period) => (
                   <option key={period.pay_period_start} value={period.pay_period_start}>
-                    {period.period_label} ({period.timecard_count} timecards)
+                    {period.period_label} ({period.timecard_count} {t('timeTracking.timecards')})
                   </option>
                 ))}
               </select>
@@ -495,7 +495,7 @@ export default function TimeTracking() {
             {/* Employee Search - Hidden for user role */}
             {userRole !== 'user' && (
               <div>
-                <label className="block text-sm font-medium mb-2 text-primary">Search Employee</label>
+                <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.searchEmployee')}</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -504,7 +504,7 @@ export default function TimeTracking() {
             </div>
             <input
               type="text"
-                    placeholder="Search by name or email..."
+                    placeholder={t('timeTracking.searchByName')}
                     value={employeeSearch}
                     onChange={(e) => setEmployeeSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
@@ -631,7 +631,7 @@ function MainTableView({ timecards, onViewIndividual, loading }) {
         <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <h3 className="text-lg font-medium text-primary mb-2">No Timecards Found</h3>
+        <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noTimecardsFound')}</h3>
         <p className="text-secondary">Select a different pay period or upload timecard data</p>
       </motion.div>
     );
@@ -648,12 +648,12 @@ function MainTableView({ timecards, onViewIndividual, loading }) {
         <table className="w-full">
           <thead className="bg-slate-100 dark:bg-slate-800">
             <tr>
-              <th className="px-6 py-4 text-left text-sm font-medium text-primary">Employee</th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-primary">Email</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-primary">Total Hours</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-primary">Overtime</th>
-              <th className="px-6 py-4 text-center text-sm font-medium text-primary">Status</th>
-              <th className="px-6 py-4 text-center text-sm font-medium text-primary">Actions</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-primary">{t('timeTracking.employee')}</th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-primary">{t('timeTracking.email')}</th>
+              <th className="px-6 py-4 text-right text-sm font-medium text-primary">{t('timeTracking.totalHours')}</th>
+              <th className="px-6 py-4 text-right text-sm font-medium text-primary">{t('timeTracking.overtime')}</th>
+              <th className="px-6 py-4 text-center text-sm font-medium text-primary">{t('timeTracking.status')}</th>
+              <th className="px-6 py-4 text-center text-sm font-medium text-primary">{t('timeTracking.actions')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -722,7 +722,7 @@ function DashboardView({ stats, selectedPeriod }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-secondary">Total Employees</h3>
+            <h3 className="text-sm font-medium text-secondary">{t('timeTracking.totalEmployees')}</h3>
             <svg className="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
@@ -732,7 +732,7 @@ function DashboardView({ stats, selectedPeriod }) {
 
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-secondary">Total Hours</h3>
+            <h3 className="text-sm font-medium text-secondary">{t('timeTracking.totalHours')}</h3>
             <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -742,7 +742,7 @@ function DashboardView({ stats, selectedPeriod }) {
 
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-secondary">Overtime Hours</h3>
+            <h3 className="text-sm font-medium text-secondary">{t('timeTracking.overtimeHours')}</h3>
             <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
@@ -755,7 +755,7 @@ function DashboardView({ stats, selectedPeriod }) {
 
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-medium text-secondary">Missing Punches</h3>
+            <h3 className="text-sm font-medium text-secondary">{t('timeTracking.missingPunches')}</h3>
             <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -767,18 +767,18 @@ function DashboardView({ stats, selectedPeriod }) {
       {/* Employee Details Table */}
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-primary">Employee Breakdown</h2>
+          <h2 className="text-lg font-semibold text-primary">{t('timeTracking.employeeBreakdown')}</h2>
           <p className="text-sm text-secondary">Detailed hours and overtime by employee</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-100 dark:bg-slate-800">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Employee</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Total Hours</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Overtime</th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-primary">Missing Punches</th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-primary">Status</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.employee')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.totalHours')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.overtime')}</th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-primary">{t('timeTracking.missingPunches')}</th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-primary">{t('timeTracking.status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -883,7 +883,7 @@ function IndividualView({ timecard, onBack }) {
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(timecard.total_hours || 0))}</div>
-            <div className="text-sm text-secondary">Total Hours</div>
+            <div className="text-sm text-secondary">{t('timeTracking.totalHours')}</div>
             {parseFloat(timecard.overtime_hours || 0) > 0 && (
               <div className="mt-2 text-amber-600 dark:text-amber-400 font-medium">
                 {formatHoursAsTime(parseFloat(timecard.overtime_hours))} OT
@@ -896,18 +896,18 @@ function IndividualView({ timecard, onBack }) {
       {/* Daily Entries */}
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-primary">Daily Time Entries</h3>
+          <h3 className="text-lg font-semibold text-primary">{t('timeTracking.dailyTimeEntries')}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-100 dark:bg-slate-800">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Date</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Clock In</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Clock Out</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Work Time</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Total Hours</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Notes</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.date')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.clockIn')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.clockOut')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.workTime')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.totalHours')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.notesLabel')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -922,10 +922,10 @@ function IndividualView({ timecard, onBack }) {
                         </td>
                       )}
                       <td className="px-6 py-4 text-sm text-primary">
-                        {entry.clock_in || <span className="text-red-500">Missing</span>}
+                        {entry.clock_in || <span className="text-red-500">{t('timeTracking.missing')}</span>}
                       </td>
                       <td className="px-6 py-4 text-sm text-primary">
-                        {entry.clock_out || <span className="text-red-500">Missing</span>}
+                        {entry.clock_out || <span className="text-red-500">{t('timeTracking.missing')}</span>}
                       </td>
                       <td className="px-6 py-4 text-sm text-right text-primary">
                         {formatHoursAsTime(parseFloat(entry.hours_worked || 0))}
@@ -970,7 +970,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
           >
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-primary">Upload Timecard Excel</h2>
+            <h2 className="text-2xl font-bold text-primary">{t('timeTracking.uploadModal.title')}</h2>
                 <button
               onClick={onClose}
               className="text-secondary hover:text-primary transition-colors"
@@ -984,7 +984,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
               <div className="space-y-4">
             {/* File Input */}
             <div>
-              <label className="block text-sm font-medium mb-2 text-primary">Excel File</label>
+              <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.uploadModal.fileLabel')}</label>
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -992,14 +992,14 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                 className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
               />
               {uploadFile && (
-                <p className="mt-2 text-sm text-secondary">Selected: {uploadFile.name}</p>
+                <p className="mt-2 text-sm text-secondary">{t('timeTracking.uploadModal.selected')} {uploadFile.name}</p>
               )}
             </div>
 
             {/* Manual Period Override */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2 text-primary">Period Start (Optional)</label>
+                <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.uploadModal.periodStartOptional')}</label>
                 <input
                   type="date"
                   value={manualPeriodStart}
@@ -1008,7 +1008,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                 />
               </div>
                 <div>
-                <label className="block text-sm font-medium mb-2 text-primary">Period End (Optional)</label>
+                <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.uploadModal.periodEndOptional')}</label>
                 <input
                   type="date"
                   value={manualPeriodEnd}
@@ -1031,12 +1031,12 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 
             {/* Info Box */}
             <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
-              <h3 className="font-medium mb-2 text-primary">Expected Format:</h3>
+              <h3 className="font-medium mb-2 text-primary">{t('timeTracking.uploadModal.expectedFormat')}</h3>
               <ul className="text-sm text-secondary space-y-1 list-disc list-inside">
-                <li>Excel file with timecard data</li>
-                <li>Each employee section includes: Period, Employee name, Date, IN, OUT, Work Time, Daily Total, Note</li>
-                <li>Multiple clock-in/out pairs per day supported</li>
-                <li>System will automatically match employees by name</li>
+                <li>{t('timeTracking.uploadModal.formatInfo1')}</li>
+                <li>{t('timeTracking.uploadModal.formatInfo2')}</li>
+                <li>{t('timeTracking.uploadModal.formatInfo3')}</li>
+                <li>{t('timeTracking.uploadModal.formatInfo4')}</li>
               </ul>
                 </div>
 
@@ -1046,14 +1046,14 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                 onClick={onClose}
                 className="px-6 py-2 text-secondary hover:text-primary transition-colors"
                   >
-                    Cancel
+                    {t('timeTracking.uploadModal.cancel')}
                   </button>
                   <button
                 onClick={onUpload}
                 disabled={!uploadFile || uploadStatus.status === 'processing'}
                 className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-medium transition-colors"
                   >
-                {uploadStatus.status === 'processing' ? 'Processing...' : 'Upload'}
+                {uploadStatus.status === 'processing' ? t('timeTracking.uploadModal.processing2') : t('timeTracking.uploadModal.upload')}
                   </button>
                 </div>
               </div>
@@ -1116,7 +1116,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
       setEditForm({});
     } catch (error) {
       console.error('❌ [Frontend] Error saving entry:', error);
-      alert('Failed to save changes: ' + (error.message || error.error || 'Unknown error'));
+      alert(t('timeTracking.failedToSave') + ': ' + (error.message || error.error || t('timeTracking.unknownError')));
     } finally {
       setSaving(false);
     }
@@ -1181,7 +1181,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
       <div className="card p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto">
-            <label className="block text-sm font-medium mb-2 text-primary">Select Date</label>
+            <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.selectDate')}</label>
             <input
               type="date"
               value={selectedDate}
@@ -1190,7 +1190,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
             />
           </div>
           <div className="text-sm text-secondary">
-            {filteredEmployees.length} of {employees.length} employees • {dayViewData.length} entries
+            {filteredEmployees.length} {t('timeTracking.ofEmployees', { total: employees.length })} • {dayViewData.length} {t('timeTracking.entries')}
           </div>
         </div>
       </div>
@@ -1206,7 +1206,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
             </div>
             <input
               type="text"
-              placeholder="Search by employee name, department, or email..."
+              placeholder={t('timeTracking.search')}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
@@ -1226,7 +1226,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
           </div>
           {searchQuery && (
             <div className="mt-2 text-sm text-secondary">
-              Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
+              {t('timeTracking.foundEmployees', { count: filteredEmployees.length, query: searchQuery })}
             </div>
           )}
         </div>
@@ -1234,22 +1234,22 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
 
       {/* Day View Data */}
       {loading ? (
-        <div className="text-center py-12 text-secondary">Loading...</div>
+        <div className="text-center py-12 text-secondary">{t('timeTracking.loading')}</div>
       ) : filteredEmployees.length === 0 && searchQuery ? (
         <div className="card p-12 text-center">
           <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          <h3 className="text-lg font-medium text-primary mb-2">No employees found</h3>
-          <p className="text-secondary">Try adjusting your search terms or clear the search to see all employees.</p>
+          <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noEmployeesFound')}</h3>
+          <p className="text-secondary">{t('timeTracking.adjustSearchTerms')}</p>
         </div>
       ) : employees.length === 0 ? (
         <div className="card p-12 text-center">
           <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
-          <h3 className="text-lg font-medium text-primary mb-2">No Data for This Date</h3>
-          <p className="text-secondary">Select another date or upload timecards</p>
+          <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noDataForDate')}</h3>
+          <p className="text-secondary">{t('timeTracking.selectAnotherDate')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -1281,7 +1281,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                       {formatHoursAsTime(employee.total_hours)}
                     </div>
                     {employee.total_hours > 8 && (
-                      <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">OVERTIME</span>
+                      <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">{t('timeTracking.dayViewTable.overtime')}</span>
                     )}
                   </div>
                 </div>
@@ -1292,11 +1292,11 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                 <table className="w-full">
                   <thead className="bg-slate-100 dark:bg-slate-800">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Clock In</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Clock Out</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase">Hours</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">Notes</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-secondary uppercase">Actions</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.clockInHeader')}</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.clockOutHeader')}</th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.hoursHeader')}</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.notesHeader')}</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.actionsHeader')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -1340,7 +1340,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 type="text"
                                 value={editForm.notes}
                                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                                placeholder="Add notes..."
+                                placeholder={t('timeTracking.dayViewTable.addNotes')}
                                 className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
                               />
                             ) : (
@@ -1355,14 +1355,14 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                   disabled={saving}
                                   className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50"
                                 >
-                                  {saving ? 'Saving...' : 'Save'}
+                                  {saving ? t('timeTracking.dayViewTable.saving') : t('timeTracking.dayViewTable.save')}
                                 </button>
                                 <button
                                   onClick={handleCancel}
                                   disabled={saving}
                                   className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-xs font-medium disabled:opacity-50"
                                 >
-                                  Cancel
+                                  {t('timeTracking.dayViewTable.cancel')}
                                 </button>
                               </div>
                             ) : (
@@ -1370,7 +1370,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 onClick={() => handleEdit(entry)}
                                 className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium"
                               >
-                                Edit
+                                {t('timeTracking.dayViewTable.edit')}
                               </button>
                             )}
                           </td>

@@ -102,7 +102,7 @@ export default function Benefits() {
   };
 
   const handleTerminateEnrollment = async (enrollmentId) => {
-    if (confirm("Are you sure you want to terminate this benefits enrollment?")) {
+    if (confirm(t('benefits.confirmTerminate'))) {
       try {
         // In production, this would be an API call
         setEnrollments(enrollments.map(enrollment => 
@@ -201,7 +201,7 @@ export default function Benefits() {
   const renderEnrollment = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Benefits Enrollment</h3>
+        <h3 className="text-lg font-semibold">{t('benefits.enrollment')}</h3>
         <button
           onClick={() => setShowEnrollEmployee(true)}
           className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -230,7 +230,7 @@ export default function Benefits() {
                   {enrollment.status}
                 </span>
                 <div className="text-right">
-                  <div className="text-sm text-neutral-400">Effective Date</div>
+                  <div className="text-sm text-neutral-400">{t('benefits.effectiveDate')}</div>
                   <div className="text-sm font-medium">{enrollment.effective_date}</div>
                 </div>
               </div>
@@ -238,22 +238,22 @@ export default function Benefits() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="font-medium text-neutral-400">Enrollment Date:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.enrollmentDate')}</span>
                 <div className="text-neutral-300">{enrollment.enrollment_date}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Coverage Level:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.coverageLevel')}</span>
                 <div className="text-neutral-300">{enrollment.coverage_level}</div>
               </div>
               {enrollment.dependents && (
                 <div>
-                  <span className="font-medium text-neutral-400">Dependents:</span>
+                  <span className="font-medium text-neutral-400">{t('benefits.dependents')}</span>
                   <div className="text-neutral-300">{enrollment.dependents}</div>
                 </div>
               )}
               {enrollment.contribution_percentage && (
                 <div>
-                  <span className="font-medium text-neutral-400">Contribution:</span>
+                  <span className="font-medium text-neutral-400">{t('benefits.contribution')}</span>
                   <div className="text-neutral-300">{enrollment.contribution_percentage}%</div>
                 </div>
               )}
@@ -284,7 +284,7 @@ export default function Benefits() {
   const renderInsurance = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Insurance Plans</h3>
+        <h3 className="text-lg font-semibold">{t('benefits.insurancePlans')}</h3>
         <button
           onClick={() => setShowAddBenefit(true)}
           className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -308,21 +308,21 @@ export default function Benefits() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-green-400">${plan.monthly_premium}</div>
-                <div className="text-xs text-neutral-400">Monthly Premium</div>
+                <div className="text-xs text-neutral-400">{t('benefits.monthlyPremium')}</div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
-                <span className="font-medium text-neutral-400">Deductible:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.deductible')}</span>
                 <div className="text-neutral-300">${plan.deductible}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Copay:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.copay')}</span>
                 <div className="text-neutral-300">${plan.copay}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Coinsurance:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.coinsurance')}</span>
                 <div className="text-neutral-300">{plan.coinsurance}</div>
               </div>
               <div>
@@ -332,7 +332,7 @@ export default function Benefits() {
             </div>
 
             <div className="mb-4">
-              <span className="font-medium text-neutral-400">Coverage Details:</span>
+              <span className="font-medium text-neutral-400">{t('benefits.coverageDetails')}</span>
               <p className="text-sm text-neutral-300 mt-1">{plan.coverage_details}</p>
             </div>
 
@@ -358,7 +358,7 @@ export default function Benefits() {
 
   const renderRetirement = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Retirement Plans</h3>
+      <h3 className="text-lg font-semibold">{t('benefits.retirementPlans')}</h3>
       
       <div className="grid gap-4">
         {retirementPlans.map((plan) => (
@@ -375,27 +375,27 @@ export default function Benefits() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-blue-400">${plan.current_balance.toLocaleString()}</div>
-                <div className="text-xs text-neutral-400">Current Balance</div>
+                <div className="text-xs text-neutral-400">{t('benefits.currentBalance')}</div>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               <div>
-                <span className="font-medium text-neutral-400">Employer Match:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.employerMatch')}</span>
                 <div className="text-neutral-300">{plan.employer_match}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Vesting Schedule:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.vestingSchedule')}</span>
                 <div className="text-neutral-300">{plan.vesting_schedule}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Investment Options:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.investmentOptions')}</span>
                 <div className="text-neutral-300">{plan.investment_options}</div>
               </div>
             </div>
 
             <div className="mb-4">
-              <span className="font-medium text-neutral-400">Annual Contribution Limit:</span>
+              <span className="font-medium text-neutral-400">{t('benefits.annualContributionLimit')}</span>
               <div className="text-neutral-300">${plan.contribution_limit.toLocaleString()}</div>
             </div>
 
@@ -421,24 +421,24 @@ export default function Benefits() {
 
   const renderAnalytics = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold">Benefits Analytics</h3>
+      <h3 className="text-lg font-semibold">{t('benefits.analytics')}</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-green-400">0%</div>
-          <div className="text-sm text-neutral-400">Enrollment Rate</div>
+          <div className="text-sm text-neutral-400">{t('benefits.enrollmentRate')}</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-blue-400">$0</div>
-          <div className="text-sm text-neutral-400">Total Benefits Cost</div>
+          <div className="text-sm text-neutral-400">{t('benefits.totalCost')}</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-purple-400">$0</div>
-          <div className="text-sm text-neutral-400">Employer Contribution</div>
+          <div className="text-sm text-neutral-400">{t('benefits.employerContribution')}</div>
         </div>
         <div className="card p-4 text-center">
           <div className="text-2xl font-bold text-indigo-400">$0</div>
-          <div className="text-sm text-neutral-400">Employee Contribution</div>
+          <div className="text-sm text-neutral-400">{t('benefits.employeeContribution')}</div>
         </div>
       </div>
 
@@ -461,7 +461,7 @@ export default function Benefits() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">Benefits Administration</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">{t('benefits.title')}</h1>
         <p className="text-neutral-400 mt-1">Manage employee benefits, insurance, and retirement plans</p>
       </div>
 
@@ -504,7 +504,7 @@ export default function Benefits() {
               <form className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Plan Name</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.planName')}</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -531,7 +531,7 @@ export default function Benefits() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Plan Level</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.planLevel')}</label>
                     <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
                       <option value="Bronze">Bronze</option>
                       <option value="Silver">Silver</option>
@@ -558,7 +558,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Monthly Premium</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.monthlyPremium')}</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -571,7 +571,7 @@ export default function Benefits() {
                   <textarea
                     rows={3}
                     className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Describe the coverage details..."
+                    placeholder={t('benefits.coverageDetailsPlaceholder')}
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
@@ -604,12 +604,12 @@ export default function Benefits() {
             className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Enroll Employee in Benefits</h3>
+              <h3 className="text-xl font-bold mb-4">{t('benefits.enrollEmployee')}</h3>
               <form className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Employee</label>
                   <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
-                    <option>Select Employee</option>
+                    <option>{t('benefits.selectEmployee')}</option>
                     {employees.map(emp => (
                       <option key={emp.id} value={emp.id}>{emp.name}</option>
                     ))}
@@ -617,9 +617,9 @@ export default function Benefits() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Benefit Plan</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.benefitPlan')}</label>
                     <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
-                      <option>Select Benefit</option>
+                      <option>{t('benefits.selectBenefit')}</option>
                       {benefits.map(benefit => (
                         <option key={benefit.id} value={benefit.id}>{benefit.name}</option>
                       ))}
@@ -637,7 +637,7 @@ export default function Benefits() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Enrollment Date</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.enrollmentDate')}</label>
                     <input
                       type="date"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -681,7 +681,7 @@ export default function Benefits() {
             className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Edit Benefits Enrollment</h3>
+              <h3 className="text-xl font-bold mb-4">{t('benefits.editEnrollment')}</h3>
               <form onSubmit={handleUpdateEnrollment} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -729,7 +729,7 @@ export default function Benefits() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Employee Contribution (%)</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.employeeContributionPercent')}</label>
                     <input
                       type="number"
                       min="0"
@@ -756,7 +756,7 @@ export default function Benefits() {
                     value={editingEnrollment.notes || ""}
                     onChange={(e) => setEditingEnrollment({...editingEnrollment, notes: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Additional notes about this enrollment..."
+                    placeholder={t('benefits.enrollmentNotesPlaceholder')}
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
@@ -792,11 +792,11 @@ export default function Benefits() {
             className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Edit Insurance Plan</h3>
+              <h3 className="text-xl font-bold mb-4">{t('benefits.editPlan')}</h3>
               <form onSubmit={handleUpdatePlan} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Plan Name *</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.planNameRequired')}</label>
                     <input
                       type="text"
                       required
@@ -816,7 +816,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Plan Type</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.planType')}</label>
                     <select
                       value={editingPlan.type || "Health"}
                       onChange={(e) => setEditingPlan({...editingPlan, type: e.target.value})}
@@ -825,12 +825,12 @@ export default function Benefits() {
                       <option value="Health">Health</option>
                       <option value="Dental">Dental</option>
                       <option value="Vision">Vision</option>
-                      <option value="Life">Life Insurance</option>
+                      <option value="Life">{t('benefits.lifeInsurance')}</option>
                       <option value="Disability">Disability</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Employee Cost (CAD)</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.employeeCost')}</label>
                     <input
                       type="number"
                       min="0"
@@ -841,7 +841,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Employer Cost (CAD)</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.employerCost')}</label>
                     <input
                       type="number"
                       min="0"
@@ -859,7 +859,7 @@ export default function Benefits() {
                     value={editingPlan.coverage_details || ""}
                     onChange={(e) => setEditingPlan({...editingPlan, coverage_details: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Describe what this plan covers..."
+                    placeholder={t('benefits.planCoveragePlaceholder')}
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
