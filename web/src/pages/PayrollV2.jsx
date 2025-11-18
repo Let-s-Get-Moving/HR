@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 export default function PayrollV2() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -219,7 +220,7 @@ export default function PayrollV2() {
               <div className="bg-neutral-900 rounded-lg p-6 border border-neutral-800">
                 <div className="text-sm text-neutral-400 mb-1">Next Pay Date</div>
                 <div className="text-2xl font-bold text-indigo-400">
-                  {nextPayPeriod ? new Date(nextPayPeriod.pay_date).toLocaleDateString() : "N/A"}
+                  {nextPayPeriod ? formatShortDate(nextPayPeriod.pay_date) : "N/A"}
                 </div>
               </div>
 
@@ -266,11 +267,11 @@ export default function PayrollV2() {
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="text-lg font-semibold mb-1">
-                            {new Date(period.pay_period_start).toLocaleDateString()} -{" "}
-                            {new Date(period.pay_period_end).toLocaleDateString()}
+                            {formatShortDate(period.pay_period_start)} -{" "}
+                            {formatShortDate(period.pay_period_end)}
                           </h3>
                           <p className="text-sm text-neutral-400">
-                            Pay Date: {new Date(period.pay_date).toLocaleDateString()}
+                            Pay Date: {formatShortDate(period.pay_date)}
                           </p>
                         </div>
                       </div>
@@ -467,11 +468,11 @@ export default function PayrollV2() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm">
-                            {new Date(payroll.pay_period_start).toLocaleDateString()} -{" "}
-                            {new Date(payroll.pay_period_end).toLocaleDateString()}
+                            {formatShortDate(payroll.pay_period_start)} -{" "}
+                            {formatShortDate(payroll.pay_period_end)}
                           </td>
                           <td className="px-6 py-4 text-sm">
-                            {new Date(payroll.pay_date).toLocaleDateString()}
+                            {formatShortDate(payroll.pay_date)}
                           </td>
                           <td className="px-6 py-4 text-right text-sm">
                             {formatHours(parseFloat(payroll.regular_hours || 0))}

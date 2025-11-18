@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 const STATUS_COLORS = {
   'Pending': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
@@ -77,11 +78,7 @@ export default function LeaveRequestApproval() {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatShortDate(dateString);
   };
 
   const getDuration = (startDate, endDate) => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { API } from '../config/api.js';
+import { formatShortDate } from '../utils/timezone.js';
 
 export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -213,7 +214,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
               file_data_base64: base64,
               mime_type: doc.file.type,
               document_category: doc.category,
-              notes: `Uploaded during termination process on ${new Date().toLocaleDateString()}`,
+              notes: `Uploaded during termination process on ${formatShortDate(new Date())}`,
               signed: false
             })
           });
@@ -255,7 +256,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
               <div className="text-sm text-neutral-400">
                 <div>Name: {employee.first_name} {employee.last_name}</div>
                 <div>Department: {employee.department_name}</div>
-                <div>Hire Date: {new Date(employee.hire_date).toLocaleDateString()}</div>
+                <div>Hire Date: {formatShortDate(employee.hire_date)}</div>
                 <div>Years of Service: {Math.floor((new Date() - new Date(employee.hire_date)) / (1000 * 60 * 60 * 24 * 365))}</div>
               </div>
             </div>
