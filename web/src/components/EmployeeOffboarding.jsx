@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Step 1: Termination Details
@@ -249,7 +251,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Termination Details</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOffboarding.terminationDetails')}</h3>
             
             <div className="bg-neutral-800 p-4 rounded-lg mb-4">
               <h4 className="font-medium mb-2">Employee Information</h4>
@@ -263,7 +265,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Termination Date *</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.terminationDate')} *</label>
                 <input
                   type="date"
                   required
@@ -273,17 +275,17 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Termination Type *</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.terminationType')} *</label>
                 <select
                   required
                   value={formData.termination_type}
                   onChange={(e) => setFormData({...formData, termination_type: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Select Type</option>
-                  <option value="Voluntary">Voluntary (Resignation)</option>
-                  <option value="Involuntary">Involuntary (Termination)</option>
-                  <option value="Retirement">Retirement</option>
+                  <option value="">{t('employeeOffboarding.selectType')}</option>
+                  <option value="Voluntary">{t('employeeOffboarding.voluntary')}</option>
+                  <option value="Involuntary">{t('employeeOffboarding.involuntary')}</option>
+                  <option value="Retirement">{t('employeeOffboarding.retirement')}</option>
                   <option value="End of Contract">End of Contract</option>
                 </select>
               </div>
@@ -291,38 +293,38 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Reason Category</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.reasonCategory')}</label>
                 <select
                   value={formData.reason_category}
                   onChange={(e) => setFormData({...formData, reason_category: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Select Category</option>
-                  <option value="Performance">Performance</option>
-                  <option value="Conduct">Conduct</option>
-                  <option value="Redundancy">Redundancy</option>
-                  <option value="Resignation">Resignation</option>
-                  <option value="Health">Health</option>
-                  <option value="Other">Other</option>
+                  <option value="">{t('employeeOffboarding.selectCategory')}</option>
+                  <option value="Performance">{t('employeeOffboarding.performance')}</option>
+                  <option value="Conduct">{t('employeeOffboarding.conduct')}</option>
+                  <option value="Redundancy">{t('employeeOffboarding.redundancy')}</option>
+                  <option value="Resignation">{t('employeeOffboarding.resignation')}</option>
+                  <option value="Health">{t('employeeOffboarding.health')}</option>
+                  <option value="Other">{t('employeeOffboarding.other')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Initiated By *</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.initiatedBy')} *</label>
                 <select
                   required
                   value={formData.initiated_by}
                   onChange={(e) => setFormData({...formData, initiated_by: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Select</option>
-                  <option value="Employee">Employee</option>
-                  <option value="Employer">Employer</option>
+                  <option value="">{t('common.select')}</option>
+                  <option value="Employee">{t('employeeOffboarding.employee')}</option>
+                  <option value="Employer">{t('employeeOffboarding.employer')}</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Termination Reason *</label>
+              <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.terminationReason')} *</label>
               <textarea
                 required
                 value={formData.termination_reason}
@@ -335,7 +337,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Notice Period (Days)</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.noticePeriod')}</label>
                 <input
                   type="text"
                   value={formData.notice_period_days}
@@ -365,11 +367,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Financial & Benefits</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOffboarding.financialBenefits')}</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Final Pay Date</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.finalPayDate')}</label>
                 <input
                   type="date"
                   value={formData.final_pay_date}
@@ -378,7 +380,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Benefits End Date</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.benefitsEndDate')}</label>
                 <input
                   type="date"
                   value={formData.benefits_end_date}
@@ -389,7 +391,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             </div>
 
             <div className="bg-neutral-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-3">Severance Package</h4>
+              <h4 className="font-medium mb-3">{t('employeeOffboarding.severancePackage')}</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-3">
                   <input

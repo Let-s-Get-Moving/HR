@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 
 export default function Testing() {
+  const { t } = useTranslation();
   const [testResults, setTestResults] = useState({});
   const [runningTests, setRunningTests] = useState(false);
   const [systemInfo, setSystemInfo] = useState({});
@@ -12,84 +14,84 @@ export default function Testing() {
   const tests = [
     {
       id: "authentication",
-      name: "Authentication System",
-      description: "Test login, logout, and session management",
+      name: t('testing.authentication.name'),
+      description: t('testing.authentication.description'),
       tests: [
-        "Login with valid credentials",
-        "Session persistence",
-        "MFA setup availability",
-        "Logout functionality"
+        t('testing.authentication.tests.loginValid'),
+        t('testing.authentication.tests.sessionPersistence'),
+        t('testing.authentication.tests.mfaSetup'),
+        t('testing.authentication.tests.logout')
       ]
     },
     {
       id: "api",
-      name: "API Endpoints",
-      description: "Test all API endpoints functionality",
+      name: t('testing.api.name'),
+      description: t('testing.api.description'),
       tests: [
-        "Employee endpoints (GET)",
-        "Payroll calculations",
-        "Timecards",
-        "Leave requests (GET)",
-        "Pending leave requests",
-        "Leave calendar (/calendar)",
-        "Dashboard analytics",
-        "Recent activity",
-        "Performance reviews",
-        "Benefits enrollments",
-        "Bonuses (root /)",
-        "Commissions (monthly)",
-        "System settings",
-        "Training records",
-        "Job postings",
-        "Timecard uploads (/uploads)"
+        t('testing.api.tests.employeeEndpoints'),
+        t('testing.api.tests.payrollCalc'),
+        t('testing.api.tests.timecards'),
+        t('testing.api.tests.leaveRequests'),
+        t('testing.api.tests.pendingLeave'),
+        t('testing.api.tests.leaveCalendar'),
+        t('testing.api.tests.dashboardAnalytics'),
+        t('testing.api.tests.recentActivity'),
+        t('testing.api.tests.performanceReviews'),
+        t('testing.api.tests.benefitsEnrollments'),
+        t('testing.api.tests.bonuses'),
+        t('testing.api.tests.commissions'),
+        t('testing.api.tests.systemSettings'),
+        t('testing.api.tests.trainingRecords'),
+        t('testing.api.tests.jobPostings'),
+        t('testing.api.tests.timecardUploads')
       ]
     },
     {
       id: "database",
-      name: "Database & Data Validation",
-      description: "Test database connectivity and data integrity",
+      name: t('testing.database.name'),
+      description: t('testing.database.description'),
       tests: [
-        "Database connection via API",
-        "Employee data schema validation",
-        "Payroll data integrity",
-        "Leave requests data validation",
-        "Foreign key relationships"
+        t('testing.database.tests.connection'),
+        t('testing.database.tests.employeeSchema'),
+        t('testing.database.tests.payrollIntegrity'),
+        t('testing.database.tests.leaveValidation'),
+        t('testing.database.tests.foreignKeys')
       ]
     },
     {
       id: "features",
-      name: "Core Features",
-      description: "Test all major system features",
+      name: t('testing.features.name'),
+      description: t('testing.features.description'),
       tests: [
-        "Employee onboarding (5-step process)",
-        "Employee offboarding (5-step process)",
-        "Payroll calculations (automatic)",
-        "Leave request workflow",
-        "Performance reviews",
-        "Benefits administration",
-        "Bonuses & commissions"
+        t('testing.features.tests.onboarding'),
+        t('testing.features.tests.offboarding'),
+        t('testing.features.tests.payrollCalc'),
+        t('testing.features.tests.leaveWorkflow'),
+        t('testing.features.tests.performanceReviews'),
+        t('testing.features.tests.benefitsAdmin'),
+        t('testing.features.tests.bonusesCommissions')
       ]
     },
     {
       id: "responsiveness",
-      name: "Responsive Design",
-      description: "Test mobile and tablet responsiveness",
+      name: t('testing.responsiveness.name'),
+      description: t('testing.responsiveness.description'),
       tests: [
-        "Mobile navigation (<768px)",
-        "Tablet layout (768px-1024px)",
-        "Desktop layout (>1024px)",
-        "Touch interactions support"
+        t('testing.responsiveness.tests.mobile'),
+        t('testing.responsiveness.tests.tablet'),
+        t('testing.responsiveness.tests.desktop'),
+        t('testing.responsiveness.tests.touchInteractions')
       ]
     },
     {
       id: "performance",
-      name: "Performance",
-      description: "Test system performance and loading times",
+      name: t('testing.performance.name'),
+      description: t('testing.performance.description'),
       tests: [
-        "Employee list load time",
-        "Dashboard API response time",
-        "Analytics API response time",
-        "Overall system responsiveness"
+        t('testing.performance.tests.employeeListLoad'),
+        t('testing.performance.tests.dashboardResponse'),
+        t('testing.performance.tests.analyticsResponse'),
+        t('testing.performance.tests.systemResponsiveness')
       ]
     }
   ];
@@ -517,24 +519,24 @@ export default function Testing() {
   return (
     <div className="max-w-7xl mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">System Testing</h1>
-        <p className="text-neutral-400 mt-1">Comprehensive testing suite for C&C HR System</p>
+        <h1 className="text-3xl font-bold">{t('testing.title')}</h1>
+        <p className="text-neutral-400 mt-1">{t('testing.description')}</p>
       </div>
 
       {/* System Information */}
       <div className="card p-6 mb-6">
-        <h3 className="text-lg font-semibold mb-4">System Information</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('testing.systemInfo.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
           <div>
-            <span className="font-medium text-neutral-400">Screen:</span> 
+            <span className="font-medium text-neutral-400">{t('testing.systemInfo.screen')}:</span> 
             <span className="ml-2">{systemInfo.screenSize}</span>
           </div>
           <div>
-            <span className="font-medium text-neutral-400">Viewport:</span> 
+            <span className="font-medium text-neutral-400">{t('testing.systemInfo.viewport')}:</span> 
             <span className="ml-2">{systemInfo.viewport}</span>
           </div>
           <div>
-            <span className="font-medium text-neutral-400">Timezone:</span> 
+            <span className="font-medium text-neutral-400">{t('testing.systemInfo.timezone')}:</span> 
             <span className="ml-2">{systemInfo.timezone}</span>
           </div>
         </div>
@@ -544,7 +546,7 @@ export default function Testing() {
       <div className="card p-6 mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-semibold">Test Suite</h3>
+            <h3 className="text-lg font-semibold">{t('testing.testSuite')}</h3>
             <p className="text-sm text-neutral-400 mt-1">
               Run comprehensive tests across all system modules
             </p>
@@ -554,7 +556,7 @@ export default function Testing() {
             disabled={runningTests}
             className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-medium transition-colors"
           >
-            {runningTests ? "Running Tests..." : "Run All Tests"}
+            {runningTests ? t('testing.runningTests') : t('testing.runAllTests')}
           </button>
         </div>
       </div>

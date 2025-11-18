@@ -398,7 +398,21 @@
     "failedToSave": "Échec de l'enregistrement des modifications",
     "unknownError": "Erreur inconnue",
     "overtime": "Heures Supplémentaires",
-    "missing": "Manquant"
+    "missing": "Manquant",
+    "fields": {
+      "theme": "Thème",
+      "language": "Langue",
+      "timezone": "Fuseau Horaire",
+      "email_notifications": "Notifications par E-mail",
+      "push_notifications": "Notifications Push",
+      "sms_notifications": "Notifications SMS",
+      "two_factor_auth": "Authentification à Deux Facteurs",
+      "session_timeout": "Délai d'Expiration de Session",
+      "password_requirements": "Exigences de Mot de Passe",
+      "backup_frequency": "Fréquence de Sauvegarde",
+      "date_format": "Format de Date",
+      "currency": "Devise"
+    }
   },
   "compliance": {
     "title": "Gestion de la Conformité",
@@ -588,6 +602,126 @@
     "subtotal": "Sous-total",
     "on": "ACTIVÉ",
     "off": "DÉSACTIVÉ",
-    "unknownError": "Erreur inconnue"
+    "unknownError": "Erreur inconnue",
+    "select": "Sélectionner"
+  },
+  "testing": {
+    "title": "Tests du Système",
+    "description": "Suite de tests complète pour le Système RH C&C",
+    "testSuite": "Suite de Tests",
+    "runAllTests": "Exécuter Tous les Tests",
+    "runningTests": "Exécution des Tests...",
+    "systemInfo": {
+      "title": "Informations Système",
+      "screen": "Écran",
+      "viewport": "Viewport",
+      "timezone": "Fuseau Horaire"
+    },
+    "authentication": {
+      "name": "Système d'Authentification",
+      "description": "Tester la connexion, déconnexion et gestion de session",
+      "tests": {
+        "loginValid": "Connexion avec des identifiants valides",
+        "sessionPersistence": "Persistance de la session",
+        "mfaSetup": "Disponibilité de la configuration MFA",
+        "logout": "Fonctionnalité de déconnexion"
+      }
+    },
+    "api": {
+      "name": "Points de Terminaison API",
+      "description": "Tester la fonctionnalité de tous les points de terminaison API",
+      "tests": {
+        "employeeEndpoints": "Points de terminaison des employés (GET)",
+        "payrollCalc": "Calculs de paie",
+        "timecards": "Fiches de temps",
+        "leaveRequests": "Demandes de congé (GET)",
+        "pendingLeave": "Demandes de congé en attente",
+        "leaveCalendar": "Calendrier des congés (/calendar)",
+        "dashboardAnalytics": "Analyses du tableau de bord",
+        "recentActivity": "Activité récente",
+        "performanceReviews": "Évaluations de performance",
+        "benefitsEnrollments": "Inscriptions aux avantages",
+        "bonuses": "Primes (racine /)",
+        "commissions": "Commissions (mensuelles)",
+        "systemSettings": "Paramètres système",
+        "trainingRecords": "Registres de formation",
+        "jobPostings": "Offres d'emploi",
+        "timecardUploads": "Téléchargements de fiches de temps (/uploads)"
+      }
+    },
+    "database": {
+      "name": "Base de Données et Validation des Données",
+      "description": "Tester la connectivité de la base de données et l'intégrité des données",
+      "tests": {
+        "connection": "Connexion à la base de données via API",
+        "employeeSchema": "Validation du schéma de données des employés",
+        "payrollIntegrity": "Intégrité des données de paie",
+        "leaveValidation": "Validation des données de demandes de congé",
+        "foreignKeys": "Relations de clés étrangères"
+      }
+    },
+    "features": {
+      "name": "Fonctionnalités Principales",
+      "description": "Tester toutes les fonctionnalités principales du système",
+      "tests": {
+        "onboarding": "Intégration des employés (processus en 5 étapes)",
+        "offboarding": "Désintégration des employés (processus en 5 étapes)",
+        "payrollCalc": "Calculs de paie (automatiques)",
+        "leaveWorkflow": "Flux de travail des demandes de congé",
+        "performanceReviews": "Évaluations de performance",
+        "benefitsAdmin": "Administration des avantages",
+        "bonusesCommissions": "Primes et commissions"
+      }
+    },
+    "responsiveness": {
+      "name": "Design Responsive",
+      "description": "Tester la réactivité mobile et tablette",
+      "tests": {
+        "mobile": "Navigation mobile (<768px)",
+        "tablet": "Disposition tablette (768px-1024px)",
+        "desktop": "Disposition bureau (>1024px)",
+        "touchInteractions": "Support des interactions tactiles"
+      }
+    },
+    "performance": {
+      "name": "Performance",
+      "description": "Tester les performances du système et les temps de chargement",
+      "tests": {
+        "employeeListLoad": "Temps de chargement de la liste des employés",
+        "dashboardResponse": "Temps de réponse de l'API du tableau de bord",
+        "analyticsResponse": "Temps de réponse de l'API d'analyses",
+        "systemResponsiveness": "Réactivité globale du système"
+      }
+    }
+  },
+  "employeeOffboarding": {
+    "terminationDetails": "Détails de la Résiliation",
+    "employeeInformation": "Informations sur l'Employé",
+    "department": "Département",
+    "position": "Poste",
+    "yearsOfService": "Années de Service",
+    "terminationDate": "Date de Résiliation",
+    "terminationType": "Type de Résiliation",
+    "selectType": "Sélectionner le Type",
+    "voluntary": "Volontaire (Démission)",
+    "involuntary": "Involontaire (Licenciement)",
+    "retirement": "Retraite",
+    "reasonCategory": "Catégorie de Raison",
+    "selectCategory": "Sélectionner la Catégorie",
+    "performance": "Performance",
+    "conduct": "Conduite",
+    "redundancy": "Redondance",
+    "resignation": "Démission",
+    "health": "Santé",
+    "other": "Autre",
+    "initiatedBy": "Initié Par",
+    "employee": "Employé",
+    "employer": "Employeur",
+    "terminationReason": "Raison de la Résiliation",
+    "noticePeriod": "Période de Préavis (Jours)",
+    "financialBenefits": "Finances et Avantages",
+    "finalPayDate": "Date de Paiement Final",
+    "benefitsEndDate": "Date de Fin des Avantages",
+    "severancePackage": "Indemnité de Départ"
   }
 }

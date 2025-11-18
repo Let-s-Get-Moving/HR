@@ -577,7 +577,140 @@
     "settingsWillAppearHere": "Settings will appear here when available",
     "noSystemSettings": "No system settings available",
     "failedToRevokeDevice": "Failed to revoke device",
-    "failedToRevokeDevices": "Failed to revoke devices"
+    "failedToRevokeDevices": "Failed to revoke devices",
+    "fields": {
+      "theme": "Theme",
+      "language": "Language",
+      "timezone": "Timezone",
+      "email_notifications": "Email Notifications",
+      "push_notifications": "Push Notifications",
+      "sms_notifications": "SMS Notifications",
+      "two_factor_auth": "Two-Factor Authentication",
+      "session_timeout": "Session Timeout",
+      "password_requirements": "Password Requirements",
+      "backup_frequency": "Backup Frequency",
+      "date_format": "Date Format",
+      "currency": "Currency"
+    }
+  },
+  "testing": {
+    "title": "System Testing",
+    "description": "Comprehensive testing suite for C&C HR System",
+    "testSuite": "Test Suite",
+    "runAllTests": "Run All Tests",
+    "runningTests": "Running Tests...",
+    "systemInfo": {
+      "title": "System Information",
+      "screen": "Screen",
+      "viewport": "Viewport",
+      "timezone": "Timezone"
+    },
+    "authentication": {
+      "name": "Authentication System",
+      "description": "Test login, logout, and session management",
+      "tests": {
+        "loginValid": "Login with valid credentials",
+        "sessionPersistence": "Session persistence",
+        "mfaSetup": "MFA setup availability",
+        "logout": "Logout functionality"
+      }
+    },
+    "api": {
+      "name": "API Endpoints",
+      "description": "Test all API endpoints functionality",
+      "tests": {
+        "employeeEndpoints": "Employee endpoints (GET)",
+        "payrollCalc": "Payroll calculations",
+        "timecards": "Timecards",
+        "leaveRequests": "Leave requests (GET)",
+        "pendingLeave": "Pending leave requests",
+        "leaveCalendar": "Leave calendar (/calendar)",
+        "dashboardAnalytics": "Dashboard analytics",
+        "recentActivity": "Recent activity",
+        "performanceReviews": "Performance reviews",
+        "benefitsEnrollments": "Benefits enrollments",
+        "bonuses": "Bonuses (root /)",
+        "commissions": "Commissions (monthly)",
+        "systemSettings": "System settings",
+        "trainingRecords": "Training records",
+        "jobPostings": "Job postings",
+        "timecardUploads": "Timecard uploads (/uploads)"
+      }
+    },
+    "database": {
+      "name": "Database & Data Validation",
+      "description": "Test database connectivity and data integrity",
+      "tests": {
+        "connection": "Database connection via API",
+        "employeeSchema": "Employee data schema validation",
+        "payrollIntegrity": "Payroll data integrity",
+        "leaveValidation": "Leave requests data validation",
+        "foreignKeys": "Foreign key relationships"
+      }
+    },
+    "features": {
+      "name": "Core Features",
+      "description": "Test all major system features",
+      "tests": {
+        "onboarding": "Employee onboarding (5-step process)",
+        "offboarding": "Employee offboarding (5-step process)",
+        "payrollCalc": "Payroll calculations (automatic)",
+        "leaveWorkflow": "Leave request workflow",
+        "performanceReviews": "Performance reviews",
+        "benefitsAdmin": "Benefits administration",
+        "bonusesCommissions": "Bonuses & commissions"
+      }
+    },
+    "responsiveness": {
+      "name": "Responsive Design",
+      "description": "Test mobile and tablet responsiveness",
+      "tests": {
+        "mobile": "Mobile navigation (<768px)",
+        "tablet": "Tablet layout (768px-1024px)",
+        "desktop": "Desktop layout (>1024px)",
+        "touchInteractions": "Touch interactions support"
+      }
+    },
+    "performance": {
+      "name": "Performance",
+      "description": "Test system performance and loading times",
+      "tests": {
+        "employeeListLoad": "Employee list load time",
+        "dashboardResponse": "Dashboard API response time",
+        "analyticsResponse": "Analytics API response time",
+        "systemResponsiveness": "Overall system responsiveness"
+      }
+    }
+  },
+  "employeeOffboarding": {
+    "terminationDetails": "Termination Details",
+    "employeeInformation": "Employee Information",
+    "department": "Department",
+    "position": "Position",
+    "yearsOfService": "Years of Service",
+    "terminationDate": "Termination Date",
+    "terminationType": "Termination Type",
+    "selectType": "Select Type",
+    "voluntary": "Voluntary (Resignation)",
+    "involuntary": "Involuntary (Termination)",
+    "retirement": "Retirement",
+    "reasonCategory": "Reason Category",
+    "selectCategory": "Select Category",
+    "performance": "Performance",
+    "conduct": "Conduct",
+    "redundancy": "Redundancy",
+    "resignation": "Resignation",
+    "health": "Health",
+    "other": "Other",
+    "initiatedBy": "Initiated By",
+    "employee": "Employee",
+    "employer": "Employer",
+    "terminationReason": "Termination Reason",
+    "noticePeriod": "Notice Period (Days)",
+    "financialBenefits": "Financial & Benefits",
+    "finalPayDate": "Final Pay Date",
+    "benefitsEndDate": "Benefits End Date",
+    "severancePackage": "Severance Package"
   },
   "login": {
     "title": "C&C HR",
@@ -604,7 +737,9 @@
     "changePassword": "Change Password",
     "changingPassword": "Changing Password...",
     "passwordChangeNote": "💡 After changing, you'll need to log in with your new password",
-    "passwordMinLength": "Must be at least 8 characters. Cannot reuse your last 5 passwords."
+    "passwordMinLength": "Must be at least 8 characters. Cannot reuse your last 5 passwords.",
+    "demoUsername": "Username",
+    "demoPassword": "Password"
   },
   "common": {
     "save": "Save",

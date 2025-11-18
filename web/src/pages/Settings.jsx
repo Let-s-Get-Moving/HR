@@ -659,6 +659,14 @@ export default function Settings() {
     setPasswordSuccess(false);
   };
 
+  // Translation mapping for setting keys
+  const getSettingLabel = (key) => {
+    const translationKey = `settings.fields.${key}`;
+    const translated = t(translationKey);
+    // If translation doesn't exist, fall back to formatted key
+    return translated !== translationKey ? translated : key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   const renderSettingField = (setting, category) => {
     // Safety check to ensure setting is valid
     if (!setting || typeof setting !== 'object') {
@@ -687,7 +695,7 @@ export default function Settings() {
         return (
           <div className="flex items-center justify-between">
             <div className="flex-1">
-              <label className="text-sm font-medium">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</label>
+              <label className="text-sm font-medium">{getSettingLabel(key)}</label>
               {description && <p className="text-xs text-secondary mt-1">{description}</p>}
             </div>
             <div className="flex items-center space-x-3">
@@ -735,7 +743,7 @@ export default function Settings() {
           return (
             <div>
               <label className="block text-sm font-medium mb-2">
-                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                {getSettingLabel(key)}
               </label>
               {description && <p className="text-xs text-secondary mb-2">{description}</p>}
               <select
@@ -753,7 +761,7 @@ export default function Settings() {
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
-              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {getSettingLabel(key)}
             </label>
             {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <select
@@ -775,7 +783,7 @@ export default function Settings() {
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
-              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {getSettingLabel(key)}
             </label>
             {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <input
@@ -792,7 +800,7 @@ export default function Settings() {
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
-              {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              {getSettingLabel(key)}
             </label>
             {description && <p className="text-xs text-secondary mb-2">{description}</p>}
             <input

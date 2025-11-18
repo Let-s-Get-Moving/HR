@@ -398,7 +398,21 @@
     "failedToSave": "Error al guardar cambios",
     "unknownError": "Error desconocido",
     "overtime": "Horas Extra",
-    "missing": "Faltante"
+    "missing": "Faltante",
+    "fields": {
+      "theme": "Tema",
+      "language": "Idioma",
+      "timezone": "Zona Horaria",
+      "email_notifications": "Notificaciones por Correo",
+      "push_notifications": "Notificaciones Push",
+      "sms_notifications": "Notificaciones SMS",
+      "two_factor_auth": "Autenticación de Dos Factores",
+      "session_timeout": "Tiempo de Espera de Sesión",
+      "password_requirements": "Requisitos de Contraseña",
+      "backup_frequency": "Frecuencia de Respaldo",
+      "date_format": "Formato de Fecha",
+      "currency": "Moneda"
+    }
   },
   "compliance": {
     "title": "Gestión de Cumplimiento",
@@ -588,6 +602,126 @@
     "subtotal": "Subtotal",
     "on": "ACTIVADO",
     "off": "DESACTIVADO",
-    "unknownError": "Error desconocido"
+    "unknownError": "Error desconocido",
+    "select": "Seleccionar"
+  },
+  "testing": {
+    "title": "Pruebas del Sistema",
+    "description": "Suite completa de pruebas para el Sistema de RRHH C&C",
+    "testSuite": "Suite de Pruebas",
+    "runAllTests": "Ejecutar Todas las Pruebas",
+    "runningTests": "Ejecutando Pruebas...",
+    "systemInfo": {
+      "title": "Información del Sistema",
+      "screen": "Pantalla",
+      "viewport": "Viewport",
+      "timezone": "Zona Horaria"
+    },
+    "authentication": {
+      "name": "Sistema de Autenticación",
+      "description": "Probar inicio de sesión, cierre de sesión y gestión de sesiones",
+      "tests": {
+        "loginValid": "Iniciar sesión con credenciales válidas",
+        "sessionPersistence": "Persistencia de sesión",
+        "mfaSetup": "Disponibilidad de configuración MFA",
+        "logout": "Funcionalidad de cierre de sesión"
+      }
+    },
+    "api": {
+      "name": "Endpoints de API",
+      "description": "Probar funcionalidad de todos los endpoints de API",
+      "tests": {
+        "employeeEndpoints": "Endpoints de empleados (GET)",
+        "payrollCalc": "Cálculos de nómina",
+        "timecards": "Tarjetas de tiempo",
+        "leaveRequests": "Solicitudes de ausencia (GET)",
+        "pendingLeave": "Solicitudes de ausencia pendientes",
+        "leaveCalendar": "Calendario de ausencias (/calendar)",
+        "dashboardAnalytics": "Analíticas del panel",
+        "recentActivity": "Actividad reciente",
+        "performanceReviews": "Evaluaciones de desempeño",
+        "benefitsEnrollments": "Inscripciones de beneficios",
+        "bonuses": "Bonos (root /)",
+        "commissions": "Comisiones (mensuales)",
+        "systemSettings": "Configuración del sistema",
+        "trainingRecords": "Registros de capacitación",
+        "jobPostings": "Publicaciones de empleo",
+        "timecardUploads": "Cargas de tarjetas de tiempo (/uploads)"
+      }
+    },
+    "database": {
+      "name": "Base de Datos y Validación de Datos",
+      "description": "Probar conectividad de base de datos e integridad de datos",
+      "tests": {
+        "connection": "Conexión a base de datos vía API",
+        "employeeSchema": "Validación de esquema de datos de empleados",
+        "payrollIntegrity": "Integridad de datos de nómina",
+        "leaveValidation": "Validación de datos de solicitudes de ausencia",
+        "foreignKeys": "Relaciones de claves foráneas"
+      }
+    },
+    "features": {
+      "name": "Características Principales",
+      "description": "Probar todas las características principales del sistema",
+      "tests": {
+        "onboarding": "Incorporación de empleados (proceso de 5 pasos)",
+        "offboarding": "Desvinculación de empleados (proceso de 5 pasos)",
+        "payrollCalc": "Cálculos de nómina (automáticos)",
+        "leaveWorkflow": "Flujo de trabajo de solicitudes de ausencia",
+        "performanceReviews": "Evaluaciones de desempeño",
+        "benefitsAdmin": "Administración de beneficios",
+        "bonusesCommissions": "Bonos y comisiones"
+      }
+    },
+    "responsiveness": {
+      "name": "Diseño Responsivo",
+      "description": "Probar capacidad de respuesta en móvil y tableta",
+      "tests": {
+        "mobile": "Navegación móvil (<768px)",
+        "tablet": "Diseño para tableta (768px-1024px)",
+        "desktop": "Diseño de escritorio (>1024px)",
+        "touchInteractions": "Soporte de interacciones táctiles"
+      }
+    },
+    "performance": {
+      "name": "Rendimiento",
+      "description": "Probar rendimiento del sistema y tiempos de carga",
+      "tests": {
+        "employeeListLoad": "Tiempo de carga de lista de empleados",
+        "dashboardResponse": "Tiempo de respuesta de API del panel",
+        "analyticsResponse": "Tiempo de respuesta de API de analíticas",
+        "systemResponsiveness": "Capacidad de respuesta general del sistema"
+      }
+    }
+  },
+  "employeeOffboarding": {
+    "terminationDetails": "Detalles de Terminación",
+    "employeeInformation": "Información del Empleado",
+    "department": "Departamento",
+    "position": "Posición",
+    "yearsOfService": "Años de Servicio",
+    "terminationDate": "Fecha de Terminación",
+    "terminationType": "Tipo de Terminación",
+    "selectType": "Seleccionar Tipo",
+    "voluntary": "Voluntaria (Renuncia)",
+    "involuntary": "Involuntaria (Despido)",
+    "retirement": "Jubilación",
+    "reasonCategory": "Categoría de Razón",
+    "selectCategory": "Seleccionar Categoría",
+    "performance": "Desempeño",
+    "conduct": "Conducta",
+    "redundancy": "Redundancia",
+    "resignation": "Renuncia",
+    "health": "Salud",
+    "other": "Otro",
+    "initiatedBy": "Iniciado Por",
+    "employee": "Empleado",
+    "employer": "Empleador",
+    "terminationReason": "Razón de Terminación",
+    "noticePeriod": "Período de Aviso (Días)",
+    "financialBenefits": "Finanzas y Beneficios",
+    "finalPayDate": "Fecha de Pago Final",
+    "benefitsEndDate": "Fecha de Fin de Beneficios",
+    "severancePackage": "Paquete de Indemnización"
   }
 }
