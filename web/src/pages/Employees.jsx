@@ -155,7 +155,7 @@ export default function Employees() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading employees...</div>
+        <div className="text-lg">{t('employees.loading')}</div>
       </div>
     );
   }
@@ -164,8 +164,8 @@ export default function Employees() {
     <div className="max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Employee Management</h1>
-          <p className="text-neutral-400 mt-1">Manage your workforce and employee records</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('employees.title')}</h1>
+          <p className="text-neutral-400 mt-1">{t('employees.description', 'Manage your workforce and employee records')}</p>
         </div>
         {/* Hide Add Employee button for user role */}
         {userRole !== 'user' && (
@@ -204,7 +204,7 @@ export default function Employees() {
             </div>
             <input
               type="text"
-              placeholder={`Search ${filterStatus === "terminated" ? "terminated" : "active"} employees...`}
+              placeholder={t('employees.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               className="block w-full pl-10 pr-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
@@ -236,19 +236,19 @@ export default function Employees() {
           <table className="w-full">
             <thead className="bg-neutral-800">
               <tr>
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Name</th>
-                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Email</th>
+                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.name')}</th>
+                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.email')}</th>
                 {filterStatus === "active" && (
-                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Department</th>
+                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.department')}</th>
                 )}
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Type</th>
-                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Hire Date</th>
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Status</th>
+                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.employmentType')}</th>
+                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.hireDate')}</th>
+                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.status')}</th>
                 {filterStatus === "terminated" && (
-                  <th className="hidden lg:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Termination Date</th>
+                  <th className="hidden lg:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.terminationDate')}</th>
                 )}
                 {filterStatus === "active" && (
-                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">Actions</th>
+                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.actions')}</th>
                 )}
               </tr>
             </thead>
@@ -260,8 +260,8 @@ export default function Employees() {
                       <svg className="h-12 w-12 text-neutral-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      <p className="text-lg font-medium mb-1">No employees found</p>
-                      <p className="text-sm">Try adjusting your search terms or clear the search to see all employees.</p>
+                      <p className="text-lg font-medium mb-1">{t('employees.noEmployees')}</p>
+                      <p className="text-sm">{t('employees.searchHint', 'Try adjusting your search terms or clear the search to see all employees.')}</p>
                     </div>
                   </td>
                 </tr>
@@ -326,7 +326,7 @@ export default function Employees() {
                         }}
                         className="text-red-400 hover:text-red-300 text-sm"
                       >
-                        Terminate
+                        {t('employees.terminateEmployee')}
                       </button>
                     </td>
                   )}
@@ -375,7 +375,7 @@ export default function Employees() {
           >
             <div className="bg-neutral-900 rounded-lg shadow-2xl">
               <div className="flex justify-between items-center p-6 border-b border-neutral-800">
-                <h2 className="text-2xl font-bold">Employee Profile</h2>
+                <h2 className="text-2xl font-bold">{t('employees.employeeDetails')}</h2>
                 <button
                   onClick={() => setSelectedEmployee(null)}
                   className="text-neutral-400 hover:text-white transition-colors"

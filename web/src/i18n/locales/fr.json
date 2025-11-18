@@ -13,11 +13,11 @@
   },
   "dashboard": {
     "title": "Tableau de Bord",
-    "welcome": "Bon retour",
+    "welcome": "Bienvenue",
     "overview": "Aperçu",
     "employees": "Employés",
     "activeEmployees": "Employés Actifs",
-    "totalPayroll": "Masse Salariale Totale",
+    "totalPayroll": "Paie Totale",
     "pendingLeave": "Demandes de Congé en Attente",
     "recentActivity": "Activité Récente",
     "noActivity": "Aucune activité récente"
@@ -27,10 +27,11 @@
     "addEmployee": "Ajouter un Employé",
     "searchPlaceholder": "Rechercher des employés...",
     "name": "Nom",
-    "email": "Courriel",
+    "email": "Email",
     "department": "Département",
     "position": "Poste",
     "hireDate": "Date d'Embauche",
+    "terminationDate": "Date de Fin",
     "status": "Statut",
     "actions": "Actions",
     "active": "Actif",
@@ -39,7 +40,13 @@
     "all": "Tous",
     "employeeDetails": "Détails de l'Employé",
     "personalInfo": "Informations Personnelles",
-    "employmentInfo": "Informations d'Emploi"
+    "employmentInfo": "Informations d'Emploi",
+    "viewProfile": "Voir le Profil",
+    "editEmployee": "Modifier l'Employé",
+    "terminateEmployee": "Terminer l'Employé",
+    "noEmployees": "Aucun employé trouvé",
+    "employmentType": "Type d'Emploi",
+    "loading": "Chargement des employés..."
   },
   "leave": {
     "title": "Gestion des Congés",
@@ -51,12 +58,67 @@
     "startDate": "Date de Début",
     "endDate": "Date de Fin",
     "reason": "Raison",
+    "notes": "Notes",
     "status": "Statut",
     "pending": "En Attente",
     "approved": "Approuvé",
     "rejected": "Rejeté",
     "approve": "Approuver",
-    "reject": "Rejeter"
+    "reject": "Rejeter",
+    "duration": "Durée",
+    "days": "jours",
+    "submittedOn": "Soumis le",
+    "noRequests": "Aucune demande de congé"
+  },
+  "payroll": {
+    "title": "Paie",
+    "overview": "Aperçu",
+    "payPeriod": "Période de Paie",
+    "payDate": "Date de Paie",
+    "totalAmount": "Montant Total",
+    "grossPay": "Salaire Brut",
+    "netPay": "Salaire Net",
+    "deductions": "Déductions",
+    "hours": "Heures",
+    "regularHours": "Heures Régulières",
+    "overtimeHours": "Heures Supplémentaires",
+    "hourlyRate": "Taux Horaire",
+    "processPayroll": "Traiter la Paie",
+    "viewDetails": "Voir les Détails"
+  },
+  "timeTracking": {
+    "title": "Suivi du Temps",
+    "clockIn": "Pointer à l'Entrée",
+    "clockOut": "Pointer à la Sortie",
+    "totalHours": "Total des Heures",
+    "weeklyHours": "Heures Hebdomadaires",
+    "timesheets": "Feuilles de Temps",
+    "viewTimecard": "Voir la Carte de Temps"
+  },
+  "compliance": {
+    "title": "Conformité",
+    "alerts": "Alertes",
+    "documents": "Documents",
+    "certifications": "Certifications",
+    "dueDate": "Date d'Échéance",
+    "status": "Statut"
+  },
+  "benefits": {
+    "title": "Avantages",
+    "healthInsurance": "Assurance Santé",
+    "retirement": "Retraite",
+    "paidTimeOff": "Congés Payés",
+    "enrollment": "Inscription",
+    "myBenefits": "Mes Avantages"
+  },
+  "bonuses": {
+    "title": "Primes et Commissions",
+    "bonuses": "Primes",
+    "commissions": "Commissions",
+    "total": "Total",
+    "pending": "En Attente",
+    "paid": "Payé",
+    "amount": "Montant"
   },
   "settings": {
     "title": "Paramètres",
@@ -71,7 +133,7 @@
     "timezone": "Fuseau Horaire",
     "dark": "Sombre",
     "light": "Clair",
-    "emailNotifications": "Notifications par Courriel",
+    "emailNotifications": "Notifications par Email",
     "pushNotifications": "Notifications Push",
     "twoFactorAuth": "Authentification à Deux Facteurs",
     "sessionTimeout": "Délai d'Expiration de Session",
@@ -101,6 +163,12 @@
     "add": "Ajouter",
     "update": "Mettre à Jour",
     "submit": "Soumettre",
-    "reset": "Réinitialiser"
+    "reset": "Réinitialiser",
+    "yes": "Oui",
+    "no": "Non",
+    "all": "Tous",
+    "none": "Aucun",
+    "total": "Total",
+    "subtotal": "Sous-total"
   }
 }

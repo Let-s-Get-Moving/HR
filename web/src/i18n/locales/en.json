@@ -31,6 +31,7 @@
     "department": "Department",
     "position": "Position",
     "hireDate": "Hire Date",
+    "terminationDate": "Termination Date",
     "status": "Status",
     "actions": "Actions",
     "active": "Active",
@@ -39,7 +40,13 @@
     "all": "All",
     "employeeDetails": "Employee Details",
     "personalInfo": "Personal Information",
-    "employmentInfo": "Employment Information"
+    "employmentInfo": "Employment Information",
+    "viewProfile": "View Profile",
+    "editEmployee": "Edit Employee",
+    "terminateEmployee": "Terminate Employee",
+    "noEmployees": "No employees found",
+    "employmentType": "Employment Type",
+    "loading": "Loading employees..."
   },
   "leave": {
     "title": "Leave Management",
@@ -51,12 +58,67 @@
     "startDate": "Start Date",
     "endDate": "End Date",
     "reason": "Reason",
+    "notes": "Notes",
     "status": "Status",
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
     "approve": "Approve",
-    "reject": "Reject"
+    "reject": "Reject",
+    "duration": "Duration",
+    "days": "days",
+    "submittedOn": "Submitted On",
+    "noRequests": "No leave requests"
+  },
+  "payroll": {
+    "title": "Payroll",
+    "overview": "Overview",
+    "payPeriod": "Pay Period",
+    "payDate": "Pay Date",
+    "totalAmount": "Total Amount",
+    "grossPay": "Gross Pay",
+    "netPay": "Net Pay",
+    "deductions": "Deductions",
+    "hours": "Hours",
+    "regularHours": "Regular Hours",
+    "overtimeHours": "Overtime Hours",
+    "hourlyRate": "Hourly Rate",
+    "processPayroll": "Process Payroll",
+    "viewDetails": "View Details"
+  },
+  "timeTracking": {
+    "title": "Time Tracking",
+    "clockIn": "Clock In",
+    "clockOut": "Clock Out",
+    "totalHours": "Total Hours",
+    "weeklyHours": "Weekly Hours",
+    "timesheets": "Timesheets",
+    "viewTimecard": "View Timecard"
+  },
+  "compliance": {
+    "title": "Compliance",
+    "alerts": "Alerts",
+    "documents": "Documents",
+    "certifications": "Certifications",
+    "dueDate": "Due Date",
+    "status": "Status"
+  },
+  "benefits": {
+    "title": "Benefits",
+    "healthInsurance": "Health Insurance",
+    "retirement": "Retirement",
+    "paidTimeOff": "Paid Time Off",
+    "enrollment": "Enrollment",
+    "myBenefits": "My Benefits"
+  },
+  "bonuses": {
+    "title": "Bonuses & Commissions",
+    "bonuses": "Bonuses",
+    "commissions": "Commissions",
+    "total": "Total",
+    "pending": "Pending",
+    "paid": "Paid",
+    "amount": "Amount"
   },
   "settings": {
     "title": "Settings",
@@ -101,6 +163,12 @@
     "add": "Add",
     "update": "Update",
     "submit": "Submit",
-    "reset": "Reset"
+    "reset": "Reset",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "total": "Total",
+    "subtotal": "Subtotal"
   }
 }
