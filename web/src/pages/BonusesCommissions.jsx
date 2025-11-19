@@ -121,8 +121,8 @@ export default function BonusesCommissions() {
 
   const tabs = [
     // Hide import tab for user role
-    ...(userRole !== 'user' ? [{ id: "import", name: "Excel Import", icon: "📥" }] : []),
-    { id: "analytics", name: "Analytics", icon: "📊" }
+    ...(userRole !== 'user' ? [{ id: "import", name: t('bonuses.excelImport'), icon: "📥" }] : []),
+    { id: "analytics", name: t('bonuses.analytics'), icon: "📊" }
   ];
 
   useEffect(() => {
@@ -1136,14 +1136,14 @@ export default function BonusesCommissions() {
 
   const renderAnalytics = () => {
     if (loading) {
-      return <div className="text-center py-8">Loading analytics...</div>;
+      return <div className="text-center py-8">{t('bonuses.loadingAnalytics')}</div>;
     }
     
     if (availablePeriods.length === 0) {
       return (
         <div className="text-center py-8">
-          <div className="text-neutral-400">No commission data available</div>
-          <div className="text-sm text-neutral-500 mt-2">Import Excel data to see analytics</div>
+          <div className="text-neutral-400">{t('bonuses.noCommissionDataAvailable')}</div>
+          <div className="text-sm text-neutral-500 mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
         </div>
       );
     }
@@ -1153,12 +1153,12 @@ export default function BonusesCommissions() {
         {/* Period Selector */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Commission Analytics</h3>
+            <h3 className="text-lg font-semibold">{t('bonuses.commissionAnalytics')}</h3>
             <button
               onClick={loadAnalyticsData}
               className="bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded text-sm transition-colors"
             >
-              🔄 Refresh
+              🔄 {t('common.refresh')}
             </button>
           </div>
           
@@ -1493,8 +1493,8 @@ export default function BonusesCommissions() {
       {/* Header with Upload Button */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Bonuses & Commissions</h1>
-          <p className="text-tertiary mt-1">Manage performance-based compensation and sales commissions</p>
+          <h1 className="text-2xl sm:text-3xl font-bold">{t('bonuses.title')}</h1>
+          <p className="text-tertiary mt-1">{t('bonuses.description')}</p>
         </div>
         {/* Hide upload button for user role */}
         {userRole !== 'user' && (
@@ -1507,7 +1507,7 @@ export default function BonusesCommissions() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            Upload Commission Data
+            {t('bonuses.uploadCommissionData')}
           </motion.button>
         )}
       </div>
