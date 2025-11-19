@@ -207,7 +207,7 @@ export default function Payroll() {
               }}
               className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
             >
-              <option value="">Select pay date...</option>
+              <option value="">{t('payroll.selectPayDate')}</option>
               {payPeriods.map((period) => {
                 // Parse date as UTC to avoid timezone shifts
                 const payDate = new Date(period.pay_date + 'T00:00:00Z');
@@ -397,7 +397,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                         </div>
                       </div>
                       <div>
-                  <div className="text-xs text-secondary uppercase mb-1">Hourly Rate</div>
+                  <div className="text-xs text-secondary uppercase mb-1">{t('payroll.hourlyRate')}</div>
                   <div className="text-lg font-semibold text-primary">{formatCurrency(employee.hourly_rate)}/hr</div>
                         </div>
                       </div>
@@ -498,7 +498,7 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
             </div>
           </div>
                 <div>
-                  <div className="text-xs text-secondary uppercase mb-1">Hourly Rate</div>
+                  <div className="text-xs text-secondary uppercase mb-1">{t('payroll.hourlyRate')}</div>
                   <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                     {formatCurrency(employee.hourly_rate)}
           </div>
@@ -533,14 +533,14 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
                 <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
                   <div>
                     <div className="font-medium text-primary">{t('payroll.grossPayLabel')}</div>
-                    <div className="text-xs text-secondary">Total before deductions</div>
+                    <div className="text-xs text-secondary">{t('payroll.totalBeforeDeductions')}</div>
                   </div>
                   <div className="text-xl font-bold text-primary">{formatCurrency(employee.gross_pay)}</div>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
                   <div>
                     <div className="font-medium text-primary">{t('payroll.deductions')}</div>
-                    <div className="text-xs text-secondary">Taxes, benefits, etc.</div>
+                    <div className="text-xs text-secondary">{t('payroll.taxesBenefitsEtc')}</div>
                   </div>
                   <div className="text-xl font-bold text-red-600 dark:text-red-400">
                     {formatCurrency(employee.deductions)}
@@ -549,7 +549,7 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
                 <div className="flex justify-between items-center py-3 bg-green-100 dark:bg-green-900/30 rounded-lg px-4">
                   <div>
                     <div className="font-bold text-green-900 dark:text-green-300 text-lg">{t('payroll.netPayLabel')}</div>
-                    <div className="text-xs text-green-700 dark:text-green-400">Take-home amount</div>
+                    <div className="text-xs text-green-700 dark:text-green-400">{t('payroll.takeHomeAmount')}</div>
                   </div>
                   <div className="text-3xl font-bold text-green-600 dark:text-green-400">
                     {formatCurrency(employee.net_pay)}

@@ -514,7 +514,7 @@ export default function Settings() {
         // DON'T save MFA status to localStorage - it must always come from server!
         // localStorage.setItem('security_two_factor_auth', 'true'); // REMOVED!
         
-        alert('✅ Two-Factor Authentication enabled successfully! Your account is now protected.');
+        alert(t('settings.mfaSetup.success'));
         
         // Don't call loadSettings() here - it causes a race condition
         // The local state is already updated correctly
@@ -561,7 +561,7 @@ export default function Settings() {
     
     try {
       await API(`/api/trusted-devices/${deviceId}`, { method: 'DELETE' });
-      alert('✅ Device revoked successfully');
+      alert(t('settings.deviceRevokedSuccess'));
       loadTrustedDevices(); // Reload list
     } catch (error) {
       console.error('❌ Failed to revoke device:', error);
@@ -577,7 +577,7 @@ export default function Settings() {
     
     try {
       const response = await API('/api/trusted-devices/revoke-all', { method: 'POST' });
-      alert(`✅ ${response.message || 'All devices revoked successfully'}`);
+      alert(`✅ ${response.message || t('settings.allDevicesRevokedSuccess')}`);
       loadTrustedDevices(); // Reload list
     } catch (error) {
       console.error('❌ Failed to revoke all devices:', error);
@@ -667,6 +667,14 @@ export default function Settings() {
     return translated !== translationKey ? translated : key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  // Translation mapping for setting descriptions
+  const getSettingDescription = (key) => {
+    const translationKey = `settings.descriptions.${key}`;
+    const translated = t(translationKey);
+    // If translation doesn't exist, return empty string (don't show untranslated text)
+    return translated !== translationKey ? translated : '';
+  };
+
   const renderSettingField = (setting, category) => {
     // Safety check to ensure setting is valid
     if (!setting || typeof setting !== 'object') {
@@ -696,7 +704,7 @@ export default function Settings() {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <label className="text-sm font-medium">{getSettingLabel(key)}</label>
-              {description && <p className="text-xs text-secondary mt-1">{description}</p>}
+              {getSettingDescription(key) && <p className="text-xs text-secondary mt-1">{getSettingDescription(key)}</p>}
             </div>
             <div className="flex items-center space-x-3">
               <span className={`text-xs font-medium ${boolValue ? 'text-green-600' : 'text-red-600'}`}>
@@ -763,7 +771,7 @@ export default function Settings() {
             <label className="block text-sm font-medium mb-2">
               {getSettingLabel(key)}
             </label>
-            {description && <p className="text-xs text-secondary mb-2">{description}</p>}
+            {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
             <select
               value={value || ''}
               onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
@@ -776,9 +784,9 @@ export default function Settings() {
                 const translated = t(translationKey);
                 const displayValue = translated !== translationKey ? translated : option.charAt(0).toUpperCase() + option.slice(1);
                 return (
-                  <option key={option} value={option}>
+                <option key={option} value={option}>
                     {displayValue}
-                  </option>
+                </option>
                 );
               })}
             </select>
@@ -791,7 +799,7 @@ export default function Settings() {
             <label className="block text-sm font-medium mb-2">
               {getSettingLabel(key)}
             </label>
-            {description && <p className="text-xs text-secondary mb-2">{description}</p>}
+            {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
             <input
               type="text"
               value={value}
@@ -808,7 +816,7 @@ export default function Settings() {
             <label className="block text-sm font-medium mb-2">
               {getSettingLabel(key)}
             </label>
-            {description && <p className="text-xs text-secondary mb-2">{description}</p>}
+            {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
             <input
               type={type === "email" ? "email" : "text"}
               value={value}
@@ -1095,7 +1103,7 @@ export default function Settings() {
                   {t('settings.mfaSetup.step1Description')}
                 </p>
                 <div className="bg-white p-4 rounded-lg flex justify-center">
-                  <img src={mfaData.qrCode} alt="MFA QR Code" className="w-48 h-48" />
+                  <img src={mfaData.qrCode} alt={t('settings.mfaSetup.qrCodeAlt')} className="w-48 h-48" />
                 </div>
               </div>
               

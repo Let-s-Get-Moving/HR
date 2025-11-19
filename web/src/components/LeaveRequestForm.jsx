@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 
 const LEAVE_TYPES = [
@@ -13,6 +14,7 @@ const LEAVE_TYPES = [
 ];
 
 export default function LeaveRequestForm({ onRequestSubmitted }) {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     leave_type: '',
     start_date: '',
@@ -97,7 +99,7 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
       className="space-y-6"
     >
       <div className="card p-6">
-        <h2 className="text-2xl font-bold text-primary mb-6">Submit Leave Request</h2>
+        <h2 className="text-2xl font-bold text-primary mb-6">{t('leave.submitLeaveRequest')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Leave Type */}
@@ -112,7 +114,7 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary"
               required
             >
-              <option value="">Select leave type...</option>
+              <option value="">{t('leave.selectLeaveType')}</option>
               {LEAVE_TYPES.map(type => (
                 <option key={type} value={type}>{type}</option>
               ))}
@@ -159,7 +161,7 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
               value={formData.reason}
               onChange={handleInputChange}
               rows={4}
-              placeholder="Please provide a reason for your leave request..."
+              placeholder={t('leave.reasonPlaceholderForm')}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary resize-none"
             />
           </div>

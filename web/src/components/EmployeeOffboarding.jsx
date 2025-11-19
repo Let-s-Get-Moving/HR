@@ -51,11 +51,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
   const [loading, setLoading] = useState(false);
 
   const steps = [
-    { id: 1, title: "Termination Details", icon: "📋" },
-    { id: 2, title: "Financial & Benefits", icon: "💰" },
-    { id: 3, title: "Exit Process", icon: "🚪" },
-    { id: 4, title: "Documentation", icon: "📄" },
-    { id: 5, title: "Review & Submit", icon: "✅" }
+    { id: 1, title: t('employeeOffboarding.terminationDetails'), icon: "📋" },
+    { id: 2, title: t('employeeOffboarding.financialBenefits'), icon: "💰" },
+    { id: 3, title: t('employeeOffboarding.exitProcess'), icon: "🚪" },
+    { id: 4, title: t('employeeOffboarding.documentation'), icon: "📄" },
+    { id: 5, title: t('employeeOffboarding.reviewSubmit'), icon: "✅" }
   ];
 
   useEffect(() => {
@@ -85,19 +85,19 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
       case 1:
         // Required fields for step 1
         if (!formData.termination_date) {
-          alert('Please select a termination date');
+          alert(t('employeeOffboarding.selectTerminationDate'));
           return false;
         }
         if (!formData.termination_type) {
-          alert('Please select a termination type');
+          alert(t('employeeOffboarding.selectTerminationType'));
           return false;
         }
         if (!formData.termination_reason || formData.termination_reason.trim() === '') {
-          alert('Please provide a termination reason');
+          alert(t('employeeOffboarding.provideTerminationReason'));
           return false;
         }
         if (!formData.initiated_by) {
-          alert('Please select who initiated the termination');
+          alert(t('employeeOffboarding.selectInitiatedBy'));
           return false;
         }
         return true;
@@ -229,12 +229,15 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
       }
 
       console.log('✅ [Offboarding] All documents uploaded');
-      alert(`Employee ${employee.first_name} ${employee.last_name} has been terminated successfully. Documents have been uploaded to their profile.`);
+      alert(t('employeeOffboarding.terminationSuccess', { 
+        firstName: employee.first_name, 
+        lastName: employee.last_name 
+      }));
       onSuccess();
       onClose();
     } catch (error) {
       console.error("❌ [Offboarding] Error processing termination:", error);
-      alert('Failed to process termination: ' + (error.message || 'Unknown error'));
+      alert(t('employeeOffboarding.failedToProcess', { error: error.message || t('common.unknownError') }));
     } finally {
       setLoading(false);
     }
@@ -254,12 +257,12 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             <h3 className="text-lg font-semibold mb-4">{t('employeeOffboarding.terminationDetails')}</h3>
             
             <div className="bg-neutral-800 p-4 rounded-lg mb-4">
-              <h4 className="font-medium mb-2">Employee Information</h4>
+              <h4 className="font-medium mb-2">{t('employeeOffboarding.employeeInformation')}</h4>
               <div className="text-sm text-neutral-400">
-                <div>Name: {employee.first_name} {employee.last_name}</div>
-                <div>Department: {employee.department_name}</div>
-                <div>Hire Date: {formatShortDate(employee.hire_date)}</div>
-                <div>Years of Service: {Math.floor((new Date() - new Date(employee.hire_date)) / (1000 * 60 * 60 * 24 * 365))}</div>
+                <div>{t('common.name')}: {employee.first_name} {employee.last_name}</div>
+                <div>{t('employeeOffboarding.department')}: {employee.department_name}</div>
+                <div>{t('employeeOffboarding.hireDate')}: {formatShortDate(employee.hire_date)}</div>
+                <div>{t('employeeOffboarding.yearsOfService')}: {Math.floor((new Date() - new Date(employee.hire_date)) / (1000 * 60 * 60 * 24 * 365))}</div>
               </div>
             </div>
 
@@ -286,7 +289,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                   <option value="Voluntary">{t('employeeOffboarding.voluntary')}</option>
                   <option value="Involuntary">{t('employeeOffboarding.involuntary')}</option>
                   <option value="Retirement">{t('employeeOffboarding.retirement')}</option>
-                  <option value="End of Contract">End of Contract</option>
+                  <option value="End of Contract">{t('employeeOffboarding.endOfContract')}</option>
                 </select>
               </div>
             </div>
@@ -329,7 +332,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 required
                 value={formData.termination_reason}
                 onChange={(e) => setFormData({...formData, termination_reason: e.target.value})}
-                placeholder="Provide detailed reason for termination..."
+                placeholder={t('employeeOffboarding.terminationReasonPlaceholder')}
                 rows={3}
                 className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
               />
@@ -346,7 +349,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Last Working Day</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.lastWorkingDay')}</label>
                 <input
                   type="date"
                   value={formData.last_working_day}
@@ -400,10 +403,10 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                     onChange={(e) => setFormData({...formData, severance_paid: e.target.checked})}
                     className="w-4 h-4 text-indigo-600 bg-neutral-700 border-neutral-600 rounded focus:ring-indigo-500"
                   />
-                  <label className="text-sm">Severance Paid</label>
+                  <label className="text-sm">{t('employeeOffboarding.severancePaid')}</label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Severance Amount ($)</label>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.severanceAmount')}</label>
                   <input
                     type="text"
                     value={formData.severance_amount}
@@ -415,7 +418,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Vacation Payout ($)</label>
+              <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.vacationPayout')}</label>
               <input
                 type="text"
                 value={formData.vacation_payout}
@@ -425,11 +428,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Final Pay Notes</label>
+              <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.finalPayNotes')}</label>
               <textarea
                 value={formData.final_pay_notes}
                 onChange={(e) => setFormData({...formData, final_pay_notes: e.target.value})}
-                placeholder="Additional notes about final pay calculation..."
+                placeholder={t('employeeOffboarding.finalPayNotesPlaceholder')}
                 rows={3}
                 className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
               />
@@ -446,11 +449,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Exit Process</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOffboarding.exitProcess')}</h3>
             
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Exit Interview Date</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.exitInterviewDate')}</label>
                 <input
                   type="date"
                   value={formData.exit_interview_date}
@@ -459,30 +462,30 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Conducted By</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.conductedBy')}</label>
                 <input
                   type="text"
                   value={formData.exit_interview_conducted_by}
                   onChange={(e) => setFormData({...formData, exit_interview_conducted_by: e.target.value})}
-                  placeholder="HR Manager name"
+                  placeholder={t('employeeOffboarding.conductedByPlaceholder')}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Exit Interview Notes</label>
+              <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.exitInterviewNotes')}</label>
               <textarea
                 value={formData.exit_interview_notes}
                 onChange={(e) => setFormData({...formData, exit_interview_notes: e.target.value})}
-                placeholder="Key points from exit interview..."
+                placeholder={t('employeeOffboarding.exitInterviewNotesPlaceholder')}
                 rows={3}
                 className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             <div className="bg-neutral-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-3">Equipment Return</h4>
+              <h4 className="font-medium mb-3">{t('employeeOffboarding.equipmentReturn')}</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-3">
                   <input
@@ -491,10 +494,10 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                     onChange={(e) => setFormData({...formData, equipment_returned: e.target.checked})}
                     className="w-4 h-4 text-indigo-600 bg-neutral-700 border-neutral-600 rounded focus:ring-indigo-500"
                   />
-                  <label className="text-sm">Equipment Returned</label>
+                  <label className="text-sm">{t('employeeOffboarding.equipmentReturned')}</label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Return Date</label>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.returnDate')}</label>
                   <input
                     type="date"
                     value={formData.equipment_return_date}
@@ -504,11 +507,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 </div>
               </div>
               <div className="mt-3">
-                <label className="block text-sm font-medium mb-2">Equipment Return Notes</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.equipmentReturnNotes')}</label>
                 <textarea
                   value={formData.equipment_return_notes}
                   onChange={(e) => setFormData({...formData, equipment_return_notes: e.target.value})}
-                  placeholder="List of returned equipment..."
+                  placeholder={t('employeeOffboarding.equipmentReturnNotesPlaceholder')}
                   rows={2}
                   className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                 />
@@ -516,7 +519,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             </div>
 
             <div className="bg-neutral-800 p-4 rounded-lg">
-              <h4 className="font-medium mb-3">Access Revocation</h4>
+              <h4 className="font-medium mb-3">{t('employeeOffboarding.accessRevocation')}</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-3">
                   <input
@@ -525,10 +528,10 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                     onChange={(e) => setFormData({...formData, access_revoked: e.target.checked})}
                     className="w-4 h-4 text-indigo-600 bg-neutral-700 border-neutral-600 rounded focus:ring-indigo-500"
                   />
-                  <label className="text-sm">Access Revoked</label>
+                  <label className="text-sm">{t('employeeOffboarding.accessRevoked')}</label>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Revocation Date</label>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.revocationDate')}</label>
                   <input
                     type="date"
                     value={formData.access_revoked_date}
@@ -550,11 +553,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Documentation</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOffboarding.documentation')}</h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Termination Letter</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.terminationLetter')}</label>
                 <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -566,15 +569,15 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                   <label htmlFor="termination-letter-upload" className="cursor-pointer">
                     <div className="text-4xl mb-2">📄</div>
                     <p className="text-neutral-400">
-                      {formData.termination_letter ? formData.termination_letter.name : "Click to upload termination letter"}
+                      {formData.termination_letter ? formData.termination_letter.name : t('employeeOffboarding.clickToUploadTerminationLetter')}
                     </p>
-                    <p className="text-xs text-neutral-500 mt-1">PDF, DOC, or DOCX files</p>
+                    <p className="text-xs text-neutral-500 mt-1">{t('employeeOffboarding.fileTypes')}</p>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Release Agreement</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.releaseAgreement')}</label>
                 <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -586,15 +589,15 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                   <label htmlFor="release-agreement-upload" className="cursor-pointer">
                     <div className="text-4xl mb-2">📋</div>
                     <p className="text-neutral-400">
-                      {formData.release_agreement ? formData.release_agreement.name : "Click to upload release agreement"}
+                      {formData.release_agreement ? formData.release_agreement.name : t('employeeOffboarding.clickToUploadReleaseAgreement')}
                     </p>
-                    <p className="text-xs text-neutral-500 mt-1">PDF, DOC, or DOCX files</p>
+                    <p className="text-xs text-neutral-500 mt-1">{t('employeeOffboarding.fileTypes')}</p>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">ROE (Record of Employment)</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.roe')}</label>
                 <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -606,15 +609,15 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                   <label htmlFor="roe-upload" className="cursor-pointer">
                     <div className="text-4xl mb-2">📊</div>
                     <p className="text-neutral-400">
-                      {formData.roe_document ? formData.roe_document.name : "Click to upload ROE"}
+                      {formData.roe_document ? formData.roe_document.name : t('employeeOffboarding.clickToUploadROE')}
                     </p>
-                    <p className="text-xs text-neutral-500 mt-1">PDF, DOC, or DOCX files</p>
+                    <p className="text-xs text-neutral-500 mt-1">{t('employeeOffboarding.fileTypes')}</p>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Final Pay Statement</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.finalPayStatement')}</label>
                 <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -626,15 +629,15 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                   <label htmlFor="final-pay-upload" className="cursor-pointer">
                     <div className="text-4xl mb-2">💰</div>
                     <p className="text-neutral-400">
-                      {formData.final_pay_statement ? formData.final_pay_statement.name : "Click to upload final pay statement"}
+                      {formData.final_pay_statement ? formData.final_pay_statement.name : t('employeeOffboarding.clickToUploadFinalPayStatement')}
                     </p>
-                    <p className="text-xs text-neutral-500 mt-1">PDF, DOC, or DOCX files</p>
+                    <p className="text-xs text-neutral-500 mt-1">{t('employeeOffboarding.fileTypes')}</p>
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Exit Interview Form</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.exitInterviewForm')}</label>
                 <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
                   <input
                     type="file"
@@ -646,9 +649,9 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                   <label htmlFor="exit-interview-upload" className="cursor-pointer">
                     <div className="text-4xl mb-2">📝</div>
                     <p className="text-neutral-400">
-                      {formData.exit_interview_form ? formData.exit_interview_form.name : "Click to upload exit interview form"}
+                      {formData.exit_interview_form ? formData.exit_interview_form.name : t('employeeOffboarding.clickToUploadExitInterviewForm')}
                     </p>
-                    <p className="text-xs text-neutral-500 mt-1">PDF, DOC, or DOCX files</p>
+                    <p className="text-xs text-neutral-500 mt-1">{t('employeeOffboarding.fileTypes')}</p>
                   </label>
                 </div>
               </div>
@@ -665,38 +668,38 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Review & Submit</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOffboarding.reviewSubmit')}</h3>
             
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-neutral-800 p-4 rounded-lg">
-                  <h4 className="font-medium mb-3">Termination Details</h4>
+                  <h4 className="font-medium mb-3">{t('employeeOffboarding.terminationDetails')}</h4>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-neutral-400">Date:</span> {formData.termination_date}</div>
-                    <div><span className="text-neutral-400">Type:</span> {formData.termination_type}</div>
-                    <div><span className="text-neutral-400">Category:</span> {formData.reason_category}</div>
-                    <div><span className="text-neutral-400">Initiated By:</span> {formData.initiated_by}</div>
+                    <div><span className="text-neutral-400">{t('common.date')}:</span> {formData.termination_date}</div>
+                    <div><span className="text-neutral-400">{t('common.type')}:</span> {formData.termination_type}</div>
+                    <div><span className="text-neutral-400">{t('employeeOffboarding.reasonCategory')}:</span> {formData.reason_category}</div>
+                    <div><span className="text-neutral-400">{t('employeeOffboarding.initiatedBy')}:</span> {formData.initiated_by}</div>
                   </div>
                 </div>
                 
                 <div className="bg-neutral-800 p-4 rounded-lg">
-                  <h4 className="font-medium mb-3">Financial Summary</h4>
+                  <h4 className="font-medium mb-3">{t('employeeOffboarding.financialSummary')}</h4>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-neutral-400">Severance:</span> ${formData.severance_amount}</div>
-                    <div><span className="text-neutral-400">Vacation Payout:</span> ${formData.vacation_payout}</div>
-                    <div><span className="text-neutral-400">Final Pay Date:</span> {formData.final_pay_date}</div>
-                    <div><span className="text-neutral-400">Benefits End:</span> {formData.benefits_end_date}</div>
+                    <div><span className="text-neutral-400">{t('employeeOffboarding.severance')}:</span> ${formData.severance_amount}</div>
+                    <div><span className="text-neutral-400">{t('employeeOffboarding.vacationPayout')}:</span> ${formData.vacation_payout}</div>
+                    <div><span className="text-neutral-400">{t('employeeOffboarding.finalPayDate')}:</span> {formData.final_pay_date}</div>
+                    <div><span className="text-neutral-400">{t('employeeOffboarding.benefitsEnd')}:</span> {formData.benefits_end_date}</div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Exit Process Status</h4>
+                <h4 className="font-medium mb-3">{t('employeeOffboarding.exitProcessStatus')}</h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="text-neutral-400">Exit Interview:</span> {formData.exit_interview_date || 'Not scheduled'}</div>
-                  <div><span className="text-neutral-400">Equipment Returned:</span> {formData.equipment_returned ? 'Yes' : 'No'}</div>
-                  <div><span className="text-neutral-400">Access Revoked:</span> {formData.access_revoked ? 'Yes' : 'No'}</div>
-                  <div><span className="text-neutral-400">Documents Uploaded:</span> {
+                  <div><span className="text-neutral-400">{t('employeeOffboarding.exitInterview')}:</span> {formData.exit_interview_date || t('employeeOffboarding.notScheduled')}</div>
+                  <div><span className="text-neutral-400">{t('employeeOffboarding.equipmentReturned')}:</span> {formData.equipment_returned ? t('common.yes') : t('common.no')}</div>
+                  <div><span className="text-neutral-400">{t('employeeOffboarding.accessRevoked')}:</span> {formData.access_revoked ? t('common.yes') : t('common.no')}</div>
+                  <div><span className="text-neutral-400">{t('employeeOffboarding.documentsUploaded')}:</span> {
                     [formData.termination_letter, formData.release_agreement, formData.roe_document, formData.final_pay_statement, formData.exit_interview_form]
                     .filter(Boolean).length
                   } / 5</div>
@@ -704,7 +707,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
               </div>
 
               <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Termination Reason</h4>
+                <h4 className="font-medium mb-3">{t('employeeOffboarding.terminationReason')}</h4>
                 <p className="text-sm text-neutral-300">{formData.termination_reason}</p>
               </div>
 
@@ -715,7 +718,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                   onChange={(e) => setFormData({...formData, reviewed: e.target.checked})}
                   className="w-4 h-4 text-indigo-600 bg-neutral-700 border-neutral-600 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm">I confirm all termination information is correct and complete</span>
+                <span className="text-sm">{t('employeeOffboarding.confirmTerminationInfo')}</span>
               </label>
             </div>
           </motion.div>
@@ -737,8 +740,8 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold">Employee Offboarding</h2>
-              <p className="text-neutral-400">Complete termination process for {employee.first_name} {employee.last_name}</p>
+              <h2 className="text-2xl font-bold">{t('employeeOffboarding.employeeOffboarding')}</h2>
+              <p className="text-neutral-400">{t('employeeOffboarding.completeTerminationProcess', { firstName: employee.first_name, lastName: employee.last_name })}</p>
             </div>
             <button
               onClick={onClose}
@@ -800,7 +803,7 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 disabled={!formData.reviewed || loading}
                 className="bg-red-600 hover:bg-red-700 disabled:bg-neutral-600 px-6 py-2 rounded-lg font-medium transition-colors"
               >
-                {loading ? 'Processing...' : 'Complete Termination'}
+                {loading ? t('common.processing') : t('employeeOffboarding.completeTermination')}
               </button>
             )}
           </div>

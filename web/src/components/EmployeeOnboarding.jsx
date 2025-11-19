@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 
 export default function EmployeeOnboarding({ onClose, onSuccess }) {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -40,10 +42,10 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
   });
 
   const steps = [
-    { id: 1, title: "Basic Information", icon: "👤" },
-    { id: 2, title: "Employment Details", icon: "💼" },
-    { id: 3, title: "Personal Details & Banking", icon: "🏦" },
-    { id: 4, title: "Review & Submit", icon: "📋" }
+    { id: 1, title: t('employeeOnboarding.basicInformation'), icon: "👤" },
+    { id: 2, title: t('employeeOnboarding.employmentDetails'), icon: "💼" },
+    { id: 3, title: t('employeeOnboarding.personalDetailsBanking'), icon: "🏦" },
+    { id: 4, title: t('employeeOnboarding.reviewSubmit'), icon: "📋" }
   ];
 
   React.useEffect(() => {
@@ -119,17 +121,23 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
         });
         
         console.log(`✅ [Onboarding] User account created successfully`);
-        alert(`Employee ${formData.first_name} ${formData.last_name} created successfully!\n\nLogin Credentials:\nUsername: ${username}\nPassword: ${password}\n\nRole: ${formData.user_role}`);
+        alert(t('employeeOnboarding.successMessage', { 
+          firstName: formData.first_name, 
+          lastName: formData.last_name,
+          username,
+          password,
+          role: formData.user_role
+        }));
       } catch (userError) {
         console.error("⚠️ [Onboarding] Error creating user account:", userError);
-        alert(`Employee created, but failed to create user account: ${userError.message}\nPlease create user account manually.`);
+        alert(t('employeeOnboarding.partialSuccessMessage', { error: userError.message }));
       }
       
       onSuccess();
       onClose();
     } catch (error) {
       console.error("❌ [Onboarding] Error creating employee:", error);
-      alert('Failed to create employee: ' + (error.message || 'Unknown error'));
+      alert(t('employeeOnboarding.failedToCreate', { error: error.message || t('common.unknownError') }));
     }
   };
 
@@ -144,10 +152,10 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOnboarding.basicInformation')}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">First Name *</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.firstName')} *</label>
                 <input
                   type="text"
                   required
@@ -157,7 +165,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Last Name *</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.lastName')} *</label>
                 <input
                   type="text"
                   required
@@ -168,7 +176,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Work Email * (Company Email)</label>
+              <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.workEmail')}</label>
               <input
                 type="email"
                 required
@@ -177,21 +185,21 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 onChange={(e) => setFormData({...formData, work_email: e.target.value})}
                 className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 font-mono text-sm"
               />
-              <p className="text-xs text-neutral-400 mt-1">Company email address</p>
+              <p className="text-xs text-neutral-400 mt-1">{t('employeeOnboarding.companyEmailAddress')}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Personal Email (Optional)</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.personalEmail')}</label>
                 <input
                   type="email"
-                  placeholder="personal@example.com"
+                  placeholder={t('employeeOnboarding.personalEmailPlaceholder')}
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Phone</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.phone')}</label>
                 <input
                   type="tel"
                   value={formData.phone}
@@ -202,21 +210,21 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Gender</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.gender')}</label>
                 <select
                   value={formData.gender}
                   onChange={(e) => setFormData({...formData, gender: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Select Gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Non-binary">Non-binary</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
+                  <option value="">{t('employeeOnboarding.selectGender')}</option>
+                  <option value="Male">{t('employeeOnboarding.genderMale')}</option>
+                  <option value="Female">{t('employeeOnboarding.genderFemale')}</option>
+                  <option value="Non-binary">{t('employeeOnboarding.genderNonBinary')}</option>
+                  <option value="Prefer not to say">{t('employeeOnboarding.genderPreferNotToSay')}</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Birth Date</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.birthDate')}</label>
                 <input
                   type="date"
                   value={formData.birth_date}
@@ -237,10 +245,10 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Employment Details</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOnboarding.employmentDetails')}</h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Hire Date *</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.hireDate')} *</label>
                 <input
                   type="date"
                   required
@@ -261,28 +269,28 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Employment Type *</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.employmentType')} *</label>
                 <select
                   required
                   value={formData.employment_type}
                   onChange={(e) => setFormData({...formData, employment_type: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
+                  <option value="Full-time">{t('employeeOnboarding.fullTime')}</option>
+                  <option value="Part-time">{t('employeeOnboarding.partTime')}</option>
+                  <option value="Contract">{t('employeeOnboarding.contract')}</option>
                 </select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Department (HR will assign)</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.department')}</label>
                 <select
                   value={formData.department_id}
                   onChange={(e) => setFormData({...formData, department_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">None - To be assigned by HR</option>
+                  <option value="">{t('employeeOnboarding.departmentToBeAssigned')}</option>
                   {departments.map(dept => (
                     <option key={dept.id} value={dept.id}>{dept.name}</option>
                   ))}
@@ -290,24 +298,24 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  System Access Role * <span className="text-indigo-400">(Determines permissions)</span>
+                  {t('employeeOnboarding.systemAccessRole')} * <span className="text-indigo-400">({t('employeeOnboarding.determinesPermissions')})</span>
                 </label>
                 <select
                   value={formData.user_role}
                   onChange={(e) => setFormData({...formData, user_role: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="user">User (Employee Access)</option>
-                  <option value="manager">Manager (HR Access)</option>
+                  <option value="user">{t('employeeOnboarding.userEmployeeAccess')}</option>
+                  <option value="manager">{t('employeeOnboarding.managerHRAccess')}</option>
                 </select>
                 <p className="text-xs text-neutral-400 mt-1">
-                  User: Can only view their own data | Manager: Full HR access to all employees
+                  {t('employeeOnboarding.userManagerDescription')}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Hourly Rate ($)</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.hourlyRate')}</label>
                 <input
                   type="text"
                   value={formData.hourly_rate}
@@ -316,7 +324,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Probation End Date (Auto-calculated)</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.probationEndDate')}</label>
                 <input
                   type="date"
                   value={formData.probation_end}
@@ -326,7 +334,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 />
               </div>
             </div>
-            <p className="text-xs text-neutral-400">Standard 3-month probation period for all employees</p>
+            <p className="text-xs text-neutral-400">{t('employeeOnboarding.standardProbationPeriod')}</p>
           </motion.div>
         );
 
@@ -339,18 +347,18 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-6"
           >
-            <h3 className="text-lg font-semibold mb-4">Personal Details & Banking</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOnboarding.personalDetailsBanking')}</h3>
             <p className="text-sm text-neutral-400 mb-4">
-              Documents can be uploaded later through the employee profile
+              {t('employeeOnboarding.documentsCanBeUploadedLater')}
             </p>
             
             <div className="space-y-6">
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium mb-2">Full Address</label>
+                <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.fullAddress')}</label>
                 <textarea
                   rows="3"
-                  placeholder="Street, City, Province, Postal Code"
+                  placeholder={t('employeeOnboarding.addressPlaceholder')}
                   value={formData.full_address}
                   onChange={(e) => setFormData({...formData, full_address: e.target.value})}
                   className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -359,11 +367,11 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
 
               {/* SIN Information */}
               <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Social Insurance Number (SIN)</h4>
+                <h4 className="font-medium mb-3">{t('employeeOnboarding.socialInsuranceNumber')}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
-                    placeholder="123-456-789"
+                    placeholder={t('employeeOnboarding.sinPlaceholder')}
                     value={formData.sin_number}
                     onChange={(e) => setFormData({...formData, sin_number: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -371,38 +379,38 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <div>
                     <input
                       type="date"
-                      placeholder="Expiry Date (if temporary)"
+                      placeholder={t('employeeOnboarding.expiryDatePlaceholder')}
                       value={formData.sin_expiry_date}
                       onChange={(e) => setFormData({...formData, sin_expiry_date: e.target.value})}
                       className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                     />
-                    <p className="text-xs text-neutral-400 mt-1">Leave empty if permanent</p>
+                    <p className="text-xs text-neutral-400 mt-1">{t('employeeOnboarding.leaveEmptyIfPermanent')}</p>
                   </div>
                 </div>
-                <p className="text-xs text-neutral-400 mt-2">Required for payroll and tax purposes</p>
+                <p className="text-xs text-neutral-400 mt-2">{t('employeeOnboarding.requiredForPayrollTax')}</p>
               </div>
 
               {/* Direct Deposit Information */}
               <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Direct Deposit Information</h4>
+                <h4 className="font-medium mb-3">{t('employeeOnboarding.directDepositInformation')}</h4>
                 <div className="grid grid-cols-3 gap-3">
                   <input
                     type="text"
-                    placeholder="Bank Name"
+                    placeholder={t('employeeOnboarding.bankNamePlaceholder')}
                     value={formData.bank_name}
                     onChange={(e) => setFormData({...formData, bank_name: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
                   <input
                     type="text"
-                    placeholder="Transit Number (5 digits)"
+                    placeholder={t('employeeOnboarding.transitNumberPlaceholder')}
                     value={formData.bank_transit_number}
                     onChange={(e) => setFormData({...formData, bank_transit_number: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
                   <input
                     type="text"
-                    placeholder="Account Number"
+                    placeholder={t('employeeOnboarding.accountNumberPlaceholder')}
                     value={formData.bank_account_number}
                     onChange={(e) => setFormData({...formData, bank_account_number: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -412,18 +420,18 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
 
               {/* Emergency Contact */}
               <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Emergency Contact</h4>
+                <h4 className="font-medium mb-3">{t('employeeOnboarding.emergencyContact')}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <input
                     type="text"
-                    placeholder="Name"
+                    placeholder={t('employeeOnboarding.namePlaceholder')}
                     value={formData.emergency_contact_name}
                     onChange={(e) => setFormData({...formData, emergency_contact_name: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
                   />
                   <input
                     type="tel"
-                    placeholder="Phone"
+                    placeholder={t('employeeOnboarding.phonePlaceholder')}
                     value={formData.emergency_contact_phone}
                     onChange={(e) => setFormData({...formData, emergency_contact_phone: e.target.value})}
                     className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -443,47 +451,47 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4">Review & Submit</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeOnboarding.reviewSubmit')}</h3>
             
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-neutral-800 p-4 rounded-lg">
-                  <h4 className="font-medium mb-3">Personal Information</h4>
+                  <h4 className="font-medium mb-3">{t('employeeOnboarding.personalInformation')}</h4>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-neutral-400">Name:</span> {formData.first_name} {formData.last_name}</div>
-                    <div><span className="text-neutral-400">Work Email:</span> <span className="font-mono text-xs text-indigo-400">{formData.work_email}</span></div>
-                    {formData.email && <div><span className="text-neutral-400">Personal Email:</span> {formData.email}</div>}
-                    <div><span className="text-neutral-400">Phone:</span> {formData.phone || 'Not provided'}</div>
-                    <div><span className="text-neutral-400">Gender:</span> {formData.gender || 'Not specified'}</div>
-                    <div><span className="text-neutral-400">Birth Date:</span> {formData.birth_date || 'Not provided'}</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.name')}:</span> {formData.first_name} {formData.last_name}</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.workEmail')}:</span> <span className="font-mono text-xs text-indigo-400">{formData.work_email}</span></div>
+                    {formData.email && <div><span className="text-neutral-400">{t('employeeOnboarding.personalEmail')}:</span> {formData.email}</div>}
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.phone')}:</span> {formData.phone || t('employeeOnboarding.notProvided')}</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.gender')}:</span> {formData.gender || t('employeeOnboarding.notSpecified')}</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.birthDate')}:</span> {formData.birth_date || t('employeeOnboarding.notProvided')}</div>
                   </div>
                 </div>
                 
                 <div className="bg-neutral-800 p-4 rounded-lg">
-                  <h4 className="font-medium mb-3">Employment Details</h4>
+                  <h4 className="font-medium mb-3">{t('employeeOnboarding.employmentDetails')}</h4>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-neutral-400">Hire Date:</span> {formData.hire_date}</div>
-                    <div><span className="text-neutral-400">Type:</span> {formData.employment_type}</div>
-                    <div><span className="text-neutral-400">Department:</span> {departments.find(d => d.id == formData.department_id)?.name || 'None'}</div>
-                    <div><span className="text-neutral-400">Hourly Rate:</span> ${formData.hourly_rate}/hr</div>
-                    <div><span className="text-neutral-400">System Access:</span> <span className="text-indigo-400">{formData.user_role === 'user' ? 'User (Employee)' : 'Manager (HR)'}</span></div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.hireDate')}:</span> {formData.hire_date}</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.type')}:</span> {formData.employment_type}</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.department')}:</span> {departments.find(d => d.id == formData.department_id)?.name || t('employeeOnboarding.none')}</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.hourlyRate')}:</span> ${formData.hourly_rate}/hr</div>
+                    <div><span className="text-neutral-400">{t('employeeOnboarding.systemAccess')}:</span> <span className="text-indigo-400">{formData.user_role === 'user' ? t('employeeOnboarding.userEmployee') : t('employeeOnboarding.managerHR')}</span></div>
                   </div>
                 </div>
               </div>
 
               <div className="bg-neutral-800 p-4 rounded-lg">
-                <h4 className="font-medium mb-3">Banking & Personal Details</h4>
+                <h4 className="font-medium mb-3">{t('employeeOnboarding.bankingPersonalDetails')}</h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="text-neutral-400">Address:</span> {formData.full_address || 'Not provided'}</div>
-                  <div><span className="text-neutral-400">SIN:</span> {formData.sin_number ? '***-***-' + formData.sin_number.slice(-3) : 'Not provided'}</div>
-                  <div><span className="text-neutral-400">Bank:</span> {formData.bank_name || 'Not provided'}</div>
-                  <div><span className="text-neutral-400">Emergency Contact:</span> {formData.emergency_contact_name || 'Not provided'}</div>
+                  <div><span className="text-neutral-400">{t('employeeOnboarding.address')}:</span> {formData.full_address || t('employeeOnboarding.notProvided')}</div>
+                  <div><span className="text-neutral-400">{t('employeeOnboarding.sin')}:</span> {formData.sin_number ? '***-***-' + formData.sin_number.slice(-3) : t('employeeOnboarding.notProvided')}</div>
+                  <div><span className="text-neutral-400">{t('employeeOnboarding.bank')}:</span> {formData.bank_name || t('employeeOnboarding.notProvided')}</div>
+                  <div><span className="text-neutral-400">{t('employeeOnboarding.emergencyContact')}:</span> {formData.emergency_contact_name || t('employeeOnboarding.notProvided')}</div>
                 </div>
               </div>
 
               <div className="bg-indigo-900/30 border border-indigo-700 p-4 rounded-lg">
                 <p className="text-sm text-indigo-300">
-                  📄 <strong>Note:</strong> Documents can be uploaded after employee creation through their profile page.
+                  📄 <strong>{t('employeeOnboarding.note')}:</strong> {t('employeeOnboarding.documentsCanBeUploadedAfter')}
                 </p>
               </div>
 
@@ -494,7 +502,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   onChange={(e) => setFormData({...formData, reviewed: e.target.checked})}
                   className="w-4 h-4 text-indigo-600 bg-neutral-700 border-neutral-600 rounded focus:ring-indigo-500"
                 />
-                <span className="text-sm">I confirm all information is correct and complete</span>
+                <span className="text-sm">{t('employeeOnboarding.confirmAllInformation')}</span>
               </label>
             </div>
           </motion.div>
@@ -516,8 +524,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-2xl font-bold">Add New Employee</h2>
-              <p className="text-neutral-400">Complete onboarding process</p>
+              <h2 className="text-2xl font-bold">{t('employeeOnboarding.addNewEmployee')}</h2>
+              <p className="text-neutral-400">{t('employeeOnboarding.completeOnboardingProcess')}</p>
             </div>
             <button
               onClick={onClose}

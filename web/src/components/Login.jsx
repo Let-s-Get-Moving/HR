@@ -204,7 +204,7 @@ export default function Login({ onLogin }) {
       setShowPasswordChange(false);
       setPasswordChangeData({ newPassword: '', confirmPassword: '' });
       setTempToken('');
-      alert('✅ Password changed successfully! Please log in with your new password.');
+      alert(t('login.passwordChangeSuccess'));
       
       // Reset form
       setCredentials({ username: credentials.username, password: '' });
@@ -289,7 +289,7 @@ export default function Login({ onLogin }) {
                   value={passwordChangeData.newPassword}
                   onChange={(e) => setPasswordChangeData({...passwordChangeData, newPassword: e.target.value})}
                   className="w-full px-3 py-2 input-md"
-                  placeholder="Enter new password (min 8 characters)"
+                  placeholder={t('login.newPasswordPlaceholder')}
                   required
                   minLength="8"
                   autoFocus
@@ -306,7 +306,7 @@ export default function Login({ onLogin }) {
                   value={passwordChangeData.confirmPassword}
                   onChange={(e) => setPasswordChangeData({...passwordChangeData, confirmPassword: e.target.value})}
                   className="w-full px-3 py-2 input-md"
-                  placeholder="Re-enter new password"
+                  placeholder={t('login.reenterPasswordPlaceholder')}
                   required
                 />
               </div>
@@ -415,7 +415,7 @@ export default function Login({ onLogin }) {
                   value={credentials.username}
                   onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
                   className="w-full px-3 py-2 input-md"
-                  placeholder="Enter username"
+                  placeholder={t('login.usernamePlaceholder')}
                   required
                 />
               </div>
@@ -427,7 +427,7 @@ export default function Login({ onLogin }) {
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                   className="w-full px-3 py-2 input-md"
-                  placeholder="Enter password"
+                  placeholder={t('login.passwordPlaceholder')}
                   required
                 />
               </div>
@@ -455,7 +455,7 @@ export default function Login({ onLogin }) {
           {!showMFAInput && (
             <>
               <div className="mt-6 text-center text-sm text-secondary">
-                <p>Demo Credentials:</p>
+                <p>{t('login.demoCredentials')}:</p>
                 <p>{t('login.demoUsername')}: <span className="text-primary font-medium">Avneet</span></p>
                 <p>{t('login.demoPassword')}: <span className="text-primary font-medium">password123</span></p>
               </div>

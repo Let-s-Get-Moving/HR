@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
@@ -16,6 +17,7 @@ const STATUS_ICONS = {
 };
 
 export default function LeaveRequestApproval() {
+  const { t } = useTranslation();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [allRequests, setAllRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,11 +69,11 @@ export default function LeaveRequestApproval() {
         setSelectedRequest(null);
         await loadRequests(); // Refresh the list
       } else {
-        alert(response.message || 'Failed to update request status');
+        alert(response.message || t('leave.failedToUpdateStatus'));
       }
     } catch (error) {
       console.error('Error updating request status:', error);
-      alert('Failed to update request status. Please try again.');
+      alert(t('leave.failedToUpdateStatusRetry'));
     } finally {
       setProcessing(false);
     }
@@ -107,7 +109,7 @@ export default function LeaveRequestApproval() {
       <div className="card p-6">
         <div className="text-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="text-secondary mt-2">Loading leave requests...</p>
+          <p className="text-secondary mt-2">{t('leave.loadingRequests')}</p>
         </div>
       </div>
     );
@@ -124,12 +126,12 @@ export default function LeaveRequestApproval() {
       {/* Header */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-primary">Leave Request Management</h2>
+          <h2 className="text-2xl font-bold text-primary">{t('leave.leaveRequestManagement')}</h2>
           <button
             onClick={loadRequests}
             className="px-4 py-2 text-sm bg-slate-100 dark:bg-slate-700 text-primary rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
           >
-            Refresh
+            {t('common.refresh')}
           </button>
         </div>
 
@@ -143,7 +145,7 @@ export default function LeaveRequestApproval() {
                 : 'text-secondary hover:text-primary'
             }`}
           >
-            Pending ({pendingRequests.length})
+            {t('leave.pending')} ({pendingRequests.length})
           </button>
           <button
             onClick={() => setActiveTab('all')}
@@ -153,7 +155,7 @@ export default function LeaveRequestApproval() {
                 : 'text-secondary hover:text-primary'
             }`}
           >
-            All Requests ({allRequests.length})
+            {t('leave.allRequests')} ({allRequests.length})
           </button>
         </div>
       </div>
@@ -163,11 +165,11 @@ export default function LeaveRequestApproval() {
         {currentRequests.length === 0 ? (
           <div className="card p-12 text-center">
             <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-lg font-medium text-primary mb-2">No leave requests</h3>
+            <h3 className="text-lg font-medium text-primary mb-2">{t('leave.noLeaveRequests')}</h3>
             <p className="text-secondary">
               {activeTab === 'pending' 
-                ? 'No pending leave requests to review.' 
-                : 'No leave requests have been submitted yet.'
+                ? t('leave.noPendingRequestsToReview')
+                : t('leave.noLeaveRequestsSubmitted')
               }
             </p>
           </div>
@@ -188,49 +190,49 @@ export default function LeaveRequestApproval() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-secondary mb-3">
                     <div>
-                      <span className="font-medium">Employee:</span> {request.first_name} {request.last_name}
+                      <span className="font-medium">{t('leave.employee')}:</span> {request.first_name} {request.last_name}
                     </div>
                     <div>
-                      <span className="font-medium">Start Date:</span> {formatDate(request.start_date)}
+                      <span className="font-medium">{t('leave.startDate')}:</span> {formatDate(request.start_date)}
                     </div>
                     <div>
-                      <span className="font-medium">End Date:</span> {formatDate(request.end_date)}
+                      <span className="font-medium">{t('leave.endDate')}:</span> {formatDate(request.end_date)}
                     </div>
                     <div>
-                      <span className="font-medium">Duration:</span> {getDuration(request.start_date, request.end_date)} day{getDuration(request.start_date, request.end_date) !== 1 ? 's' : ''}
+                      <span className="font-medium">{t('leave.duration')}:</span> {getDuration(request.start_date, request.end_date)} {getDuration(request.start_date, request.end_date) !== 1 ? t('leave.days') : t('leave.day')}
                     </div>
                   </div>
 
                   {/* Leave Balance for Pending Requests */}
                   {request.status === 'Pending' && (
                     <div className="mb-3 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                      <h4 className="font-medium text-primary text-sm mb-2">Employee Leave Balance:</h4>
+                      <h4 className="font-medium text-primary text-sm mb-2">{t('leave.employeeLeaveBalance')}:</h4>
                       <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>Vacation: {getLeaveBalance(request, 'Vacation')} days</div>
-                        <div>Sick Leave: {getLeaveBalance(request, 'Sick Leave')} days</div>
-                        <div>Personal: {getLeaveBalance(request, 'Personal Leave')} days</div>
+                        <div>{t('leave.vacation')}: {getLeaveBalance(request, 'Vacation')} {t('leave.days')}</div>
+                        <div>{t('leave.sickLeave')}: {getLeaveBalance(request, 'Sick Leave')} {t('leave.days')}</div>
+                        <div>{t('leave.personal')}: {getLeaveBalance(request, 'Personal Leave')} {t('leave.days')}</div>
                       </div>
                     </div>
                   )}
 
                   {request.reason && (
                     <div className="mb-3">
-                      <span className="font-medium text-primary text-sm">Reason:</span>
+                      <span className="font-medium text-primary text-sm">{t('leave.reason')}:</span>
                       <p className="text-secondary text-sm mt-1">{request.reason}</p>
                     </div>
                   )}
 
                   {request.review_notes && (
                     <div className="mb-3">
-                      <span className="font-medium text-primary text-sm">HR Notes:</span>
+                      <span className="font-medium text-primary text-sm">{t('leave.hrNotes')}:</span>
                       <p className="text-secondary text-sm mt-1">{request.review_notes}</p>
                     </div>
                   )}
 
                   <div className="text-xs text-tertiary">
-                    Submitted: {formatDate(request.requested_at)}
+                    {t('leave.submitted')}: {formatDate(request.requested_at)}
                     {request.reviewed_at && (
-                      <span> • Reviewed: {formatDate(request.reviewed_at)} by {request.reviewed_by_name}</span>
+                      <span> • {t('leave.reviewed')}: {formatDate(request.reviewed_at)} {t('leave.by')} {request.reviewed_by_name}</span>
                     )}
                   </div>
                 </div>
@@ -242,7 +244,7 @@ export default function LeaveRequestApproval() {
                       onClick={() => setSelectedRequest(request)}
                       className="px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
                     >
-                      Review
+                      {t('leave.review')}
                     </button>
                   </div>
                 )}
@@ -257,21 +259,21 @@ export default function LeaveRequestApproval() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-primary mb-4">
-              Review Leave Request
+              {t('leave.reviewLeaveRequest')}
             </h3>
             
             <div className="space-y-4">
               <div>
-                <span className="font-medium">Employee:</span> {selectedRequest.first_name} {selectedRequest.last_name}
+                <span className="font-medium">{t('leave.employee')}:</span> {selectedRequest.first_name} {selectedRequest.last_name}
               </div>
               <div>
-                <span className="font-medium">Leave Type:</span> {selectedRequest.leave_type}
+                <span className="font-medium">{t('leave.leaveType')}:</span> {selectedRequest.leave_type}
               </div>
               <div>
-                <span className="font-medium">Dates:</span> {formatDate(selectedRequest.start_date)} - {formatDate(selectedRequest.end_date)}
+                <span className="font-medium">{t('leave.dates')}:</span> {formatDate(selectedRequest.start_date)} - {formatDate(selectedRequest.end_date)}
               </div>
               <div>
-                <span className="font-medium">Duration:</span> {getDuration(selectedRequest.start_date, selectedRequest.end_date)} days
+                <span className="font-medium">{t('leave.duration')}:</span> {getDuration(selectedRequest.start_date, selectedRequest.end_date)} {t('leave.days')}
               </div>
               
               <div>
@@ -282,7 +284,7 @@ export default function LeaveRequestApproval() {
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
                   rows={3}
-                  placeholder="Add notes about your decision..."
+                  placeholder={t('leave.addNotesAboutDecision')}
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary resize-none"
                 />
               </div>
@@ -297,21 +299,21 @@ export default function LeaveRequestApproval() {
                 className="px-4 py-2 text-sm bg-slate-100 dark:bg-slate-700 text-primary rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                 disabled={processing}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleApproveReject(selectedRequest.id, 'Rejected')}
                 className="px-4 py-2 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
                 disabled={processing}
               >
-                {processing ? 'Processing...' : 'Reject'}
+                {processing ? t('common.processing') : t('leave.reject')}
               </button>
               <button
                 onClick={() => handleApproveReject(selectedRequest.id, 'Approved')}
                 className="px-4 py-2 text-sm bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
                 disabled={processing}
               >
-                {processing ? 'Processing...' : 'Approve'}
+                {processing ? t('common.processing') : t('leave.approve')}
               </button>
             </div>
           </div>

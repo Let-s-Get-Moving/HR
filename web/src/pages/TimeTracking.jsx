@@ -579,6 +579,7 @@ export default function TimeTracking() {
             }}
             onBack={() => setView("uploads")}
             loading={loading}
+            t={t}
           />
         )}
         {view === "employee-timecard" && (
@@ -588,10 +589,11 @@ export default function TimeTracking() {
             upload={selectedUpload}
             onBack={() => setView("upload-detail")}
             loading={loading}
+            t={t}
           />
         )}
         {view === "main" && <MainTableView timecards={displayedTimecards} onViewIndividual={viewIndividualTimecard} loading={loading} t={t} />}
-        {view === "individual" && <IndividualView timecard={selectedEmployee} onBack={() => setView("main")} />}
+        {view === "individual" && <IndividualView timecard={selectedEmployee} onBack={() => setView("main")} t={t} />}
       </AnimatePresence>
 
       {/* Upload Modal */}
@@ -619,7 +621,7 @@ export default function TimeTracking() {
 // Main Table View Component
 function MainTableView({ timecards, onViewIndividual, loading, t }) {
   if (loading) {
-    return <div className="text-center py-8 text-secondary">Loading...</div>;
+    return <div className="text-center py-8 text-secondary">{t('common.loading')}</div>;
   }
 
   if (timecards.length === 0) {
@@ -633,7 +635,7 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noTimecardsFound')}</h3>
-        <p className="text-secondary">Select a different pay period or upload timecard data</p>
+        <p className="text-secondary">{t('timeTracking.selectDifferentPeriod')}</p>
       </motion.div>
     );
   }
@@ -707,9 +709,9 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
 }
 
 // Dashboard View Component
-function DashboardView({ stats, selectedPeriod }) {
+function DashboardView({ stats, selectedPeriod, t }) {
   if (!stats) {
-    return <div className="text-center py-8 text-secondary">Loading statistics...</div>;
+    return <div className="text-center py-8 text-secondary">{t('timeTracking.loadingStatistics')}</div>;
   }
 
   return (
@@ -769,7 +771,7 @@ function DashboardView({ stats, selectedPeriod }) {
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
           <h2 className="text-lg font-semibold text-primary">{t('timeTracking.employeeBreakdown')}</h2>
-          <p className="text-sm text-secondary">Detailed hours and overtime by employee</p>
+          <p className="text-sm text-secondary">{t('timeTracking.detailedHoursOvertime')}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -833,9 +835,9 @@ const formatHoursAsTime = (decimalHours) => {
 };
 
 // Individual Timecard View Component
-function IndividualView({ timecard, onBack }) {
+function IndividualView({ timecard, onBack, t }) {
   if (!timecard) {
-    return <div className="text-center py-8 text-secondary">Loading timecard...</div>;
+    return <div className="text-center py-8 text-secondary">{t('timeTracking.loadingTimecard')}</div>;
   }
 
   // Group entries by date

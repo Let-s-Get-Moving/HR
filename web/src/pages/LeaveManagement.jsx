@@ -323,7 +323,7 @@ export default function LeaveManagement() {
                 {/* Employee Selection with Search */}
                 <div className="form-group">
                   <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                    Employee <span className="text-red-500">*</span>
+                    {t('leave.employee')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -342,7 +342,7 @@ export default function LeaveManagement() {
                   <datalist id="employee-list">
                     {employees.map(emp => (
                       <option key={emp.id} value={`${emp.first_name} ${emp.last_name}`}>
-                        {emp.department || 'No Dept'}
+                        {emp.department || t('leave.noDept')}
                       </option>
                     ))}
                   </datalist>
@@ -351,7 +351,7 @@ export default function LeaveManagement() {
                 {/* Leave Type */}
                 <div className="form-group">
                   <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                    Leave Type <span className="text-red-500">*</span>
+                    {t('leave.leaveType')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={newRequest.leave_type_id}
@@ -359,7 +359,7 @@ export default function LeaveManagement() {
                     required
                     className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   >
-                    <option value="">Select leave type...</option>
+                    <option value="">{t('leave.selectLeaveType')}</option>
                     {leaveTypes.map(type => (
                       <option key={type.id} value={type.id}>{type.name}</option>
                     ))}
@@ -382,7 +382,7 @@ export default function LeaveManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">
                     <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                      Start Date <span className="text-red-500">*</span>
+                      {t('leave.startDate')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -394,7 +394,7 @@ export default function LeaveManagement() {
                   </div>
                   <div className="form-group">
                     <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                      End Date <span className="text-red-500">*</span>
+                      {t('leave.endDate')} <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
@@ -422,7 +422,7 @@ export default function LeaveManagement() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">
                     <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                      Request Method <span className="text-red-500">*</span>
+                      {t('leave.requestMethod')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={newRequest.request_method}
@@ -430,18 +430,18 @@ export default function LeaveManagement() {
                       required
                       className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                     >
-                      <option value="">How was it requested?</option>
-                      <option value="Email">📧 Email</option>
-                      <option value="Phone">📞 Phone</option>
-                      <option value="In-Person">🤝 In-Person</option>
-                      <option value="Slack">💬 Slack</option>
-                      <option value="Written">📝 Written</option>
-                      <option value="Other">❓ Other</option>
+                      <option value="">{t('leave.howWasRequested')}</option>
+                      <option value="Email">📧 {t('leave.email')}</option>
+                      <option value="Phone">📞 {t('leave.phone')}</option>
+                      <option value="In-Person">🤝 {t('leave.inPerson')}</option>
+                      <option value="Slack">💬 {t('leave.slack')}</option>
+                      <option value="Written">📝 {t('leave.written')}</option>
+                      <option value="Other">❓ {t('common.other')}</option>
                     </select>
                   </div>
                   <div className="form-group">
                     <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                      Status <span className="text-red-500">*</span>
+                      {t('leave.status')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={newRequest.status}
@@ -449,10 +449,10 @@ export default function LeaveManagement() {
                       required
                       className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                     >
-                      <option value="Pending">⏳ Pending Review</option>
-                      <option value="Approved">✅ Approved</option>
-                      <option value="Rejected">❌ Rejected</option>
-                      <option value="Cancelled">🚫 Cancelled</option>
+                      <option value="Pending">{t('leave.pendingReview')}</option>
+                      <option value="Approved">{t('leave.approvedStatus')}</option>
+                      <option value="Rejected">{t('leave.rejectedStatus')}</option>
+                      <option value="Cancelled">{t('leave.cancelled')}</option>
                     </select>
                   </div>
                 </div>
@@ -460,7 +460,7 @@ export default function LeaveManagement() {
                 {/* Reason */}
                 <div className="form-group">
                   <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                    Reason
+                    {t('leave.reason')}
                   </label>
                   <textarea
                     value={newRequest.reason}
@@ -474,7 +474,7 @@ export default function LeaveManagement() {
                 {/* Notes */}
                 <div className="form-group">
                   <label className="text-sm font-medium text-neutral-300 mb-2 block">
-                    HR Notes (Internal)
+                    {t('leave.hrNotes')}
                   </label>
                   <textarea
                     value={newRequest.notes}
@@ -577,9 +577,9 @@ export default function LeaveManagement() {
                         {/* Results info */}
                         <div className="flex justify-between items-center mb-4 text-sm text-neutral-400">
                           <span>
-                            Showing {startIndex + 1}-{Math.min(endIndex, filteredRequests.length)} of {filteredRequests.length} requests
+                            {t('leave.showing')} {startIndex + 1}-{Math.min(endIndex, filteredRequests.length)} {t('leave.of')} {filteredRequests.length} {t('leave.requests')}
                           </span>
-                          <span>Page {historyCurrentPage} of {totalPages}</span>
+                          <span>{t('leave.page')} {historyCurrentPage} {t('leave.of')} {totalPages}</span>
                         </div>
 
                         {/* Paginated requests */}
@@ -996,7 +996,7 @@ export default function LeaveManagement() {
                     year: 'numeric', 
                     month: 'long', 
                     day: 'numeric' 
-                  }) : 'Select a date'}
+                  }) : t('leave.selectDate')}
                 </h4>
                 
                 {selectedDate ? (
@@ -1176,10 +1176,10 @@ export default function LeaveManagement() {
                     <div>
                       <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.fiscalYearStart')}</label>
                       <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
-                        <option>January 1st</option>
-                        <option>April 1st</option>
-                        <option>July 1st</option>
-                        <option>October 1st</option>
+                        <option>{t('leave.policyManagement.january1')}</option>
+                        <option>{t('leave.policyManagement.april1')}</option>
+                        <option>{t('leave.policyManagement.july1')}</option>
+                        <option>{t('leave.policyManagement.october1')}</option>
                       </select>
                     </div>
                     <div>

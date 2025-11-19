@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 // Convert decimal hours to HH:MM format
 const formatHoursAsTime = (decimalHours) => {
@@ -61,11 +62,11 @@ export function UploadsListView({ uploads, onViewUpload, loading, t }) {
             
             <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
               <div>
-                <p className="text-xs text-secondary">Employees</p>
+                <p className="text-xs text-secondary">{t('timeTracking.employees')}</p>
                 <p className="text-xl font-bold text-primary">{upload.employee_count}</p>
               </div>
               <div>
-                <p className="text-xs text-secondary">Total Hours</p>
+                <p className="text-xs text-secondary">{t('timeTracking.totalHours')}</p>
                 <p className="text-xl font-bold text-primary">{parseFloat(upload.total_hours || 0).toFixed(1)}</p>
               </div>
             </div>
@@ -81,9 +82,9 @@ export function UploadsListView({ uploads, onViewUpload, loading, t }) {
 }
 
 // Upload Detail View (shows all employees for an upload)
-export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, loading }) {
+export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, loading, t }) {
   if (loading) {
-    return <div className="text-center py-8 text-secondary">Loading...</div>;
+    return <div className="text-center py-8 text-secondary">{t('common.loading')}</div>;
   }
 
   return (
@@ -101,7 +102,7 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Back to All Uploads
+{t('timeTracking.backToAllUploads')}
       </button>
 
       {/* Upload Info Card */}
@@ -118,7 +119,7 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-primary">{upload?.employee_count}</div>
-            <div className="text-sm text-secondary">Employees</div>
+            <div className="text-sm text-secondary">{t('timeTracking.employees')}</div>
             <div className="mt-2 text-xl font-semibold text-indigo-600 dark:text-indigo-400">
               {formatHoursAsTime(parseFloat(upload?.total_hours || 0))}
             </div>
@@ -129,7 +130,7 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
       {/* Employee Selection */}
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-primary">Select Employee to View Timecard</h3>
+          <h3 className="text-lg font-semibold text-primary">{t('timeTracking.selectEmployeeToViewTimecard')}</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-6">
           {employees.map((emp) => (
@@ -151,9 +152,9 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
 }
 
 // Employee Timecard View (shows entries in Excel format)
-export function EmployeeTimecardView({ employee, entries, upload, onBack, loading }) {
+export function EmployeeTimecardView({ employee, entries, upload, onBack, loading, t }) {
   if (loading) {
-    return <div className="text-center py-8 text-secondary">Loading timecard...</div>;
+    return <div className="text-center py-8 text-secondary">{t('timeTracking.loadingTimecard')}</div>;
   }
 
   // Group entries by date and calculate daily totals
@@ -185,7 +186,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Back to Upload
+        {t('timeTracking.backToUpload')}
       </button>
 
       {/* Employee Info Card */}
@@ -199,7 +200,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
           </div>
           <div className="text-right">
             <div className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(employee?.total_hours || 0))}</div>
-            <div className="text-sm text-secondary">Total Hours</div>
+            <div className="text-sm text-secondary">{t('timeTracking.totalHours')}</div>
           </div>
         </div>
       </div>
@@ -207,19 +208,19 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
       {/* Timecard Table (Excel Format) */}
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h3 className="text-lg font-semibold text-primary">Timecard Entries</h3>
+          <h3 className="text-lg font-semibold text-primary">{t('timeTracking.timecardEntries')}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-100 dark:bg-slate-800">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Day</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Date</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">IN</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">OUT</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Work Time</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Total Hours</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Note</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.day')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.date')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.in')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.out')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.workTime')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.totalHours')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.note')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -266,9 +267,9 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
 }
 
 // Upload Dashboard View (overall stats)
-export function UploadDashboardView({ stats, onBack, loading }) {
+export function UploadDashboardView({ stats, onBack, loading, t }) {
   if (loading) {
-    return <div className="text-center py-8 text-secondary">Loading statistics...</div>;
+    return <div className="text-center py-8 text-secondary">{t('timeTracking.loadingStatistics')}</div>;
   }
 
   return (
@@ -286,10 +287,10 @@ export function UploadDashboardView({ stats, onBack, loading }) {
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
-        Back to Uploads
+{t('timeTracking.backToUploads')}
       </button>
 
-      <h2 className="text-2xl font-bold text-primary">Timecard Dashboard</h2>
+      <h2 className="text-2xl font-bold text-primary">{t('timeTracking.timecardDashboard')}</h2>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -337,15 +338,15 @@ export function UploadDashboardView({ stats, onBack, loading }) {
       {/* Top Employees */}
       <div className="card overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-semibold text-primary">Top 5 Employees by Hours</h2>
+          <h2 className="text-lg font-semibold text-primary">{t('timeTracking.top5EmployeesByHours')}</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-100 dark:bg-slate-800">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Rank</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">Employee</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">Total Hours</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.rank')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.employee')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.totalHours')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -370,7 +371,7 @@ export function UploadDashboardView({ stats, onBack, loading }) {
       {/* Latest Upload Info */}
       {stats?.latestUpload && (
         <div className="card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-700">
-          <h3 className="font-semibold text-primary mb-2">Latest Upload</h3>
+          <h3 className="font-semibold text-primary mb-2">{t('timeTracking.latestUpload')}</h3>
           <p className="text-secondary">{stats.latestUpload.filename}</p>
           <p className="text-sm text-secondary mt-1">
             {new Date(stats.latestUpload.upload_date).toLocaleDateString()} at {new Date(stats.latestUpload.upload_date).toLocaleTimeString()}

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
+  const { t } = useTranslation();
   const [employee, setEmployee] = useState(null);
   const [timeEntries, setTimeEntries] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -72,9 +74,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         id: empData?.id,
         name: `${empData?.first_name} ${empData?.last_name}`,
         birth_date: empData?.birth_date,
-        sin_number: empData?.sin_number ? 'Present' : 'Not provided',
-        bank_name: empData?.bank_name || 'Not provided',
-        emergency_contact_name: empData?.emergency_contact_name || 'Not provided'
+        sin_number: empData?.sin_number ? t('employeeProfile.present') : t('employeeProfile.notProvided'),
+        bank_name: empData?.bank_name || t('employeeProfile.notProvided'),
+        emergency_contact_name: empData?.emergency_contact_name || t('employeeProfile.notProvided')
       });
       
       setEmployee(empData);
@@ -274,7 +276,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
 
   const handleUploadDocument = async () => {
     if (!uploadData.file || !uploadData.doc_type) {
-      alert('Please select a file and document type');
+      alert(t('employeeProfile.selectFileAndType'));
       return;
     }
 
@@ -315,7 +317,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         });
 
         console.log(`✅ [EmployeeProfile] Document uploaded successfully:`, result);
-        alert('Document uploaded successfully!');
+        alert(t('employeeProfile.documentUploadSuccess'));
         setShowUploadModal(false);
         setUploadData({
           doc_type: 'Other',
@@ -334,7 +336,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         message: error.message,
         stack: error.stack
       });
-      alert('Failed to upload document: ' + error.message);
+      alert(t('employeeProfile.failedToUploadDocument', { error: error.message }));
     }
   };
 
@@ -397,7 +399,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           }
         } else {
           console.error(`❌ [EmployeeProfile] Download failed:`, response.statusText);
-          alert('Failed to load document: ' + response.statusText);
+          alert(t('employeeProfile.failedToLoadDocument', { error: response.statusText }));
         }
       }
     } catch (error) {
@@ -406,13 +408,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         message: error.message,
         stack: error.stack
       });
-      alert('Failed to open document: ' + error.message);
+      alert(t('employeeProfile.failedToOpenDocument', { error: error.message }));
     }
   };
 
   const handleDeleteDocument = async (docId) => {
     console.log(`🗑️ [EmployeeProfile] Deleting document:`, docId);
-    if (!confirm('Are you sure you want to delete this document?')) return;
+    if (!confirm(t('employeeProfile.confirmDeleteDocument'))) return;
     
     try {
       console.log(`🚀 [EmployeeProfile] Sending delete request...`);
@@ -421,7 +423,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         credentials: 'include'
       });
       console.log(`✅ [EmployeeProfile] Document deleted successfully`);
-      alert('Document deleted successfully');
+      alert(t('employeeProfile.documentDeletedSuccess'));
       await loadEmployeeData();
     } catch (error) {
       console.error('❌ [EmployeeProfile] Error deleting document:', error);
@@ -429,7 +431,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         message: error.message,
         stack: error.stack
       });
-      alert('Failed to delete document: ' + error.message);
+      alert(t('employeeProfile.failedToDeleteDocument', { error: error.message }));
     }
   };
 
@@ -489,7 +491,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
-        <div className="text-neutral-400">Loading employee profile...</div>
+        <div className="text-neutral-400">{t('employeeProfile.loadingProfile')}</div>
       </div>
     );
   }
@@ -497,7 +499,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   if (!employee) {
     return (
       <div className="p-6">
-        <div className="text-red-400">Employee not found</div>
+        <div className="text-red-400">{t('employeeProfile.employeeNotFound')}</div>
       </div>
     );
   }
@@ -519,14 +521,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       type="text"
                       value={editData.first_name || ''}
                       onChange={(e) => setEditData({...editData, first_name: e.target.value})}
-                      placeholder="First Name"
+                      placeholder={t('employeeProfile.firstName')}
                       className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-xl font-bold"
                     />
                     <input
                       type="text"
                       value={editData.last_name || ''}
                       onChange={(e) => setEditData({...editData, last_name: e.target.value})}
-                      placeholder="Last Name"
+                      placeholder={t('employeeProfile.lastName')}
                       className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-xl font-bold"
                     />
                   </div>
@@ -534,7 +536,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="text"
                     value={editData.role_title || ''}
                     onChange={(e) => setEditData({...editData, role_title: e.target.value})}
-                    placeholder="Role Title"
+                    placeholder={t('employeeProfile.roleTitle')}
                     className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-sm text-neutral-400 w-full"
                   />
                 </div>
@@ -575,23 +577,23 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">Status</div>
+            <div className="text-sm text-neutral-400">{t('employeeProfile.status')}</div>
             {isEditing ? (
               <select
                 value={editData.status || ''}
                 onChange={(e) => setEditData({...editData, status: e.target.value})}
                 className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
               >
-                <option value="Active">Active</option>
-                <option value="On Leave">On Leave</option>
-                <option value="Terminated">Terminated</option>
+                <option value="Active">{t('employeeProfile.statusActive')}</option>
+                <option value="On Leave">{t('employeeProfile.statusOnLeave')}</option>
+                <option value="Terminated">{t('employeeProfile.statusTerminated')}</option>
               </select>
             ) : (
               <div className="font-medium">{employee.status}</div>
             )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">Hire Date</div>
+            <div className="text-sm text-neutral-400">{t('employeeProfile.hireDate')}</div>
             {isEditing ? (
               <input
                 type="date"
@@ -604,7 +606,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">Hourly Rate</div>
+            <div className="text-sm text-neutral-400">{t('employeeProfile.hourlyRate')}</div>
             {isEditing ? (
               <div className="flex items-center">
                 <span className="mr-1">$</span>
@@ -623,14 +625,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             )}
           </div>
           <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">Department</div>
+            <div className="text-sm text-neutral-400">{t('employeeProfile.department')}</div>
             {isEditing ? (
               <select
                 value={editData.department_id || ''}
                 onChange={(e) => setEditData({...editData, department_id: parseInt(e.target.value) || null})}
                 className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
               >
-                <option value="">Not assigned</option>
+                <option value="">{t('employeeProfile.notAssigned')}</option>
                 {departments.map(dept => (
                   <option key={dept.id} value={dept.id}>{dept.name}</option>
                 ))}
@@ -669,13 +671,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         >
           <div className="space-y-6">
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Personal Information</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.personalInformation')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Email:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.email')}:</span>
                   {isEditing ? (
                     <div className="flex flex-col items-end gap-2">
-                      <div className="text-xs text-neutral-500">Work email</div>
+                      <div className="text-xs text-neutral-500">{t('employeeProfile.workEmail')}</div>
                       <input
                         type="email"
                         value={editData.work_email || ''}
@@ -683,13 +685,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right w-64 font-mono text-xs text-indigo-400"
                         placeholder="firstname@letsgetmovinggroup.com"
                       />
-                      <div className="text-xs text-neutral-500 mt-2">Personal email</div>
+                      <div className="text-xs text-neutral-500 mt-2">{t('employeeProfile.personalEmail')}</div>
                       <input
                         type="email"
                         value={editData.email || ''}
                         onChange={(e) => setEditData({...editData, email: e.target.value})}
                         className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right w-64"
-                        placeholder="Personal email (optional)"
+                        placeholder={t('employeeProfile.personalEmailOptional')}
                       />
                     </div>
                   ) : (
@@ -706,7 +708,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Phone:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.phone')}:</span>
                   {isEditing ? (
                     <input
                       type="tel"
@@ -715,29 +717,29 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right"
                     />
                   ) : (
-                    <span>{employee.phone || 'Not provided'}</span>
+                    <span>{employee.phone || t('employeeProfile.notProvided')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Gender:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.gender')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.gender || ''}
                       onChange={(e) => setEditData({...editData, gender: e.target.value})}
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     >
-                      <option value="">Not specified</option>
-                      <option value="Male">Male</option>
-                      <option value="Female">Female</option>
-                      <option value="Non-binary">Non-binary</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
+                      <option value="">{t('employeeProfile.notSpecified')}</option>
+                      <option value="Male">{t('employeeProfile.genderMale')}</option>
+                      <option value="Female">{t('employeeProfile.genderFemale')}</option>
+                      <option value="Non-binary">{t('employeeProfile.genderNonBinary')}</option>
+                      <option value="Prefer not to say">{t('employeeProfile.genderPreferNotToSay')}</option>
                     </select>
                   ) : (
-                    <span>{employee.gender || 'Not specified'}</span>
+                    <span>{employee.gender || t('employeeProfile.notSpecified')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Birth Date:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.birthDate')}:</span>
                   {isEditing ? (
                     <input
                       type="date"
@@ -760,7 +762,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               return 'Invalid Date';
                             }
                           })()
-                        : 'Not provided'}
+                        : t('employeeProfile.notProvided')}
                     </span>
                   )}
                 </div>
@@ -768,10 +770,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Employment Details</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.employmentDetails')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Hire Date:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.hireDate')}:</span>
                   {isEditing ? (
                     <input
                       type="date"
@@ -780,27 +782,27 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     />
                   ) : (
-                    <span>{employee.hire_date ? formatShortDate(employee.hire_date) : 'Not set'}</span>
+                    <span>{employee.hire_date ? formatShortDate(employee.hire_date) : t('employeeProfile.notSet')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Employment Type:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.employmentType')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.employment_type || ''}
                       onChange={(e) => setEditData({...editData, employment_type: e.target.value})}
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     >
-                      <option value="Full-time">Full-time</option>
-                      <option value="Part-time">Part-time</option>
-                      <option value="Contract">Contract</option>
+                      <option value="Full-time">{t('employeeProfile.fullTime')}</option>
+                      <option value="Part-time">{t('employeeProfile.partTime')}</option>
+                      <option value="Contract">{t('employeeProfile.contract')}</option>
                     </select>
                   ) : (
                     <span>{employee.employment_type}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Department:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.department')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.department_id || ''}
@@ -811,34 +813,34 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       }}
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
                     >
-                      <option value="">None - To be assigned</option>
+                      <option value="">{t('employeeProfile.noneToBeAssigned')}</option>
                       {departments.map(dept => (
                         <option key={dept.id} value={dept.id}>{dept.name}</option>
                       ))}
                     </select>
                   ) : (
-                    <span>{employee.department_name || 'Not assigned'}</span>
+                    <span>{employee.department_name || t('employeeProfile.notAssigned')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Location:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.location')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.location_id || ''}
                       onChange={(e) => setEditData({...editData, location_id: parseInt(e.target.value) || null})}
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     >
-                      <option value="">None - To be assigned</option>
+                      <option value="">{t('employeeProfile.noneToBeAssigned')}</option>
                       {locations.map(loc => (
                         <option key={loc.id} value={loc.id}>{loc.name}</option>
                       ))}
                     </select>
                   ) : (
-                    <span>{employee.location_name || 'Not assigned'}</span>
+                    <span>{employee.location_name || t('employeeProfile.notAssigned')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">Probation End:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.probationEnd')}:</span>
                   {isEditing ? (
                     <input
                       type="date"
@@ -847,7 +849,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     />
                   ) : (
-                    <span>{employee.probation_end ? formatShortDate(employee.probation_end) : 'Not set'}</span>
+                    <span>{employee.probation_end ? formatShortDate(employee.probation_end) : t('employeeProfile.notSet')}</span>
                   )}
                 </div>
               </div>
@@ -861,16 +863,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-400">Contract:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.contract')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.contract_status || 'Not Sent'}
                       onChange={(e) => setEditData({...editData, contract_status: e.target.value})}
                       className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
                     >
-                      <option value="Not Sent">Not Sent</option>
-                      <option value="Sent">Sent</option>
-                      <option value="Signed">Signed</option>
+                      <option value="Not Sent">{t('employeeProfile.contractNotSent')}</option>
+                      <option value="Sent">{t('employeeProfile.contractSent')}</option>
+                      <option value="Signed">{t('employeeProfile.contractSigned')}</option>
                     </select>
                   ) : (
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -880,13 +882,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         ? 'bg-yellow-900/50 text-yellow-300'
                         : 'bg-neutral-700 text-neutral-400'
                     }`}>
-                      {employee.contract_status || 'Not Sent'}
+                      {employee.contract_status || t('employeeProfile.contractNotSent')}
                     </span>
                   )}
                 </div>
                 {(employee.contract_signed_date || isEditing) && (
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">Signed On:</span>
+                    <span className="text-neutral-400">{t('employeeProfile.signedOn')}:</span>
                     {isEditing ? (
                       <input
                         type="date"
@@ -900,7 +902,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   </div>
                 )}
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-400">Gift Card:</span>
+                  <span className="text-neutral-400">{t('employeeProfile.giftCard')}:</span>
                   {isEditing ? (
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -909,7 +911,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         onChange={(e) => setEditData({...editData, gift_card_sent: e.target.checked})}
                         className="w-4 h-4 bg-neutral-700 border-neutral-600 rounded"
                       />
-                      <span className="text-sm">Sent</span>
+                      <span className="text-sm">{t('employeeProfile.sent')}</span>
                     </label>
                   ) : (
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -917,13 +919,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         ? 'bg-green-900/50 text-green-300' 
                         : 'bg-neutral-700 text-neutral-400'
                     }`}>
-                      {employee.gift_card_sent ? 'Sent ✓' : 'Pending'}
+                      {employee.gift_card_sent ? t('employeeProfile.sentCheckmark') : t('employeeProfile.pending')}
                     </span>
                   )}
                 </div>
                 {employee.onboarding_source && (
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">Source:</span>
+                    <span className="text-neutral-400">{t('employeeProfile.source')}:</span>
                     <span className="text-xs">{employee.onboarding_source}</span>
                   </div>
                 )}
@@ -931,29 +933,29 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Quick Stats</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.quickStats')}</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span>Total Hours Worked</span>
+                  <span>{t('employeeProfile.totalHoursWorked')}</span>
                   <span className="font-bold">{formatHoursAsTime(calculateTotalHours())}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Total Earnings</span>
+                  <span>{t('employeeProfile.totalEarnings')}</span>
                   <span className="font-bold">${(calculateTotalEarnings() || 0).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Documents</span>
+                  <span>{t('employeeProfile.documents')}</span>
                   <span className="font-bold">{documents?.length || 0}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Training Records</span>
+                  <span>{t('employeeProfile.trainingRecords')}</span>
                   <span className="font-bold">{trainingRecords?.length || 0}</span>
                 </div>
               </div>
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.recentActivity')}</h3>
               <div className="space-y-3">
                 {(timeEntries || []).slice(0, 5).map((entry) => (
                   <div key={entry.id} className="flex justify-between text-sm">
@@ -976,14 +978,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         >
           <div className="grid grid-cols-3 gap-6">
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Earnings Summary</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.earningsSummary')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span>Regular Hours:</span>
+                  <span>{t('employeeProfile.regularHours')}:</span>
                   <span>${((calculateTotalHours() || 0) * (parseFloat(employee?.hourly_rate) || 25)).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Overtime:</span>
+                  <span>{t('employeeProfile.overtime')}:</span>
                   <span>${(timeEntries || []).reduce((total, entry) => {
                     const overtimeHours = entry.overtime_hours || 0;
                     const overtimeRate = (parseFloat(employee.hourly_rate) || 25) * 1.5;
@@ -992,41 +994,41 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <hr className="border-neutral-700" />
                 <div className="flex justify-between font-bold">
-                  <span>Total:</span>
+                  <span>{t('employeeProfile.total')}:</span>
                   <span>${(calculateTotalEarnings() || 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Deductions</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.deductions')}</h3>
               <div className="space-y-3">
                 {(() => {
                   const deductions = calculateDeductions(calculateTotalEarnings() || 0);
                   return (
                     <>
                       <div className="flex justify-between text-xs text-neutral-400 mb-2">
-                        <span>Province: {deductions.province}</span>
+                        <span>{t('employeeProfile.province')}: {deductions.province}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>CPP (5.95%):</span>
+                        <span>{t('employeeProfile.cpp')} (5.95%):</span>
                         <span>${deductions.cpp.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>EI (1.58%):</span>
+                        <span>{t('employeeProfile.ei')} (1.58%):</span>
                         <span>${deductions.ei.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Federal Tax (15%):</span>
+                        <span>{t('employeeProfile.federalTax')} (15%):</span>
                         <span>${deductions.federalTax.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Provincial Tax ({(DEDUCTION_RATES.provincial_tax[deductions.province] * 100).toFixed(2)}%):</span>
+                        <span>{t('employeeProfile.provincialTax')} ({(DEDUCTION_RATES.provincial_tax[deductions.province] * 100).toFixed(2)}%):</span>
                         <span>${deductions.provincialTax.toFixed(2)}</span>
                       </div>
                       <hr className="border-neutral-700" />
                       <div className="flex justify-between font-bold">
-                        <span>Total Deductions:</span>
+                        <span>{t('employeeProfile.totalDeductions')}:</span>
                         <span>${deductions.total.toFixed(2)}</span>
                       </div>
                     </>
@@ -1036,7 +1038,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Net Pay</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.netPay')}</h3>
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-400 mb-2">
                   ${(() => {
@@ -1045,7 +1047,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     return (gross - deductions.total).toFixed(2);
                   })()}
                 </div>
-                <div className="text-sm text-neutral-400">Net earnings after deductions</div>
+                <div className="text-sm text-neutral-400">{t('employeeProfile.netEarningsAfterDeductions')}</div>
             </div>
           </div>
           </div>
@@ -1053,7 +1055,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           {/* YTD (Year-to-Date) Summary */}
           <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 p-6 rounded-lg border border-indigo-700/50">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
-              <span className="mr-2">📊</span> Year-to-Date Summary ({new Date().getFullYear()})
+              <span className="mr-2">📊</span> {t('employeeProfile.yearToDateSummary', { year: new Date().getFullYear() })}
             </h3>
             <div className="grid grid-cols-5 gap-4">
               {(() => {
@@ -1064,23 +1066,23 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 return (
                   <>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">Gross Earnings</div>
+                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.grossEarnings')}</div>
                       <div className="text-2xl font-bold text-green-400">${gross.toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">CPP Deducted</div>
+                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.cppDeducted')}</div>
                       <div className="text-xl font-semibold">${deductions.cpp.toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">EI Deducted</div>
+                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.eiDeducted')}</div>
                       <div className="text-xl font-semibold">${deductions.ei.toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">Tax Withheld</div>
+                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.taxWithheld')}</div>
                       <div className="text-xl font-semibold">${(deductions.federalTax + deductions.provincialTax).toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">Net Pay</div>
+                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.netPay')}</div>
                       <div className="text-2xl font-bold text-indigo-400">${net.toFixed(2)}</div>
                     </div>
                   </>
@@ -1088,22 +1090,22 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               })()}
             </div>
             <div className="mt-4 text-xs text-neutral-400 text-center">
-              Based on all time entries recorded this year • Province: {getEmployeeProvince()}
+              {t('employeeProfile.basedOnTimeEntries', { province: getEmployeeProvince() })}
             </div>
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Payroll History</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.payrollHistory')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-neutral-700">
-                    <th className="text-left py-2">Period</th>
-                    <th className="text-left py-2">Hours</th>
-                    <th className="text-left py-2">Rate</th>
-                    <th className="text-left py-2">Gross</th>
-                    <th className="text-left py-2">Deductions</th>
-                    <th className="text-left py-2">Net</th>
+                    <th className="text-left py-2">{t('employeeProfile.period')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.hours')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.rate')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.gross')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.deductions')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.net')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1132,18 +1134,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="space-y-6"
         >
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Time Entries</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.timeEntries')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-neutral-700">
-                    <th className="text-left py-2">Day</th>
-                    <th className="text-left py-2">Date</th>
-                    <th className="text-left py-2">Clock In</th>
-                    <th className="text-left py-2">Clock Out</th>
-                    <th className="text-right py-2">Hours</th>
-                    <th className="text-right py-2">Daily Total</th>
-                    <th className="text-left py-2 pl-8">Notes</th>
+                    <th className="text-left py-2">{t('employeeProfile.day')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.date')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.clockIn')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.clockOut')}</th>
+                    <th className="text-right py-2">{t('employeeProfile.hours')}</th>
+                    <th className="text-right py-2">{t('employeeProfile.dailyTotal')}</th>
+                    <th className="text-left py-2 pl-8">{t('employeeProfile.notes')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1198,13 +1200,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         >
           <div className="bg-neutral-800 p-6 rounded-lg">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold">Employee Documents</h3>
+              <h3 className="text-lg font-semibold">{t('employeeProfile.employeeDocuments')}</h3>
               <button
                 onClick={() => setShowUploadModal(true)}
                 className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex items-center space-x-2 transition"
               >
                 <span>📤</span>
-                <span>Upload Document</span>
+                <span>{t('employeeProfile.uploadDocument')}</span>
               </button>
             </div>
 
@@ -1216,8 +1218,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 return (
                   <div className="text-center py-12 text-neutral-400">
                     <div className="text-6xl mb-4">📁</div>
-                    <p>No documents uploaded yet</p>
-                    <p className="text-sm mt-2">Click "Upload Document" to add files</p>
+                    <p>{t('employeeProfile.noDocumentsUploadedYet')}</p>
+                    <p className="text-sm mt-2">{t('employeeProfile.clickUploadDocumentToAddFiles')}</p>
                   </div>
                 );
               }
@@ -1228,7 +1230,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {categorized.Financial && categorized.Financial.length > 0 && (
                     <div>
                       <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
-                        <span className="mr-2">💰</span> Financial Documents
+                        <span className="mr-2">💰</span> {t('employeeProfile.financialDocuments')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Financial.map(doc => (
@@ -1239,7 +1241,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {formatShortDate(doc.uploaded_on)}
+                                  {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
@@ -1248,13 +1250,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
                               }`}>
-                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                                {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
                                 className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
                               >
-                                👁️ View
+                                👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
@@ -1273,7 +1275,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {categorized.Immigration && categorized.Immigration.length > 0 && (
                     <div>
                       <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
-                        <span className="mr-2">🛂</span> Immigration & Status
+                        <span className="mr-2">🛂</span> {t('employeeProfile.immigrationStatus')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Immigration.map(doc => (
@@ -1284,7 +1286,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {formatShortDate(doc.uploaded_on)}
+                                  {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
@@ -1293,13 +1295,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
                               }`}>
-                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                                {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
                                 className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
                               >
-                                👁️ View
+                                👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
@@ -1318,7 +1320,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {categorized.Employment && categorized.Employment.length > 0 && (
                     <div>
                       <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
-                        <span className="mr-2">📄</span> Employment Documents
+                        <span className="mr-2">📄</span> {t('employeeProfile.employmentDocuments')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Employment.map(doc => (
@@ -1329,7 +1331,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {formatShortDate(doc.uploaded_on)}
+                                  {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
@@ -1338,13 +1340,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
                               }`}>
-                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                                {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
                                 className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
                               >
-                                👁️ View
+                                👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
@@ -1363,7 +1365,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {categorized.Other && categorized.Other.length > 0 && (
                     <div>
                       <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
-                        <span className="mr-2">📎</span> Other Documents
+                        <span className="mr-2">📎</span> {t('employeeProfile.otherDocuments')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Other.map(doc => (
@@ -1374,11 +1376,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-neutral-400">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
-                                  Uploaded: {formatShortDate(doc.uploaded_on)}
+                                  {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                                 {doc.notes && (
-                                  <div className="text-xs text-neutral-400 mt-1">Note: {doc.notes}</div>
+                                  <div className="text-xs text-neutral-400 mt-1">{t('employeeProfile.note')}: {doc.notes}</div>
                                 )}
                               </div>
                             </div>
@@ -1386,13 +1388,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                                 doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
                               }`}>
-                                {doc.signed ? '✓ Signed' : '⏳ Pending'}
+                                {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
                                 className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
                               >
-                                👁️ View
+                                👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
@@ -1419,47 +1421,47 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 animate={{ scale: 1, opacity: 1 }}
                 className="bg-neutral-800 p-6 rounded-lg max-w-md w-full mx-4"
               >
-                <h3 className="text-xl font-semibold mb-4">Upload Document</h3>
+                <h3 className="text-xl font-semibold mb-4">{t('employeeProfile.uploadDocument')}</h3>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Document Type *</label>
+                    <label className="block text-sm font-medium mb-2">{t('employeeProfile.documentType')} *</label>
                     <select
                       value={uploadData.doc_type}
                       onChange={(e) => setUploadData({...uploadData, doc_type: e.target.value})}
                       className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2"
                     >
-                      <option value="Contract">Contract</option>
-                      <option value="VoidCheque">Void Cheque</option>
-                      <option value="DirectDeposit">Direct Deposit Form</option>
-                      <option value="WorkPermit">Work Permit</option>
-                      <option value="PR_Card">PR Card</option>
-                      <option value="Citizenship">Citizenship</option>
-                      <option value="SIN_Document">SIN Document</option>
-                      <option value="StudyPermit">Study Permit</option>
-                      <option value="PolicyAck">Policy Acknowledgment</option>
-                      <option value="Visa">Visa</option>
-                      <option value="Other">Other</option>
+                      <option value="Contract">{t('employeeProfile.docTypeContract')}</option>
+                      <option value="VoidCheque">{t('employeeProfile.docTypeVoidCheque')}</option>
+                      <option value="DirectDeposit">{t('employeeProfile.docTypeDirectDeposit')}</option>
+                      <option value="WorkPermit">{t('employeeProfile.docTypeWorkPermit')}</option>
+                      <option value="PR_Card">{t('employeeProfile.docTypePRCard')}</option>
+                      <option value="Citizenship">{t('employeeProfile.docTypeCitizenship')}</option>
+                      <option value="SIN_Document">{t('employeeProfile.docTypeSINDocument')}</option>
+                      <option value="StudyPermit">{t('employeeProfile.docTypeStudyPermit')}</option>
+                      <option value="PolicyAck">{t('employeeProfile.docTypePolicyAck')}</option>
+                      <option value="Visa">{t('employeeProfile.docTypeVisa')}</option>
+                      <option value="Other">{t('common.other')}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Category</label>
+                    <label className="block text-sm font-medium mb-2">{t('employeeProfile.category')}</label>
                     <select
                       value={uploadData.document_category}
                       onChange={(e) => setUploadData({...uploadData, document_category: e.target.value})}
                       className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2"
                     >
-                      <option value="Financial">Financial</option>
-                      <option value="Immigration">Immigration</option>
-                      <option value="Employment">Employment</option>
-                      <option value="Personal">Personal</option>
-                      <option value="Other">Other</option>
+                      <option value="Financial">{t('employeeProfile.categoryFinancial')}</option>
+                      <option value="Immigration">{t('employeeProfile.categoryImmigration')}</option>
+                      <option value="Employment">{t('employeeProfile.categoryEmployment')}</option>
+                      <option value="Personal">{t('employeeProfile.categoryPersonal')}</option>
+                      <option value="Other">{t('common.other')}</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">File *</label>
+                    <label className="block text-sm font-medium mb-2">{t('employeeProfile.file')} *</label>
                     <input
                       type="file"
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
@@ -1468,19 +1470,19 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     />
                     {uploadData.file && (
                       <p className="text-xs text-neutral-400 mt-1">
-                        Selected: {uploadData.file_name} ({(uploadData.file.size / 1024).toFixed(1)} KB)
+                        {t('employeeProfile.selected')}: {uploadData.file_name} ({(uploadData.file.size / 1024).toFixed(1)} KB)
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Notes</label>
+                    <label className="block text-sm font-medium mb-2">{t('employeeProfile.notes')}</label>
                     <textarea
                       value={uploadData.notes}
                       onChange={(e) => setUploadData({...uploadData, notes: e.target.value})}
                       className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2 text-sm"
                       rows="3"
-                      placeholder="Optional notes about this document..."
+                      placeholder={t('employeeProfile.optionalNotesPlaceholder')}
                     ></textarea>
                   </div>
 
@@ -1492,7 +1494,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       onChange={(e) => setUploadData({...uploadData, signed: e.target.checked})}
                       className="rounded"
                     />
-                    <label htmlFor="signed" className="text-sm">Document is signed</label>
+                    <label htmlFor="signed" className="text-sm">{t('employeeProfile.documentIsSigned')}</label>
                   </div>
 
                   <div className="flex space-x-3 mt-6">
@@ -1500,7 +1502,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       onClick={handleUploadDocument}
                       className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
                     >
-                      Upload
+                      {t('common.upload')}
                     </button>
                     <button
                       onClick={() => {
@@ -1516,7 +1518,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       }}
                       className="flex-1 bg-neutral-700 hover:bg-neutral-600 px-4 py-2 rounded-lg transition"
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   </div>
                 </div>
@@ -1534,18 +1536,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="grid grid-cols-2 gap-6"
         >
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Identifiers</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.identifiers')}</h3>
             <div className="space-y-4">
               {/* SIN Number */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">SIN Number</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.sinNumber')}</div>
                 {isEditing ? (
                   <input
                     type="text"
                     value={editData.sin_number || ''}
                     onChange={(e) => setEditData({...editData, sin_number: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="XXX-XXX-XXX"
+                    placeholder={t('employeeProfile.sinPlaceholder')}
                   />
                 ) : (
                   <div className="font-mono text-indigo-400">{employee.sin_number || '—'}</div>
@@ -1553,7 +1555,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* SIN Expiry Date */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">SIN Expiry Date</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.sinExpiryDate')}</div>
                 {isEditing ? (
                   <input
                     type="date"
@@ -1581,18 +1583,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Bank Accounts</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.bankAccounts')}</h3>
             <div className="space-y-4">
               {/* Bank Name */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">Bank Name</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.bankName')}</div>
                 {isEditing ? (
                   <input
                     type="text"
                     value={editData.bank_name || ''}
                     onChange={(e) => setEditData({...editData, bank_name: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Bank Name"
+                    placeholder={t('employeeProfile.bankName')}
                   />
                 ) : (
                   <div>{employee.bank_name || '—'}</div>
@@ -1600,14 +1602,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* Transit Number */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">Transit Number</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.transitNumber')}</div>
                 {isEditing ? (
                   <input
                     type="text"
                     value={editData.bank_transit_number || ''}
                     onChange={(e) => setEditData({...editData, bank_transit_number: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="XXXXX"
+                    placeholder={t('employeeProfile.transitNumberPlaceholder')}
                   />
                 ) : (
                   <div>{employee.bank_transit_number || '—'}</div>
@@ -1615,14 +1617,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* Account Number */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">Account Number</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.accountNumber')}</div>
                 {isEditing ? (
                   <input
                     type="text"
                     value={editData.bank_account_number || ''}
                     onChange={(e) => setEditData({...editData, bank_account_number: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Account Number"
+                    placeholder={t('employeeProfile.accountNumber')}
                   />
                 ) : (
                   <div className="font-mono">{employee.bank_account_number || '—'}</div>
@@ -1632,17 +1634,17 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Addresses</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.addresses')}</h3>
             <div className="space-y-4">
               {/* Full Address */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">Full Address</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.fullAddress')}</div>
                 {isEditing ? (
                   <textarea
                     value={editData.full_address || ''}
                     onChange={(e) => setEditData({...editData, full_address: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Full Address"
+                    placeholder={t('employeeProfile.fullAddress')}
                     rows={3}
                   />
                 ) : (
@@ -1653,18 +1655,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Emergency Contacts</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.emergencyContacts')}</h3>
             <div className="space-y-4">
               {/* Emergency Contact Name */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">Emergency Contact Name</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.emergencyContactName')}</div>
                 {isEditing ? (
                   <input
                     type="text"
                     value={editData.emergency_contact_name || ''}
                     onChange={(e) => setEditData({...editData, emergency_contact_name: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Contact Name"
+                    placeholder={t('employeeProfile.contactName')}
                   />
                 ) : (
                   <div>{employee.emergency_contact_name || '—'}</div>
@@ -1672,14 +1674,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* Emergency Contact Phone */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">Emergency Contact Phone</div>
+                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.emergencyContactPhone')}</div>
                 {isEditing ? (
                   <input
                     type="tel"
                     value={editData.emergency_contact_phone || ''}
                     onChange={(e) => setEditData({...editData, emergency_contact_phone: e.target.value})}
                     className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
-                    placeholder="Phone Number"
+                    placeholder={t('employeeProfile.phoneNumber')}
                   />
                 ) : (
                   <div>{employee.emergency_contact_phone || '—'}</div>
@@ -1689,15 +1691,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Compensation History</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.compensationHistory')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-neutral-700">
-                    <th className="text-left py-2">Effective</th>
-                    <th className="text-left py-2">Type</th>
-                    <th className="text-left py-2">Rate</th>
-                    <th className="text-left py-2">Hours/biweekly</th>
+                    <th className="text-left py-2">{t('employeeProfile.effective')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.type')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.rate')}</th>
+                    <th className="text-left py-2">{t('employeeProfile.hoursBiweekly')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1710,7 +1712,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     </tr>
                   ))}
                   {(!hrDetails.compensation_history || hrDetails.compensation_history.length === 0) && (
-                    <tr><td className="text-neutral-400 text-sm py-2" colSpan={4}>No compensation records</td></tr>
+                    <tr><td className="text-neutral-400 text-sm py-2" colSpan={4}>{t('employeeProfile.noCompensationRecords')}</td></tr>
                   )}
                 </tbody>
               </table>
@@ -1718,7 +1720,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Status History</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.statusHistory')}</h3>
             <div className="space-y-2">
               {(hrDetails.status_history || []).map(sh => (
                 <div key={sh.id} className="flex justify-between text-sm">
@@ -1727,7 +1729,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
               ))}
               {(!hrDetails.status_history || hrDetails.status_history.length === 0) && (
-                <div className="text-neutral-400 text-sm">No status history</div>
+                <div className="text-neutral-400 text-sm">{t('employeeProfile.noStatusHistory')}</div>
               )}
             </div>
           </div>
@@ -1742,14 +1744,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="space-y-6"
         >
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4">Training Records</h3>
+            <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.trainingRecords')}</h3>
             <div className="grid gap-4">
               {(trainingRecords || []).map((record) => (
                 <div key={record.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg">
                   <div>
                     <div className="font-medium">{record.training_name}</div>
-                    <div className="text-sm text-neutral-400">Completed: {formatShortDate(record.completed_on)}</div>
-                    <div className="text-xs text-neutral-500">Valid for {record.validity_months} months</div>
+                    <div className="text-sm text-neutral-400">{t('employeeProfile.completed')}: {formatShortDate(record.completed_on)}</div>
+                    <div className="text-xs text-neutral-500">{t('employeeProfile.validFor', { months: record.validity_months })}</div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 rounded text-xs ${
@@ -1758,8 +1760,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         : 'bg-red-900 text-red-300'
                     }`}>
                       {new Date(record.completed_on).getTime() + (record.validity_months * 30 * 24 * 60 * 60 * 1000) > Date.now()
-                        ? 'Valid'
-                        : 'Expired'
+                        ? t('employeeProfile.valid')
+                        : t('employeeProfile.expired')
                       }
                     </span>
                   </div>
@@ -1778,65 +1780,65 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="space-y-6"
         >
           <div className="bg-red-900/20 border border-red-700 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-red-400">⚠️ Termination Information</h3>
+            <h3 className="text-lg font-semibold mb-4 text-red-400">⚠️ {t('employeeProfile.terminationInformation')}</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <div className="text-sm text-neutral-400">Termination Date</div>
-                <div className="font-medium text-lg">{terminationDetails.termination_date ? formatShortDate(terminationDetails.termination_date) : 'N/A'}</div>
+                <div className="text-sm text-neutral-400">{t('employeeProfile.terminationDate')}</div>
+                <div className="font-medium text-lg">{terminationDetails.termination_date ? formatShortDate(terminationDetails.termination_date) : t('common.n/a')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">Termination Type</div>
-                <div className="font-medium">{terminationDetails.termination_type || 'N/A'}</div>
+                <div className="text-sm text-neutral-400">{t('employeeProfile.terminationType')}</div>
+                <div className="font-medium">{terminationDetails.termination_type || t('common.n/a')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">Reason Category</div>
-                <div className="font-medium">{terminationDetails.reason_category || 'N/A'}</div>
+                <div className="text-sm text-neutral-400">{t('employeeProfile.reasonCategory')}</div>
+                <div className="font-medium">{terminationDetails.reason_category || t('common.n/a')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">Initiated By</div>
-                <div className="font-medium">{terminationDetails.initiated_by || 'N/A'}</div>
+                <div className="text-sm text-neutral-400">{t('employeeProfile.initiatedBy')}</div>
+                <div className="font-medium">{terminationDetails.initiated_by || t('common.n/a')}</div>
               </div>
             </div>
           </div>
 
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h4 className="font-semibold mb-3">Termination Reason</h4>
-            <p className="text-neutral-300">{terminationDetails.termination_reason || 'No reason provided'}</p>
+            <h4 className="font-semibold mb-3">{t('employeeProfile.terminationReason')}</h4>
+            <p className="text-neutral-300">{terminationDetails.termination_reason || t('employeeProfile.noReasonProvided')}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h4 className="font-semibold mb-4">Timeline</h4>
+              <h4 className="font-semibold mb-4">{t('employeeProfile.timeline')}</h4>
               <div className="space-y-3">
                 <div>
-                  <div className="text-sm text-neutral-400">Notice Period</div>
-                  <div className="font-medium">{terminationDetails.notice_period_days || 0} days</div>
+                  <div className="text-sm text-neutral-400">{t('employeeProfile.noticePeriod')}</div>
+                  <div className="font-medium">{terminationDetails.notice_period_days || 0} {t('employeeProfile.days')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">Last Working Day</div>
-                  <div className="font-medium">{terminationDetails.last_working_day ? formatShortDate(terminationDetails.last_working_day) : 'N/A'}</div>
+                  <div className="text-sm text-neutral-400">{t('employeeProfile.lastWorkingDay')}</div>
+                  <div className="font-medium">{terminationDetails.last_working_day ? formatShortDate(terminationDetails.last_working_day) : t('common.n/a')}</div>
                 </div>
               </div>
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h4 className="font-semibold mb-4">Financial Summary</h4>
+              <h4 className="font-semibold mb-4">{t('employeeProfile.financialSummary')}</h4>
               <div className="space-y-3">
                 <div>
-                  <div className="text-sm text-neutral-400">Severance Payment</div>
-                  <div className="font-medium">{terminationDetails.severance_paid ? `$${terminationDetails.severance_amount || 0}` : 'Not paid'}</div>
+                  <div className="text-sm text-neutral-400">{t('employeeProfile.severancePayment')}</div>
+                  <div className="font-medium">{terminationDetails.severance_paid ? `$${terminationDetails.severance_amount || 0}` : t('employeeProfile.notPaid')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">Vacation Payout</div>
+                  <div className="text-sm text-neutral-400">{t('employeeProfile.vacationPayout')}</div>
                   <div className="font-medium">${terminationDetails.vacation_payout || 0}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">Final Pay Date</div>
-                  <div className="font-medium">{terminationDetails.final_pay_date ? formatShortDate(terminationDetails.final_pay_date) : 'N/A'}</div>
+                  <div className="text-sm text-neutral-400">{t('employeeProfile.finalPayDate')}</div>
+                  <div className="font-medium">{terminationDetails.final_pay_date ? formatShortDate(terminationDetails.final_pay_date) : t('common.n/a')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">Benefits End Date</div>
-                  <div className="font-medium">{terminationDetails.benefits_end_date ? formatShortDate(terminationDetails.benefits_end_date) : 'N/A'}</div>
+                  <div className="text-sm text-neutral-400">{t('employeeProfile.benefitsEndDate')}</div>
+                  <div className="font-medium">{terminationDetails.benefits_end_date ? formatShortDate(terminationDetails.benefits_end_date) : t('common.n/a')}</div>
                 </div>
               </div>
             </div>
@@ -1852,20 +1854,20 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="space-y-6"
         >
           <div className="bg-neutral-800 p-6 rounded-lg">
-            <h4 className="font-semibold mb-4">Exit Interview</h4>
+            <h4 className="font-semibold mb-4">{t('employeeProfile.exitInterview')}</h4>
             <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
-                <div className="text-sm text-neutral-400">Interview Date</div>
-                <div className="font-medium">{terminationDetails.exit_interview_date ? formatShortDate(terminationDetails.exit_interview_date) : 'Not conducted'}</div>
+                <div className="text-sm text-neutral-400">{t('employeeProfile.interviewDate')}</div>
+                <div className="font-medium">{terminationDetails.exit_interview_date ? formatShortDate(terminationDetails.exit_interview_date) : t('employeeProfile.notConducted')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">Conducted By</div>
-                <div className="font-medium">{terminationDetails.exit_interview_conducted_by || 'N/A'}</div>
+                <div className="text-sm text-neutral-400">{t('employeeProfile.conductedBy')}</div>
+                <div className="font-medium">{terminationDetails.exit_interview_conducted_by || t('common.n/a')}</div>
               </div>
             </div>
             {terminationDetails.exit_interview_notes && (
               <div>
-                <div className="text-sm text-neutral-400 mb-2">Interview Notes</div>
+                <div className="text-sm text-neutral-400 mb-2">{t('employeeProfile.interviewNotes')}</div>
                 <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.exit_interview_notes}</div>
               </div>
             )}
@@ -1873,22 +1875,22 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
 
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h4 className="font-semibold mb-4">Equipment Return</h4>
+              <h4 className="font-semibold mb-4">{t('employeeProfile.equipmentReturn')}</h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded text-sm ${terminationDetails.equipment_returned ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
-                    {terminationDetails.equipment_returned ? '✓ Returned' : '✗ Not Returned'}
+                    {terminationDetails.equipment_returned ? t('employeeProfile.returnedCheckmark') : t('employeeProfile.notReturned')}
                   </span>
                 </div>
                 {terminationDetails.equipment_return_date && (
                   <div>
-                    <div className="text-sm text-neutral-400">Return Date</div>
+                    <div className="text-sm text-neutral-400">{t('employeeProfile.returnDate')}</div>
                     <div className="font-medium">{formatShortDate(terminationDetails.equipment_return_date)}</div>
                   </div>
                 )}
                 {terminationDetails.equipment_return_notes && (
                   <div>
-                    <div className="text-sm text-neutral-400">Notes</div>
+                    <div className="text-sm text-neutral-400">{t('employeeProfile.notes')}</div>
                     <div className="text-neutral-300">{terminationDetails.equipment_return_notes}</div>
                   </div>
                 )}
@@ -1896,16 +1898,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
 
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h4 className="font-semibold mb-4">System Access</h4>
+              <h4 className="font-semibold mb-4">{t('employeeProfile.systemAccess')}</h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded text-sm ${terminationDetails.access_revoked ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
-                    {terminationDetails.access_revoked ? '✓ Revoked' : '✗ Not Revoked'}
+                    {terminationDetails.access_revoked ? t('employeeProfile.revokedCheckmark') : t('employeeProfile.notRevoked')}
                   </span>
                 </div>
                 {terminationDetails.access_revoked_date && (
                   <div>
-                    <div className="text-sm text-neutral-400">Revoked Date</div>
+                    <div className="text-sm text-neutral-400">{t('employeeProfile.revokedDate')}</div>
                     <div className="font-medium">{formatShortDate(terminationDetails.access_revoked_date)}</div>
                   </div>
                 )}
@@ -1915,7 +1917,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
 
           {terminationDetails.final_pay_notes && (
             <div className="bg-neutral-800 p-6 rounded-lg">
-              <h4 className="font-semibold mb-3">Final Pay Notes</h4>
+              <h4 className="font-semibold mb-3">{t('employeeProfile.finalPayNotes')}</h4>
               <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.final_pay_notes}</div>
             </div>
           )}

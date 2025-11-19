@@ -326,7 +326,7 @@ export default function Benefits() {
                 <div className="text-neutral-300">{plan.coinsurance}</div>
               </div>
               <div>
-                <span className="font-medium text-neutral-400">Type:</span>
+                <span className="font-medium text-neutral-400">{t('benefits.type')}:</span>
                 <div className="text-neutral-300">{plan.type}</div>
               </div>
             </div>
@@ -500,7 +500,7 @@ export default function Benefits() {
             className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Add Insurance Plan</h3>
+              <h3 className="text-xl font-bold mb-4">{t('benefits.addInsurancePlan')}</h3>
               <form className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -508,53 +508,53 @@ export default function Benefits() {
                     <input
                       type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                      placeholder="e.g., Health Insurance"
+                      placeholder={t('benefits.planNamePlaceholder')}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Provider</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.provider')}</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                      placeholder="e.g., Blue Cross Blue Shield"
+                      placeholder={t('benefits.providerPlaceholder')}
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Type</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.type')}</label>
                     <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
-                      <option value="Medical">Medical</option>
-                      <option value="Dental">Dental</option>
-                      <option value="Vision">Vision</option>
-                      <option value="Life">Life</option>
+                      <option value="Medical">{t('benefits.typeMedical')}</option>
+                      <option value="Dental">{t('benefits.typeDental')}</option>
+                      <option value="Vision">{t('benefits.typeVision')}</option>
+                      <option value="Life">{t('benefits.typeLife')}</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">{t('benefits.planLevel')}</label>
                     <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
-                      <option value="Bronze">Bronze</option>
-                      <option value="Silver">Silver</option>
-                      <option value="Gold">Gold</option>
-                      <option value="Platinum">Platinum</option>
+                      <option value="Bronze">{t('benefits.levelBronze')}</option>
+                      <option value="Silver">{t('benefits.levelSilver')}</option>
+                      <option value="Gold">{t('benefits.levelGold')}</option>
+                      <option value="Platinum">{t('benefits.levelPlatinum')}</option>
                     </select>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Deductible</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.deductible')}</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                      placeholder="1000"
+                      placeholder={t('benefits.deductiblePlaceholder')}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Copay</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.copay')}</label>
                     <input
                       type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                      placeholder="25"
+                      placeholder={t('benefits.copayPlaceholder')}
                     />
                   </div>
                   <div>
@@ -562,12 +562,12 @@ export default function Benefits() {
                     <input
                       type="text"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
-                      placeholder="600"
+                      placeholder={t('benefits.monthlyPremiumPlaceholder')}
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Coverage Details</label>
+                  <label className="block text-sm font-medium mb-2">{t('benefits.coverageDetails')}</label>
                   <textarea
                     rows={3}
                     className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -580,13 +580,13 @@ export default function Benefits() {
                     onClick={() => setShowAddBenefit(false)}
                     className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    Add Plan
+                    {t('benefits.addPlan')}
                   </button>
                 </div>
               </form>
@@ -607,7 +607,7 @@ export default function Benefits() {
               <h3 className="text-xl font-bold mb-4">{t('benefits.enrollEmployee')}</h3>
               <form className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Employee</label>
+                  <label className="block text-sm font-medium mb-2">{t('benefits.employee')}</label>
                   <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
                     <option>{t('benefits.selectEmployee')}</option>
                     {employees.map(emp => (
@@ -626,12 +626,12 @@ export default function Benefits() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Coverage Level</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.coverageLevel')}</label>
                     <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
-                      <option value="Individual">Individual</option>
-                      <option value="Employee + Spouse">Employee + Spouse</option>
-                      <option value="Employee + Children">Employee + Children</option>
-                      <option value="Family">Family</option>
+                      <option value="Individual">{t('benefits.levelIndividual')}</option>
+                      <option value="Employee + Spouse">{t('benefits.levelEmployeeSpouse')}</option>
+                      <option value="Employee + Children">{t('benefits.levelEmployeeChildren')}</option>
+                      <option value="Family">{t('benefits.levelFamily')}</option>
                     </select>
                   </div>
                 </div>
@@ -644,7 +644,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Effective Date</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.effectiveDate')}</label>
                     <input
                       type="date"
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
@@ -657,13 +657,13 @@ export default function Benefits() {
                     onClick={() => setShowEnrollEmployee(false)}
                     className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    Enroll Employee
+                    {t('benefits.enrollEmployee')}
                   </button>
                 </div>
               </form>
@@ -685,7 +685,7 @@ export default function Benefits() {
               <form onSubmit={handleUpdateEnrollment} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Employee</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.employee')}</label>
                     <input
                       type="text"
                       value={editingEnrollment.employee_name || ""}
@@ -694,7 +694,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Plan</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.plan')}</label>
                     <input
                       type="text"
                       value={editingEnrollment.plan_name || ""}
@@ -703,29 +703,29 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Status</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.status')}</label>
                     <select
                       value={editingEnrollment.status || "Active"}
                       onChange={(e) => setEditingEnrollment({...editingEnrollment, status: e.target.value})}
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                     >
-                      <option value="Active">Active</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Suspended">Suspended</option>
-                      <option value="Terminated">Terminated</option>
+                      <option value="Active">{t('benefits.statusActive')}</option>
+                      <option value="Pending">{t('benefits.statusPending')}</option>
+                      <option value="Suspended">{t('benefits.statusSuspended')}</option>
+                      <option value="Terminated">{t('benefits.statusTerminated')}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Coverage Level</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.coverageLevel')}</label>
                     <select
                       value={editingEnrollment.coverage_level || "Individual"}
                       onChange={(e) => setEditingEnrollment({...editingEnrollment, coverage_level: e.target.value})}
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                     >
-                      <option value="Individual">Individual</option>
-                      <option value="Family">Family</option>
-                      <option value="Employee + Spouse">Employee + Spouse</option>
-                      <option value="Employee + Children">Employee + Children</option>
+                      <option value="Individual">{t('benefits.levelIndividual')}</option>
+                      <option value="Family">{t('benefits.levelFamily')}</option>
+                      <option value="Employee + Spouse">{t('benefits.levelEmployeeSpouse')}</option>
+                      <option value="Employee + Children">{t('benefits.levelEmployeeChildren')}</option>
                     </select>
                   </div>
                   <div>
@@ -740,7 +740,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Effective Date</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.effectiveDate')}</label>
                     <input
                       type="date"
                       value={editingEnrollment.start_date || ""}
@@ -750,7 +750,7 @@ export default function Benefits() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Notes</label>
+                  <label className="block text-sm font-medium mb-2">{t('benefits.notes')}</label>
                   <textarea
                     rows={3}
                     value={editingEnrollment.notes || ""}
@@ -768,13 +768,13 @@ export default function Benefits() {
                     }}
                     className="px-4 py-2 text-neutral-400 hover:text-white transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    Update Enrollment
+                    {t('benefits.updateEnrollment')}
                   </button>
                 </div>
               </form>
@@ -806,7 +806,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Provider *</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.provider')} *</label>
                     <input
                       type="text"
                       required
@@ -822,11 +822,11 @@ export default function Benefits() {
                       onChange={(e) => setEditingPlan({...editingPlan, type: e.target.value})}
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                     >
-                      <option value="Health">Health</option>
-                      <option value="Dental">Dental</option>
-                      <option value="Vision">Vision</option>
-                      <option value="Life">{t('benefits.lifeInsurance')}</option>
-                      <option value="Disability">Disability</option>
+                      <option value="Health">{t('benefits.typeHealth')}</option>
+                      <option value="Dental">{t('benefits.typeDental')}</option>
+                      <option value="Vision">{t('benefits.typeVision')}</option>
+                      <option value="Life">{t('benefits.typeLife')}</option>
+                      <option value="Disability">{t('benefits.typeDisability')}</option>
                     </select>
                   </div>
                   <div>
@@ -853,7 +853,7 @@ export default function Benefits() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Coverage Details</label>
+                  <label className="block text-sm font-medium mb-2">{t('benefits.coverageDetails')}</label>
                   <textarea
                     rows={4}
                     value={editingPlan.coverage_details || ""}
@@ -896,7 +896,7 @@ export default function Benefits() {
           >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">Plan Details</h3>
+                <h3 className="text-xl font-bold">{t('benefits.planDetails')}</h3>
                 <button
                   onClick={() => {
                     setShowPlanDetails(false);
@@ -911,38 +911,38 @@ export default function Benefits() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-neutral-400">Plan Name</label>
+                    <label className="text-sm font-medium text-neutral-400">{t('benefits.planName')}</label>
                     <p className="font-medium">{selectedPlan.plan_name}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-neutral-400">Provider</label>
+                    <label className="text-sm font-medium text-neutral-400">{t('benefits.provider')}</label>
                     <p className="font-medium">{selectedPlan.provider}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-neutral-400">Plan Type</label>
+                    <label className="text-sm font-medium text-neutral-400">{t('benefits.planType')}</label>
                     <p className="font-medium">{selectedPlan.type}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-neutral-400">Employee Cost</label>
+                    <label className="text-sm font-medium text-neutral-400">{t('benefits.employeeCost')}</label>
                     <p className="font-medium">${selectedPlan.employee_cost}/month</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-neutral-400">Employer Cost</label>
+                    <label className="text-sm font-medium text-neutral-400">{t('benefits.employerCost')}</label>
                     <p className="font-medium">${selectedPlan.employer_cost}/month</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-neutral-400">Total Cost</label>
+                    <label className="text-sm font-medium text-neutral-400">{t('benefits.totalCost')}</label>
                     <p className="font-medium">${(parseFloat(selectedPlan.employee_cost || 0) + parseFloat(selectedPlan.employer_cost || 0)).toFixed(2)}/month</p>
                   </div>
                 </div>
                 
                 <div>
-                  <label className="text-sm font-medium text-neutral-400">Coverage Details</label>
-                  <p className="text-sm bg-neutral-800 p-3 rounded mt-1">{selectedPlan.coverage_details || 'No details available'}</p>
+                  <label className="text-sm font-medium text-neutral-400">{t('benefits.coverageDetails')}</label>
+                  <p className="text-sm bg-neutral-800 p-3 rounded mt-1">{selectedPlan.coverage_details || t('benefits.noDetailsAvailable')}</p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-neutral-400">Plan Status</label>
+                    <label className="text-sm font-medium text-neutral-400">{t('benefits.planStatus')}</label>
                   <span className="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                     Active
                   </span>
@@ -990,7 +990,7 @@ export default function Benefits() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold">Success</h3>
+                <h3 className="text-xl font-bold">{t('common.success')}</h3>
               </div>
               <div className="mb-6">
                 <p className="text-neutral-300 whitespace-pre-line">{successMessage}</p>
@@ -1017,55 +1017,55 @@ export default function Benefits() {
             className="card w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Investment Details</h3>
+              <h3 className="text-xl font-bold mb-4">{t('benefits.investmentDetails')}</h3>
               <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
-                <h4 className="font-medium mb-2">Plan Information</h4>
-                <p><strong>Plan Name:</strong> {selectedInvestmentPlan.plan_name}</p>
-                <p><strong>Provider:</strong> {selectedInvestmentPlan.provider || 'N/A'}</p>
-                <p><strong>Type:</strong> {selectedInvestmentPlan.type || 'N/A'}</p>
+                <h4 className="font-medium mb-2">{t('benefits.planInformation')}</h4>
+                <p><strong>{t('benefits.planName')}:</strong> {selectedInvestmentPlan.plan_name}</p>
+                <p><strong>{t('benefits.provider')}:</strong> {selectedInvestmentPlan.provider || t('common.n/a')}</p>
+                <p><strong>{t('benefits.type')}:</strong> {selectedInvestmentPlan.type || t('common.n/a')}</p>
               </div>
               
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="p-4 bg-neutral-800 rounded-lg">
-                    <h4 className="font-medium mb-3 text-indigo-400">Current Fund Performance</h4>
+                    <h4 className="font-medium mb-3 text-indigo-400">{t('benefits.currentFundPerformance')}</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span>YTD Return:</span>
+                        <span>{t('benefits.ytdReturn')}:</span>
                         <span className="text-green-400">+8.5%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>1 Year Return:</span>
+                        <span>{t('benefits.oneYearReturn')}:</span>
                         <span className="text-green-400">+12.3%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>3 Year Return:</span>
+                        <span>{t('benefits.threeYearReturn')}:</span>
                         <span className="text-green-400">+9.8%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>5 Year Return:</span>
+                        <span>{t('benefits.fiveYearReturn')}:</span>
                         <span className="text-green-400">+11.2%</span>
                       </div>
                     </div>
                   </div>
                   
                   <div className="p-4 bg-neutral-800 rounded-lg">
-                    <h4 className="font-medium mb-3 text-indigo-400">Asset Allocation</h4>
+                    <h4 className="font-medium mb-3 text-indigo-400">{t('benefits.assetAllocation')}</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span>Stocks:</span>
+                        <span>{t('benefits.stocks')}:</span>
                         <span>65%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Bonds:</span>
+                        <span>{t('benefits.bonds')}:</span>
                         <span>25%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Cash:</span>
+                        <span>{t('benefits.cash')}:</span>
                         <span>5%</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Other:</span>
+                        <span>{t('common.other')}:</span>
                         <span>5%</span>
                       </div>
                     </div>
@@ -1073,10 +1073,10 @@ export default function Benefits() {
                 </div>
                 
                 <div className="p-4 bg-neutral-800 rounded-lg">
-                  <h4 className="font-medium mb-3 text-indigo-400">Available Investment Options</h4>
+                  <h4 className="font-medium mb-3 text-indigo-400">{t('benefits.availableInvestmentOptions')}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <h5 className="font-medium mb-2">Target Date Funds</h5>
+                      <h5 className="font-medium mb-2">{t('benefits.targetDateFunds')}</h5>
                       <ul className="text-sm text-neutral-300 space-y-1">
                         <li>• 2050 Target Date Fund</li>
                         <li>• 2045 Target Date Fund</li>
@@ -1085,7 +1085,7 @@ export default function Benefits() {
                       </ul>
                     </div>
                     <div>
-                      <h5 className="font-medium mb-2">Index Funds</h5>
+                      <h5 className="font-medium mb-2">{t('benefits.indexFunds')}</h5>
                       <ul className="text-sm text-neutral-300 space-y-1">
                         <li>• S&P 500 Index Fund</li>
                         <li>• Total Stock Market Index</li>
@@ -1097,14 +1097,14 @@ export default function Benefits() {
                 </div>
                 
                 <div className="p-4 bg-neutral-800 rounded-lg">
-                  <h4 className="font-medium mb-3 text-indigo-400">Historical Returns</h4>
+                  <h4 className="font-medium mb-3 text-indigo-400">{t('benefits.historicalReturns')}</h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-neutral-700">
-                          <th className="text-left py-2">Period</th>
-                          <th className="text-right py-2">Return</th>
-                          <th className="text-right py-2">Benchmark</th>
+                          <th className="text-left py-2">{t('common.period')}</th>
+                          <th className="text-right py-2">{t('benefits.return')}</th>
+                          <th className="text-right py-2">{t('benefits.benchmark')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1159,11 +1159,11 @@ export default function Benefits() {
             className="card w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4">Manage Retirement Plan: {selectedPlanToManage.name}</h3>
+              <h3 className="text-xl font-bold mb-4">{t('benefits.manageRetirementPlan', { name: selectedPlanToManage.name })}</h3>
               <form onSubmit={handleUpdateRetirementPlan} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Employer Match Percentage</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.employerMatchPercentage')}</label>
                     <input
                       type="text"
                       value={managePlanData.employer_match_percentage}
@@ -1173,24 +1173,24 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Vesting Schedule</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.vestingSchedule')}</label>
                     <select
                       value={managePlanData.vesting_schedule}
                       onChange={(e) => setManagePlanData({...managePlanData, vesting_schedule: e.target.value})}
                       className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
                     >
-                      <option value="Immediate">Immediate</option>
-                      <option value="1-year cliff">1-year cliff</option>
-                      <option value="2-year cliff">2-year cliff</option>
-                      <option value="3-year cliff">3-year cliff</option>
-                      <option value="3-year graded">3-year graded</option>
-                      <option value="4-year graded">4-year graded</option>
-                      <option value="5-year graded">5-year graded</option>
-                      <option value="6-year graded">6-year graded</option>
+                      <option value="Immediate">{t('benefits.vestingImmediate')}</option>
+                      <option value="1-year cliff">{t('benefits.vesting1YearCliff')}</option>
+                      <option value="2-year cliff">{t('benefits.vesting2YearCliff')}</option>
+                      <option value="3-year cliff">{t('benefits.vesting3YearCliff')}</option>
+                      <option value="3-year graded">{t('benefits.vesting3YearGraded')}</option>
+                      <option value="4-year graded">{t('benefits.vesting4YearGraded')}</option>
+                      <option value="5-year graded">{t('benefits.vesting5YearGraded')}</option>
+                      <option value="6-year graded">{t('benefits.vesting6YearGraded')}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Annual Contribution Limit ($)</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.annualContributionLimit')}</label>
                     <input
                       type="number"
                       value={managePlanData.contribution_limit}
@@ -1200,7 +1200,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Investment Options Count</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.investmentOptionsCount')}</label>
                     <input
                       type="number"
                       value={managePlanData.investment_options}
@@ -1210,7 +1210,7 @@ export default function Benefits() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Management Fees (%)</label>
+                    <label className="block text-sm font-medium mb-2">{t('benefits.managementFees')}</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1223,15 +1223,15 @@ export default function Benefits() {
                 </div>
                 
                 <div className="bg-neutral-800 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2 text-indigo-400">Current Plan Information</h4>
+                  <h4 className="font-medium mb-2 text-indigo-400">{t('benefits.currentPlanInformation')}</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-neutral-400">Provider:</span>
+                      <span className="text-neutral-400">{t('benefits.provider')}:</span>
                       <div className="font-medium">{selectedPlanToManage.provider}</div>
                     </div>
                     <div>
-                      <span className="text-neutral-400">Current Balance:</span>
-                      <div className="font-medium">${selectedPlanToManage.current_balance?.toLocaleString() || 'N/A'}</div>
+                      <span className="text-neutral-400">{t('benefits.currentBalance')}:</span>
+                      <div className="font-medium">${selectedPlanToManage.current_balance?.toLocaleString() || t('common.n/a')}</div>
                     </div>
                   </div>
                 </div>
