@@ -595,7 +595,9 @@
       "saveBackupCodes": "⚠️ Guarde Estos Códigos de Respaldo",
       "backupCodesDescription": "Almacene estos códigos en un lugar seguro. Puede usarlos para acceder a su cuenta si pierde su autenticador:",
       "verifying": "Verificando...",
-      "enableMFA": "Habilitar MFA"
+      "enableMFA": "Habilitar MFA",
+      "qrCodeAlt": "Código QR MFA",
+      "success": "✅ ¡Autenticación de dos factores habilitada exitosamente! Su cuenta ahora está protegida."
     },
     "passwordChange": {
       "title": "🔐 Cambiar Contraseña",
@@ -634,10 +636,24 @@
     "noSystemSettings": "No hay configuración del sistema disponible",
     "failedToRevokeDevice": "Error al revocar dispositivo",
     "failedToRevokeDevices": "Error al revocar dispositivos",
+    "deviceRevokedSuccess": "✅ Dispositivo revocado exitosamente",
+    "allDevicesRevokedSuccess": "Todos los dispositivos revocados exitosamente",
     "weak": "Débil",
     "medium": "Media",
     "strong": "Fuerte",
     "fields": {
+      "theme": "Tema",
+      "language": "Idioma",
+      "timezone": "Zona Horaria",
+      "email_notifications": "Notificaciones por Correo Electrónico",
+      "push_notifications": "Notificaciones Push",
+      "sms_notifications": "Notificaciones SMS",
+      "two_factor_auth": "Autenticación de Dos Factores",
+      "session_timeout": "Tiempo de Espera de Sesión (minutos)",
+      "password_requirements": "Requisitos de Contraseña",
+      "backup_frequency": "Frecuencia de Copia de Seguridad",
+      "date_format": "Formato de Fecha",
+      "currency": "Moneda",
       "lockout_duration_minutes": "Duración del bloqueo de cuenta en minutos",
       "login_attempts_limit": "Intentos máximos de inicio de sesión antes del bloqueo",
       "max_login_attempts": "Intentos máximos de inicio de sesión antes del bloqueo",
@@ -1145,16 +1161,6 @@
     "hoursBiweekly": "Horas/quincena",
     "noCompensationRecords": "No hay registros de compensación",
     "statusHistory": "Historial de Estado"
-  },
-  "settings": {
-    "mfaSetup": {
-      "qrCodeAlt": "Código QR MFA",
-      "success": "✅ ¡Autenticación de dos factores habilitada exitosamente! Su cuenta ahora está protegida."
-    },
-    "deviceRevokedSuccess": "✅ Dispositivo revocado exitosamente",
-    "allDevicesRevokedSuccess": "Todos los dispositivos revocados exitosamente",
-    "failedToRevokeDevice": "Error al revocar dispositivo",
-    "failedToRevokeDevices": "Error al revocar todos los dispositivos"
   },
   "common": {
     "n/a": "N/A",

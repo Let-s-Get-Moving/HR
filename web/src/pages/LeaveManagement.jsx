@@ -851,7 +851,7 @@ export default function LeaveManagement() {
 
             {/* HR Management Actions */}
             <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.actions')}</h3>
+              <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.title')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button 
                   onClick={() => setActiveTab("requests")}
@@ -859,7 +859,7 @@ export default function LeaveManagement() {
                 >
                   <div className="text-2xl mb-2">📋</div>
                   <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
-                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.reviewDescription')}</p>
+                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.reviewRequestsDesc')}</p>
                 </button>
                 <button 
                   onClick={() => setActiveTab("analytics")}
@@ -867,7 +867,7 @@ export default function LeaveManagement() {
                 >
                   <div className="text-2xl mb-2">📊</div>
                   <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
-                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.analyticsDescription')}</p>
+                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
                 </button>
                 <button 
                   onClick={() => setShowManagePolicies(true)}
@@ -875,7 +875,7 @@ export default function LeaveManagement() {
                 >
                   <div className="text-2xl mb-2">⚙️</div>
                   <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
-                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.policiesDescription')}</p>
+                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.managePoliciesDesc')}</p>
                 </button>
               </div>
             </div>
@@ -901,7 +901,7 @@ export default function LeaveManagement() {
                       ←
                     </button>
                     <span className="font-medium text-lg">
-                      {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      {currentMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
                     </span>
                     <button
                       onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
@@ -915,7 +915,15 @@ export default function LeaveManagement() {
                 {/* Calendar Grid */}
                 <div className="grid grid-cols-7 gap-1">
                   {/* Day Headers */}
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  {[
+                    t('leave.calendar.sun'),
+                    t('leave.calendar.mon'),
+                    t('leave.calendar.tue'),
+                    t('leave.calendar.wed'),
+                    t('leave.calendar.thu'),
+                    t('leave.calendar.fri'),
+                    t('leave.calendar.sat')
+                  ].map(day => (
                     <div key={day} className="p-3 text-center text-sm font-medium text-neutral-400">
                       {day}
                     </div>
@@ -991,7 +999,7 @@ export default function LeaveManagement() {
             <div className="lg:col-span-1">
               <div className="card p-6">
                 <h4 className="text-lg font-semibold mb-4">
-                  {selectedDate ? selectedDate.toLocaleDateString('en-US', { 
+                  {selectedDate ? selectedDate.toLocaleDateString(undefined, { 
                     weekday: 'long', 
                     year: 'numeric', 
                     month: 'long', 

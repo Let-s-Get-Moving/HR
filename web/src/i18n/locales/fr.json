@@ -595,7 +595,9 @@
       "saveBackupCodes": "⚠️ Enregistrez Ces Codes de Secours",
       "backupCodesDescription": "Conservez ces codes dans un endroit sûr. Vous pouvez les utiliser pour accéder à votre compte si vous perdez votre authentificateur:",
       "verifying": "Vérification...",
-      "enableMFA": "Activer MFA"
+      "enableMFA": "Activer MFA",
+      "qrCodeAlt": "Code QR MFA",
+      "success": "✅ Authentification à deux facteurs activée avec succès! Votre compte est maintenant protégé."
     },
     "passwordChange": {
       "title": "🔐 Changer le Mot de Passe",
@@ -634,10 +636,24 @@
     "noSystemSettings": "Aucun paramètre système disponible",
     "failedToRevokeDevice": "Échec de la révocation de l'appareil",
     "failedToRevokeDevices": "Échec de la révocation des appareils",
+    "deviceRevokedSuccess": "✅ Appareil révoqué avec succès",
+    "allDevicesRevokedSuccess": "Tous les appareils révoqués avec succès",
     "weak": "Faible",
     "medium": "Moyen",
     "strong": "Fort",
     "fields": {
+      "theme": "Thème",
+      "language": "Langue",
+      "timezone": "Fuseau Horaire",
+      "email_notifications": "Notifications par Courriel",
+      "push_notifications": "Notifications Push",
+      "sms_notifications": "Notifications SMS",
+      "two_factor_auth": "Authentification à Deux Facteurs",
+      "session_timeout": "Délai d'Expiration de Session (minutes)",
+      "password_requirements": "Exigences de Mot de Passe",
+      "backup_frequency": "Fréquence de Sauvegarde",
+      "date_format": "Format de Date",
+      "currency": "Devise",
       "lockout_duration_minutes": "Durée du verrouillage du compte en minutes",
       "login_attempts_limit": "Tentatives de connexion maximales avant verrouillage",
       "max_login_attempts": "Tentatives de connexion maximales avant verrouillage",
@@ -1144,16 +1160,6 @@
     "hoursBiweekly": "Heures/quinzaine",
     "noCompensationRecords": "Aucun dossier de compensation",
     "statusHistory": "Historique du Statut"
-  },
-  "settings": {
-    "mfaSetup": {
-      "qrCodeAlt": "Code QR MFA",
-      "success": "✅ Authentification à deux facteurs activée avec succès! Votre compte est maintenant protégé."
-    },
-    "deviceRevokedSuccess": "✅ Appareil révoqué avec succès",
-    "allDevicesRevokedSuccess": "Tous les appareils révoqués avec succès",
-    "failedToRevokeDevice": "Échec de la révocation de l'appareil",
-    "failedToRevokeDevices": "Échec de la révocation de tous les appareils"
   },
   "common": {
     "n/a": "N/A",

@@ -672,7 +672,9 @@
       "saveBackupCodes": "⚠️ Save These Backup Codes",
       "backupCodesDescription": "Store these codes in a safe place. You can use them to access your account if you lose your authenticator:",
       "verifying": "Verifying...",
-      "enableMFA": "Enable MFA"
+      "enableMFA": "Enable MFA",
+      "qrCodeAlt": "MFA QR Code",
+      "success": "✅ Two-Factor Authentication enabled successfully! Your account is now protected."
     },
     "passwordChange": {
       "title": "🔐 Change Password",
@@ -711,6 +713,8 @@
     "noSystemSettings": "No system settings available",
     "failedToRevokeDevice": "Failed to revoke device",
     "failedToRevokeDevices": "Failed to revoke devices",
+    "deviceRevokedSuccess": "✅ Device revoked successfully",
+    "allDevicesRevokedSuccess": "All devices revoked successfully",
     "weak": "Weak",
     "medium": "Medium",
     "strong": "Strong",
@@ -734,7 +738,7 @@
       "password_min_length": "Minimum password length",
       "session_timeout_minutes": "Session timeout in minutes",
       "log_retention_days": "Log retention period in days",
-      "auto_backup": "Automatic Backup",
+      "auto_backup": "Auto Backup",
       "notifications_enabled": "Notifications Enabled"
     },
     "descriptions": {
@@ -1282,15 +1286,5 @@
     "notSet": "Not set",
     "sinPlaceholder": "XXX-XXX-XXX",
     "transitNumberPlaceholder": "XXXXX"
-  },
-  "settings": {
-    "mfaSetup": {
-      "qrCodeAlt": "MFA QR Code",
-      "success": "✅ Two-Factor Authentication enabled successfully! Your account is now protected."
-    },
-    "deviceRevokedSuccess": "✅ Device revoked successfully",
-    "allDevicesRevokedSuccess": "All devices revoked successfully",
-    "failedToRevokeDevice": "Failed to revoke device",
-    "failedToRevokeDevices": "Failed to revoke all devices"
   }
 }
