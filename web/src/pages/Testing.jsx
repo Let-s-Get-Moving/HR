@@ -607,18 +607,18 @@ export default function Testing() {
 
       {/* System Modules Overview */}
       <div className="card p-6 mt-6">
-        <h3 className="text-lg font-semibold mb-4">System Modules Overview</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('testing.systemModules.title')}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            { icon: "👥", name: "Employee Management", desc: "Complete lifecycle management" },
-            { icon: "💰", name: "Payroll & Compensation", desc: "Automatic calculations" },
-            { icon: "📊", name: "Performance Management", desc: "Reviews & 360° feedback" },
-            { icon: "🏥", name: "Benefits Administration", desc: "Insurance & retirement" },
-            { icon: "💸", name: "Bonuses & Commissions", desc: "Performance-based pay" },
-            { icon: "📝", name: "Recruiting & Hiring", desc: "Job postings & pipeline" },
-            { icon: "⏰", name: "Time & Attendance", desc: "Tracking & overtime" },
-            { icon: "🏖️", name: "Leave Management", desc: "7 leave types (ESA)" },
-            { icon: "✅", name: "Compliance & Docs", desc: "WHMIS & contracts" }
+            { icon: "👥", name: t('testing.systemModules.employeeManagement'), desc: t('testing.systemModules.employeeManagementDesc') },
+            { icon: "💰", name: t('testing.systemModules.payrollCompensation'), desc: t('testing.systemModules.payrollCompensationDesc') },
+            { icon: "📊", name: t('testing.systemModules.performanceManagement'), desc: t('testing.systemModules.performanceManagementDesc') },
+            { icon: "🏥", name: t('testing.systemModules.benefitsAdministration'), desc: t('testing.systemModules.benefitsAdministrationDesc') },
+            { icon: "💸", name: t('testing.systemModules.bonusesCommissions'), desc: t('testing.systemModules.bonusesCommissionsDesc') },
+            { icon: "📝", name: t('testing.systemModules.recruitingHiring'), desc: t('testing.systemModules.recruitingHiringDesc') },
+            { icon: "⏰", name: t('testing.systemModules.timeAttendance'), desc: t('testing.systemModules.timeAttendanceDesc') },
+            { icon: "🏖️", name: t('testing.systemModules.leaveManagement'), desc: t('testing.systemModules.leaveManagementDesc') },
+            { icon: "✅", name: t('testing.systemModules.complianceDocs'), desc: t('testing.systemModules.complianceDocsDesc') }
           ].map((module, idx) => (
             <div key={idx} className="p-4 bg-neutral-800/50 rounded-lg">
               <div className="flex items-center space-x-3 mb-2">

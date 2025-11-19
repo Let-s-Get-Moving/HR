@@ -242,14 +242,14 @@ export default function LeaveManagement() {
   };
 
   const tabs = userRole === 'user' ? [
-    { id: "request", name: "Submit Request", icon: "📝" },
-    { id: "my-requests", name: "My Requests", icon: "📋" },
-    { id: "calendar", name: "Leave Calendar", icon: "📅" }
+    { id: "request", name: t('leave.submitRequest'), icon: "📝" },
+    { id: "my-requests", name: t('leave.myRequests'), icon: "📋" },
+    { id: "calendar", name: t('leave.leaveCalendar'), icon: "📅" }
   ] : [
-    { id: "approvals", name: "Leave Requests", icon: "📋" },
-    { id: "calendar", name: "Leave Calendar", icon: "📅" },
-    { id: "balances", name: "Leave Balances", icon: "💰" },
-    { id: "analytics", name: "Analytics", icon: "📊" }
+    { id: "approvals", name: t('leave.leaveRequests'), icon: "📋" },
+    { id: "calendar", name: t('leave.leaveCalendar'), icon: "📅" },
+    { id: "balances", name: t('leave.leaveBalances'), icon: "💰" },
+    { id: "analytics", name: t('leave.analytics'), icon: "📊" }
   ];
 
   if (loading) {
@@ -315,7 +315,7 @@ export default function LeaveManagement() {
             <div className="card p-6 bg-neutral-800">
               <h3 className="text-lg font-semibold mb-4 flex items-center">
                 <span className="text-2xl mr-2">📝</span>
-                Record Leave Entry
+                {t('leave.recordLeaveEntry')}
               </h3>
               <p className="text-sm text-neutral-400 mb-6">{t('leave.hrRecordsDescription')}</p>
               

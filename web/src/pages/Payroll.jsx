@@ -290,6 +290,7 @@ export default function Payroll() {
           formatCurrency={formatCurrency}
           formatHours={formatHours}
           searchQuery={searchQuery}
+          t={t}
         />
       </AnimatePresence>
 
@@ -310,7 +311,7 @@ export default function Payroll() {
 }
 
 // Period View Component - Shows all employees in grid
-function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, formatHours, searchQuery }) {
+function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, formatHours, searchQuery, t }) {
   if (loading) {
     return <div className="text-center py-12 text-secondary">{t('payroll.loading')}</div>;
   }
@@ -321,8 +322,8 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
         <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
-        <h3 className="text-lg font-medium text-primary mb-2">No employees found</h3>
-        <p className="text-secondary">Try adjusting your search terms or clear the search to see all employees.</p>
+        <h3 className="text-lg font-medium text-primary mb-2">{t('payroll.noEmployeesFound')}</h3>
+        <p className="text-secondary">{t('payroll.adjustSearchTerms')}</p>
       </div>
     );
   }
@@ -334,7 +335,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <h3 className="text-lg font-medium text-primary mb-2">{t('payroll.noData')}</h3>
-        <p className="text-secondary">No approved timecards found for this pay period</p>
+        <p className="text-secondary">{t('payroll.noApprovedTimecards')}</p>
       </div>
     );
   }

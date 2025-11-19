@@ -10,9 +10,9 @@ const formatHoursAsTime = (decimalHours) => {
 };
 
 // Uploads List View
-export function UploadsListView({ uploads, onViewUpload, loading }) {
+export function UploadsListView({ uploads, onViewUpload, loading, t }) {
   if (loading) {
-    return <div className="text-center py-8 text-secondary">Loading uploads...</div>;
+    return <div className="text-center py-8 text-secondary">{t('timeTracking.loadingUploads')}</div>;
   }
 
   if (uploads.length === 0) {
@@ -25,8 +25,8 @@ export function UploadsListView({ uploads, onViewUpload, loading }) {
         <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
-        <h3 className="text-lg font-medium text-primary mb-2">No Uploads Yet</h3>
-        <p className="text-secondary">Upload your first timecard Excel file to get started</p>
+        <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noUploadsYet')}</h3>
+        <p className="text-secondary">{t('timeTracking.uploadFirstTimecard')}</p>
       </motion.div>
     );
   }

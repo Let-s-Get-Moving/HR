@@ -770,11 +770,17 @@ export default function Settings() {
               disabled={saving[key]}
               className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {optionList.map(option => (
-                <option key={option} value={option}>
-                  {option.charAt(0).toUpperCase() + option.slice(1)}
-                </option>
-              ))}
+              {optionList.map(option => {
+                // Try to translate the option value
+                const translationKey = `settings.${option}`;
+                const translated = t(translationKey);
+                const displayValue = translated !== translationKey ? translated : option.charAt(0).toUpperCase() + option.slice(1);
+                return (
+                  <option key={option} value={option}>
+                    {displayValue}
+                  </option>
+                );
+              })}
             </select>
           </div>
         );

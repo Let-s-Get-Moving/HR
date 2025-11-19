@@ -312,7 +312,10 @@
     "deductions": "Déductions",
     "vacationAccrual": "Cumul de Vacances (4%)",
     "vacationHoursAccrued": "Heures de Vacances Accumulées",
-    "vacationPayValue": "Valeur de la Paie de Vacances"
+    "vacationPayValue": "Valeur de la Paie de Vacances",
+    "noApprovedTimecards": "Aucune fiche de temps approuvée trouvée pour cette période de paie",
+    "noEmployeesFound": "Aucun employé trouvé",
+    "adjustSearchTerms": "Essayez d'ajuster vos termes de recherche ou effacez la recherche pour voir tous les employés."
   },
   "timeTracking": {
     "title": "Suivi du Temps",
@@ -399,20 +402,9 @@
     "unknownError": "Erreur inconnue",
     "overtime": "Heures Supplémentaires",
     "missing": "Manquant",
-    "fields": {
-      "theme": "Thème",
-      "language": "Langue",
-      "timezone": "Fuseau Horaire",
-      "email_notifications": "Notifications par E-mail",
-      "push_notifications": "Notifications Push",
-      "sms_notifications": "Notifications SMS",
-      "two_factor_auth": "Authentification à Deux Facteurs",
-      "session_timeout": "Délai d'Expiration de Session",
-      "password_requirements": "Exigences de Mot de Passe",
-      "backup_frequency": "Fréquence de Sauvegarde",
-      "date_format": "Format de Date",
-      "currency": "Devise"
-    }
+    "loadingUploads": "Chargement des téléchargements...",
+    "noUploadsYet": "Aucun Téléchargement Pour le Moment",
+    "uploadFirstTimecard": "Téléchargez votre premier fichier Excel de fiches de temps pour commencer"
   },
   "compliance": {
     "title": "Gestion de la Conformité",
@@ -431,12 +423,19 @@
     "allClear": "Tout est en Ordre!"
   },
   "benefits": {
-    "title": "Avantages Sociaux",
+    "title": "Administration des Avantages Sociaux",
+    "description": "Gérer les avantages sociaux des employés, les assurances et les plans de retraite",
     "healthInsurance": "Assurance Santé",
     "retirement": "Retraite",
     "paidTimeOff": "Congés Payés",
-    "enrollment": "Inscription",
-    "myBenefits": "Mes Avantages"
+    "enrollment": "Inscription aux Avantages",
+    "myBenefits": "Mes Avantages",
+    "insurancePlans": "Plans d'Assurance",
+    "retirementPlans": "Plans de Retraite",
+    "analytics": "Analytiques des Avantages",
+    "noBenefitsData": "Aucune Donnée d'Avantages",
+    "addBenefitsToSeeAnalytics": "Ajoutez des avantages et des inscriptions pour voir les analytiques",
+    "loadingBenefitsData": "Chargement des données d'avantages..."
   },
   "bonuses": {
     "title": "Primes et Commissions",
@@ -544,7 +543,23 @@
     "noOptionsWarning": "⚠️ Ce paramètre n'a aucune option disponible",
     "noSettingsAvailable": "Aucun paramètre disponible",
     "settingsWillAppearHere": "Les paramètres apparaîtront ici lorsqu'ils seront disponibles",
-    "noSystemSettings": "Aucun paramètre système disponible"
+    "noSystemSettings": "Aucun paramètre système disponible",
+    "failedToRevokeDevice": "Échec de la révocation de l'appareil",
+    "failedToRevokeDevices": "Échec de la révocation des appareils",
+    "weak": "Faible",
+    "medium": "Moyen",
+    "strong": "Fort",
+    "fields": {
+      "lockout_duration_minutes": "Durée du verrouillage du compte en minutes",
+      "login_attempts_limit": "Tentatives de connexion maximales avant verrouillage",
+      "max_login_attempts": "Tentatives de connexion maximales avant verrouillage",
+      "password_expiry_days": "Expiration du mot de passe en jours",
+      "password_min_length": "Longueur minimale du mot de passe",
+      "session_timeout_minutes": "Délai d'expiration de session en minutes",
+      "log_retention_days": "Période de rétention des journaux en jours",
+      "auto_backup": "Sauvegarde Automatique",
+      "notifications_enabled": "Notifications Activées"
+    }
   },
   "login": {
     "title": "C&C HR",
@@ -616,6 +631,27 @@
       "screen": "Écran",
       "viewport": "Viewport",
       "timezone": "Fuseau Horaire"
+    },
+    "systemModules": {
+      "title": "Aperçu des Modules du Système",
+      "employeeManagement": "Gestion des Employés",
+      "employeeManagementDesc": "Gestion complète du cycle de vie",
+      "payrollCompensation": "Paie et Rémunération",
+      "payrollCompensationDesc": "Calculs automatiques",
+      "performanceManagement": "Gestion de la Performance",
+      "performanceManagementDesc": "Évaluations et retours à 360°",
+      "benefitsAdministration": "Administration des Avantages",
+      "benefitsAdministrationDesc": "Assurances et retraite",
+      "bonusesCommissions": "Primes et Commissions",
+      "bonusesCommissionsDesc": "Rémunération basée sur la performance",
+      "recruitingHiring": "Recrutement et Embauche",
+      "recruitingHiringDesc": "Offres d'emploi et pipeline",
+      "timeAttendance": "Temps et Présence",
+      "timeAttendanceDesc": "Suivi et heures supplémentaires",
+      "leaveManagement": "Gestion des Congés",
+      "leaveManagementDesc": "7 types de congés (ESA)",
+      "complianceDocs": "Conformité et Documents",
+      "complianceDocsDesc": "WHMIS et contrats"
     },
     "authentication": {
       "name": "Système d'Authentification",

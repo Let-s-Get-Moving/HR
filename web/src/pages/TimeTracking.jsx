@@ -566,6 +566,7 @@ export default function TimeTracking() {
             uploads={uploads}
             onViewUpload={loadUploadDetails}
             loading={loading}
+            t={t}
           />
         )}
         {view === "upload-detail" && (
@@ -589,7 +590,7 @@ export default function TimeTracking() {
             loading={loading}
           />
         )}
-        {view === "main" && <MainTableView timecards={displayedTimecards} onViewIndividual={viewIndividualTimecard} loading={loading} />}
+        {view === "main" && <MainTableView timecards={displayedTimecards} onViewIndividual={viewIndividualTimecard} loading={loading} t={t} />}
         {view === "individual" && <IndividualView timecard={selectedEmployee} onBack={() => setView("main")} />}
       </AnimatePresence>
 
@@ -616,7 +617,7 @@ export default function TimeTracking() {
 }
 
 // Main Table View Component
-function MainTableView({ timecards, onViewIndividual, loading }) {
+function MainTableView({ timecards, onViewIndividual, loading, t }) {
   if (loading) {
     return <div className="text-center py-8 text-secondary">Loading...</div>;
   }

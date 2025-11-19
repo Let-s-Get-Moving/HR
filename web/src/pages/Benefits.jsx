@@ -48,10 +48,10 @@ export default function Benefits() {
   });
 
   const tabs = [
-    { id: "enrollment", name: "Benefits Enrollment", icon: "📋" },
-    { id: "insurance", name: "Insurance Plans", icon: "🏥" },
-    { id: "retirement", name: "Retirement Plans", icon: "💰" },
-    { id: "analytics", name: "Benefits Analytics", icon: "📊" }
+    { id: "enrollment", name: t('benefits.enrollment'), icon: "📋" },
+    { id: "insurance", name: t('benefits.insurancePlans'), icon: "🏥" },
+    { id: "retirement", name: t('benefits.retirementPlans'), icon: "💰" },
+    { id: "analytics", name: t('benefits.analytics'), icon: "📊" }
   ];
 
   const handleAddBenefit = async (e) => {
@@ -444,8 +444,8 @@ export default function Benefits() {
 
       <div className="bg-neutral-800 border border-neutral-700 rounded-lg p-8 text-center">
         <div className="text-neutral-400 mb-2">📊</div>
-        <h4 className="text-lg font-semibold mb-2">No Benefits Data</h4>
-        <p className="text-sm text-neutral-500">Add benefits and enrollments to see analytics</p>
+        <h4 className="text-lg font-semibold mb-2">{t('benefits.noBenefitsData')}</h4>
+        <p className="text-sm text-neutral-500">{t('benefits.addBenefitsToSeeAnalytics')}</p>
       </div>
     </div>
   );
@@ -453,7 +453,7 @@ export default function Benefits() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg">Loading benefits data...</div>
+        <div className="text-lg">{t('benefits.loadingBenefitsData')}</div>
       </div>
     );
   }
@@ -462,7 +462,7 @@ export default function Benefits() {
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">{t('benefits.title')}</h1>
-        <p className="text-neutral-400 mt-1">Manage employee benefits, insurance, and retirement plans</p>
+        <p className="text-neutral-400 mt-1">{t('benefits.description')}</p>
       </div>
 
       {/* Tab Navigation */}

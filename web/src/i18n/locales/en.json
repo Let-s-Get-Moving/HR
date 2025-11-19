@@ -310,7 +310,10 @@
     "netPayLabel": "Net Pay",
     "vacationAccrual": "Vacation Accrual (4%)",
     "vacationHoursAccrued": "Vacation Hours Accrued",
-    "vacationPayValue": "Vacation Pay Value"
+    "vacationPayValue": "Vacation Pay Value",
+    "noApprovedTimecards": "No approved timecards found for this pay period",
+    "noEmployeesFound": "No employees found",
+    "adjustSearchTerms": "Try adjusting your search terms or clear the search to see all employees."
   },
   "timeTracking": {
     "title": "Time Tracking",
@@ -403,7 +406,10 @@
     "status": "Status",
     "actions": "Actions",
     "date": "Date",
-    "notesLabel": "Notes"
+    "notesLabel": "Notes",
+    "loadingUploads": "Loading uploads...",
+    "noUploadsYet": "No Uploads Yet",
+    "uploadFirstTimecard": "Upload your first timecard Excel file to get started"
   },
   "compliance": {
     "title": "Compliance Management",
@@ -423,6 +429,7 @@
   },
   "benefits": {
     "title": "Benefits Administration",
+    "description": "Manage employee benefits, insurance, and retirement plans",
     "healthInsurance": "Health Insurance",
     "retirement": "Retirement",
     "paidTimeOff": "Paid Time Off",
@@ -467,7 +474,10 @@
     "employeeCost": "Employee Cost (CAD)",
     "employerCost": "Employer Cost (CAD)",
     "planCoveragePlaceholder": "Describe what this plan covers...",
-    "confirmTerminate": "Are you sure you want to terminate this benefits enrollment?"
+    "confirmTerminate": "Are you sure you want to terminate this benefits enrollment?",
+    "noBenefitsData": "No Benefits Data",
+    "addBenefitsToSeeAnalytics": "Add benefits and enrollments to see analytics",
+    "loadingBenefitsData": "Loading benefits data..."
   },
   "bonuses": {
     "title": "Bonuses & Commissions",
@@ -578,6 +588,9 @@
     "noSystemSettings": "No system settings available",
     "failedToRevokeDevice": "Failed to revoke device",
     "failedToRevokeDevices": "Failed to revoke devices",
+    "weak": "Weak",
+    "medium": "Medium",
+    "strong": "Strong",
     "fields": {
       "theme": "Theme",
       "language": "Language",
@@ -586,11 +599,20 @@
       "push_notifications": "Push Notifications",
       "sms_notifications": "SMS Notifications",
       "two_factor_auth": "Two-Factor Authentication",
-      "session_timeout": "Session Timeout",
+      "session_timeout": "Session Timeout (minutes)",
       "password_requirements": "Password Requirements",
       "backup_frequency": "Backup Frequency",
       "date_format": "Date Format",
-      "currency": "Currency"
+      "currency": "Currency",
+      "lockout_duration_minutes": "Account lockout duration in minutes",
+      "login_attempts_limit": "Maximum login attempts before lockout",
+      "max_login_attempts": "Maximum login attempts before lockout",
+      "password_expiry_days": "Password expiry in days",
+      "password_min_length": "Minimum password length",
+      "session_timeout_minutes": "Session timeout in minutes",
+      "log_retention_days": "Log retention period in days",
+      "auto_backup": "Automatic Backup",
+      "notifications_enabled": "Notifications Enabled"
     }
   },
   "testing": {
@@ -604,6 +626,27 @@
       "screen": "Screen",
       "viewport": "Viewport",
       "timezone": "Timezone"
+    },
+    "systemModules": {
+      "title": "System Modules Overview",
+      "employeeManagement": "Employee Management",
+      "employeeManagementDesc": "Complete lifecycle management",
+      "payrollCompensation": "Payroll & Compensation",
+      "payrollCompensationDesc": "Automatic calculations",
+      "performanceManagement": "Performance Management",
+      "performanceManagementDesc": "Reviews & 360° feedback",
+      "benefitsAdministration": "Benefits Administration",
+      "benefitsAdministrationDesc": "Insurance & retirement",
+      "bonusesCommissions": "Bonuses & Commissions",
+      "bonusesCommissionsDesc": "Performance-based pay",
+      "recruitingHiring": "Recruiting & Hiring",
+      "recruitingHiringDesc": "Job postings & pipeline",
+      "timeAttendance": "Time & Attendance",
+      "timeAttendanceDesc": "Tracking & overtime",
+      "leaveManagement": "Leave Management",
+      "leaveManagementDesc": "7 leave types (ESA)",
+      "complianceDocs": "Compliance & Docs",
+      "complianceDocsDesc": "WHMIS & contracts"
     },
     "authentication": {
       "name": "Authentication System",
