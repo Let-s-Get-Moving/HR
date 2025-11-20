@@ -210,19 +210,8 @@ export default function Settings() {
   // Track if component is mounted (avoid double-loading on first render)
   const isInitialMount = React.useRef(true);
   
-  // Loading refs to prevent duplicate API requests
-  const loadingRefs = useRef({
-    departments: false,
-    holidays: false,
-    jobTitles: false,
-    employees: false,
-    leaveTypes: false,
-    benefitsPackages: false,
-    workSchedules: false,
-    overtimePolicies: false,
-    attendancePolicies: false,
-    remoteWorkPolicies: false
-  });
+  // Track which modals have loaded data in current session to prevent duplicates
+  const loadedModalsRef = useRef(new Set());
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -254,63 +243,37 @@ export default function Settings() {
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
 
-  // Load data when modals are opened - with duplicate prevention
+  // Load data when modals are opened - track loaded modals to prevent duplicates
   useEffect(() => {
-    if (showDepartmentsModal && !loadingRefs.current.departments) {
-      loadingRefs.current.departments = true;
-      loadDepartments().finally(() => {
-        loadingRefs.current.departments = false;
-      });
+    if (showDepartmentsModal && !loadedModalsRef.current.has('departments')) {
+      loadedModalsRef.current.add('departments');
+      loadDepartments();
     }
     if (!showDepartmentsModal) {
-      loadingRefs.current.departments = false;
+      loadedModalsRef.current.delete('departments');
     }
   }, [showDepartmentsModal]);
 
   useEffect(() => {
-    if (showLeavePoliciesModal && !loadingRefs.current.leaveTypes) {
-      loadingRefs.current.leaveTypes = true;
-      loadLeaveTypes().finally(() => {
-        loadingRefs.current.leaveTypes = false;
-      });
+    if (showLeavePoliciesModal && !loadedModalsRef.current.has('leavePolicies')) {
+      loadedModalsRef.current.add('leavePolicies');
+      loadLeaveTypes();
     }
     if (!showLeavePoliciesModal) {
-      loadingRefs.current.leaveTypes = false;
+      loadedModalsRef.current.delete('leavePolicies');
     }
   }, [showLeavePoliciesModal]);
 
   useEffect(() => {
-    if (showHolidaysModal) {
-      if (!loadingRefs.current.holidays) {
-        loadingRefs.current.holidays = true;
-        loadHolidays().finally(() => {
-          loadingRefs.current.holidays = false;
-        });
-      }
-      if (!loadingRefs.current.departments) {
-        loadingRefs.current.departments = true;
-        loadDepartments().finally(() => {
-          loadingRefs.current.departments = false;
-        });
-      }
-      if (!loadingRefs.current.jobTitles) {
-        loadingRefs.current.jobTitles = true;
-        loadJobTitles().finally(() => {
-          loadingRefs.current.jobTitles = false;
-        });
-      }
-      if (!loadingRefs.current.employees) {
-        loadingRefs.current.employees = true;
-        loadEmployees().finally(() => {
-          loadingRefs.current.employees = false;
-        });
-      }
+    if (showHolidaysModal && !loadedModalsRef.current.has('holidays')) {
+      loadedModalsRef.current.add('holidays');
+      loadHolidays();
+      loadDepartments();
+      loadJobTitles();
+      loadEmployees();
     }
     if (!showHolidaysModal) {
-      loadingRefs.current.holidays = false;
-      loadingRefs.current.departments = false;
-      loadingRefs.current.jobTitles = false;
-      loadingRefs.current.employees = false;
+      loadedModalsRef.current.delete('holidays');
     }
   }, [showHolidaysModal]);
   
@@ -325,131 +288,69 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    if (showJobTitlesModal) {
-      if (!loadingRefs.current.jobTitles) {
-        loadingRefs.current.jobTitles = true;
-        loadJobTitles().finally(() => {
-          loadingRefs.current.jobTitles = false;
-        });
-      }
-      if (!loadingRefs.current.departments) {
-        loadingRefs.current.departments = true;
-        loadDepartments().finally(() => {
-          loadingRefs.current.departments = false;
-        });
-      }
+    if (showJobTitlesModal && !loadedModalsRef.current.has('jobTitles')) {
+      loadedModalsRef.current.add('jobTitles');
+      loadJobTitles();
+      loadDepartments();
     }
     if (!showJobTitlesModal) {
-      loadingRefs.current.jobTitles = false;
-      loadingRefs.current.departments = false;
+      loadedModalsRef.current.delete('jobTitles');
     }
   }, [showJobTitlesModal]);
 
   useEffect(() => {
-    if (showBenefitsPackagesModal && !loadingRefs.current.benefitsPackages) {
-      loadingRefs.current.benefitsPackages = true;
-      loadBenefitsPackages().finally(() => {
-        loadingRefs.current.benefitsPackages = false;
-      });
+    if (showBenefitsPackagesModal && !loadedModalsRef.current.has('benefitsPackages')) {
+      loadedModalsRef.current.add('benefitsPackages');
+      loadBenefitsPackages();
     }
     if (!showBenefitsPackagesModal) {
-      loadingRefs.current.benefitsPackages = false;
+      loadedModalsRef.current.delete('benefitsPackages');
     }
   }, [showBenefitsPackagesModal]);
 
   useEffect(() => {
-    if (showWorkSchedulesModal && !loadingRefs.current.workSchedules) {
-      loadingRefs.current.workSchedules = true;
-      loadWorkSchedules().finally(() => {
-        loadingRefs.current.workSchedules = false;
-      });
+    if (showWorkSchedulesModal && !loadedModalsRef.current.has('workSchedules')) {
+      loadedModalsRef.current.add('workSchedules');
+      loadWorkSchedules();
     }
     if (!showWorkSchedulesModal) {
-      loadingRefs.current.workSchedules = false;
+      loadedModalsRef.current.delete('workSchedules');
     }
   }, [showWorkSchedulesModal]);
 
   useEffect(() => {
-    if (showOvertimePoliciesModal) {
-      if (!loadingRefs.current.overtimePolicies) {
-        loadingRefs.current.overtimePolicies = true;
-        loadOvertimePolicies().finally(() => {
-          loadingRefs.current.overtimePolicies = false;
-        });
-      }
-      if (!loadingRefs.current.departments) {
-        loadingRefs.current.departments = true;
-        loadDepartments().finally(() => {
-          loadingRefs.current.departments = false;
-        });
-      }
-      if (!loadingRefs.current.jobTitles) {
-        loadingRefs.current.jobTitles = true;
-        loadJobTitles().finally(() => {
-          loadingRefs.current.jobTitles = false;
-        });
-      }
+    if (showOvertimePoliciesModal && !loadedModalsRef.current.has('overtimePolicies')) {
+      loadedModalsRef.current.add('overtimePolicies');
+      loadOvertimePolicies();
+      loadDepartments();
+      loadJobTitles();
     }
     if (!showOvertimePoliciesModal) {
-      loadingRefs.current.overtimePolicies = false;
-      loadingRefs.current.departments = false;
-      loadingRefs.current.jobTitles = false;
+      loadedModalsRef.current.delete('overtimePolicies');
     }
   }, [showOvertimePoliciesModal]);
 
   useEffect(() => {
-    if (showAttendancePoliciesModal) {
-      if (!loadingRefs.current.attendancePolicies) {
-        loadingRefs.current.attendancePolicies = true;
-        loadAttendancePolicies().finally(() => {
-          loadingRefs.current.attendancePolicies = false;
-        });
-      }
-      if (!loadingRefs.current.departments) {
-        loadingRefs.current.departments = true;
-        loadDepartments().finally(() => {
-          loadingRefs.current.departments = false;
-        });
-      }
-      if (!loadingRefs.current.jobTitles) {
-        loadingRefs.current.jobTitles = true;
-        loadJobTitles().finally(() => {
-          loadingRefs.current.jobTitles = false;
-        });
-      }
+    if (showAttendancePoliciesModal && !loadedModalsRef.current.has('attendancePolicies')) {
+      loadedModalsRef.current.add('attendancePolicies');
+      loadAttendancePolicies();
+      loadDepartments();
+      loadJobTitles();
     }
     if (!showAttendancePoliciesModal) {
-      loadingRefs.current.attendancePolicies = false;
-      loadingRefs.current.departments = false;
-      loadingRefs.current.jobTitles = false;
+      loadedModalsRef.current.delete('attendancePolicies');
     }
   }, [showAttendancePoliciesModal]);
 
   useEffect(() => {
-    if (showRemoteWorkPoliciesModal) {
-      if (!loadingRefs.current.remoteWorkPolicies) {
-        loadingRefs.current.remoteWorkPolicies = true;
-        loadRemoteWorkPolicies().finally(() => {
-          loadingRefs.current.remoteWorkPolicies = false;
-        });
-      }
-      if (!loadingRefs.current.departments) {
-        loadingRefs.current.departments = true;
-        loadDepartments().finally(() => {
-          loadingRefs.current.departments = false;
-        });
-      }
-      if (!loadingRefs.current.jobTitles) {
-        loadingRefs.current.jobTitles = true;
-        loadJobTitles().finally(() => {
-          loadingRefs.current.jobTitles = false;
-        });
-      }
+    if (showRemoteWorkPoliciesModal && !loadedModalsRef.current.has('remoteWorkPolicies')) {
+      loadedModalsRef.current.add('remoteWorkPolicies');
+      loadRemoteWorkPolicies();
+      loadDepartments();
+      loadJobTitles();
     }
     if (!showRemoteWorkPoliciesModal) {
-      loadingRefs.current.remoteWorkPolicies = false;
-      loadingRefs.current.departments = false;
-      loadingRefs.current.jobTitles = false;
+      loadedModalsRef.current.delete('remoteWorkPolicies');
     }
   }, [showRemoteWorkPoliciesModal]);
 
@@ -476,12 +377,9 @@ export default function Settings() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [showDepartmentsModal, showLeavePoliciesModal, showHolidaysModal]);
 
-  // Ensure only one modal is open at a time - consolidated to prevent blinking
-  const isClosingModalsRef = useRef(false);
+  // Ensure only one modal is open at a time - prevent blinking with stable check
+  const previousOpenModalRef = useRef(null);
   useEffect(() => {
-    // Prevent infinite loops and unnecessary updates
-    if (isClosingModalsRef.current) return;
-    
     const modalStates = {
       departments: showDepartmentsModal,
       leavePolicies: showLeavePoliciesModal,
@@ -498,26 +396,27 @@ export default function Settings() {
       .filter(([_, isOpen]) => isOpen)
       .map(([name]) => name);
     
-    // If more than one modal is open, close all except the first one
+    // Only act if there's actually a change (more than one modal open)
     if (openModals.length > 1) {
-      isClosingModalsRef.current = true;
       const firstModal = openModals[0];
-      
-      // Batch all state updates - React 18+ automatically batches these
-      if (firstModal !== 'departments') setShowDepartmentsModal(false);
-      if (firstModal !== 'leavePolicies') setShowLeavePoliciesModal(false);
-      if (firstModal !== 'holidays') setShowHolidaysModal(false);
-      if (firstModal !== 'jobTitles') setShowJobTitlesModal(false);
-      if (firstModal !== 'benefitsPackages') setShowBenefitsPackagesModal(false);
-      if (firstModal !== 'workSchedules') setShowWorkSchedulesModal(false);
-      if (firstModal !== 'overtimePolicies') setShowOvertimePoliciesModal(false);
-      if (firstModal !== 'attendancePolicies') setShowAttendancePoliciesModal(false);
-      if (firstModal !== 'remoteWorkPolicies') setShowRemoteWorkPoliciesModal(false);
-      
-      // Reset ref after state updates complete
-      setTimeout(() => {
-        isClosingModalsRef.current = false;
-      }, 0);
+      // Only close others if this is a new situation (different from previous)
+      if (previousOpenModalRef.current !== firstModal) {
+        previousOpenModalRef.current = firstModal;
+        // Close all except the first one - React batches these automatically
+        if (firstModal !== 'departments') setShowDepartmentsModal(false);
+        if (firstModal !== 'leavePolicies') setShowLeavePoliciesModal(false);
+        if (firstModal !== 'holidays') setShowHolidaysModal(false);
+        if (firstModal !== 'jobTitles') setShowJobTitlesModal(false);
+        if (firstModal !== 'benefitsPackages') setShowBenefitsPackagesModal(false);
+        if (firstModal !== 'workSchedules') setShowWorkSchedulesModal(false);
+        if (firstModal !== 'overtimePolicies') setShowOvertimePoliciesModal(false);
+        if (firstModal !== 'attendancePolicies') setShowAttendancePoliciesModal(false);
+        if (firstModal !== 'remoteWorkPolicies') setShowRemoteWorkPoliciesModal(false);
+      }
+    } else if (openModals.length === 1) {
+      previousOpenModalRef.current = openModals[0];
+    } else {
+      previousOpenModalRef.current = null;
     }
   }, [
     showDepartmentsModal,
