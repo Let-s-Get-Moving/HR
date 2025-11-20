@@ -215,6 +215,9 @@ export default function Settings() {
   
   // Track which modals have already loaded to prevent double-loading
   const loadedModalsRef = useRef(new Set());
+  
+  // Loading states for modals to prevent blinking
+  const [loadingModalData, setLoadingModalData] = useState(false);
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -282,39 +285,68 @@ export default function Settings() {
       loadedModalsRef.current.add('holidays');
       
       const loadAll = async () => {
-        const promises = [];
+        setLoadingModalData(true);
         
-        if (!inFlightRequests.has('holidays')) {
-          inFlightRequests.add('holidays');
-          promises.push(loadHolidays().finally(() => {
-            inFlightRequests.delete('holidays');
-          }));
+        try {
+          const promises = [];
+          let holidaysData = null;
+          let deptsData = null;
+          let titlesData = null;
+          let empsData = null;
+          
+          if (!inFlightRequests.has('holidays')) {
+            inFlightRequests.add('holidays');
+            promises.push(
+              API("/api/leave/holidays").catch(() => []).then(data => {
+                holidaysData = data;
+                inFlightRequests.delete('holidays');
+              })
+            );
+          }
+          if (!inFlightRequests.has('departments')) {
+            inFlightRequests.add('departments');
+            promises.push(
+              API("/api/employees/departments").catch(() => []).then(data => {
+                deptsData = data;
+                inFlightRequests.delete('departments');
+              })
+            );
+          }
+          if (!inFlightRequests.has('jobTitles')) {
+            inFlightRequests.add('jobTitles');
+            promises.push(
+              API("/api/settings/job-titles").catch(() => []).then(data => {
+                titlesData = data;
+                inFlightRequests.delete('jobTitles');
+              })
+            );
+          }
+          if (!inFlightRequests.has('employees')) {
+            inFlightRequests.add('employees');
+            promises.push(
+              API("/api/employees").catch(() => []).then(data => {
+                empsData = data;
+                inFlightRequests.delete('employees');
+              })
+            );
+          }
+          
+          await Promise.all(promises);
+          
+          // Set ALL state at once
+          if (holidaysData !== null) setHolidays(holidaysData || []);
+          if (deptsData !== null) setDepartments(deptsData || []);
+          if (titlesData !== null) setJobTitles(titlesData || []);
+          if (empsData !== null) setEmployees(empsData || []);
+        } finally {
+          setLoadingModalData(false);
         }
-        if (!inFlightRequests.has('departments')) {
-          inFlightRequests.add('departments');
-          promises.push(loadDepartments(true).finally(() => {
-            inFlightRequests.delete('departments');
-          }));
-        }
-        if (!inFlightRequests.has('jobTitles')) {
-          inFlightRequests.add('jobTitles');
-          promises.push(loadJobTitles().finally(() => {
-            inFlightRequests.delete('jobTitles');
-          }));
-        }
-        if (!inFlightRequests.has('employees')) {
-          inFlightRequests.add('employees');
-          promises.push(loadEmployees().finally(() => {
-            inFlightRequests.delete('employees');
-          }));
-        }
-        
-        await Promise.all(promises);
       };
       
       loadAll();
     } else if (!showHolidaysModal) {
       loadedModalsRef.current.delete('holidays');
+      setLoadingModalData(false);
     }
   }, [showHolidaysModal]);
   
@@ -333,27 +365,46 @@ export default function Settings() {
       loadedModalsRef.current.add('jobTitles');
       
       const loadAll = async () => {
-        const promises = [];
+        setLoadingModalData(true);
         
-        if (!inFlightRequests.has('jobTitles')) {
-          inFlightRequests.add('jobTitles');
-          promises.push(loadJobTitles().finally(() => {
-            inFlightRequests.delete('jobTitles');
-          }));
+        try {
+          const promises = [];
+          let titlesData = null;
+          let deptsData = null;
+          
+          if (!inFlightRequests.has('jobTitles')) {
+            inFlightRequests.add('jobTitles');
+            promises.push(
+              API("/api/settings/job-titles").catch(() => []).then(data => {
+                titlesData = data;
+                inFlightRequests.delete('jobTitles');
+              })
+            );
+          }
+          if (!inFlightRequests.has('departments')) {
+            inFlightRequests.add('departments');
+            promises.push(
+              API("/api/employees/departments").catch(() => []).then(data => {
+                deptsData = data;
+                inFlightRequests.delete('departments');
+              })
+            );
+          }
+          
+          await Promise.all(promises);
+          
+          // Set ALL state at once in a single synchronous block
+          if (titlesData !== null) setJobTitles(titlesData || []);
+          if (deptsData !== null) setDepartments(deptsData || []);
+        } finally {
+          setLoadingModalData(false);
         }
-        if (!inFlightRequests.has('departments')) {
-          inFlightRequests.add('departments');
-          promises.push(loadDepartments(true).finally(() => {
-            inFlightRequests.delete('departments');
-          }));
-        }
-        
-        await Promise.all(promises);
       };
       
       loadAll();
     } else if (!showJobTitlesModal) {
       loadedModalsRef.current.delete('jobTitles');
+      setLoadingModalData(false);
     }
   }, [showJobTitlesModal]);
 
@@ -392,33 +443,57 @@ export default function Settings() {
       loadedModalsRef.current.add('overtimePolicies');
       
       const loadAll = async () => {
-        const promises = [];
+        setLoadingModalData(true);
         
-        if (!inFlightRequests.has('overtimePolicies')) {
-          inFlightRequests.add('overtimePolicies');
-          promises.push(loadOvertimePolicies().finally(() => {
-            inFlightRequests.delete('overtimePolicies');
-          }));
+        try {
+          const promises = [];
+          let policiesData = null;
+          let deptsData = null;
+          let titlesData = null;
+          
+          if (!inFlightRequests.has('overtimePolicies')) {
+            inFlightRequests.add('overtimePolicies');
+            promises.push(
+              API("/api/settings/overtime-policies").catch(() => []).then(data => {
+                policiesData = data;
+                inFlightRequests.delete('overtimePolicies');
+              })
+            );
+          }
+          if (!inFlightRequests.has('departments')) {
+            inFlightRequests.add('departments');
+            promises.push(
+              API("/api/employees/departments").catch(() => []).then(data => {
+                deptsData = data;
+                inFlightRequests.delete('departments');
+              })
+            );
+          }
+          if (!inFlightRequests.has('jobTitles')) {
+            inFlightRequests.add('jobTitles');
+            promises.push(
+              API("/api/settings/job-titles").catch(() => []).then(data => {
+                titlesData = data;
+                inFlightRequests.delete('jobTitles');
+              })
+            );
+          }
+          
+          await Promise.all(promises);
+          
+          // Set ALL state at once
+          if (policiesData !== null) setOvertimePolicies(policiesData || []);
+          if (deptsData !== null) setDepartments(deptsData || []);
+          if (titlesData !== null) setJobTitles(titlesData || []);
+        } finally {
+          setLoadingModalData(false);
         }
-        if (!inFlightRequests.has('departments')) {
-          inFlightRequests.add('departments');
-          promises.push(loadDepartments(true).finally(() => {
-            inFlightRequests.delete('departments');
-          }));
-        }
-        if (!inFlightRequests.has('jobTitles')) {
-          inFlightRequests.add('jobTitles');
-          promises.push(loadJobTitles().finally(() => {
-            inFlightRequests.delete('jobTitles');
-          }));
-        }
-        
-        await Promise.all(promises);
       };
       
       loadAll();
     } else if (!showOvertimePoliciesModal) {
       loadedModalsRef.current.delete('overtimePolicies');
+      setLoadingModalData(false);
     }
   }, [showOvertimePoliciesModal]);
 
@@ -427,33 +502,57 @@ export default function Settings() {
       loadedModalsRef.current.add('attendancePolicies');
       
       const loadAll = async () => {
-        const promises = [];
+        setLoadingModalData(true);
         
-        if (!inFlightRequests.has('attendancePolicies')) {
-          inFlightRequests.add('attendancePolicies');
-          promises.push(loadAttendancePolicies().finally(() => {
-            inFlightRequests.delete('attendancePolicies');
-          }));
+        try {
+          const promises = [];
+          let policiesData = null;
+          let deptsData = null;
+          let titlesData = null;
+          
+          if (!inFlightRequests.has('attendancePolicies')) {
+            inFlightRequests.add('attendancePolicies');
+            promises.push(
+              API("/api/settings/attendance-policies").catch(() => []).then(data => {
+                policiesData = data;
+                inFlightRequests.delete('attendancePolicies');
+              })
+            );
+          }
+          if (!inFlightRequests.has('departments')) {
+            inFlightRequests.add('departments');
+            promises.push(
+              API("/api/employees/departments").catch(() => []).then(data => {
+                deptsData = data;
+                inFlightRequests.delete('departments');
+              })
+            );
+          }
+          if (!inFlightRequests.has('jobTitles')) {
+            inFlightRequests.add('jobTitles');
+            promises.push(
+              API("/api/settings/job-titles").catch(() => []).then(data => {
+                titlesData = data;
+                inFlightRequests.delete('jobTitles');
+              })
+            );
+          }
+          
+          await Promise.all(promises);
+          
+          // Set ALL state at once
+          if (policiesData !== null) setAttendancePolicies(policiesData || []);
+          if (deptsData !== null) setDepartments(deptsData || []);
+          if (titlesData !== null) setJobTitles(titlesData || []);
+        } finally {
+          setLoadingModalData(false);
         }
-        if (!inFlightRequests.has('departments')) {
-          inFlightRequests.add('departments');
-          promises.push(loadDepartments(true).finally(() => {
-            inFlightRequests.delete('departments');
-          }));
-        }
-        if (!inFlightRequests.has('jobTitles')) {
-          inFlightRequests.add('jobTitles');
-          promises.push(loadJobTitles().finally(() => {
-            inFlightRequests.delete('jobTitles');
-          }));
-        }
-        
-        await Promise.all(promises);
       };
       
       loadAll();
     } else if (!showAttendancePoliciesModal) {
       loadedModalsRef.current.delete('attendancePolicies');
+      setLoadingModalData(false);
     }
   }, [showAttendancePoliciesModal]);
 
@@ -462,33 +561,57 @@ export default function Settings() {
       loadedModalsRef.current.add('remoteWorkPolicies');
       
       const loadAll = async () => {
-        const promises = [];
+        setLoadingModalData(true);
         
-        if (!inFlightRequests.has('remoteWorkPolicies')) {
-          inFlightRequests.add('remoteWorkPolicies');
-          promises.push(loadRemoteWorkPolicies().finally(() => {
-            inFlightRequests.delete('remoteWorkPolicies');
-          }));
+        try {
+          const promises = [];
+          let policiesData = null;
+          let deptsData = null;
+          let titlesData = null;
+          
+          if (!inFlightRequests.has('remoteWorkPolicies')) {
+            inFlightRequests.add('remoteWorkPolicies');
+            promises.push(
+              API("/api/settings/remote-work-policies").catch(() => []).then(data => {
+                policiesData = data;
+                inFlightRequests.delete('remoteWorkPolicies');
+              })
+            );
+          }
+          if (!inFlightRequests.has('departments')) {
+            inFlightRequests.add('departments');
+            promises.push(
+              API("/api/employees/departments").catch(() => []).then(data => {
+                deptsData = data;
+                inFlightRequests.delete('departments');
+              })
+            );
+          }
+          if (!inFlightRequests.has('jobTitles')) {
+            inFlightRequests.add('jobTitles');
+            promises.push(
+              API("/api/settings/job-titles").catch(() => []).then(data => {
+                titlesData = data;
+                inFlightRequests.delete('jobTitles');
+              })
+            );
+          }
+          
+          await Promise.all(promises);
+          
+          // Set ALL state at once
+          if (policiesData !== null) setRemoteWorkPolicies(policiesData || []);
+          if (deptsData !== null) setDepartments(deptsData || []);
+          if (titlesData !== null) setJobTitles(titlesData || []);
+        } finally {
+          setLoadingModalData(false);
         }
-        if (!inFlightRequests.has('departments')) {
-          inFlightRequests.add('departments');
-          promises.push(loadDepartments(true).finally(() => {
-            inFlightRequests.delete('departments');
-          }));
-        }
-        if (!inFlightRequests.has('jobTitles')) {
-          inFlightRequests.add('jobTitles');
-          promises.push(loadJobTitles().finally(() => {
-            inFlightRequests.delete('jobTitles');
-          }));
-        }
-        
-        await Promise.all(promises);
       };
       
       loadAll();
     } else if (!showRemoteWorkPoliciesModal) {
       loadedModalsRef.current.delete('remoteWorkPolicies');
+      setLoadingModalData(false);
     }
   }, [showRemoteWorkPoliciesModal]);
 
@@ -2982,6 +3105,14 @@ export default function Settings() {
             </button>
           </div>
 
+          {loadingModalData ? (
+            <div className="p-6 flex items-center justify-center min-h-[300px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                <p className="text-secondary">Loading...</p>
+              </div>
+            </div>
+          ) : (
           <div className="p-6 overflow-y-auto flex-1">
             <p className="text-sm text-secondary mb-6">{t('settings.jobTitles.description')}</p>
 
@@ -3202,6 +3333,7 @@ export default function Settings() {
               )}
             </div>
           </div>
+          )}
         </motion.div>
       </div>
     );
