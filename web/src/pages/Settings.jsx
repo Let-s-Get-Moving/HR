@@ -624,10 +624,6 @@ export default function Settings() {
       // Clean up any MFA status from localStorage (it should ONLY come from server)
       localStorage.removeItem('security_two_factor_auth');
       
-      // Always try to load system settings (no auth required)
-      const system = await API("/api/settings/system").catch(() => []);
-      setSystemSettings(enrichSettingsWithOptions(system || []));
-
       // Detect current theme from DOM
       const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
       
@@ -657,10 +653,12 @@ export default function Settings() {
       // Check if user is authenticated before trying authenticated endpoints
       const sessionId = localStorage.getItem('sessionId');
       
-      let preferences, notifs, sec, maint;
+      // Load ALL settings in parallel, including system settings
+      let system, preferences, notifs, sec, maint;
       
       if (!sessionId) {
         console.log('⚠️ [Settings] No session found, using default settings only');
+        system = await API("/api/settings/system").catch(() => []);
         preferences = defaultPreferences;
         notifs = defaultNotifications;
         sec = defaultSecurity;
@@ -668,7 +666,8 @@ export default function Settings() {
       } else {
         // Try to load authenticated settings - if API returns 401, it will fall back to defaults
         console.log('📡 [Settings] Attempting to load authenticated settings from API...');
-        [preferences, notifs, sec, maint] = await Promise.all([
+        [system, preferences, notifs, sec, maint] = await Promise.all([
+        API("/api/settings/system").catch(() => []),
         API("/api/settings/preferences").catch((err) => {
           console.log('⚠️ [Settings] Preferences API failed, using defaults:', err.message);
           return defaultPreferences;
@@ -693,6 +692,7 @@ export default function Settings() {
       
       // Enrich all settings with options before setting state
       // This ensures select dropdowns always have their options, even when loaded from database
+      const enrichedSystem = enrichSettingsWithOptions(system || []);
       const enrichedPreferences = enrichSettingsWithOptions(preferences || defaultPreferences);
       const enrichedNotifications = enrichSettingsWithOptions(notifs || defaultNotifications);
       const enrichedSecurity = enrichSettingsWithOptions(sec || defaultSecurity);
@@ -713,9 +713,10 @@ export default function Settings() {
         }
       });
       
-      // Set all settings regardless of whether they came from API or defaults
+      // Set ALL settings in a single batch to prevent blinking
       console.log('✅ [Settings] Setting state with preferences:', enrichedPreferences?.length);
       console.log('✅ [Settings] Setting state with security:', enrichedSecurity?.length);
+      setSystemSettings(enrichedSystem);
       setUserPreferences(enrichedPreferences);
       setNotifications(enrichedNotifications);
       setSecurity(enrichedSecurity);
