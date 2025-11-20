@@ -8,6 +8,9 @@ import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
 // CleanupButton component COMPLETELY REMOVED
 // This component was causing accidental data deletion and has been permanently removed
 
+// Track requests currently in-flight OUTSIDE component to persist across unmounts
+const inFlightRequests = new Set();
+
 export default function Settings() {
   const { t, i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("system");
@@ -209,9 +212,6 @@ export default function Settings() {
 
   // Track if component is mounted (avoid double-loading on first render)
   const isInitialMount = React.useRef(true);
-  
-  // Track requests currently in-flight to prevent duplicates
-  const inFlightRequestsRef = useRef(new Set());
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -246,10 +246,10 @@ export default function Settings() {
   // Load data when modals are opened - track in-flight requests to prevent duplicates
   useEffect(() => {
     if (showDepartmentsModal) {
-      if (!inFlightRequestsRef.current.has('departments')) {
-        inFlightRequestsRef.current.add('departments');
+      if (!inFlightRequests.has('departments')) {
+        inFlightRequests.add('departments');
         loadDepartments().finally(() => {
-          inFlightRequestsRef.current.delete('departments');
+          inFlightRequests.delete('departments');
         });
       }
     }
@@ -257,10 +257,10 @@ export default function Settings() {
 
   useEffect(() => {
     if (showLeavePoliciesModal) {
-      if (!inFlightRequestsRef.current.has('leaveTypes')) {
-        inFlightRequestsRef.current.add('leaveTypes');
+      if (!inFlightRequests.has('leaveTypes')) {
+        inFlightRequests.add('leaveTypes');
         loadLeaveTypes().finally(() => {
-          inFlightRequestsRef.current.delete('leaveTypes');
+          inFlightRequests.delete('leaveTypes');
         });
       }
     }
@@ -268,28 +268,28 @@ export default function Settings() {
 
   useEffect(() => {
     if (showHolidaysModal) {
-      if (!inFlightRequestsRef.current.has('holidays')) {
-        inFlightRequestsRef.current.add('holidays');
+      if (!inFlightRequests.has('holidays')) {
+        inFlightRequests.add('holidays');
         loadHolidays().finally(() => {
-          inFlightRequestsRef.current.delete('holidays');
+          inFlightRequests.delete('holidays');
         });
       }
-      if (!inFlightRequestsRef.current.has('departments')) {
-        inFlightRequestsRef.current.add('departments');
-        loadDepartments().finally(() => {
-          inFlightRequestsRef.current.delete('departments');
+      if (!inFlightRequests.has('departments')) {
+        inFlightRequests.add('departments');
+        loadDepartments(true).finally(() => {
+          inFlightRequests.delete('departments');
         });
       }
-      if (!inFlightRequestsRef.current.has('jobTitles')) {
-        inFlightRequestsRef.current.add('jobTitles');
+      if (!inFlightRequests.has('jobTitles')) {
+        inFlightRequests.add('jobTitles');
         loadJobTitles().finally(() => {
-          inFlightRequestsRef.current.delete('jobTitles');
+          inFlightRequests.delete('jobTitles');
         });
       }
-      if (!inFlightRequestsRef.current.has('employees')) {
-        inFlightRequestsRef.current.add('employees');
+      if (!inFlightRequests.has('employees')) {
+        inFlightRequests.add('employees');
         loadEmployees().finally(() => {
-          inFlightRequestsRef.current.delete('employees');
+          inFlightRequests.delete('employees');
         });
       }
     }
@@ -307,16 +307,16 @@ export default function Settings() {
 
   useEffect(() => {
     if (showJobTitlesModal) {
-      if (!inFlightRequestsRef.current.has('jobTitles')) {
-        inFlightRequestsRef.current.add('jobTitles');
+      if (!inFlightRequests.has('jobTitles')) {
+        inFlightRequests.add('jobTitles');
         loadJobTitles().finally(() => {
-          inFlightRequestsRef.current.delete('jobTitles');
+          inFlightRequests.delete('jobTitles');
         });
       }
-      if (!inFlightRequestsRef.current.has('departments')) {
-        inFlightRequestsRef.current.add('departments');
-        loadDepartments().finally(() => {
-          inFlightRequestsRef.current.delete('departments');
+      if (!inFlightRequests.has('departments')) {
+        inFlightRequests.add('departments');
+        loadDepartments(true).finally(() => {
+          inFlightRequests.delete('departments');
         });
       }
     }
@@ -324,10 +324,10 @@ export default function Settings() {
 
   useEffect(() => {
     if (showBenefitsPackagesModal) {
-      if (!inFlightRequestsRef.current.has('benefitsPackages')) {
-        inFlightRequestsRef.current.add('benefitsPackages');
+      if (!inFlightRequests.has('benefitsPackages')) {
+        inFlightRequests.add('benefitsPackages');
         loadBenefitsPackages().finally(() => {
-          inFlightRequestsRef.current.delete('benefitsPackages');
+          inFlightRequests.delete('benefitsPackages');
         });
       }
     }
@@ -335,10 +335,10 @@ export default function Settings() {
 
   useEffect(() => {
     if (showWorkSchedulesModal) {
-      if (!inFlightRequestsRef.current.has('workSchedules')) {
-        inFlightRequestsRef.current.add('workSchedules');
+      if (!inFlightRequests.has('workSchedules')) {
+        inFlightRequests.add('workSchedules');
         loadWorkSchedules().finally(() => {
-          inFlightRequestsRef.current.delete('workSchedules');
+          inFlightRequests.delete('workSchedules');
         });
       }
     }
@@ -346,22 +346,22 @@ export default function Settings() {
 
   useEffect(() => {
     if (showOvertimePoliciesModal) {
-      if (!inFlightRequestsRef.current.has('overtimePolicies')) {
-        inFlightRequestsRef.current.add('overtimePolicies');
+      if (!inFlightRequests.has('overtimePolicies')) {
+        inFlightRequests.add('overtimePolicies');
         loadOvertimePolicies().finally(() => {
-          inFlightRequestsRef.current.delete('overtimePolicies');
+          inFlightRequests.delete('overtimePolicies');
         });
       }
-      if (!inFlightRequestsRef.current.has('departments')) {
-        inFlightRequestsRef.current.add('departments');
-        loadDepartments().finally(() => {
-          inFlightRequestsRef.current.delete('departments');
+      if (!inFlightRequests.has('departments')) {
+        inFlightRequests.add('departments');
+        loadDepartments(true).finally(() => {
+          inFlightRequests.delete('departments');
         });
       }
-      if (!inFlightRequestsRef.current.has('jobTitles')) {
-        inFlightRequestsRef.current.add('jobTitles');
+      if (!inFlightRequests.has('jobTitles')) {
+        inFlightRequests.add('jobTitles');
         loadJobTitles().finally(() => {
-          inFlightRequestsRef.current.delete('jobTitles');
+          inFlightRequests.delete('jobTitles');
         });
       }
     }
@@ -369,22 +369,22 @@ export default function Settings() {
 
   useEffect(() => {
     if (showAttendancePoliciesModal) {
-      if (!inFlightRequestsRef.current.has('attendancePolicies')) {
-        inFlightRequestsRef.current.add('attendancePolicies');
+      if (!inFlightRequests.has('attendancePolicies')) {
+        inFlightRequests.add('attendancePolicies');
         loadAttendancePolicies().finally(() => {
-          inFlightRequestsRef.current.delete('attendancePolicies');
+          inFlightRequests.delete('attendancePolicies');
         });
       }
-      if (!inFlightRequestsRef.current.has('departments')) {
-        inFlightRequestsRef.current.add('departments');
-        loadDepartments().finally(() => {
-          inFlightRequestsRef.current.delete('departments');
+      if (!inFlightRequests.has('departments')) {
+        inFlightRequests.add('departments');
+        loadDepartments(true).finally(() => {
+          inFlightRequests.delete('departments');
         });
       }
-      if (!inFlightRequestsRef.current.has('jobTitles')) {
-        inFlightRequestsRef.current.add('jobTitles');
+      if (!inFlightRequests.has('jobTitles')) {
+        inFlightRequests.add('jobTitles');
         loadJobTitles().finally(() => {
-          inFlightRequestsRef.current.delete('jobTitles');
+          inFlightRequests.delete('jobTitles');
         });
       }
     }
@@ -392,22 +392,22 @@ export default function Settings() {
 
   useEffect(() => {
     if (showRemoteWorkPoliciesModal) {
-      if (!inFlightRequestsRef.current.has('remoteWorkPolicies')) {
-        inFlightRequestsRef.current.add('remoteWorkPolicies');
+      if (!inFlightRequests.has('remoteWorkPolicies')) {
+        inFlightRequests.add('remoteWorkPolicies');
         loadRemoteWorkPolicies().finally(() => {
-          inFlightRequestsRef.current.delete('remoteWorkPolicies');
+          inFlightRequests.delete('remoteWorkPolicies');
         });
       }
-      if (!inFlightRequestsRef.current.has('departments')) {
-        inFlightRequestsRef.current.add('departments');
-        loadDepartments().finally(() => {
-          inFlightRequestsRef.current.delete('departments');
+      if (!inFlightRequests.has('departments')) {
+        inFlightRequests.add('departments');
+        loadDepartments(true).finally(() => {
+          inFlightRequests.delete('departments');
         });
       }
-      if (!inFlightRequestsRef.current.has('jobTitles')) {
-        inFlightRequestsRef.current.add('jobTitles');
+      if (!inFlightRequests.has('jobTitles')) {
+        inFlightRequests.add('jobTitles');
         loadJobTitles().finally(() => {
-          inFlightRequestsRef.current.delete('jobTitles');
+          inFlightRequests.delete('jobTitles');
         });
       }
     }
@@ -435,59 +435,6 @@ export default function Settings() {
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, [showDepartmentsModal, showLeavePoliciesModal, showHolidaysModal]);
-
-  // Ensure only one modal is open at a time - prevent blinking with stable check
-  const previousOpenModalRef = useRef(null);
-  useEffect(() => {
-    const modalStates = {
-      departments: showDepartmentsModal,
-      leavePolicies: showLeavePoliciesModal,
-      holidays: showHolidaysModal,
-      jobTitles: showJobTitlesModal,
-      benefitsPackages: showBenefitsPackagesModal,
-      workSchedules: showWorkSchedulesModal,
-      overtimePolicies: showOvertimePoliciesModal,
-      attendancePolicies: showAttendancePoliciesModal,
-      remoteWorkPolicies: showRemoteWorkPoliciesModal
-    };
-    
-    const openModals = Object.entries(modalStates)
-      .filter(([_, isOpen]) => isOpen)
-      .map(([name]) => name);
-    
-    // Only act if there's actually a change (more than one modal open)
-    if (openModals.length > 1) {
-      const firstModal = openModals[0];
-      // Only close others if this is a new situation (different from previous)
-      if (previousOpenModalRef.current !== firstModal) {
-        previousOpenModalRef.current = firstModal;
-        // Close all except the first one - React batches these automatically
-        if (firstModal !== 'departments') setShowDepartmentsModal(false);
-        if (firstModal !== 'leavePolicies') setShowLeavePoliciesModal(false);
-        if (firstModal !== 'holidays') setShowHolidaysModal(false);
-        if (firstModal !== 'jobTitles') setShowJobTitlesModal(false);
-        if (firstModal !== 'benefitsPackages') setShowBenefitsPackagesModal(false);
-        if (firstModal !== 'workSchedules') setShowWorkSchedulesModal(false);
-        if (firstModal !== 'overtimePolicies') setShowOvertimePoliciesModal(false);
-        if (firstModal !== 'attendancePolicies') setShowAttendancePoliciesModal(false);
-        if (firstModal !== 'remoteWorkPolicies') setShowRemoteWorkPoliciesModal(false);
-      }
-    } else if (openModals.length === 1) {
-      previousOpenModalRef.current = openModals[0];
-    } else {
-      previousOpenModalRef.current = null;
-    }
-  }, [
-    showDepartmentsModal,
-    showLeavePoliciesModal,
-    showHolidaysModal,
-    showJobTitlesModal,
-    showBenefitsPackagesModal,
-    showWorkSchedulesModal,
-    showOvertimePoliciesModal,
-    showAttendancePoliciesModal,
-    showRemoteWorkPoliciesModal
-  ]);
 
   // Reload settings when user navigates back to settings (but not on initial mount)
   useEffect(() => {
@@ -785,34 +732,36 @@ export default function Settings() {
   };
 
   // Load departments and employee counts
-  const loadDepartments = async () => {
+  const loadDepartments = async (skipEmployeeCounts = false) => {
     try {
       const depts = await API("/api/employees/departments").catch(() => []);
       setDepartments(depts || []);
 
-      // Load all employees and count by department
-      try {
-        const employees = await API("/api/employees").catch(() => []);
-        const counts = {};
-        (depts || []).forEach(dept => {
-          counts[dept.id] = 0;
-        });
-        (employees || []).forEach(emp => {
-          // Employees API returns e.* which includes department_id
-          const deptId = emp.department_id;
-          if (deptId && counts[deptId] !== undefined) {
-            counts[deptId] = (counts[deptId] || 0) + 1;
-          }
-        });
-        setDepartmentEmployeeCounts(counts);
-      } catch (err) {
-        console.error("Error loading employee counts:", err);
-        // Set all counts to 0 if we can't fetch employees
-        const counts = {};
-        (depts || []).forEach(dept => {
-          counts[dept.id] = 0;
-        });
-        setDepartmentEmployeeCounts(counts);
+      // Load all employees and count by department (only if not skipped)
+      if (!skipEmployeeCounts) {
+        try {
+          const employees = await API("/api/employees").catch(() => []);
+          const counts = {};
+          (depts || []).forEach(dept => {
+            counts[dept.id] = 0;
+          });
+          (employees || []).forEach(emp => {
+            // Employees API returns e.* which includes department_id
+            const deptId = emp.department_id;
+            if (deptId && counts[deptId] !== undefined) {
+              counts[deptId] = (counts[deptId] || 0) + 1;
+            }
+          });
+          setDepartmentEmployeeCounts(counts);
+        } catch (err) {
+          console.error("Error loading employee counts:", err);
+          // Set all counts to 0 if we can't fetch employees
+          const counts = {};
+          (depts || []).forEach(dept => {
+            counts[dept.id] = 0;
+          });
+          setDepartmentEmployeeCounts(counts);
+        }
       }
     } catch (error) {
       console.error("Error loading departments:", error);
