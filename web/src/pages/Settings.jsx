@@ -1923,17 +1923,15 @@ export default function Settings() {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {settings.map((setting, index) => (
-            <motion.div
+            <div
               key={setting?.key || `setting-${index}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
               className="card p-4"
             >
               {renderSettingField(setting, category)}
               {setting?.key && saving[setting.key] && (
                 <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
               )}
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -1956,120 +1954,94 @@ export default function Settings() {
           {canManage && (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
               {/* Departments Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+              <button
                 onClick={() => setShowDepartmentsModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">🏢</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.departments.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.departments.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Leave Policies Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
+              <button
                 onClick={() => setShowLeavePoliciesModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">📋</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.leavePolicies.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.leavePolicies.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Holidays Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
+              <button
                 onClick={() => setShowHolidaysModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">🎉</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.holidays.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.holidays.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Job Titles Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+              <button
                 onClick={() => setShowJobTitlesModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">💼</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.jobTitles.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.jobTitles.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Benefits Packages Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+              <button
                 onClick={() => setShowBenefitsPackagesModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">🎁</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.benefitsPackages.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.benefitsPackages.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Work Schedules Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+              <button
                 onClick={() => setShowWorkSchedulesModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">⏰</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.workSchedules.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.workSchedules.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Overtime Policies Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+              <button
                 onClick={() => setShowOvertimePoliciesModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">⏱️</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.overtimePolicies.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.overtimePolicies.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Attendance Policies Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
+              <button
                 onClick={() => setShowAttendancePoliciesModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">📊</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.attendancePolicies.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.attendancePolicies.description')}</p>
-              </motion.button>
+              </button>
 
               {/* Remote Work Policies Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.8 }}
+              <button
                 onClick={() => setShowRemoteWorkPoliciesModal(true)}
                 className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
               >
                 <div className="text-3xl mb-3">🏠</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.remoteWorkPolicies.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.remoteWorkPolicies.description')}</p>
-              </motion.button>
+              </button>
             </div>
           )}
 
@@ -2098,17 +2070,15 @@ export default function Settings() {
             <h4 className="text-md font-medium text-neutral-300 mb-4">{category}</h4>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {settings.map((setting) => (
-                <motion.div
+                <div
                   key={setting.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
                   className="card p-4"
                 >
                   {renderSettingField(setting, "system")}
                   {saving[setting.key] && (
                     <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
                   )}
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -2132,10 +2102,7 @@ export default function Settings() {
         if (e.target === e.currentTarget) handleClose();
       }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
@@ -2194,10 +2161,8 @@ export default function Settings() {
               ) : (
                 <div className="space-y-3">
                   {departments.map((dept) => (
-                    <motion.div
+                    <div
                       key={dept.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
                       className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
                     >
                       <div className="flex-1">
@@ -2224,13 +2189,13 @@ export default function Settings() {
                           {deletingDepartment === dept.id ? t('settings.departments.deleting') : t('settings.departments.delete')}
                         </button>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -2250,10 +2215,7 @@ export default function Settings() {
         if (e.target === e.currentTarget) handleClose();
       }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
@@ -2439,10 +2401,8 @@ export default function Settings() {
               ) : (
                 <div className="space-y-3">
                   {leaveTypes.map((lt) => (
-                    <motion.div
+                    <div
                       key={lt.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
                       className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
                     >
                       <div className="flex-1">
@@ -2491,13 +2451,13 @@ export default function Settings() {
                           </button>
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -2516,10 +2476,7 @@ export default function Settings() {
         if (e.target === e.currentTarget) handleClose();
       }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
@@ -2658,10 +2615,8 @@ export default function Settings() {
                     const holidayDate = new Date(holiday.date);
                     const isUpcoming = holidayDate >= new Date();
                     return (
-                      <motion.div
+                      <div
                         key={holiday.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
                         className={`flex items-center justify-between p-4 bg-neutral-800 rounded-lg border ${isUpcoming ? 'border-yellow-600' : 'border-neutral-700'}`}
                       >
                         <div className="flex-1">
@@ -2688,14 +2643,14 @@ export default function Settings() {
                             {deletingHoliday === holiday.id ? t('settings.holidays.deleting') : t('settings.holidays.delete')}
                           </button>
                         )}
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -2719,10 +2674,7 @@ export default function Settings() {
         if (e.target === e.currentTarget) handleClose();
       }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
@@ -2906,10 +2858,8 @@ export default function Settings() {
               ) : (
                 <div className="space-y-3">
                   {jobTitles.map((jt) => (
-                    <motion.div
+                    <div
                       key={jt.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
                       className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
                     >
                       <div className="flex-1">
@@ -2949,13 +2899,13 @@ export default function Settings() {
                           </button>
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -2981,10 +2931,7 @@ export default function Settings() {
         if (e.target === e.currentTarget) handleClose();
       }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
@@ -3158,10 +3105,8 @@ export default function Settings() {
               ) : (
                 <div className="space-y-3">
                   {benefitsPackages.map((bp) => (
-                    <motion.div
+                    <div
                       key={bp.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
                       className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
                     >
                       <div className="flex-1">
@@ -3202,13 +3147,13 @@ export default function Settings() {
                           </button>
                         </div>
                       )}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -3226,7 +3171,7 @@ export default function Settings() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-6 border-b border-neutral-700">
             <h2 className="text-2xl font-semibold">{t('settings.workSchedules.title')}</h2>
@@ -3314,7 +3259,7 @@ export default function Settings() {
               {workSchedules.length === 0 ? <p className="text-secondary">{t('settings.workSchedules.noSchedules')}</p> : (
                 <div className="space-y-3">
                   {workSchedules.map((ws) => (
-                    <motion.div key={ws.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={ws.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
                       <div className="flex-1">
                         <div className="font-medium text-white">{ws.name}</div>
                         {ws.description && <div className="text-sm text-secondary mt-1">{ws.description}</div>}
@@ -3327,13 +3272,13 @@ export default function Settings() {
                           {deletingWorkSchedule === ws.id ? t('settings.workSchedules.deleting') : t('settings.workSchedules.delete')}
                         </button>
                       </div>}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -3350,7 +3295,7 @@ export default function Settings() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-6 border-b border-neutral-700">
             <h2 className="text-2xl font-semibold">{t('settings.overtimePolicies.title')}</h2>
@@ -3433,7 +3378,7 @@ export default function Settings() {
               {overtimePolicies.length === 0 ? <p className="text-secondary">{t('settings.overtimePolicies.noPolicies')}</p> : (
                 <div className="space-y-3">
                   {overtimePolicies.map((op) => (
-                    <motion.div key={op.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={op.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
                       <div className="flex-1">
                         <div className="font-medium text-white">{op.name}</div>
                         {op.description && <div className="text-sm text-secondary mt-1">{op.description}</div>}
@@ -3446,13 +3391,13 @@ export default function Settings() {
                           {deletingOvertimePolicy === op.id ? t('settings.overtimePolicies.deleting') : t('settings.overtimePolicies.delete')}
                         </button>
                       </div>}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -3469,7 +3414,7 @@ export default function Settings() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-6 border-b border-neutral-700">
             <h2 className="text-2xl font-semibold">{t('settings.attendancePolicies.title')}</h2>
@@ -3556,7 +3501,7 @@ export default function Settings() {
               {attendancePolicies.length === 0 ? <p className="text-secondary">{t('settings.attendancePolicies.noPolicies')}</p> : (
                 <div className="space-y-3">
                   {attendancePolicies.map((ap) => (
-                    <motion.div key={ap.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={ap.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
                       <div className="flex-1">
                         <div className="font-medium text-white">{ap.name}</div>
                         {ap.description && <div className="text-sm text-secondary mt-1">{ap.description}</div>}
@@ -3571,13 +3516,13 @@ export default function Settings() {
                           {deletingAttendancePolicy === ap.id ? t('settings.attendancePolicies.deleting') : t('settings.attendancePolicies.delete')}
                         </button>
                       </div>}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -3594,7 +3539,7 @@ export default function Settings() {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+        <div
           className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between p-6 border-b border-neutral-700">
             <h2 className="text-2xl font-semibold">{t('settings.remoteWorkPolicies.title')}</h2>
@@ -3675,7 +3620,7 @@ export default function Settings() {
               {remoteWorkPolicies.length === 0 ? <p className="text-secondary">{t('settings.remoteWorkPolicies.noPolicies')}</p> : (
                 <div className="space-y-3">
                   {remoteWorkPolicies.map((rwp) => (
-                    <motion.div key={rwp.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={rwp.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
                       <div className="flex-1">
                         <div className="font-medium text-white">{rwp.name}</div>
                         {rwp.description && <div className="text-sm text-secondary mt-1">{rwp.description}</div>}
@@ -3691,13 +3636,13 @@ export default function Settings() {
                           {deletingRemoteWorkPolicy === rwp.id ? t('settings.remoteWorkPolicies.deleting') : t('settings.remoteWorkPolicies.delete')}
                         </button>
                       </div>}
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   };
@@ -3875,9 +3820,7 @@ export default function Settings() {
       {/* MFA Setup Modal */}
       {showMFAModal && mfaData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <div
             className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
           >
             <h2 className="text-2xl font-bold mb-4">{t('settings.mfaSetup.title')}</h2>
@@ -3955,16 +3898,14 @@ export default function Settings() {
                 </button>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
       
       {/* Change Password Modal */}
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+          <div
             className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
           >
             <h2 className="text-2xl font-bold mb-4">{t('settings.passwordChange.title')}</h2>
@@ -4046,7 +3987,7 @@ export default function Settings() {
                 </button>
               </div>
             </form>
-          </motion.div>
+          </div>
         </div>
       )}
 
