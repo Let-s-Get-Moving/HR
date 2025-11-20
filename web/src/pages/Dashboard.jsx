@@ -306,7 +306,7 @@ export default function Dashboard({ onNavigate, user }) {
           ) : (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📊</div>
-              <p className="text-neutral-400 text-sm mb-2">No payroll data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
+              <p className="text-neutral-400 text-sm mb-2">{t('dashboard.noPayrollDataFor')} {getTimeRangeLabel(selectedTimeRange)}</p>
               <p className="text-neutral-500 text-xs">{t('dashboard.uploadTimecardsToGenerate')}</p>
             </div>
           )}
@@ -341,7 +341,7 @@ export default function Dashboard({ onNavigate, user }) {
           ) : (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📅</div>
-              <p className="text-neutral-400 text-sm mb-2">No attendance data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
+              <p className="text-neutral-400 text-sm mb-2">{t('dashboard.noAttendanceDataFor')} {getTimeRangeLabel(selectedTimeRange)}</p>
               <p className="text-neutral-500 text-xs">{t('dashboard.uploadTimecardsToTrackAttendance')}</p>
             </div>
           )}

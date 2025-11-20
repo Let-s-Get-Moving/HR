@@ -705,7 +705,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.available_days || 0), 0)}</p>
                     </div>
                   </div>
-                  <p className="text-blue-100 text-sm font-medium">days remaining</p>
+                  <p className="text-blue-100 text-sm font-medium">{t('leave.balances.daysRemaining')}</p>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105">
@@ -720,7 +720,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.used_days || 0), 0)}</p>
                     </div>
                   </div>
-                  <p className="text-emerald-100 text-sm font-medium">days taken</p>
+                  <p className="text-emerald-100 text-sm font-medium">{t('leave.balances.daysTaken')}</p>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700 p-6 text-white shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 hover:scale-105">
@@ -735,7 +735,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">2.5</p>
                     </div>
                   </div>
-                  <p className="text-violet-100 text-sm font-medium">days per month</p>
+                  <p className="text-violet-100 text-sm font-medium">{t('leave.balances.daysPerMonth')}</p>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-6 text-white shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105">
@@ -750,7 +750,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">5</p>
                     </div>
                   </div>
-                  <p className="text-amber-100 text-sm font-medium">days in 30 days</p>
+                  <p className="text-amber-100 text-sm font-medium">{t('leave.balances.daysInThirtyDays')}</p>
               </div>
             </div>
 
@@ -775,17 +775,17 @@ export default function LeaveManagement() {
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🏖️</div>
                       <h5 className="font-medium text-white">{t('leave.types.vacation')}</h5>
-                      <p className="text-sm text-neutral-400">20 days/year</p>
+                      <p className="text-sm text-neutral-400">{t('leave.balances.vacationDaysPerYear')}</p>
                     </div>
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🤒</div>
                       <h5 className="font-medium text-white">{t('leave.types.sickLeave')}</h5>
-                      <p className="text-sm text-neutral-400">10 days/year</p>
+                      <p className="text-sm text-neutral-400">{t('leave.balances.sickLeaveDaysPerYear')}</p>
                     </div>
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🎯</div>
                       <h5 className="font-medium text-white">{t('leave.types.personalLeave')}</h5>
-                      <p className="text-sm text-neutral-400">5 days/year</p>
+                      <p className="text-sm text-neutral-400">{t('leave.balances.personalDaysPerYear')}</p>
                     </div>
                   </div>
                 </div>
@@ -1033,7 +1033,7 @@ export default function LeaveManagement() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-neutral-400 text-sm">{t('leave.calendar.clickDayPrompt')}</p>
+                  <p className="text-neutral-400 text-sm">{t('leave.calendar.clickToSee')}</p>
                 )}
               </div>
             </div>

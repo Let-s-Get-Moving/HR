@@ -559,6 +559,7 @@ export default function TimeTracking() {
             searchQuery={dayViewSearch}
             onSearchChange={setDayViewSearch}
             userRole={userRole}
+            t={t}
           />
         )}
         {view === "uploads" && (
@@ -1067,7 +1068,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 }
 
 // Day View Component
-function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData, searchQuery, onSearchChange, userRole }) {
+function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData, searchQuery, onSearchChange, userRole, t }) {
   const [editingEntryId, setEditingEntryId] = React.useState(null);
   const [editForm, setEditForm] = React.useState({});
   const [saving, setSaving] = React.useState(false);

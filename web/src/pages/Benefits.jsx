@@ -206,7 +206,7 @@ export default function Benefits() {
           onClick={() => setShowEnrollEmployee(true)}
           className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
-          + Enroll Employee
+          + {t('benefits.enrollEmployee')}
         </button>
       </div>
 

@@ -108,7 +108,7 @@ export default function Compliance() {
             onClick={handleGenerateAlerts}
             className="btn-primary"
           >
-            Generate Alerts
+            {t('compliance.generateAlerts')}
           </button>
         </div>
       </motion.div>
@@ -149,7 +149,7 @@ export default function Compliance() {
                 <div className="p-8 text-center">
                   <div className="text-4xl mb-4">✅</div>
                   <h3 className="text-lg font-medium  mb-2">{t('compliance.allClear')}</h3>
-                  <p className="text-secondary">No active compliance alerts at this time.</p>
+                  <p className="text-secondary">{t('compliance.noActiveAlerts')}</p>
                 </div>
               ) : (
                 alerts.map((alert) => (
