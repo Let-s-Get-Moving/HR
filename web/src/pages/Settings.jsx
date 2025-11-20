@@ -2296,7 +2296,7 @@ export default function Settings() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.description')}</label>
+                    <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.descriptionLabel')}</label>
                     <textarea
                       value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.description || '' : newLeaveType.description}
                       onChange={(e) => {
@@ -2530,7 +2530,7 @@ export default function Settings() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.holidays.description')} *</label>
+                      <label className="block text-sm font-medium mb-2">{t('settings.holidays.descriptionLabel')} *</label>
                       <input
                         type="text"
                         value={newHoliday.description}
@@ -2749,7 +2749,7 @@ export default function Settings() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.description')}</label>
+                    <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.descriptionLabel')}</label>
                     <textarea
                       value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.description || '' : newJobTitle.description}
                       onChange={(e) => {
@@ -2984,7 +2984,7 @@ export default function Settings() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.description')}</label>
+                    <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.descriptionLabel')}</label>
                     <textarea
                       value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.description || '' : newBenefitsPackage.description}
                       onChange={(e) => {
@@ -3204,7 +3204,7 @@ export default function Settings() {
                         onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, name: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, name: e.target.value}); } setWorkScheduleError(''); }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                     </div>
-                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.description')}</label>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.descriptionLabel')}</label>
                       <textarea value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.description || '' : newWorkSchedule.description}
                         onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, description: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, description: e.target.value}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
@@ -3327,7 +3327,7 @@ export default function Settings() {
                       onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, name: e.target.value } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, name: e.target.value}); } setOvertimePolicyError(''); }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                   </div>
-                  <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.description')}</label>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.descriptionLabel')}</label>
                     <textarea value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.description || '' : newOvertimePolicy.description}
                       onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, description: e.target.value } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, description: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
@@ -3446,7 +3446,7 @@ export default function Settings() {
                       onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, name: e.target.value } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, name: e.target.value}); } setAttendancePolicyError(''); }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                   </div>
-                  <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.description')}</label>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.descriptionLabel')}</label>
                     <textarea value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.description || '' : newAttendancePolicy.description}
                       onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, description: e.target.value } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, description: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
@@ -3571,7 +3571,7 @@ export default function Settings() {
                       onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, name: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, name: e.target.value}); } setRemoteWorkPolicyError(''); }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                   </div>
-                  <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.description')}</label>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.descriptionLabel')}</label>
                     <textarea value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.description || '' : newRemoteWorkPolicy.description}
                       onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, description: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, description: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
