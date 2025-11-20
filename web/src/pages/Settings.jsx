@@ -281,30 +281,38 @@ export default function Settings() {
     if (showHolidaysModal && !loadedModalsRef.current.has('holidays')) {
       loadedModalsRef.current.add('holidays');
       
-      if (!inFlightRequests.has('holidays')) {
-        inFlightRequests.add('holidays');
-        loadHolidays().finally(() => {
-          inFlightRequests.delete('holidays');
-        });
-      }
-      if (!inFlightRequests.has('departments')) {
-        inFlightRequests.add('departments');
-        loadDepartments(true).finally(() => {
-          inFlightRequests.delete('departments');
-        });
-      }
-      if (!inFlightRequests.has('jobTitles')) {
-        inFlightRequests.add('jobTitles');
-        loadJobTitles().finally(() => {
-          inFlightRequests.delete('jobTitles');
-        });
-      }
-      if (!inFlightRequests.has('employees')) {
-        inFlightRequests.add('employees');
-        loadEmployees().finally(() => {
-          inFlightRequests.delete('employees');
-        });
-      }
+      const loadAll = async () => {
+        const promises = [];
+        
+        if (!inFlightRequests.has('holidays')) {
+          inFlightRequests.add('holidays');
+          promises.push(loadHolidays().finally(() => {
+            inFlightRequests.delete('holidays');
+          }));
+        }
+        if (!inFlightRequests.has('departments')) {
+          inFlightRequests.add('departments');
+          promises.push(loadDepartments(true).finally(() => {
+            inFlightRequests.delete('departments');
+          }));
+        }
+        if (!inFlightRequests.has('jobTitles')) {
+          inFlightRequests.add('jobTitles');
+          promises.push(loadJobTitles().finally(() => {
+            inFlightRequests.delete('jobTitles');
+          }));
+        }
+        if (!inFlightRequests.has('employees')) {
+          inFlightRequests.add('employees');
+          promises.push(loadEmployees().finally(() => {
+            inFlightRequests.delete('employees');
+          }));
+        }
+        
+        await Promise.all(promises);
+      };
+      
+      loadAll();
     } else if (!showHolidaysModal) {
       loadedModalsRef.current.delete('holidays');
     }
@@ -324,18 +332,26 @@ export default function Settings() {
     if (showJobTitlesModal && !loadedModalsRef.current.has('jobTitles')) {
       loadedModalsRef.current.add('jobTitles');
       
-      if (!inFlightRequests.has('jobTitles')) {
-        inFlightRequests.add('jobTitles');
-        loadJobTitles().finally(() => {
-          inFlightRequests.delete('jobTitles');
-        });
-      }
-      if (!inFlightRequests.has('departments')) {
-        inFlightRequests.add('departments');
-        loadDepartments(true).finally(() => {
-          inFlightRequests.delete('departments');
-        });
-      }
+      const loadAll = async () => {
+        const promises = [];
+        
+        if (!inFlightRequests.has('jobTitles')) {
+          inFlightRequests.add('jobTitles');
+          promises.push(loadJobTitles().finally(() => {
+            inFlightRequests.delete('jobTitles');
+          }));
+        }
+        if (!inFlightRequests.has('departments')) {
+          inFlightRequests.add('departments');
+          promises.push(loadDepartments(true).finally(() => {
+            inFlightRequests.delete('departments');
+          }));
+        }
+        
+        await Promise.all(promises);
+      };
+      
+      loadAll();
     } else if (!showJobTitlesModal) {
       loadedModalsRef.current.delete('jobTitles');
     }
@@ -375,24 +391,32 @@ export default function Settings() {
     if (showOvertimePoliciesModal && !loadedModalsRef.current.has('overtimePolicies')) {
       loadedModalsRef.current.add('overtimePolicies');
       
-      if (!inFlightRequests.has('overtimePolicies')) {
-        inFlightRequests.add('overtimePolicies');
-        loadOvertimePolicies().finally(() => {
-          inFlightRequests.delete('overtimePolicies');
-        });
-      }
-      if (!inFlightRequests.has('departments')) {
-        inFlightRequests.add('departments');
-        loadDepartments(true).finally(() => {
-          inFlightRequests.delete('departments');
-        });
-      }
-      if (!inFlightRequests.has('jobTitles')) {
-        inFlightRequests.add('jobTitles');
-        loadJobTitles().finally(() => {
-          inFlightRequests.delete('jobTitles');
-        });
-      }
+      const loadAll = async () => {
+        const promises = [];
+        
+        if (!inFlightRequests.has('overtimePolicies')) {
+          inFlightRequests.add('overtimePolicies');
+          promises.push(loadOvertimePolicies().finally(() => {
+            inFlightRequests.delete('overtimePolicies');
+          }));
+        }
+        if (!inFlightRequests.has('departments')) {
+          inFlightRequests.add('departments');
+          promises.push(loadDepartments(true).finally(() => {
+            inFlightRequests.delete('departments');
+          }));
+        }
+        if (!inFlightRequests.has('jobTitles')) {
+          inFlightRequests.add('jobTitles');
+          promises.push(loadJobTitles().finally(() => {
+            inFlightRequests.delete('jobTitles');
+          }));
+        }
+        
+        await Promise.all(promises);
+      };
+      
+      loadAll();
     } else if (!showOvertimePoliciesModal) {
       loadedModalsRef.current.delete('overtimePolicies');
     }
@@ -402,24 +426,32 @@ export default function Settings() {
     if (showAttendancePoliciesModal && !loadedModalsRef.current.has('attendancePolicies')) {
       loadedModalsRef.current.add('attendancePolicies');
       
-      if (!inFlightRequests.has('attendancePolicies')) {
-        inFlightRequests.add('attendancePolicies');
-        loadAttendancePolicies().finally(() => {
-          inFlightRequests.delete('attendancePolicies');
-        });
-      }
-      if (!inFlightRequests.has('departments')) {
-        inFlightRequests.add('departments');
-        loadDepartments(true).finally(() => {
-          inFlightRequests.delete('departments');
-        });
-      }
-      if (!inFlightRequests.has('jobTitles')) {
-        inFlightRequests.add('jobTitles');
-        loadJobTitles().finally(() => {
-          inFlightRequests.delete('jobTitles');
-        });
-      }
+      const loadAll = async () => {
+        const promises = [];
+        
+        if (!inFlightRequests.has('attendancePolicies')) {
+          inFlightRequests.add('attendancePolicies');
+          promises.push(loadAttendancePolicies().finally(() => {
+            inFlightRequests.delete('attendancePolicies');
+          }));
+        }
+        if (!inFlightRequests.has('departments')) {
+          inFlightRequests.add('departments');
+          promises.push(loadDepartments(true).finally(() => {
+            inFlightRequests.delete('departments');
+          }));
+        }
+        if (!inFlightRequests.has('jobTitles')) {
+          inFlightRequests.add('jobTitles');
+          promises.push(loadJobTitles().finally(() => {
+            inFlightRequests.delete('jobTitles');
+          }));
+        }
+        
+        await Promise.all(promises);
+      };
+      
+      loadAll();
     } else if (!showAttendancePoliciesModal) {
       loadedModalsRef.current.delete('attendancePolicies');
     }
@@ -429,24 +461,32 @@ export default function Settings() {
     if (showRemoteWorkPoliciesModal && !loadedModalsRef.current.has('remoteWorkPolicies')) {
       loadedModalsRef.current.add('remoteWorkPolicies');
       
-      if (!inFlightRequests.has('remoteWorkPolicies')) {
-        inFlightRequests.add('remoteWorkPolicies');
-        loadRemoteWorkPolicies().finally(() => {
-          inFlightRequests.delete('remoteWorkPolicies');
-        });
-      }
-      if (!inFlightRequests.has('departments')) {
-        inFlightRequests.add('departments');
-        loadDepartments(true).finally(() => {
-          inFlightRequests.delete('departments');
-        });
-      }
-      if (!inFlightRequests.has('jobTitles')) {
-        inFlightRequests.add('jobTitles');
-        loadJobTitles().finally(() => {
-          inFlightRequests.delete('jobTitles');
-        });
-      }
+      const loadAll = async () => {
+        const promises = [];
+        
+        if (!inFlightRequests.has('remoteWorkPolicies')) {
+          inFlightRequests.add('remoteWorkPolicies');
+          promises.push(loadRemoteWorkPolicies().finally(() => {
+            inFlightRequests.delete('remoteWorkPolicies');
+          }));
+        }
+        if (!inFlightRequests.has('departments')) {
+          inFlightRequests.add('departments');
+          promises.push(loadDepartments(true).finally(() => {
+            inFlightRequests.delete('departments');
+          }));
+        }
+        if (!inFlightRequests.has('jobTitles')) {
+          inFlightRequests.add('jobTitles');
+          promises.push(loadJobTitles().finally(() => {
+            inFlightRequests.delete('jobTitles');
+          }));
+        }
+        
+        await Promise.all(promises);
+      };
+      
+      loadAll();
     } else if (!showRemoteWorkPoliciesModal) {
       loadedModalsRef.current.delete('remoteWorkPolicies');
     }
