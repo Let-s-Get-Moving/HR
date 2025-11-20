@@ -214,6 +214,10 @@ export default function Settings() {
   const isInitialMount = React.useRef(true);
   
   // Track if individual modals have loaded (one ref per modal)
+  const departmentsLoadedRef = useRef(false);
+  const leavePoliciesLoadedRef = useRef(false);
+  const benefitsPackagesLoadedRef = useRef(false);
+  const workSchedulesLoadedRef = useRef(false);
   const jobTitlesLoadedRef = useRef(false);
   const holidaysLoadedRef = useRef(false);
   const overtimeLoadedRef = useRef(false);
@@ -252,8 +256,8 @@ export default function Settings() {
 
   // Load data when modals are opened - track in-flight requests to prevent duplicates
   useEffect(() => {
-    if (showDepartmentsModal && !loadedModalsRef.current.has('departments')) {
-      loadedModalsRef.current.add('departments');
+    if (showDepartmentsModal && !departmentsLoadedRef.current) {
+      departmentsLoadedRef.current = true;
       
       if (!inFlightRequests.has('departments')) {
         inFlightRequests.add('departments');
@@ -261,14 +265,12 @@ export default function Settings() {
           inFlightRequests.delete('departments');
         });
       }
-    } else if (!showDepartmentsModal) {
-      loadedModalsRef.current.delete('departments');
     }
   }, [showDepartmentsModal]);
 
   useEffect(() => {
-    if (showLeavePoliciesModal && !loadedModalsRef.current.has('leavePolicies')) {
-      loadedModalsRef.current.add('leavePolicies');
+    if (showLeavePoliciesModal && !leavePoliciesLoadedRef.current) {
+      leavePoliciesLoadedRef.current = true;
       
       if (!inFlightRequests.has('leaveTypes')) {
         inFlightRequests.add('leaveTypes');
@@ -276,8 +278,6 @@ export default function Settings() {
           inFlightRequests.delete('leaveTypes');
         });
       }
-    } else if (!showLeavePoliciesModal) {
-      loadedModalsRef.current.delete('leavePolicies');
     }
   }, [showLeavePoliciesModal]);
 
@@ -342,8 +342,8 @@ export default function Settings() {
   }, [showJobTitlesModal]);
 
   useEffect(() => {
-    if (showBenefitsPackagesModal && !loadedModalsRef.current.has('benefitsPackages')) {
-      loadedModalsRef.current.add('benefitsPackages');
+    if (showBenefitsPackagesModal && !benefitsPackagesLoadedRef.current) {
+      benefitsPackagesLoadedRef.current = true;
       
       if (!inFlightRequests.has('benefitsPackages')) {
         inFlightRequests.add('benefitsPackages');
@@ -351,14 +351,12 @@ export default function Settings() {
           inFlightRequests.delete('benefitsPackages');
         });
       }
-    } else if (!showBenefitsPackagesModal) {
-      loadedModalsRef.current.delete('benefitsPackages');
     }
   }, [showBenefitsPackagesModal]);
 
   useEffect(() => {
-    if (showWorkSchedulesModal && !loadedModalsRef.current.has('workSchedules')) {
-      loadedModalsRef.current.add('workSchedules');
+    if (showWorkSchedulesModal && !workSchedulesLoadedRef.current) {
+      workSchedulesLoadedRef.current = true;
       
       if (!inFlightRequests.has('workSchedules')) {
         inFlightRequests.add('workSchedules');
@@ -366,8 +364,6 @@ export default function Settings() {
           inFlightRequests.delete('workSchedules');
         });
       }
-    } else if (!showWorkSchedulesModal) {
-      loadedModalsRef.current.delete('workSchedules');
     }
   }, [showWorkSchedulesModal]);
 
