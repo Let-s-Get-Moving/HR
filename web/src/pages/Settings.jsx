@@ -84,6 +84,11 @@ export default function Settings() {
   const [deletingHoliday, setDeletingHoliday] = useState(null);
   const [holidayError, setHolidayError] = useState('');
 
+  // Modal State
+  const [showDepartmentsModal, setShowDepartmentsModal] = useState(false);
+  const [showLeavePoliciesModal, setShowLeavePoliciesModal] = useState(false);
+  const [showHolidaysModal, setShowHolidaysModal] = useState(false);
+
   const tabs = [
     { id: "system", name: t('settings.system'), icon: "⚙️" },
     { id: "preferences", name: t('settings.preferences'), icon: "👤" },
@@ -122,22 +127,72 @@ export default function Settings() {
   useEffect(() => {
     console.log('🎬 [Settings] useEffect #1 triggered - calling loadSettings()');
     loadSettings();
-    if (activeTab === 'system') {
-      loadDepartments();
-      loadLeaveTypes();
-      loadHolidays();
-    }
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
 
-  // Load data when system tab is active
+  // Load data when modals are opened
   useEffect(() => {
-    if (activeTab === 'system') {
+    if (showDepartmentsModal) {
       loadDepartments();
+    }
+  }, [showDepartmentsModal]);
+
+  useEffect(() => {
+    if (showLeavePoliciesModal) {
       loadLeaveTypes();
+    }
+  }, [showLeavePoliciesModal]);
+
+  useEffect(() => {
+    if (showHolidaysModal) {
       loadHolidays();
     }
-  }, [activeTab]);
+  }, [showHolidaysModal]);
+
+  // Handle Escape key to close modals
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        if (showDepartmentsModal) {
+          setShowDepartmentsModal(false);
+          setDepartmentError('');
+        }
+        if (showLeavePoliciesModal) {
+          setShowLeavePoliciesModal(false);
+          setEditingLeaveType(null);
+          setLeaveTypeError('');
+        }
+        if (showHolidaysModal) {
+          setShowHolidaysModal(false);
+          setHolidayError('');
+        }
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [showDepartmentsModal, showLeavePoliciesModal, showHolidaysModal]);
+
+  // Ensure only one modal is open at a time
+  useEffect(() => {
+    if (showDepartmentsModal) {
+      setShowLeavePoliciesModal(false);
+      setShowHolidaysModal(false);
+    }
+  }, [showDepartmentsModal]);
+
+  useEffect(() => {
+    if (showLeavePoliciesModal) {
+      setShowDepartmentsModal(false);
+      setShowHolidaysModal(false);
+    }
+  }, [showLeavePoliciesModal]);
+
+  useEffect(() => {
+    if (showHolidaysModal) {
+      setShowDepartmentsModal(false);
+      setShowLeavePoliciesModal(false);
+    }
+  }, [showHolidaysModal]);
 
   // Reload settings when user navigates back to settings (but not on initial mount)
   useEffect(() => {
@@ -1187,27 +1242,156 @@ export default function Settings() {
                 <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
               )}
             </motion.div>
-          ))}
-        </div>
+          )        )}
       </div>
-    );
-  };
+
+      {/* Modals */}
+      <DepartmentsModal />
+      <LeavePoliciesModal />
+      <HolidaysModal />
+    </div>
+  );
+};
 
   const renderSystemSettings = () => {
     const canManage = hasFullAccess(userRole);
     
-    // Show management sections if no system settings exist
+    // Show management buttons if no system settings exist
     if (!Array.isArray(systemSettings) || systemSettings.length === 0) {
       return (
-        <div className="space-y-8">
-          {/* Departments Section */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">{t('settings.departments.title')}</h3>
-              <p className="text-sm text-secondary mb-6">{t('settings.departments.description')}</p>
-            </div>
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold mb-2">{t('settings.system')}</h3>
+            <p className="text-sm text-secondary mb-6">{t('settings.systemDescription')}</p>
+          </div>
 
-            {/* Add Department Form (Manager/Admin only) */}
+          {/* Management Buttons */}
+          {canManage && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Departments Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => setShowDepartmentsModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">🏢</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.departments.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.departments.description')}</p>
+              </motion.button>
+
+              {/* Leave Policies Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                onClick={() => setShowLeavePoliciesModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">📋</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.leavePolicies.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.leavePolicies.description')}</p>
+              </motion.button>
+
+              {/* Holidays Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                onClick={() => setShowHolidaysModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">🎉</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.holidays.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.holidays.description')}</p>
+              </motion.button>
+            </div>
+          )}
+
+          {!canManage && (
+            <div className="card p-6 text-center">
+              <p className="text-secondary">{t('settings.noSystemSettings')}</p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Show regular system settings if they exist
+    const categories = {};
+    systemSettings.forEach(setting => {
+      if (!categories[setting.category]) {
+        categories[setting.category] = [];
+      }
+      categories[setting.category].push(setting);
+    });
+
+    return (
+      <div className="space-y-8">
+        {Object.entries(categories).map(([category, settings]) => (
+          <div key={category}>
+            <h4 className="text-md font-medium text-neutral-300 mb-4">{category}</h4>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {settings.map((setting) => (
+                <motion.div
+                  key={setting.key}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="card p-4"
+                >
+                  {renderSettingField(setting, "system")}
+                  {saving[setting.key] && (
+                    <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Modal Components
+  const DepartmentsModal = () => {
+    if (!showDepartmentsModal) return null;
+    const canManage = hasFullAccess(userRole);
+
+    const handleClose = () => {
+      setShowDepartmentsModal(false);
+      setDepartmentError('');
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.departments.title')}</h2>
+            <button
+              onClick={handleClose}
+              className="text-secondary hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.departments.description')}</p>
+
+            {/* Add Department Form */}
             {canManage && (
               <div className="card p-6 mb-6">
                 <h4 className="text-lg font-medium mb-4">{t('settings.departments.addNew')}</h4>
@@ -1281,15 +1465,51 @@ export default function Settings() {
               )}
             </div>
           </div>
+        </motion.div>
+      </div>
+    );
+  };
 
-          {/* Leave Policies Section */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">{t('settings.leavePolicies.title')}</h3>
-              <p className="text-sm text-secondary mb-6">{t('settings.leavePolicies.description')}</p>
-            </div>
+  const LeavePoliciesModal = () => {
+    if (!showLeavePoliciesModal) return null;
+    const canManage = hasFullAccess(userRole);
 
-            {/* Add Leave Type Form (Manager/Admin only) */}
+    const handleClose = () => {
+      setShowLeavePoliciesModal(false);
+      setEditingLeaveType(null);
+      setLeaveTypeError('');
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.leavePolicies.title')}</h2>
+            <button
+              onClick={handleClose}
+              className="text-secondary hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.leavePolicies.description')}</p>
+
+            {/* Add Leave Type Form */}
             {canManage && (
               <div className="card p-6 mb-6">
                 <h4 className="text-lg font-medium mb-4">
@@ -1355,7 +1575,7 @@ export default function Settings() {
                     <div className="flex items-center">
                       <input
                         type="checkbox"
-                        id="is_paid"
+                        id="modal_is_paid"
                         checked={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.is_paid !== false : newLeaveType.is_paid}
                         onChange={(e) => {
                           if (editingLeaveType) {
@@ -1366,12 +1586,12 @@ export default function Settings() {
                         }}
                         className="mr-2"
                       />
-                      <label htmlFor="is_paid" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
+                      <label htmlFor="modal_is_paid" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
                     </div>
                     <div className="flex items-center">
                       <input
                         type="checkbox"
-                        id="requires_approval"
+                        id="modal_requires_approval"
                         checked={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.requires_approval !== false : newLeaveType.requires_approval}
                         onChange={(e) => {
                           if (editingLeaveType) {
@@ -1382,7 +1602,7 @@ export default function Settings() {
                         }}
                         className="mr-2"
                       />
-                      <label htmlFor="requires_approval" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
+                      <label htmlFor="modal_requires_approval" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.color')}</label>
@@ -1510,15 +1730,50 @@ export default function Settings() {
               )}
             </div>
           </div>
+        </motion.div>
+      </div>
+    );
+  };
 
-          {/* Holidays Section */}
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">{t('settings.holidays.title')}</h3>
-              <p className="text-sm text-secondary mb-6">{t('settings.holidays.description')}</p>
-            </div>
+  const HolidaysModal = () => {
+    if (!showHolidaysModal) return null;
+    const canManage = hasFullAccess(userRole);
 
-            {/* Add Holiday Form (Manager/Admin only) */}
+    const handleClose = () => {
+      setShowHolidaysModal(false);
+      setHolidayError('');
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.holidays.title')}</h2>
+            <button
+              onClick={handleClose}
+              className="text-secondary hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.holidays.description')}</p>
+
+            {/* Add Holiday Form */}
             {canManage && (
               <div className="card p-6 mb-6">
                 <h4 className="text-lg font-medium mb-4">{t('settings.holidays.addNew')}</h4>
@@ -1556,12 +1811,12 @@ export default function Settings() {
                   <div className="flex items-center">
                     <input
                       type="checkbox"
-                      id="is_company_closure"
+                      id="modal_is_company_closure"
                       checked={newHoliday.is_company_closure}
                       onChange={(e) => setNewHoliday({...newHoliday, is_company_closure: e.target.checked})}
                       className="mr-2"
                     />
-                    <label htmlFor="is_company_closure" className="text-sm">{t('settings.holidays.companyClosure')}</label>
+                    <label htmlFor="modal_is_company_closure" className="text-sm">{t('settings.holidays.companyClosure')}</label>
                   </div>
                   <button
                     type="submit"
@@ -1618,41 +1873,7 @@ export default function Settings() {
               )}
             </div>
           </div>
-        </div>
-      );
-    }
-
-    // Show regular system settings if they exist
-    const categories = {};
-    systemSettings.forEach(setting => {
-      if (!categories[setting.category]) {
-        categories[setting.category] = [];
-      }
-      categories[setting.category].push(setting);
-    });
-
-    return (
-      <div className="space-y-8">
-        {Object.entries(categories).map(([category, settings]) => (
-          <div key={category}>
-            <h4 className="text-md font-medium text-neutral-300 mb-4">{category}</h4>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {settings.map((setting) => (
-                <motion.div
-                  key={setting.key}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="card p-4"
-                >
-                  {renderSettingField(setting, "system")}
-                  {saving[setting.key] && (
-                    <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        ))}
+        </motion.div>
       </div>
     );
   };

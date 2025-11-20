@@ -643,6 +643,8 @@
     "title": "Settings",
     "description": "Manage system configuration and user preferences",
     "system": "System Settings",
+    "systemDescription": "Manage departments, leave policies, and company holidays",
+    "noSystemSettings": "You don't have permission to manage system settings",
     "preferences": "User Preferences",
     "notifications": "Notifications",
     "security": "Security",

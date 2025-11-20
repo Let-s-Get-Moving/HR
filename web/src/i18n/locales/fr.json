@@ -567,6 +567,8 @@
     "title": "Paramètres",
     "description": "Gérer la configuration du système et les préférences utilisateur",
     "system": "Paramètres Système",
+    "systemDescription": "Gérer les départements, les politiques de congés et les jours fériés de l'entreprise",
+    "noSystemSettings": "Vous n'avez pas la permission de gérer les paramètres système",
     "preferences": "Préférences Utilisateur",
     "notifications": "Notifications",
     "security": "Sécurité",

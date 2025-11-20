@@ -567,6 +567,8 @@
     "title": "Configuración",
     "description": "Gestionar configuración del sistema y preferencias de usuario",
     "system": "Configuración del Sistema",
+    "systemDescription": "Gestionar departamentos, políticas de licencia y días festivos de la empresa",
+    "noSystemSettings": "No tiene permiso para gestionar la configuración del sistema",
     "preferences": "Preferencias de Usuario",
     "notifications": "Notificaciones",
     "security": "Seguridad",
