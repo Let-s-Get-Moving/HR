@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
+import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
 
 // CleanupButton component COMPLETELY REMOVED
 // This component was causing accidental data deletion and has been permanently removed
@@ -47,6 +48,15 @@ export default function Settings() {
   const [trustedDevices, setTrustedDevices] = useState([]);
   const [loadingDevices, setLoadingDevices] = useState(false);
 
+  // Department Management State
+  const { userRole } = useUserRole();
+  const [departments, setDepartments] = useState([]);
+  const [newDepartmentName, setNewDepartmentName] = useState('');
+  const [addingDepartment, setAddingDepartment] = useState(false);
+  const [deletingDepartment, setDeletingDepartment] = useState(null);
+  const [departmentError, setDepartmentError] = useState('');
+  const [departmentEmployeeCounts, setDepartmentEmployeeCounts] = useState({});
+
   const tabs = [
     { id: "system", name: t('settings.system'), icon: "⚙️" },
     { id: "preferences", name: t('settings.preferences'), icon: "👤" },
@@ -85,8 +95,18 @@ export default function Settings() {
   useEffect(() => {
     console.log('🎬 [Settings] useEffect #1 triggered - calling loadSettings()');
     loadSettings();
+    if (activeTab === 'system') {
+      loadDepartments();
+    }
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
+
+  // Load departments when system tab is active
+  useEffect(() => {
+    if (activeTab === 'system') {
+      loadDepartments();
+    }
+  }, [activeTab]);
 
   // Reload settings when user navigates back to settings (but not on initial mount)
   useEffect(() => {
@@ -380,6 +400,92 @@ export default function Settings() {
       console.log('🏁 [Settings] Finally block reached - setting loading to FALSE');
       setLoading(false);
       console.log('🏁 [Settings] Loading state set to FALSE');
+    }
+  };
+
+  // Load departments and employee counts
+  const loadDepartments = async () => {
+    try {
+      const depts = await API("/api/employees/departments").catch(() => []);
+      setDepartments(depts || []);
+
+      // Load all employees and count by department
+      try {
+        const employees = await API("/api/employees").catch(() => []);
+        const counts = {};
+        (depts || []).forEach(dept => {
+          counts[dept.id] = 0;
+        });
+        (employees || []).forEach(emp => {
+          // Employees API returns e.* which includes department_id
+          const deptId = emp.department_id;
+          if (deptId && counts[deptId] !== undefined) {
+            counts[deptId] = (counts[deptId] || 0) + 1;
+          }
+        });
+        setDepartmentEmployeeCounts(counts);
+      } catch (err) {
+        console.error("Error loading employee counts:", err);
+        // Set all counts to 0 if we can't fetch employees
+        const counts = {};
+        (depts || []).forEach(dept => {
+          counts[dept.id] = 0;
+        });
+        setDepartmentEmployeeCounts(counts);
+      }
+    } catch (error) {
+      console.error("Error loading departments:", error);
+      setDepartments([]);
+    }
+  };
+
+  // Add new department
+  const handleAddDepartment = async (e) => {
+    e.preventDefault();
+    if (!newDepartmentName.trim()) {
+      setDepartmentError(t('settings.departments.nameRequired'));
+      return;
+    }
+
+    setAddingDepartment(true);
+    setDepartmentError('');
+
+    try {
+      const result = await API("/api/employees/departments", {
+        method: "POST",
+        body: JSON.stringify({ name: newDepartmentName.trim() })
+      });
+
+      setNewDepartmentName('');
+      await loadDepartments();
+    } catch (error) {
+      console.error("Error adding department:", error);
+      setDepartmentError(error.message || t('settings.departments.addError'));
+    } finally {
+      setAddingDepartment(false);
+    }
+  };
+
+  // Delete department
+  const handleDeleteDepartment = async (id) => {
+    if (!window.confirm(t('settings.departments.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingDepartment(id);
+
+    try {
+      await API(`/api/employees/departments/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadDepartments();
+    } catch (error) {
+      console.error("Error deleting department:", error);
+      const errorMsg = error.message || t('settings.departments.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingDepartment(null);
     }
   };
 
@@ -865,14 +971,95 @@ export default function Settings() {
   };
 
   const renderSystemSettings = () => {
+    const canManage = hasFullAccess(userRole);
+    
+    // Show department management if no system settings exist
     if (!Array.isArray(systemSettings) || systemSettings.length === 0) {
       return (
-        <div className="text-center py-8">
-          <p className="text-secondary">{t('settings.noSystemSettings')}</p>
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-semibold mb-4">{t('settings.departments.title')}</h3>
+            <p className="text-sm text-secondary mb-6">{t('settings.departments.description')}</p>
+          </div>
+
+          {/* Add Department Form (Manager/Admin only) */}
+          {canManage && (
+            <div className="card p-6 mb-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.departments.addNew')}</h4>
+              <form onSubmit={handleAddDepartment} className="flex gap-3">
+                <input
+                  type="text"
+                  value={newDepartmentName}
+                  onChange={(e) => {
+                    setNewDepartmentName(e.target.value);
+                    setDepartmentError('');
+                  }}
+                  placeholder={t('settings.departments.namePlaceholder')}
+                  className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                  maxLength={100}
+                />
+                <button
+                  type="submit"
+                  disabled={addingDepartment || !newDepartmentName.trim()}
+                  className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {addingDepartment ? t('settings.departments.adding') : t('settings.departments.add')}
+                </button>
+              </form>
+              {departmentError && (
+                <p className="mt-2 text-sm text-red-400">{departmentError}</p>
+              )}
+            </div>
+          )}
+
+          {/* Departments List */}
+          <div className="card p-6">
+            <h4 className="text-lg font-medium mb-4">{t('settings.departments.list')}</h4>
+            {departments.length === 0 ? (
+              <p className="text-secondary">{t('settings.departments.noDepartments')}</p>
+            ) : (
+              <div className="space-y-3">
+                {departments.map((dept) => (
+                  <motion.div
+                    key={dept.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                  >
+                    <div className="flex-1">
+                      <div className="font-medium text-white">{dept.name}</div>
+                      {departmentEmployeeCounts[dept.id] !== undefined && (
+                        <div className="text-sm text-secondary mt-1">
+                          {departmentEmployeeCounts[dept.id] === 0
+                            ? t('settings.departments.noEmployees')
+                            : t('settings.departments.employeeCount', { count: departmentEmployeeCounts[dept.id] })}
+                        </div>
+                      )}
+                    </div>
+                    {canManage && (
+                      <button
+                        onClick={() => handleDeleteDepartment(dept.id)}
+                        disabled={deletingDepartment === dept.id || (departmentEmployeeCounts[dept.id] || 0) > 0}
+                        className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                        title={
+                          (departmentEmployeeCounts[dept.id] || 0) > 0
+                            ? t('settings.departments.cannotDelete')
+                            : t('settings.departments.delete')
+                        }
+                      >
+                        {deletingDepartment === dept.id ? t('settings.departments.deleting') : t('settings.departments.delete')}
+                      </button>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       );
     }
 
+    // Show regular system settings if they exist
     const categories = {};
     systemSettings.forEach(setting => {
       if (!categories[setting.category]) {

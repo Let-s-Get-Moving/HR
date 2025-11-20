@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
-import { applyScopeFilter } from "../middleware/rbac.js";
+import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
+import { requireAuth } from "../session.js";
 
 const r = Router();
 
@@ -51,6 +52,83 @@ r.get("/terminated", async (_req, res) => {
 r.get("/departments", async (_req, res) => {
   const { rows } = await q(`SELECT * FROM departments ORDER BY name`);
   res.json(rows);
+});
+
+// POST /api/employees/departments - Create new department (manager/admin only)
+r.post("/departments", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name } = req.body;
+    
+    // Validation
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Department name is required' });
+    }
+    
+    const trimmedName = name.trim();
+    
+    if (trimmedName.length > 100) {
+      return res.status(400).json({ error: 'Department name must be 100 characters or less' });
+    }
+    
+    // Check if department already exists
+    const existing = await q(`SELECT id FROM departments WHERE name = $1`, [trimmedName]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Department already exists' });
+    }
+    
+    // Insert new department
+    const result = await q(`
+      INSERT INTO departments (name) 
+      VALUES ($1) 
+      RETURNING *
+    `, [trimmedName]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating department:', error);
+    res.status(500).json({ error: 'Failed to create department' });
+  }
+});
+
+// DELETE /api/employees/departments/:id - Delete department (manager/admin only)
+r.delete("/departments/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const departmentId = parseInt(req.params.id, 10);
+    
+    if (isNaN(departmentId)) {
+      return res.status(400).json({ error: 'Invalid department ID' });
+    }
+    
+    // Check if any employees are assigned to this department
+    const employeesCheck = await q(`
+      SELECT COUNT(*) as count 
+      FROM employees 
+      WHERE department_id = $1
+    `, [departmentId]);
+    
+    const employeeCount = parseInt(employeesCheck.rows[0].count, 10);
+    
+    if (employeeCount > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete department with assigned employees',
+        employeeCount 
+      });
+    }
+    
+    // Check if department exists
+    const deptCheck = await q(`SELECT id FROM departments WHERE id = $1`, [departmentId]);
+    if (deptCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Department not found' });
+    }
+    
+    // Delete department
+    await q(`DELETE FROM departments WHERE id = $1`, [departmentId]);
+    
+    res.json({ message: 'Department deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting department:', error);
+    res.status(500).json({ error: 'Failed to delete department' });
+  }
 });
 
 r.get("/locations", async (_req, res) => {

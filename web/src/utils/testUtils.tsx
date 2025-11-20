@@ -60,9 +60,12 @@ export const mockEmployees = [
 
 // Mock department data
 export const mockDepartments = [
-  { id: 1, name: 'Engineering', description: 'Software development team' },
-  { id: 2, name: 'Human Resources', description: 'HR management team' },
+  { id: 1, name: 'Sales', description: 'Sales team' },
+  { id: 2, name: 'Operations', description: 'Operations team' },
   { id: 3, name: 'Finance', description: 'Financial management team' },
+  { id: 4, name: 'IT', description: 'Information Technology team' },
+  { id: 5, name: 'Marketing', description: 'Marketing team' },
+  { id: 6, name: 'HR', description: 'Human Resources team' },
 ];
 
 // Mock payroll data

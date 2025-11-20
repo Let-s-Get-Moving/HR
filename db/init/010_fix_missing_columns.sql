@@ -38,9 +38,12 @@ CREATE INDEX IF NOT EXISTS idx_employees_employment_status ON employees(employme
 
 -- Ensure we have departments
 INSERT INTO departments (name) VALUES 
-('Engineering'), 
-('Human Resources'), 
-('Operations')
+('Sales'),
+('Operations'),
+('Finance'),
+('IT'),
+('Marketing'),
+('HR')
 ON CONFLICT (name) DO NOTHING;
 
 -- Update employee department references if they don't exist

@@ -1,4 +1,4 @@
-INSERT INTO departments (name) VALUES ('Operations'),('HR'),('Sales') ON CONFLICT DO NOTHING;
+INSERT INTO departments (name) VALUES ('Sales'),('Operations'),('Finance'),('IT'),('Marketing'),('HR') ON CONFLICT DO NOTHING;
 INSERT INTO locations (name, region) VALUES ('Downtown','ON'),('North York','ON') ON CONFLICT DO NOTHING;
 
 -- Seed employees removed - import from Excel instead

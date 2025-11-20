@@ -11,6 +11,7 @@ export default function BonusesCommissions() {
   const { userRole } = useUserRole();
   const [activeTab, setActiveTab] = useState("analytics");
   const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [bonuses, setBonuses] = useState([]);
   const [commissions, setCommissions] = useState([]);
   const [bonusStructures, setBonusStructures] = useState([]);
@@ -127,7 +128,18 @@ export default function BonusesCommissions() {
 
   useEffect(() => {
     loadAvailablePeriods();
+    loadDepartments();
   }, []);
+
+  const loadDepartments = async () => {
+    try {
+      const depts = await API("/api/employees/departments").catch(() => []);
+      setDepartments(depts || []);
+    } catch (error) {
+      console.error("Error loading departments:", error);
+      setDepartments([]);
+    }
+  };
 
   useEffect(() => {
     if (selectedPeriod) {
@@ -1728,11 +1740,10 @@ export default function BonusesCommissions() {
                   <div>
                     <label className="block text-sm font-medium mb-2">Department</label>
                     <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
-                      <option value="Sales">Sales</option>
-                      <option value="Engineering">Engineering</option>
-                      <option value="Marketing">Marketing</option>
-                      <option value="Operations">Operations</option>
                       <option value="All">All Departments</option>
+                      {departments.map(dept => (
+                        <option key={dept.id} value={dept.name}>{dept.name}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
