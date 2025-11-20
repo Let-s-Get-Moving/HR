@@ -872,20 +872,19 @@ export default function BonusesCommissions() {
   const renderImport = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Excel Commission Import</h3>
+        <h3 className="text-lg font-semibold">{t('bonuses.excelCommissionImport')}</h3>
       </div>
 
       <div className="bg-neutral-900 p-6 rounded-lg">
         <div className="space-y-4">
           <div className="bg-amber-900/20 border border-amber-700/30 p-3 rounded-lg">
             <p className="text-xs text-amber-200">
-              💡 <strong>Supported Format:</strong> Excel files (.xlsx, .xls) with commission data. 
-              The system will automatically detect Main Commission, Agent US, and Hourly Payout tables.
+              {t('bonuses.supportedFormat')}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Upload Excel File</label>
+            <label className="block text-sm font-medium mb-2">{t('bonuses.uploadExcelFile')}</label>
             <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
               <input
                 type="file"
@@ -897,23 +896,23 @@ export default function BonusesCommissions() {
               <label htmlFor="excel-upload" className="cursor-pointer">
                 <div className="text-4xl mb-2">📊</div>
                 <p className="text-neutral-400">
-                  {importFile ? importFile.name : "Click to upload Excel file"}
+                  {importFile ? importFile.name : t('bonuses.clickToUploadExcelFile')}
                 </p>
                 <p className="text-xs text-neutral-500 mt-1">
-                  Supports .xlsx and .xls formats with multiple data tables
+                  {t('bonuses.supportsFormats')}
                 </p>
               </label>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">Period Month (Optional)</label>
+            <label className="block text-sm font-medium mb-2">{t('bonuses.periodMonthOptional')}</label>
             <select
               value={manualPeriod}
               onChange={(e) => setManualPeriod(e.target.value)}
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-sm"
             >
-              <option value="">Auto-detect from sheet name</option>
+              <option value="">{t('bonuses.autoDetectFromSheetName')}</option>
               {(() => {
                 // Generate last 12 months dynamically
                 const months = ['January', 'February', 'March', 'April', 'May', 'June', 
@@ -934,7 +933,7 @@ export default function BonusesCommissions() {
               })()}
             </select>
             <p className="text-xs text-neutral-500 mt-1">
-              Leave as "Auto-detect" if your sheet is named like "July 2025". Otherwise, select from recent months.
+              {t('bonuses.autoDetectHelper')}
             </p>
           </div>
 
@@ -954,7 +953,7 @@ export default function BonusesCommissions() {
               disabled={!importFile}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-600 px-6 py-3 rounded-lg font-medium transition-colors"
             >
-              Import Commission Data
+              {t('bonuses.importCommissionData')}
             </button>
             <button
               onClick={() => {
@@ -963,7 +962,7 @@ export default function BonusesCommissions() {
               }}
               className="px-6 py-3 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors"
             >
-              Clear
+              {t('bonuses.clear')}
             </button>
           </div>
         </div>

@@ -206,7 +206,7 @@ export default function Benefits() {
           onClick={() => setShowEnrollEmployee(true)}
           className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
-          + {t('benefits.enrollEmployee')}
+          {t('benefits.enrollEmployeeButton')}
         </button>
       </div>
 
@@ -289,7 +289,7 @@ export default function Benefits() {
           onClick={() => setShowAddBenefit(true)}
           className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
         >
-          + Add Plan
+          {t('benefits.addPlanButton')}
         </button>
       </div>
 
