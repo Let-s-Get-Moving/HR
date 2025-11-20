@@ -2,6 +2,7 @@ import express from "express";
 import { z } from "zod";
 import { q } from "../db.js";
 import { requireAuth, optionalAuth } from "../session.js";
+import { requireRole, ROLES } from "../middleware/rbac.js";
 
 const r = express.Router();
 
@@ -664,6 +665,602 @@ r.get("/export", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Error exporting settings:", error);
     res.status(500).json({ error: "Failed to export settings" });
+  }
+});
+
+// ============================================================================
+// Job Titles/Positions Endpoints
+// ============================================================================
+
+r.get("/job-titles", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT jt.*, d.name as department_name,
+        (SELECT COUNT(*) FROM employees WHERE role_title = jt.name) as employee_count
+      FROM job_titles jt
+      LEFT JOIN departments d ON jt.department_id = d.id
+      ORDER BY jt.name
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching job titles:', error);
+    res.status(500).json({ error: 'Failed to fetch job titles' });
+  }
+});
+
+r.post("/job-titles", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, description, department_id, level_grade, reports_to_id, min_salary, max_salary } = req.body;
+    
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Job title name is required' });
+    }
+    
+    const result = await q(`
+      INSERT INTO job_titles (name, description, department_id, level_grade, reports_to_id, min_salary, max_salary)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *
+    `, [name.trim(), description || null, department_id || null, level_grade || null, reports_to_id || null, min_salary || null, max_salary || null]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Job title with this name already exists in this department' });
+    }
+    console.error('Error creating job title:', error);
+    res.status(500).json({ error: 'Failed to create job title' });
+  }
+});
+
+r.put("/job-titles/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { name, description, department_id, level_grade, reports_to_id, min_salary, max_salary } = req.body;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid job title ID' });
+    }
+    
+    const result = await q(`
+      UPDATE job_titles
+      SET name = $1, description = $2, department_id = $3, level_grade = $4, reports_to_id = $5, min_salary = $6, max_salary = $7
+      WHERE id = $8
+      RETURNING *
+    `, [name, description || null, department_id || null, level_grade || null, reports_to_id || null, min_salary || null, max_salary || null, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Job title not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating job title:', error);
+    res.status(500).json({ error: 'Failed to update job title' });
+  }
+});
+
+r.delete("/job-titles/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid job title ID' });
+    }
+    
+    // Check if any employees are assigned to this job title
+    const employeeCheck = await q(`
+      SELECT COUNT(*) as count FROM employees WHERE role_title = (SELECT name FROM job_titles WHERE id = $1)
+    `, [id]);
+    
+    if (parseInt(employeeCheck.rows[0].count, 10) > 0) {
+      return res.status(400).json({ error: 'Cannot delete job title with assigned employees' });
+    }
+    
+    const result = await q(`DELETE FROM job_titles WHERE id = $1 RETURNING *`, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Job title not found' });
+    }
+    
+    res.json({ message: 'Job title deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting job title:', error);
+    res.status(500).json({ error: 'Failed to delete job title' });
+  }
+});
+
+// ============================================================================
+// Benefits Packages Endpoints
+// ============================================================================
+
+r.get("/benefits-packages", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT bp.*,
+        (SELECT COUNT(*) FROM employees WHERE benefits_package_id = bp.id) as employee_count
+      FROM benefits_packages bp
+      ORDER BY bp.name
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching benefits packages:', error);
+    res.status(500).json({ error: 'Failed to fetch benefits packages' });
+  }
+});
+
+r.post("/benefits-packages", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, description, benefit_types, coverage_level, employee_cost, employer_cost } = req.body;
+    
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Package name is required' });
+    }
+    
+    const result = await q(`
+      INSERT INTO benefits_packages (name, description, benefit_types, coverage_level, employee_cost, employer_cost)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `, [name.trim(), description || null, JSON.stringify(benefit_types || []), coverage_level || 'Standard', employee_cost || 0, employer_cost || 0]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Benefits package with this name already exists' });
+    }
+    console.error('Error creating benefits package:', error);
+    res.status(500).json({ error: 'Failed to create benefits package' });
+  }
+});
+
+r.put("/benefits-packages/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { name, description, benefit_types, coverage_level, employee_cost, employer_cost } = req.body;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid benefits package ID' });
+    }
+    
+    const result = await q(`
+      UPDATE benefits_packages
+      SET name = $1, description = $2, benefit_types = $3, coverage_level = $4, employee_cost = $5, employer_cost = $6
+      WHERE id = $7
+      RETURNING *
+    `, [name, description || null, JSON.stringify(benefit_types || []), coverage_level || 'Standard', employee_cost || 0, employer_cost || 0, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Benefits package not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating benefits package:', error);
+    res.status(500).json({ error: 'Failed to update benefits package' });
+  }
+});
+
+r.delete("/benefits-packages/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid benefits package ID' });
+    }
+    
+    // Check if any employees are assigned to this package
+    const employeeCheck = await q(`
+      SELECT COUNT(*) as count FROM employees WHERE benefits_package_id = $1
+    `, [id]);
+    
+    if (parseInt(employeeCheck.rows[0].count, 10) > 0) {
+      return res.status(400).json({ error: 'Cannot delete benefits package assigned to employees' });
+    }
+    
+    const result = await q(`DELETE FROM benefits_packages WHERE id = $1 RETURNING *`, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Benefits package not found' });
+    }
+    
+    res.json({ message: 'Benefits package deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting benefits package:', error);
+    res.status(500).json({ error: 'Failed to delete benefits package' });
+  }
+});
+
+// ============================================================================
+// Work Schedules Endpoints
+// ============================================================================
+
+r.get("/work-schedules", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT ws.*,
+        (SELECT COUNT(*) FROM employees WHERE work_schedule_id = ws.id) as employee_count
+      FROM work_schedules ws
+      ORDER BY ws.name
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching work schedules:', error);
+    res.status(500).json({ error: 'Failed to fetch work schedules' });
+  }
+});
+
+r.post("/work-schedules", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, description, start_time, end_time, days_of_week, break_duration_minutes, flexible_hours, max_hours_per_week } = req.body;
+    
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Schedule name is required' });
+    }
+    
+    if (!start_time || !end_time) {
+      return res.status(400).json({ error: 'Start time and end time are required' });
+    }
+    
+    const result = await q(`
+      INSERT INTO work_schedules (name, description, start_time, end_time, days_of_week, break_duration_minutes, flexible_hours, max_hours_per_week)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *
+    `, [name.trim(), description || null, start_time, end_time, JSON.stringify(days_of_week || []), break_duration_minutes || 0, flexible_hours || false, max_hours_per_week || 40]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Work schedule with this name already exists' });
+    }
+    console.error('Error creating work schedule:', error);
+    res.status(500).json({ error: 'Failed to create work schedule' });
+  }
+});
+
+r.put("/work-schedules/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { name, description, start_time, end_time, days_of_week, break_duration_minutes, flexible_hours, max_hours_per_week } = req.body;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid work schedule ID' });
+    }
+    
+    const result = await q(`
+      UPDATE work_schedules
+      SET name = $1, description = $2, start_time = $3, end_time = $4, days_of_week = $5, break_duration_minutes = $6, flexible_hours = $7, max_hours_per_week = $8
+      WHERE id = $9
+      RETURNING *
+    `, [name, description || null, start_time, end_time, JSON.stringify(days_of_week || []), break_duration_minutes || 0, flexible_hours || false, max_hours_per_week || 40, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Work schedule not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating work schedule:', error);
+    res.status(500).json({ error: 'Failed to update work schedule' });
+  }
+});
+
+r.delete("/work-schedules/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid work schedule ID' });
+    }
+    
+    // Check if any employees are assigned to this schedule
+    const employeeCheck = await q(`
+      SELECT COUNT(*) as count FROM employees WHERE work_schedule_id = $1
+    `, [id]);
+    
+    if (parseInt(employeeCheck.rows[0].count, 10) > 0) {
+      return res.status(400).json({ error: 'Cannot delete work schedule assigned to employees' });
+    }
+    
+    const result = await q(`DELETE FROM work_schedules WHERE id = $1 RETURNING *`, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Work schedule not found' });
+    }
+    
+    res.json({ message: 'Work schedule deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting work schedule:', error);
+    res.status(500).json({ error: 'Failed to delete work schedule' });
+  }
+});
+
+// ============================================================================
+// Overtime Policies Endpoints
+// ============================================================================
+
+r.get("/overtime-policies", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT op.*,
+        CASE 
+          WHEN op.applies_to_type = 'Department' THEN d.name
+          WHEN op.applies_to_type = 'JobTitle' THEN jt.name
+          ELSE NULL
+        END as applies_to_name
+      FROM overtime_policies op
+      LEFT JOIN departments d ON op.applies_to_type = 'Department' AND op.applies_to_id = d.id
+      LEFT JOIN job_titles jt ON op.applies_to_type = 'JobTitle' AND op.applies_to_id = jt.id
+      ORDER BY op.name
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching overtime policies:', error);
+    res.status(500).json({ error: 'Failed to fetch overtime policies' });
+  }
+});
+
+r.post("/overtime-policies", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, description, weekly_threshold_hours, daily_threshold_hours, multiplier, requires_approval, applies_to_type, applies_to_id } = req.body;
+    
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Policy name is required' });
+    }
+    
+    const result = await q(`
+      INSERT INTO overtime_policies (name, description, weekly_threshold_hours, daily_threshold_hours, multiplier, requires_approval, applies_to_type, applies_to_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *
+    `, [name.trim(), description || null, weekly_threshold_hours || 40.0, daily_threshold_hours || 8.0, multiplier || 1.5, requires_approval !== false, applies_to_type || 'All', applies_to_id || null]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Overtime policy with this name already exists' });
+    }
+    console.error('Error creating overtime policy:', error);
+    res.status(500).json({ error: 'Failed to create overtime policy' });
+  }
+});
+
+r.put("/overtime-policies/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { name, description, weekly_threshold_hours, daily_threshold_hours, multiplier, requires_approval, applies_to_type, applies_to_id } = req.body;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid overtime policy ID' });
+    }
+    
+    const result = await q(`
+      UPDATE overtime_policies
+      SET name = $1, description = $2, weekly_threshold_hours = $3, daily_threshold_hours = $4, multiplier = $5, requires_approval = $6, applies_to_type = $7, applies_to_id = $8
+      WHERE id = $9
+      RETURNING *
+    `, [name, description || null, weekly_threshold_hours || 40.0, daily_threshold_hours || 8.0, multiplier || 1.5, requires_approval !== false, applies_to_type || 'All', applies_to_id || null, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Overtime policy not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating overtime policy:', error);
+    res.status(500).json({ error: 'Failed to update overtime policy' });
+  }
+});
+
+r.delete("/overtime-policies/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid overtime policy ID' });
+    }
+    
+    const result = await q(`DELETE FROM overtime_policies WHERE id = $1 RETURNING *`, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Overtime policy not found' });
+    }
+    
+    res.json({ message: 'Overtime policy deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting overtime policy:', error);
+    res.status(500).json({ error: 'Failed to delete overtime policy' });
+  }
+});
+
+// ============================================================================
+// Attendance Policies Endpoints
+// ============================================================================
+
+r.get("/attendance-policies", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT ap.*,
+        CASE 
+          WHEN ap.applies_to_type = 'Department' THEN d.name
+          WHEN ap.applies_to_type = 'JobTitle' THEN jt.name
+          ELSE NULL
+        END as applies_to_name
+      FROM attendance_policies ap
+      LEFT JOIN departments d ON ap.applies_to_type = 'Department' AND ap.applies_to_id = d.id
+      LEFT JOIN job_titles jt ON ap.applies_to_type = 'JobTitle' AND ap.applies_to_id = jt.id
+      ORDER BY ap.name
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching attendance policies:', error);
+    res.status(500).json({ error: 'Failed to fetch attendance policies' });
+  }
+});
+
+r.post("/attendance-policies", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, description, late_grace_period_minutes, absence_limit_per_month, tardiness_penalty_points, absence_penalty_points, point_threshold_termination, applies_to_type, applies_to_id } = req.body;
+    
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Policy name is required' });
+    }
+    
+    const result = await q(`
+      INSERT INTO attendance_policies (name, description, late_grace_period_minutes, absence_limit_per_month, tardiness_penalty_points, absence_penalty_points, point_threshold_termination, applies_to_type, applies_to_id)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING *
+    `, [name.trim(), description || null, late_grace_period_minutes || 15, absence_limit_per_month || 3, tardiness_penalty_points || 1, absence_penalty_points || 3, point_threshold_termination || 10, applies_to_type || 'All', applies_to_id || null]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Attendance policy with this name already exists' });
+    }
+    console.error('Error creating attendance policy:', error);
+    res.status(500).json({ error: 'Failed to create attendance policy' });
+  }
+});
+
+r.put("/attendance-policies/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { name, description, late_grace_period_minutes, absence_limit_per_month, tardiness_penalty_points, absence_penalty_points, point_threshold_termination, applies_to_type, applies_to_id } = req.body;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid attendance policy ID' });
+    }
+    
+    const result = await q(`
+      UPDATE attendance_policies
+      SET name = $1, description = $2, late_grace_period_minutes = $3, absence_limit_per_month = $4, tardiness_penalty_points = $5, absence_penalty_points = $6, point_threshold_termination = $7, applies_to_type = $8, applies_to_id = $9
+      WHERE id = $10
+      RETURNING *
+    `, [name, description || null, late_grace_period_minutes || 15, absence_limit_per_month || 3, tardiness_penalty_points || 1, absence_penalty_points || 3, point_threshold_termination || 10, applies_to_type || 'All', applies_to_id || null, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Attendance policy not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating attendance policy:', error);
+    res.status(500).json({ error: 'Failed to update attendance policy' });
+  }
+});
+
+r.delete("/attendance-policies/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid attendance policy ID' });
+    }
+    
+    const result = await q(`DELETE FROM attendance_policies WHERE id = $1 RETURNING *`, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Attendance policy not found' });
+    }
+    
+    res.json({ message: 'Attendance policy deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting attendance policy:', error);
+    res.status(500).json({ error: 'Failed to delete attendance policy' });
+  }
+});
+
+// ============================================================================
+// Remote Work Policies Endpoints
+// ============================================================================
+
+r.get("/remote-work-policies", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT rwp.*,
+        CASE 
+          WHEN rwp.eligibility_type = 'Department' THEN d.name
+          WHEN rwp.eligibility_type = 'JobTitle' THEN jt.name
+          ELSE NULL
+        END as eligibility_name
+      FROM remote_work_policies rwp
+      LEFT JOIN departments d ON rwp.eligibility_type = 'Department' AND rwp.eligibility_id = d.id
+      LEFT JOIN job_titles jt ON rwp.eligibility_type = 'JobTitle' AND rwp.eligibility_id = jt.id
+      ORDER BY rwp.name
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching remote work policies:', error);
+    res.status(500).json({ error: 'Failed to fetch remote work policies' });
+  }
+});
+
+r.post("/remote-work-policies", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, description, eligibility_type, eligibility_id, days_per_week_allowed, requires_approval, equipment_provided, equipment_policy } = req.body;
+    
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Policy name is required' });
+    }
+    
+    const result = await q(`
+      INSERT INTO remote_work_policies (name, description, eligibility_type, eligibility_id, days_per_week_allowed, requires_approval, equipment_provided, equipment_policy)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *
+    `, [name.trim(), description || null, eligibility_type || 'All', eligibility_id || null, days_per_week_allowed || 5, requires_approval !== false, equipment_provided || null, equipment_policy || null]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Remote work policy with this name already exists' });
+    }
+    console.error('Error creating remote work policy:', error);
+    res.status(500).json({ error: 'Failed to create remote work policy' });
+  }
+});
+
+r.put("/remote-work-policies/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { name, description, eligibility_type, eligibility_id, days_per_week_allowed, requires_approval, equipment_provided, equipment_policy } = req.body;
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid remote work policy ID' });
+    }
+    
+    const result = await q(`
+      UPDATE remote_work_policies
+      SET name = $1, description = $2, eligibility_type = $3, eligibility_id = $4, days_per_week_allowed = $5, requires_approval = $6, equipment_provided = $7, equipment_policy = $8
+      WHERE id = $9
+      RETURNING *
+    `, [name, description || null, eligibility_type || 'All', eligibility_id || null, days_per_week_allowed || 5, requires_approval !== false, equipment_provided || null, equipment_policy || null, id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Remote work policy not found' });
+    }
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating remote work policy:', error);
+    res.status(500).json({ error: 'Failed to update remote work policy' });
+  }
+});
+
+r.delete("/remote-work-policies/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    
+    if (isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid remote work policy ID' });
+    }
+    
+    const result = await q(`DELETE FROM remote_work_policies WHERE id = $1 RETURNING *`, [id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Remote work policy not found' });
+    }
+    
+    res.json({ message: 'Remote work policy deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting remote work policy:', error);
+    res.status(500).json({ error: 'Failed to delete remote work policy' });
   }
 });
 
