@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
-import { applyScopeFilter } from "../middleware/rbac.js";
+import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
+import { requireAuth } from "../session.js";
 import { notificationService } from "../services/notifications.js";
 
 const r = Router();
@@ -113,44 +114,6 @@ r.get("/balances/:id", async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error getting employee leave balance:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get leave calendar
-r.get("/calendar", async (req, res) => {
-  try {
-    const { start_date, end_date } = req.query;
-    
-    // Use current year if no dates provided
-    const currentYear = new Date().getFullYear();
-    const defaultStart = `${currentYear}-01-01`;
-    const defaultEnd = `${currentYear}-12-31`;
-    
-    let query = `
-      SELECT lr.*, e.first_name, e.last_name, lt.name as leave_type_name, lt.color
-      FROM leave_requests lr
-      JOIN employees e ON lr.employee_id = e.id
-      JOIN leave_types lt ON lr.leave_type_id = lt.id
-      WHERE lr.status = 'Approved'
-      AND (lr.start_date <= $2 AND lr.end_date >= $1)
-    `;
-    
-    const params = [start_date || defaultStart, end_date || defaultEnd];
-    
-    // RBAC: Users can only see their own leave on calendar
-    if (req.userScope === 'own' && req.employeeId) {
-      query += ` AND lr.employee_id = $3`;
-      params.push(req.employeeId);
-      console.log(`🔒 [RBAC] Filtering calendar for employee ${req.employeeId}`);
-    }
-    
-    query += ` ORDER BY lr.start_date`;
-    
-    const { rows } = await q(query, params);
-    res.json(rows);
-  } catch (error) {
-    console.error('Error getting leave calendar:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -400,6 +363,354 @@ r.get("/analytics", async (_req, res) => {
       upcoming: upcoming.rows[0]
     });
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ========== LEAVE TYPES ENDPOINTS ==========
+
+// GET /api/leave/types - Get all leave types
+r.get("/types", async (_req, res) => {
+  try {
+    const { rows } = await q(`SELECT * FROM leave_types ORDER BY name`);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching leave types:', error);
+    res.status(500).json({ error: 'Failed to fetch leave types' });
+  }
+});
+
+// POST /api/leave/types - Create new leave type (manager/admin only)
+r.post("/types", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, description, default_annual_entitlement, is_paid, requires_approval, color } = req.body;
+    
+    // Validation
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Leave type name is required' });
+    }
+    
+    const trimmedName = name.trim();
+    
+    if (trimmedName.length > 100) {
+      return res.status(400).json({ error: 'Leave type name must be 100 characters or less' });
+    }
+    
+    if (default_annual_entitlement === undefined || default_annual_entitlement < 0) {
+      return res.status(400).json({ error: 'Default annual entitlement must be 0 or greater' });
+    }
+    
+    // Validate color format (hex)
+    const colorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (color && !colorRegex.test(color)) {
+      return res.status(400).json({ error: 'Color must be a valid hex color (e.g., #3B82F6)' });
+    }
+    
+    // Check if leave type already exists
+    const existing = await q(`SELECT id FROM leave_types WHERE name = $1`, [trimmedName]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Leave type already exists' });
+    }
+    
+    // Insert new leave type
+    const result = await q(`
+      INSERT INTO leave_types (name, description, default_annual_entitlement, is_paid, requires_approval, color) 
+      VALUES ($1, $2, $3, $4, $5, $6) 
+      RETURNING *
+    `, [
+      trimmedName,
+      description || null,
+      default_annual_entitlement || 0,
+      is_paid !== undefined ? is_paid : true,
+      requires_approval !== undefined ? requires_approval : true,
+      color || '#3B82F6'
+    ]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating leave type:', error);
+    res.status(500).json({ error: 'Failed to create leave type' });
+  }
+});
+
+// PUT /api/leave/types/:id - Update leave type (manager/admin only)
+r.put("/types/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const leaveTypeId = parseInt(req.params.id, 10);
+    const { name, description, default_annual_entitlement, is_paid, requires_approval, color } = req.body;
+    
+    if (isNaN(leaveTypeId)) {
+      return res.status(400).json({ error: 'Invalid leave type ID' });
+    }
+    
+    // Check if leave type exists
+    const deptCheck = await q(`SELECT id FROM leave_types WHERE id = $1`, [leaveTypeId]);
+    if (deptCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Leave type not found' });
+    }
+    
+    // Validation
+    if (name && (typeof name !== 'string' || name.trim().length === 0)) {
+      return res.status(400).json({ error: 'Leave type name cannot be empty' });
+    }
+    
+    const trimmedName = name ? name.trim() : null;
+    
+    if (trimmedName && trimmedName.length > 100) {
+      return res.status(400).json({ error: 'Leave type name must be 100 characters or less' });
+    }
+    
+    if (default_annual_entitlement !== undefined && default_annual_entitlement < 0) {
+      return res.status(400).json({ error: 'Default annual entitlement must be 0 or greater' });
+    }
+    
+    // Validate color format (hex)
+    const colorRegex = /^#[0-9A-Fa-f]{6}$/;
+    if (color && !colorRegex.test(color)) {
+      return res.status(400).json({ error: 'Color must be a valid hex color (e.g., #3B82F6)' });
+    }
+    
+    // Check if name is unique (if changing name)
+    if (trimmedName) {
+      const existing = await q(`SELECT id FROM leave_types WHERE name = $1 AND id != $2`, [trimmedName, leaveTypeId]);
+      if (existing.rows.length > 0) {
+        return res.status(409).json({ error: 'Leave type name already exists' });
+      }
+    }
+    
+    // Update leave type
+    const result = await q(`
+      UPDATE leave_types 
+      SET 
+        name = COALESCE($1, name),
+        description = COALESCE($2, description),
+        default_annual_entitlement = COALESCE($3, default_annual_entitlement),
+        is_paid = COALESCE($4, is_paid),
+        requires_approval = COALESCE($5, requires_approval),
+        color = COALESCE($6, color)
+      WHERE id = $7
+      RETURNING *
+    `, [
+      trimmedName,
+      description !== undefined ? description : null,
+      default_annual_entitlement !== undefined ? default_annual_entitlement : null,
+      is_paid !== undefined ? is_paid : null,
+      requires_approval !== undefined ? requires_approval : null,
+      color || null,
+      leaveTypeId
+    ]);
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating leave type:', error);
+    res.status(500).json({ error: 'Failed to update leave type' });
+  }
+});
+
+// DELETE /api/leave/types/:id - Delete leave type (manager/admin only)
+r.delete("/types/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const leaveTypeId = parseInt(req.params.id, 10);
+    
+    if (isNaN(leaveTypeId)) {
+      return res.status(400).json({ error: 'Invalid leave type ID' });
+    }
+    
+    // Check if any leave requests use this leave type
+    const requestsCheck = await q(`
+      SELECT COUNT(*) as count 
+      FROM leave_requests 
+      WHERE leave_type_id = $1
+    `, [leaveTypeId]);
+    
+    const requestsCount = parseInt(requestsCheck.rows[0].count, 10);
+    
+    // Check if any leave balances use this leave type
+    const balancesCheck = await q(`
+      SELECT COUNT(*) as count 
+      FROM leave_balances 
+      WHERE leave_type_id = $1
+    `, [leaveTypeId]);
+    
+    const balancesCount = parseInt(balancesCheck.rows[0].count, 10);
+    
+    if (requestsCount > 0 || balancesCount > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete leave type that is in use',
+        requestsCount,
+        balancesCount
+      });
+    }
+    
+    // Check if leave type exists
+    const deptCheck = await q(`SELECT id FROM leave_types WHERE id = $1`, [leaveTypeId]);
+    if (deptCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Leave type not found' });
+    }
+    
+    // Delete leave type
+    await q(`DELETE FROM leave_types WHERE id = $1`, [leaveTypeId]);
+    
+    res.json({ message: 'Leave type deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting leave type:', error);
+    res.status(500).json({ error: 'Failed to delete leave type' });
+  }
+});
+
+// ========== HOLIDAYS ENDPOINTS ==========
+
+// GET /api/leave/holidays - Get all holidays
+r.get("/holidays", async (_req, res) => {
+  try {
+    const { rows } = await q(`
+      SELECT * FROM leave_calendar 
+      WHERE is_holiday = true 
+      ORDER BY date
+    `);
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching holidays:', error);
+    res.status(500).json({ error: 'Failed to fetch holidays' });
+  }
+});
+
+// POST /api/leave/holidays - Add holiday (manager/admin only)
+r.post("/holidays", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { date, description, is_company_closure } = req.body;
+    
+    // Validation
+    if (!date) {
+      return res.status(400).json({ error: 'Date is required' });
+    }
+    
+    if (!description || typeof description !== 'string' || description.trim().length === 0) {
+      return res.status(400).json({ error: 'Holiday description is required' });
+    }
+    
+    const trimmedDescription = description.trim();
+    
+    if (trimmedDescription.length > 200) {
+      return res.status(400).json({ error: 'Description must be 200 characters or less' });
+    }
+    
+    // Validate date format
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return res.status(400).json({ error: 'Invalid date format' });
+    }
+    
+    // Check if holiday already exists for this date
+    const existing = await q(`SELECT id FROM leave_calendar WHERE date = $1`, [date]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'A holiday or event already exists for this date' });
+    }
+    
+    // Insert new holiday
+    const result = await q(`
+      INSERT INTO leave_calendar (date, description, is_holiday, is_company_closure) 
+      VALUES ($1, $2, true, $3) 
+      RETURNING *
+    `, [date, trimmedDescription, is_company_closure !== undefined ? is_company_closure : true]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating holiday:', error);
+    res.status(500).json({ error: 'Failed to create holiday' });
+  }
+});
+
+// DELETE /api/leave/holidays/:id - Delete holiday (manager/admin only)
+r.delete("/holidays/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const holidayId = parseInt(req.params.id, 10);
+    
+    if (isNaN(holidayId)) {
+      return res.status(400).json({ error: 'Invalid holiday ID' });
+    }
+    
+    // Check if holiday exists
+    const holidayCheck = await q(`SELECT id FROM leave_calendar WHERE id = $1 AND is_holiday = true`, [holidayId]);
+    if (holidayCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Holiday not found' });
+    }
+    
+    // Delete holiday
+    await q(`DELETE FROM leave_calendar WHERE id = $1`, [holidayId]);
+    
+    res.json({ message: 'Holiday deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting holiday:', error);
+    res.status(500).json({ error: 'Failed to delete holiday' });
+  }
+});
+
+// Update calendar endpoint to include holidays
+r.get("/calendar", async (req, res) => {
+  try {
+    const { start_date, end_date } = req.query;
+    
+    // Use current year if no dates provided
+    const currentYear = new Date().getFullYear();
+    const defaultStart = `${currentYear}-01-01`;
+    const defaultEnd = `${currentYear}-12-31`;
+    
+    const startDate = start_date || defaultStart;
+    const endDate = end_date || defaultEnd;
+    
+    // Get approved leave requests
+    let leaveQuery = `
+      SELECT lr.*, e.first_name, e.last_name, lt.name as leave_type_name, lt.color,
+             'leave_request' as type
+      FROM leave_requests lr
+      JOIN employees e ON lr.employee_id = e.id
+      JOIN leave_types lt ON lr.leave_type_id = lt.id
+      WHERE lr.status = 'Approved'
+      AND (lr.start_date <= $2 AND lr.end_date >= $1)
+    `;
+    
+    const params = [startDate, endDate];
+    
+    // RBAC: Users can only see their own leave on calendar
+    if (req.userScope === 'own' && req.employeeId) {
+      leaveQuery += ` AND lr.employee_id = $3`;
+      params.push(req.employeeId);
+      console.log(`🔒 [RBAC] Filtering calendar for employee ${req.employeeId}`);
+    }
+    
+    leaveQuery += ` ORDER BY lr.start_date`;
+    
+    // Get holidays
+    const holidaysQuery = `
+      SELECT id, date, description, is_holiday, is_company_closure,
+             NULL as employee_id, NULL as first_name, NULL as last_name,
+             NULL as leave_type_name, NULL as color,
+             'holiday' as type
+      FROM leave_calendar
+      WHERE is_holiday = true
+      AND date >= $1 AND date <= $2
+      ORDER BY date
+    `;
+    
+    const [leaveRows, holidayRows] = await Promise.all([
+      q(leaveQuery, params),
+      q(holidaysQuery, [startDate, endDate])
+    ]);
+    
+    // Combine results
+    const allEvents = [...leaveRows.rows, ...holidayRows.rows];
+    
+    // Sort by date
+    allEvents.sort((a, b) => {
+      const dateA = new Date(a.date || a.start_date);
+      const dateB = new Date(b.date || b.start_date);
+      return dateA - dateB;
+    });
+    
+    res.json(allEvents);
+  } catch (error) {
+    console.error('Error getting leave calendar:', error);
     res.status(500).json({ error: error.message });
   }
 });

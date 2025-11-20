@@ -57,6 +57,33 @@ export default function Settings() {
   const [departmentError, setDepartmentError] = useState('');
   const [departmentEmployeeCounts, setDepartmentEmployeeCounts] = useState({});
 
+  // Leave Policies Management State
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [newLeaveType, setNewLeaveType] = useState({
+    name: '',
+    description: '',
+    default_annual_entitlement: 0,
+    is_paid: true,
+    requires_approval: true,
+    color: '#3B82F6'
+  });
+  const [editingLeaveType, setEditingLeaveType] = useState(null);
+  const [addingLeaveType, setAddingLeaveType] = useState(false);
+  const [deletingLeaveType, setDeletingLeaveType] = useState(null);
+  const [leaveTypeError, setLeaveTypeError] = useState('');
+  const [leaveTypeUsageCounts, setLeaveTypeUsageCounts] = useState({});
+
+  // Holidays Management State
+  const [holidays, setHolidays] = useState([]);
+  const [newHoliday, setNewHoliday] = useState({
+    date: '',
+    description: '',
+    is_company_closure: true
+  });
+  const [addingHoliday, setAddingHoliday] = useState(false);
+  const [deletingHoliday, setDeletingHoliday] = useState(null);
+  const [holidayError, setHolidayError] = useState('');
+
   const tabs = [
     { id: "system", name: t('settings.system'), icon: "⚙️" },
     { id: "preferences", name: t('settings.preferences'), icon: "👤" },
@@ -97,14 +124,18 @@ export default function Settings() {
     loadSettings();
     if (activeTab === 'system') {
       loadDepartments();
+      loadLeaveTypes();
+      loadHolidays();
     }
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
 
-  // Load departments when system tab is active
+  // Load data when system tab is active
   useEffect(() => {
     if (activeTab === 'system') {
       loadDepartments();
+      loadLeaveTypes();
+      loadHolidays();
     }
   }, [activeTab]);
 
@@ -486,6 +517,198 @@ export default function Settings() {
       alert(errorMsg);
     } finally {
       setDeletingDepartment(null);
+    }
+  };
+
+  // Load leave types and usage counts
+  const loadLeaveTypes = async () => {
+    try {
+      const types = await API("/api/leave/types").catch(() => []);
+      setLeaveTypes(types || []);
+
+      // Load usage counts for each leave type
+      try {
+        const requests = await API("/api/leave/requests").catch(() => []);
+        const counts = {};
+        (types || []).forEach(type => {
+          counts[type.id] = 0;
+        });
+        (requests || []).forEach(req => {
+          const typeId = req.leave_type_id;
+          if (typeId && counts[typeId] !== undefined) {
+            counts[typeId] = (counts[typeId] || 0) + 1;
+          }
+        });
+        setLeaveTypeUsageCounts(counts);
+      } catch (err) {
+        console.error("Error loading leave type usage counts:", err);
+        const counts = {};
+        (types || []).forEach(type => {
+          counts[type.id] = 0;
+        });
+        setLeaveTypeUsageCounts(counts);
+      }
+    } catch (error) {
+      console.error("Error loading leave types:", error);
+      setLeaveTypes([]);
+    }
+  };
+
+  // Add new leave type
+  const handleAddLeaveType = async (e) => {
+    e.preventDefault();
+    if (!newLeaveType.name.trim()) {
+      setLeaveTypeError(t('settings.leavePolicies.nameRequired'));
+      return;
+    }
+
+    setAddingLeaveType(true);
+    setLeaveTypeError('');
+
+    try {
+      await API("/api/leave/types", {
+        method: "POST",
+        body: JSON.stringify(newLeaveType)
+      });
+
+      setNewLeaveType({
+        name: '',
+        description: '',
+        default_annual_entitlement: 0,
+        is_paid: true,
+        requires_approval: true,
+        color: '#3B82F6'
+      });
+      await loadLeaveTypes();
+    } catch (error) {
+      console.error("Error adding leave type:", error);
+      setLeaveTypeError(error.message || t('settings.leavePolicies.addError'));
+    } finally {
+      setAddingLeaveType(false);
+    }
+  };
+
+  // Update leave type
+  const handleUpdateLeaveType = async (id) => {
+    const leaveType = leaveTypes.find(lt => lt.id === id);
+    if (!leaveType) return;
+
+    if (!leaveType.name || !leaveType.name.trim()) {
+      setLeaveTypeError(t('settings.leavePolicies.nameRequired'));
+      return;
+    }
+
+    setAddingLeaveType(true);
+    setLeaveTypeError('');
+
+    try {
+      await API(`/api/leave/types/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: leaveType.name.trim(),
+          description: leaveType.description || null,
+          default_annual_entitlement: leaveType.default_annual_entitlement || 0,
+          is_paid: leaveType.is_paid !== false,
+          requires_approval: leaveType.requires_approval !== false,
+          color: leaveType.color || '#3B82F6'
+        })
+      });
+
+      setEditingLeaveType(null);
+      await loadLeaveTypes();
+    } catch (error) {
+      console.error("Error updating leave type:", error);
+      setLeaveTypeError(error.message || t('settings.leavePolicies.updateError'));
+    } finally {
+      setAddingLeaveType(false);
+    }
+  };
+
+  // Delete leave type
+  const handleDeleteLeaveType = async (id) => {
+    if (!window.confirm(t('settings.leavePolicies.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingLeaveType(id);
+
+    try {
+      await API(`/api/leave/types/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadLeaveTypes();
+    } catch (error) {
+      console.error("Error deleting leave type:", error);
+      const errorMsg = error.message || t('settings.leavePolicies.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingLeaveType(null);
+    }
+  };
+
+  // Load holidays
+  const loadHolidays = async () => {
+    try {
+      const hols = await API("/api/leave/holidays").catch(() => []);
+      setHolidays(hols || []);
+    } catch (error) {
+      console.error("Error loading holidays:", error);
+      setHolidays([]);
+    }
+  };
+
+  // Add new holiday
+  const handleAddHoliday = async (e) => {
+    e.preventDefault();
+    if (!newHoliday.date || !newHoliday.description.trim()) {
+      setHolidayError(t('settings.holidays.dateAndDescriptionRequired'));
+      return;
+    }
+
+    setAddingHoliday(true);
+    setHolidayError('');
+
+    try {
+      await API("/api/leave/holidays", {
+        method: "POST",
+        body: JSON.stringify(newHoliday)
+      });
+
+      setNewHoliday({
+        date: '',
+        description: '',
+        is_company_closure: true
+      });
+      await loadHolidays();
+    } catch (error) {
+      console.error("Error adding holiday:", error);
+      setHolidayError(error.message || t('settings.holidays.addError'));
+    } finally {
+      setAddingHoliday(false);
+    }
+  };
+
+  // Delete holiday
+  const handleDeleteHoliday = async (id) => {
+    if (!window.confirm(t('settings.holidays.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingHoliday(id);
+
+    try {
+      await API(`/api/leave/holidays/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadHolidays();
+    } catch (error) {
+      console.error("Error deleting holiday:", error);
+      const errorMsg = error.message || t('settings.holidays.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingHoliday(null);
     }
   };
 
@@ -973,87 +1196,427 @@ export default function Settings() {
   const renderSystemSettings = () => {
     const canManage = hasFullAccess(userRole);
     
-    // Show department management if no system settings exist
+    // Show management sections if no system settings exist
     if (!Array.isArray(systemSettings) || systemSettings.length === 0) {
       return (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-semibold mb-4">{t('settings.departments.title')}</h3>
-            <p className="text-sm text-secondary mb-6">{t('settings.departments.description')}</p>
-          </div>
-
-          {/* Add Department Form (Manager/Admin only) */}
-          {canManage && (
-            <div className="card p-6 mb-6">
-              <h4 className="text-lg font-medium mb-4">{t('settings.departments.addNew')}</h4>
-              <form onSubmit={handleAddDepartment} className="flex gap-3">
-                <input
-                  type="text"
-                  value={newDepartmentName}
-                  onChange={(e) => {
-                    setNewDepartmentName(e.target.value);
-                    setDepartmentError('');
-                  }}
-                  placeholder={t('settings.departments.namePlaceholder')}
-                  className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                  maxLength={100}
-                />
-                <button
-                  type="submit"
-                  disabled={addingDepartment || !newDepartmentName.trim()}
-                  className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {addingDepartment ? t('settings.departments.adding') : t('settings.departments.add')}
-                </button>
-              </form>
-              {departmentError && (
-                <p className="mt-2 text-sm text-red-400">{departmentError}</p>
-              )}
+        <div className="space-y-8">
+          {/* Departments Section */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-4">{t('settings.departments.title')}</h3>
+              <p className="text-sm text-secondary mb-6">{t('settings.departments.description')}</p>
             </div>
-          )}
 
-          {/* Departments List */}
-          <div className="card p-6">
-            <h4 className="text-lg font-medium mb-4">{t('settings.departments.list')}</h4>
-            {departments.length === 0 ? (
-              <p className="text-secondary">{t('settings.departments.noDepartments')}</p>
-            ) : (
-              <div className="space-y-3">
-                {departments.map((dept) => (
-                  <motion.div
-                    key={dept.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+            {/* Add Department Form (Manager/Admin only) */}
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">{t('settings.departments.addNew')}</h4>
+                <form onSubmit={handleAddDepartment} className="flex gap-3">
+                  <input
+                    type="text"
+                    value={newDepartmentName}
+                    onChange={(e) => {
+                      setNewDepartmentName(e.target.value);
+                      setDepartmentError('');
+                    }}
+                    placeholder={t('settings.departments.namePlaceholder')}
+                    className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                    maxLength={100}
+                  />
+                  <button
+                    type="submit"
+                    disabled={addingDepartment || !newDepartmentName.trim()}
+                    className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <div className="flex-1">
-                      <div className="font-medium text-white">{dept.name}</div>
-                      {departmentEmployeeCounts[dept.id] !== undefined && (
-                        <div className="text-sm text-secondary mt-1">
-                          {departmentEmployeeCounts[dept.id] === 0
-                            ? t('settings.departments.noEmployees')
-                            : t('settings.departments.employeeCount', { count: departmentEmployeeCounts[dept.id] })}
-                        </div>
-                      )}
-                    </div>
-                    {canManage && (
-                      <button
-                        onClick={() => handleDeleteDepartment(dept.id)}
-                        disabled={deletingDepartment === dept.id || (departmentEmployeeCounts[dept.id] || 0) > 0}
-                        className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                        title={
-                          (departmentEmployeeCounts[dept.id] || 0) > 0
-                            ? t('settings.departments.cannotDelete')
-                            : t('settings.departments.delete')
-                        }
-                      >
-                        {deletingDepartment === dept.id ? t('settings.departments.deleting') : t('settings.departments.delete')}
-                      </button>
-                    )}
-                  </motion.div>
-                ))}
+                    {addingDepartment ? t('settings.departments.adding') : t('settings.departments.add')}
+                  </button>
+                </form>
+                {departmentError && (
+                  <p className="mt-2 text-sm text-red-400">{departmentError}</p>
+                )}
               </div>
             )}
+
+            {/* Departments List */}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.departments.list')}</h4>
+              {departments.length === 0 ? (
+                <p className="text-secondary">{t('settings.departments.noDepartments')}</p>
+              ) : (
+                <div className="space-y-3">
+                  {departments.map((dept) => (
+                    <motion.div
+                      key={dept.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{dept.name}</div>
+                        {departmentEmployeeCounts[dept.id] !== undefined && (
+                          <div className="text-sm text-secondary mt-1">
+                            {departmentEmployeeCounts[dept.id] === 0
+                              ? t('settings.departments.noEmployees')
+                              : t('settings.departments.employeeCount', { count: departmentEmployeeCounts[dept.id] })}
+                          </div>
+                        )}
+                      </div>
+                      {canManage && (
+                        <button
+                          onClick={() => handleDeleteDepartment(dept.id)}
+                          disabled={deletingDepartment === dept.id || (departmentEmployeeCounts[dept.id] || 0) > 0}
+                          className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                          title={
+                            (departmentEmployeeCounts[dept.id] || 0) > 0
+                              ? t('settings.departments.cannotDelete')
+                              : t('settings.departments.delete')
+                          }
+                        >
+                          {deletingDepartment === dept.id ? t('settings.departments.deleting') : t('settings.departments.delete')}
+                        </button>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Leave Policies Section */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-4">{t('settings.leavePolicies.title')}</h3>
+              <p className="text-sm text-secondary mb-6">{t('settings.leavePolicies.description')}</p>
+            </div>
+
+            {/* Add Leave Type Form (Manager/Admin only) */}
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">
+                  {editingLeaveType ? t('settings.leavePolicies.edit') : t('settings.leavePolicies.addNew')}
+                </h4>
+                <form onSubmit={editingLeaveType ? (e) => { e.preventDefault(); handleUpdateLeaveType(editingLeaveType); } : handleAddLeaveType} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.name')} *</label>
+                      <input
+                        type="text"
+                        value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.name || '' : newLeaveType.name}
+                        onChange={(e) => {
+                          if (editingLeaveType) {
+                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, name: e.target.value } : lt));
+                          } else {
+                            setNewLeaveType({...newLeaveType, name: e.target.value});
+                          }
+                          setLeaveTypeError('');
+                        }}
+                        placeholder={t('settings.leavePolicies.namePlaceholder')}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        maxLength={100}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.annualEntitlement')} *</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.default_annual_entitlement || 0 : newLeaveType.default_annual_entitlement}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10) || 0;
+                          if (editingLeaveType) {
+                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, default_annual_entitlement: val } : lt));
+                          } else {
+                            setNewLeaveType({...newLeaveType, default_annual_entitlement: val});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.description')}</label>
+                    <textarea
+                      value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.description || '' : newLeaveType.description}
+                      onChange={(e) => {
+                        if (editingLeaveType) {
+                          setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, description: e.target.value } : lt));
+                        } else {
+                          setNewLeaveType({...newLeaveType, description: e.target.value});
+                        }
+                      }}
+                      placeholder={t('settings.leavePolicies.descriptionPlaceholder')}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      rows="2"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="is_paid"
+                        checked={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.is_paid !== false : newLeaveType.is_paid}
+                        onChange={(e) => {
+                          if (editingLeaveType) {
+                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, is_paid: e.target.checked } : lt));
+                          } else {
+                            setNewLeaveType({...newLeaveType, is_paid: e.target.checked});
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <label htmlFor="is_paid" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="requires_approval"
+                        checked={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.requires_approval !== false : newLeaveType.requires_approval}
+                        onChange={(e) => {
+                          if (editingLeaveType) {
+                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, requires_approval: e.target.checked } : lt));
+                          } else {
+                            setNewLeaveType({...newLeaveType, requires_approval: e.target.checked});
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <label htmlFor="requires_approval" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.color')}</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.color || '#3B82F6' : newLeaveType.color}
+                          onChange={(e) => {
+                            if (editingLeaveType) {
+                              setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, color: e.target.value } : lt));
+                            } else {
+                              setNewLeaveType({...newLeaveType, color: e.target.value});
+                            }
+                          }}
+                          className="h-10 w-20 rounded border border-neutral-700"
+                        />
+                        <input
+                          type="text"
+                          value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.color || '#3B82F6' : newLeaveType.color}
+                          onChange={(e) => {
+                            if (editingLeaveType) {
+                              setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, color: e.target.value } : lt));
+                            } else {
+                              setNewLeaveType({...newLeaveType, color: e.target.value});
+                            }
+                          }}
+                          placeholder="#3B82F6"
+                          className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          pattern="^#[0-9A-Fa-f]{6}$"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={addingLeaveType}
+                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {addingLeaveType ? t('settings.leavePolicies.saving') : (editingLeaveType ? t('settings.leavePolicies.update') : t('settings.leavePolicies.add'))}
+                    </button>
+                    {editingLeaveType && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingLeaveType(null);
+                          setLeaveTypeError('');
+                        }}
+                        className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                      >
+                        {t('settings.leavePolicies.cancel')}
+                      </button>
+                    )}
+                  </div>
+                </form>
+                {leaveTypeError && (
+                  <p className="mt-2 text-sm text-red-400">{leaveTypeError}</p>
+                )}
+              </div>
+            )}
+
+            {/* Leave Types List */}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.leavePolicies.list')}</h4>
+              {leaveTypes.length === 0 ? (
+                <p className="text-secondary">{t('settings.leavePolicies.noLeaveTypes')}</p>
+              ) : (
+                <div className="space-y-3">
+                  {leaveTypes.map((lt) => (
+                    <motion.div
+                      key={lt.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-4 h-4 rounded"
+                            style={{ backgroundColor: lt.color || '#3B82F6' }}
+                          />
+                          <div>
+                            <div className="font-medium text-white">{lt.name}</div>
+                            {lt.description && (
+                              <div className="text-sm text-secondary mt-1">{lt.description}</div>
+                            )}
+                            <div className="text-xs text-secondary mt-1">
+                              {lt.default_annual_entitlement} {t('settings.leavePolicies.daysPerYear')} • 
+                              {lt.is_paid ? ` ${t('settings.leavePolicies.paid')}` : ` ${t('settings.leavePolicies.unpaid')}`} • 
+                              {lt.requires_approval ? ` ${t('settings.leavePolicies.approvalRequired')}` : ` ${t('settings.leavePolicies.noApproval')}`}
+                            </div>
+                            {leaveTypeUsageCounts[lt.id] !== undefined && leaveTypeUsageCounts[lt.id] > 0 && (
+                              <div className="text-xs text-yellow-400 mt-1">
+                                {t('settings.leavePolicies.inUse', { count: leaveTypeUsageCounts[lt.id] })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {canManage && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingLeaveType(lt.id)}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                          >
+                            {t('settings.leavePolicies.edit')}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteLeaveType(lt.id)}
+                            disabled={deletingLeaveType === lt.id || (leaveTypeUsageCounts[lt.id] || 0) > 0}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            title={
+                              (leaveTypeUsageCounts[lt.id] || 0) > 0
+                                ? t('settings.leavePolicies.cannotDelete')
+                                : t('settings.leavePolicies.delete')
+                            }
+                          >
+                            {deletingLeaveType === lt.id ? t('settings.leavePolicies.deleting') : t('settings.leavePolicies.delete')}
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Holidays Section */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-xl font-semibold mb-4">{t('settings.holidays.title')}</h3>
+              <p className="text-sm text-secondary mb-6">{t('settings.holidays.description')}</p>
+            </div>
+
+            {/* Add Holiday Form (Manager/Admin only) */}
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">{t('settings.holidays.addNew')}</h4>
+                <form onSubmit={handleAddHoliday} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.holidays.date')} *</label>
+                      <input
+                        type="date"
+                        value={newHoliday.date}
+                        onChange={(e) => {
+                          setNewHoliday({...newHoliday, date: e.target.value});
+                          setHolidayError('');
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.holidays.description')} *</label>
+                      <input
+                        type="text"
+                        value={newHoliday.description}
+                        onChange={(e) => {
+                          setNewHoliday({...newHoliday, description: e.target.value});
+                          setHolidayError('');
+                        }}
+                        placeholder={t('settings.holidays.descriptionPlaceholder')}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        maxLength={200}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="is_company_closure"
+                      checked={newHoliday.is_company_closure}
+                      onChange={(e) => setNewHoliday({...newHoliday, is_company_closure: e.target.checked})}
+                      className="mr-2"
+                    />
+                    <label htmlFor="is_company_closure" className="text-sm">{t('settings.holidays.companyClosure')}</label>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={addingHoliday || !newHoliday.date || !newHoliday.description.trim()}
+                    className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {addingHoliday ? t('settings.holidays.adding') : t('settings.holidays.add')}
+                  </button>
+                </form>
+                {holidayError && (
+                  <p className="mt-2 text-sm text-red-400">{holidayError}</p>
+                )}
+              </div>
+            )}
+
+            {/* Holidays List */}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.holidays.list')}</h4>
+              {holidays.length === 0 ? (
+                <p className="text-secondary">{t('settings.holidays.noHolidays')}</p>
+              ) : (
+                <div className="space-y-3">
+                  {holidays.map((holiday) => {
+                    const holidayDate = new Date(holiday.date);
+                    const isUpcoming = holidayDate >= new Date();
+                    return (
+                      <motion.div
+                        key={holiday.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex items-center justify-between p-4 bg-neutral-800 rounded-lg border ${isUpcoming ? 'border-yellow-600' : 'border-neutral-700'}`}
+                      >
+                        <div className="flex-1">
+                          <div className="font-medium text-white">{holiday.description}</div>
+                          <div className="text-sm text-secondary mt-1">
+                            {holidayDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            {holiday.is_company_closure && ` • ${t('settings.holidays.companyClosure')}`}
+                            {isUpcoming && ` • ${t('settings.holidays.upcoming')}`}
+                          </div>
+                        </div>
+                        {canManage && (
+                          <button
+                            onClick={() => handleDeleteHoliday(holiday.id)}
+                            disabled={deletingHoliday === holiday.id}
+                            className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                          >
+                            {deletingHoliday === holiday.id ? t('settings.holidays.deleting') : t('settings.holidays.delete')}
+                          </button>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       );

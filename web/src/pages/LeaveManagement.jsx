@@ -46,12 +46,13 @@ export default function LeaveManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [requestsData, balancesData, calendarData, analyticsData, employeesData] = await Promise.all([
+      const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),
         API("/api/leave/calendar"),
         API("/api/leave/analytics"),
-        API("/api/employees")
+        API("/api/employees"),
+        API("/api/leave/types")
       ]);
       
       console.log('📊 Leave data loaded:', {
@@ -59,7 +60,8 @@ export default function LeaveManagement() {
         balances: balancesData.length,
         calendar: calendarData.length,
         analytics: analyticsData,
-        employees: employeesData.length
+        employees: employeesData.length,
+        leaveTypes: leaveTypesData.length
       });
       
       setRequests(requestsData);
@@ -68,17 +70,7 @@ export default function LeaveManagement() {
       setCalendar(calendarData);
       setAnalytics(analyticsData);
       setEmployees(employeesData);
-      
-      // Set leave types from first request or default
-      setLeaveTypes([
-        { id: 1, name: t('leave.types.vacation', 'Vacation') },
-        { id: 2, name: t('leave.types.sickLeave', 'Sick Leave') },
-        { id: 3, name: t('leave.types.personalLeave', 'Personal Leave') },
-        { id: 4, name: t('leave.types.bereavement', 'Bereavement') },
-        { id: 5, name: t('leave.types.parentalLeave', 'Parental Leave') },
-        { id: 6, name: t('leave.types.juryDuty', 'Jury Duty') },
-        { id: 7, name: t('leave.types.militaryLeave', 'Military Leave') }
-      ]);
+      setLeaveTypes(leaveTypesData || []);
     } catch (error) {
       console.error("Error loading leave data:", error);
       // Set empty arrays on error to prevent UI issues
@@ -87,6 +79,7 @@ export default function LeaveManagement() {
       setCalendar([]);
       setAnalytics({});
       setEmployees([]);
+      setLeaveTypes([]);
     } finally {
       setLoading(false);
     }
@@ -211,22 +204,41 @@ export default function LeaveManagement() {
   const getLeaveForDate = (date) => {
     if (!calendar || !date) return [];
     
-    return calendar.filter(leave => {
-      // Normalize dates to midnight for proper comparison
-      const startDate = new Date(leave.start_date);
-      startDate.setHours(0, 0, 0, 0);
-      
-      const endDate = new Date(leave.end_date);
-      endDate.setHours(23, 59, 59, 999);
-      
+    return calendar.filter(item => {
       const checkDate = new Date(date);
       checkDate.setHours(12, 0, 0, 0); // Noon to avoid timezone issues
       
-      return checkDate >= startDate && checkDate <= endDate;
+      // Handle holidays
+      if (item.type === 'holiday') {
+        const holidayDate = new Date(item.date);
+        holidayDate.setHours(0, 0, 0, 0);
+        const checkDateOnly = new Date(checkDate);
+        checkDateOnly.setHours(0, 0, 0, 0);
+        return checkDateOnly.getTime() === holidayDate.getTime();
+      }
+      
+      // Handle leave requests
+      if (item.type === 'leave_request' || !item.type) {
+        const startDate = new Date(item.start_date);
+        startDate.setHours(0, 0, 0, 0);
+        
+        const endDate = new Date(item.end_date);
+        endDate.setHours(23, 59, 59, 999);
+        
+        return checkDate >= startDate && checkDate <= endDate;
+      }
+      
+      return false;
     });
   };
 
-  const getLeaveTypeColor = (leaveType) => {
+  const getLeaveTypeColor = (leaveTypeName, leaveColor) => {
+    // Use color from database if available
+    if (leaveColor) {
+      return `text-white`;
+    }
+    
+    // Fallback to hardcoded colors
     const colors = {
       'Vacation': 'bg-blue-500 text-white',
       'Sick': 'bg-red-500 text-white',
@@ -238,7 +250,7 @@ export default function LeaveManagement() {
       'Other': 'bg-gray-500 text-white'
     };
     
-    return colors[leaveType] || 'bg-gray-500 text-white';
+    return colors[leaveTypeName] || 'bg-gray-500 text-white';
   };
 
   const tabs = userRole === 'user' ? [
@@ -705,7 +717,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.available_days || 0), 0)}</p>
                     </div>
                   </div>
-                  <p className="text-blue-100 text-sm font-medium">{t('leave.balances.daysRemaining')}</p>
+                  <p className="text-blue-100 text-sm font-medium">days remaining</p>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105">
@@ -720,7 +732,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.used_days || 0), 0)}</p>
                     </div>
                   </div>
-                  <p className="text-emerald-100 text-sm font-medium">{t('leave.balances.daysTaken')}</p>
+                  <p className="text-emerald-100 text-sm font-medium">days taken</p>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700 p-6 text-white shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 hover:scale-105">
@@ -735,7 +747,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">2.5</p>
                     </div>
                   </div>
-                  <p className="text-violet-100 text-sm font-medium">{t('leave.balances.daysPerMonth')}</p>
+                  <p className="text-violet-100 text-sm font-medium">days per month</p>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-6 text-white shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105">
@@ -750,7 +762,7 @@ export default function LeaveManagement() {
                       <p className="text-4xl font-bold tracking-tight">5</p>
                     </div>
                   </div>
-                  <p className="text-amber-100 text-sm font-medium">{t('leave.balances.daysInThirtyDays')}</p>
+                  <p className="text-amber-100 text-sm font-medium">days in 30 days</p>
               </div>
             </div>
 
@@ -775,17 +787,17 @@ export default function LeaveManagement() {
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🏖️</div>
                       <h5 className="font-medium text-white">{t('leave.types.vacation')}</h5>
-                      <p className="text-sm text-neutral-400">{t('leave.balances.vacationDaysPerYear')}</p>
+                      <p className="text-sm text-neutral-400">20 days/year</p>
                     </div>
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🤒</div>
                       <h5 className="font-medium text-white">{t('leave.types.sickLeave')}</h5>
-                      <p className="text-sm text-neutral-400">{t('leave.balances.sickLeaveDaysPerYear')}</p>
+                      <p className="text-sm text-neutral-400">10 days/year</p>
                     </div>
                     <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
                       <div className="text-2xl mb-2">🎯</div>
                       <h5 className="font-medium text-white">{t('leave.types.personalLeave')}</h5>
-                      <p className="text-sm text-neutral-400">{t('leave.balances.personalDaysPerYear')}</p>
+                      <p className="text-sm text-neutral-400">5 days/year</p>
                     </div>
                   </div>
                 </div>
@@ -947,22 +959,50 @@ export default function LeaveManagement() {
                       >
                         <div className="text-sm font-medium">{day.date.getDate()}</div>
                         
-                        {/* Leave indicators */}
+                        {/* Holidays and Leave indicators */}
                         <div className="mt-1 space-y-1">
-                          {dayLeaves.slice(0, 3).map((leave, idx) => (
-                            <div
-                              key={idx}
-                              className={`text-xs px-1 py-0.5 rounded truncate ${getLeaveTypeColor(leave.leave_type_name)}`}
-                              title={`${leave.first_name} ${leave.last_name} - ${leave.leave_type_name}`}
-                            >
-                              {leave.first_name}
-                            </div>
-                          ))}
-                          {dayLeaves.length > 3 && (
-                            <div className="text-xs text-neutral-400">
-                              +{dayLeaves.length - 3} more
-                            </div>
-                          )}
+                          {(() => {
+                            const holidays = dayLeaves.filter(item => item.type === 'holiday');
+                            const leaveRequests = dayLeaves.filter(item => item.type === 'leave_request' || !item.type);
+                            
+                            return (
+                              <>
+                                {/* Show holidays first */}
+                                {holidays.map((holiday, idx) => (
+                                  <div
+                                    key={`holiday-${idx}`}
+                                    className="text-xs px-1 py-0.5 rounded truncate bg-yellow-600 text-white"
+                                    title={holiday.description}
+                                  >
+                                    🎉 {holiday.description}
+                                  </div>
+                                ))}
+                                
+                                {/* Show leave requests */}
+                                {leaveRequests.slice(0, holidays.length > 0 ? 2 : 3).map((leave, idx) => {
+                                  const hasColor = leave.color && leave.color.startsWith('#');
+                                  const style = hasColor ? { backgroundColor: leave.color, color: '#ffffff' } : {};
+                                  const className = hasColor ? 'text-xs px-1 py-0.5 rounded truncate text-white' : `text-xs px-1 py-0.5 rounded truncate ${getLeaveTypeColor(leave.leave_type_name, leave.color)}`;
+                                  return (
+                                    <div
+                                      key={`leave-${idx}`}
+                                      className={className}
+                                      style={style}
+                                      title={`${leave.first_name} ${leave.last_name} - ${leave.leave_type_name}`}
+                                    >
+                                      {leave.first_name}
+                                    </div>
+                                  );
+                                })}
+                                
+                                {leaveRequests.length > (holidays.length > 0 ? 2 : 3) && (
+                                  <div className="text-xs text-neutral-400">
+                                    +{leaveRequests.length - (holidays.length > 0 ? 2 : 3)} more
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     );
@@ -1009,31 +1049,66 @@ export default function LeaveManagement() {
                 
                 {selectedDate ? (
                   <div className="space-y-4">
-                    {getLeaveForDate(selectedDate).length === 0 ? (
-                      <p className="text-neutral-400 text-sm">{t('leave.calendar.noOneOnLeave')}</p>
-                    ) : (
-                      getLeaveForDate(selectedDate).map((leave, index) => (
-                        <div key={index} className="border-l-4 border-indigo-400 pl-4 py-2">
-                          <div className="font-medium">
-                            {leave.first_name} {leave.last_name}
-                          </div>
-                          <div className="text-sm text-neutral-400">
-                            {leave.leave_type_name}
-                          </div>
-                          <div className="text-xs text-neutral-500 mt-1">
-                            {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
-                          </div>
-                          {leave.reason && (
-                            <div className="text-xs text-neutral-500 mt-1">
-                              {leave.reason}
+                    {(() => {
+                      const dayItems = getLeaveForDate(selectedDate);
+                      const holidays = dayItems.filter(item => item.type === 'holiday');
+                      const leaveRequests = dayItems.filter(item => item.type === 'leave_request' || !item.type);
+                      
+                      if (dayItems.length === 0) {
+                        return <p className="text-neutral-400 text-sm">{t('leave.calendar.noOneOnLeave')}</p>;
+                      }
+                      
+                      return (
+                        <>
+                          {/* Show holidays */}
+                          {holidays.length > 0 && (
+                            <div>
+                              <h5 className="text-sm font-semibold text-yellow-400 mb-2">{t('leave.calendar.holidays')}</h5>
+                              {holidays.map((holiday, index) => (
+                                <div key={`holiday-${index}`} className="border-l-4 border-yellow-500 pl-4 py-2 mb-2">
+                                  <div className="font-medium text-yellow-400">
+                                    🎉 {holiday.description}
+                                  </div>
+                                  {holiday.is_company_closure && (
+                                    <div className="text-xs text-neutral-400 mt-1">
+                                      {t('leave.calendar.companyClosure')}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
                             </div>
                           )}
-                        </div>
-                      ))
-                    )}
+                          
+                          {/* Show leave requests */}
+                          {leaveRequests.length > 0 && (
+                            <div>
+                              {holidays.length > 0 && <h5 className="text-sm font-semibold text-neutral-300 mb-2">{t('leave.calendar.leaveRequests')}</h5>}
+                              {leaveRequests.map((leave, index) => (
+                                <div key={`leave-${index}`} className="border-l-4 border-indigo-400 pl-4 py-2 mb-2">
+                                  <div className="font-medium">
+                                    {leave.first_name} {leave.last_name}
+                                  </div>
+                                  <div className="text-sm text-neutral-400">
+                                    {leave.leave_type_name}
+                                  </div>
+                                  <div className="text-xs text-neutral-500 mt-1">
+                                    {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
+                                  </div>
+                                  {leave.reason && (
+                                    <div className="text-xs text-neutral-500 mt-1">
+                                      {leave.reason}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 ) : (
-                  <p className="text-neutral-400 text-sm">{t('leave.calendar.clickToSee')}</p>
+                  <p className="text-neutral-400 text-sm">{t('leave.calendar.clickDayPrompt')}</p>
                 )}
               </div>
             </div>
