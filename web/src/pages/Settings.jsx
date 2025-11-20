@@ -1242,16 +1242,11 @@ export default function Settings() {
                 <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
               )}
             </motion.div>
-          )        )}
+          ))}
+        </div>
       </div>
-
-      {/* Modals */}
-      <DepartmentsModal />
-      <LeavePoliciesModal />
-      <HolidaysModal />
-    </div>
-  );
-};
+    );
+  };
 
   const renderSystemSettings = () => {
     const canManage = hasFullAccess(userRole);
@@ -2233,6 +2228,11 @@ export default function Settings() {
           </motion.div>
         </div>
       )}
+
+      {/* Management Modals */}
+      <DepartmentsModal />
+      <LeavePoliciesModal />
+      <HolidaysModal />
     </div>
   );
 }
