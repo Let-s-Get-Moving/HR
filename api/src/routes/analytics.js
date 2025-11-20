@@ -82,9 +82,9 @@ r.get("/dashboard", async (req, res) => {
         COUNT(*) as total_employees,
         COUNT(CASE WHEN status = 'Active' THEN 1 END) as total_active_employees,
         COUNT(CASE WHEN status = 'Terminated' THEN 1 END) as total_terminated,
-        COUNT(CASE WHEN employment_type = 'Full-time' THEN 1 END) as full_time,
-        COUNT(CASE WHEN employment_type = 'Part-time' THEN 1 END) as part_time,
-        COUNT(CASE WHEN employment_type = 'Contract' THEN 1 END) as contract
+        COUNT(CASE WHEN employment_type = 'Full-time' AND status = 'Active' THEN 1 END) as full_time,
+        COUNT(CASE WHEN employment_type = 'Part-time' AND status = 'Active' THEN 1 END) as part_time,
+        COUNT(CASE WHEN employment_type = 'Contract' AND status = 'Active' THEN 1 END) as contract
       FROM employees
     `);
 
@@ -167,7 +167,7 @@ r.get("/dashboard", async (req, res) => {
     const terminationsThisPeriod = parseInt(employees.terminations_this_period) || 0;
     
     // Calculate metrics
-    const turnoverRate = totalEmployees > 0 ? Math.round(((terminationsThisPeriod / totalEmployees) * 100) * 10) / 10 : 0;
+    const turnoverRate = activeEmployees > 0 ? Math.round(((terminationsThisPeriod / activeEmployees) * 100) * 10) / 10 : 0;
     const avgHoursPerWeek = attendance.total_work_days > 0 ? Math.round((parseFloat(attendance.avg_hours_per_entry) * attendance.total_work_days / (timeIntervalDays / 7)) * 10) / 10 : 0;
     const trainingCompletionRate = activeEmployees > 0 ? Math.round((parseInt(training.employees_with_training) / activeEmployees * 100) * 10) / 10 : 0;
 
