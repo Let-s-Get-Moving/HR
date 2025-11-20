@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
@@ -13,12 +12,28 @@ const inFlightRequests = new Set();
 
 export default function Settings() {
   const { t, i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState("system");
+  const activeTabRef = useRef("system");
 
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    // Removed loadSettings() call - it causes blinking
-    // Settings are loaded once on mount, no need to reload on tab change
+    activeTabRef.current = tabId;
+    // Update button styles manually (no re-render needed)
+    const buttons = document.querySelectorAll('[data-tab-button]');
+    buttons.forEach(btn => {
+      if (btn.dataset.tabId === tabId) {
+        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-primary text-white";
+      } else {
+        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors text-secondary hover:text-white hover:bg-tertiary";
+      }
+    });
+    // Update content visibility with CSS
+    const contents = document.querySelectorAll('[data-tab-content]');
+    contents.forEach(content => {
+      if (content.dataset.tabId === tabId) {
+        content.style.display = 'block';
+      } else {
+        content.style.display = 'none';
+      }
+    });
   };
   const [systemSettings, setSystemSettings] = useState([]);
   const [userPreferences, setUserPreferences] = useState([]);
@@ -1661,12 +1676,10 @@ export default function Settings() {
     }
   };
   
-  // Load trusted devices when security tab is opened
+  // Load trusted devices on mount (security tab is visible by default)
   useEffect(() => {
-    if (activeTab === 'security') {
-      loadTrustedDevices();
-    }
-  }, [activeTab]);
+    loadTrustedDevices();
+  }, []);
   
   // Open Change Password Modal
   const openPasswordModal = () => {
@@ -3659,9 +3672,11 @@ export default function Settings() {
         {tabs.map((tab) => (
           <button
             key={tab.id}
+            data-tab-button
+            data-tab-id={tab.id}
             onClick={() => handleTabChange(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              activeTab === tab.id
+              activeTabRef.current === tab.id
                 ? "bg-primary text-white"
                 : "text-secondary hover:text-white hover:bg-tertiary"
             }`}
@@ -3674,147 +3689,137 @@ export default function Settings() {
 
       {/* Tab Content */}
       <div className="space-y-6">
-        {activeTab === "system" && (
-          <div className="card">
-            {renderSystemSettings()}
-          </div>
-        )}
+        <div data-tab-content data-tab-id="system" className="card" style={{ display: activeTabRef.current === 'system' ? 'block' : 'none' }}>
+          {renderSystemSettings()}
+        </div>
         
-        {activeTab === "preferences" && (
-          <div className="card">
-            {renderSettingsSection(userPreferences, "preferences", t('settings.userPreferences'))}
-          </div>
-        )}
+        <div data-tab-content data-tab-id="preferences" className="card" style={{ display: activeTabRef.current === 'preferences' ? 'block' : 'none' }}>
+          {renderSettingsSection(userPreferences, "preferences", t('settings.userPreferences'))}
+        </div>
         
-        {activeTab === "notifications" && (
-          <div className="card">
-            {renderSettingsSection(notifications, "notifications", t('settings.notificationSettings'))}
-          </div>
-        )}
+        <div data-tab-content data-tab-id="notifications" className="card" style={{ display: activeTabRef.current === 'notifications' ? 'block' : 'none' }}>
+          {renderSettingsSection(notifications, "notifications", t('settings.notificationSettings'))}
+        </div>
         
-        {activeTab === "security" && (
-          <>
-            <div className="card">
-              {renderSettingsSection(security, "security", t('settings.securitySettings'))}
+        <div data-tab-content data-tab-id="security" style={{ display: activeTabRef.current === 'security' ? 'block' : 'none' }}>
+          <div className="card">
+            {renderSettingsSection(security, "security", t('settings.securitySettings'))}
+          </div>
+          
+          {/* Change Password Section */}
+          <div className="card">
+            <div className="card-header">
+              <h2 className="text-xl font-semibold">{t('settings.passwordChange.title')}</h2>
+              <p className="text-sm text-secondary mt-1">{t('settings.passwordChange.updatePassword')}</p>
             </div>
-            
-            {/* Change Password Section */}
-            <div className="card">
-              <div className="card-header">
-                <h2 className="text-xl font-semibold">{t('settings.passwordChange.title')}</h2>
-                <p className="text-sm text-secondary mt-1">{t('settings.passwordChange.updatePassword')}</p>
-              </div>
-              <div className="card-content">
-                <button
-                  onClick={openPasswordModal}
-                  className="btn-primary px-6 py-2 rounded-lg hover:opacity-90 transition-all"
-                >
-                  {t('settings.changePassword')}
-                </button>
-                <p className="text-xs text-tertiary mt-2">
-                  {t('settings.passwordChange.expiryNote')}
-                </p>
-              </div>
+            <div className="card-content">
+              <button
+                onClick={openPasswordModal}
+                className="btn-primary px-6 py-2 rounded-lg hover:opacity-90 transition-all"
+              >
+                {t('settings.changePassword')}
+              </button>
+              <p className="text-xs text-tertiary mt-2">
+                {t('settings.passwordChange.expiryNote')}
+              </p>
             </div>
-            
-            {/* Trusted Devices Section */}
-            <div className="card">
-              <div className="card-header">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold">{t('settings.trustedDevicesInfo.title')}</h2>
-                    <p className="text-sm text-secondary mt-1">{t('settings.trustedDevicesInfo.description')}</p>
-                  </div>
-                  {trustedDevices.length > 0 && (
-                    <button
-                      onClick={revokeAllDevices}
-                      className="btn-danger px-4 py-2 rounded-lg hover:opacity-90 transition-all text-sm"
-                    >
-                      {t('settings.revokeAll')}
-                    </button>
-                  )}
+          </div>
+          
+          {/* Trusted Devices Section */}
+          <div className="card">
+            <div className="card-header">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold">{t('settings.trustedDevicesInfo.title')}</h2>
+                  <p className="text-sm text-secondary mt-1">{t('settings.trustedDevicesInfo.description')}</p>
                 </div>
-              </div>
-              <div className="card-content">
-                {loadingDevices ? (
-                  <div className="text-center py-8">
-                    <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
-                    <p className="text-sm text-secondary mt-2">{t('settings.trustedDevicesInfo.loading')}</p>
-                  </div>
-                ) : trustedDevices.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-5xl mb-3">🔓</div>
-            <p className="text-secondary">{t('settings.noTrustedDevices')}</p>
-            <p className="text-xs text-tertiary mt-2">
-              {t('settings.trustDeviceNote')}
-            </p>
-          </div>
-                ) : (
-                  <div className="space-y-3">
-                    {trustedDevices.map((device) => (
-                      <div 
-                        key={device.id} 
-                        className="flex items-start justify-between p-4 bg-neutral-900 bg-opacity-40 rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="text-lg">
-                              {device.os === 'macOS' ? '🍎' :
-                               device.os === 'Windows' ? '🪟' :
-                               device.os === 'Linux' ? '🐧' :
-                               device.os === 'Android' ? '🤖' :
-                               device.os === 'iOS' ? '📱' : '💻'}
-                            </span>
-                            <h3 className="font-semibold">{device.label}</h3>
-                          </div>
-                          <div className="text-xs text-tertiary space-y-1">
-                            <p>
-                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.browser')}</span>
-                              <span className="text-secondary">{device.browser || t('settings.trustedDevicesInfo.unknown')}</span>
-                            </p>
-                            <p>
-                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.lastUsed')}</span>
-                              <span className="text-secondary">
-                                {device.lastUsedAt ? new Date(device.lastUsedAt).toLocaleString() : t('settings.trustedDevicesInfo.never')}
-                              </span>
-                            </p>
-                            <p>
-                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.expiresIn')}</span>
-                              <span className={device.expiresIn?.includes('1 day') || device.expiresIn?.includes('Less') ? 'text-yellow-500' : 'text-secondary'}>
-                                {device.expiresIn}
-                              </span>
-                            </p>
-                            <p>
-                              <span className="inline-block w-20">{t('settings.trustedDevicesInfo.ip')}</span>
-                              <span className="text-secondary font-mono text-xs">
-                                {device.ipLastUsed || device.ipCreated || t('settings.trustedDevicesInfo.unknown')}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => revokeDevice(device.id)}
-                          className="ml-4 px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-20 rounded transition-all"
-                          title={t('settings.revoke')}
-                        >
-                          {t('settings.revoke')}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                {trustedDevices.length > 0 && (
+                  <button
+                    onClick={revokeAllDevices}
+                    className="btn-danger px-4 py-2 rounded-lg hover:opacity-90 transition-all text-sm"
+                  >
+                    {t('settings.revokeAll')}
+                  </button>
                 )}
               </div>
             </div>
-          </>
-        )}
-        
-        {activeTab === "maintenance" && (
-          <>
-            <div className="card">
-              {renderSettingsSection(maintenance, "maintenance", t('settings.maintenanceAndBackup'))}
+            <div className="card-content">
+              {loadingDevices ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                  <p className="text-sm text-secondary mt-2">{t('settings.trustedDevicesInfo.loading')}</p>
+                </div>
+              ) : trustedDevices.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="text-5xl mb-3">🔓</div>
+          <p className="text-secondary">{t('settings.noTrustedDevices')}</p>
+          <p className="text-xs text-tertiary mt-2">
+            {t('settings.trustDeviceNote')}
+          </p>
+        </div>
+              ) : (
+                <div className="space-y-3">
+                  {trustedDevices.map((device) => (
+                    <div 
+                      key={device.id} 
+                      className="flex items-start justify-between p-4 bg-neutral-900 bg-opacity-40 rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-lg">
+                            {device.os === 'macOS' ? '🍎' :
+                             device.os === 'Windows' ? '🪟' :
+                             device.os === 'Linux' ? '🐧' :
+                             device.os === 'Android' ? '🤖' :
+                             device.os === 'iOS' ? '📱' : '💻'}
+                          </span>
+                          <h3 className="font-semibold">{device.label}</h3>
+                        </div>
+                        <div className="text-xs text-tertiary space-y-1">
+                          <p>
+                            <span className="inline-block w-20">{t('settings.trustedDevicesInfo.browser')}</span>
+                            <span className="text-secondary">{device.browser || t('settings.trustedDevicesInfo.unknown')}</span>
+                          </p>
+                          <p>
+                            <span className="inline-block w-20">{t('settings.trustedDevicesInfo.lastUsed')}</span>
+                            <span className="text-secondary">
+                              {device.lastUsedAt ? new Date(device.lastUsedAt).toLocaleString() : t('settings.trustedDevicesInfo.never')}
+                            </span>
+                          </p>
+                          <p>
+                            <span className="inline-block w-20">{t('settings.trustedDevicesInfo.expiresIn')}</span>
+                            <span className={device.expiresIn?.includes('1 day') || device.expiresIn?.includes('Less') ? 'text-yellow-500' : 'text-secondary'}>
+                              {device.expiresIn}
+                            </span>
+                          </p>
+                          <p>
+                            <span className="inline-block w-20">{t('settings.trustedDevicesInfo.ip')}</span>
+                            <span className="text-secondary font-mono text-xs">
+                              {device.ipLastUsed || device.ipCreated || t('settings.trustedDevicesInfo.unknown')}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => revokeDevice(device.id)}
+                        className="ml-4 px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-20 rounded transition-all"
+                        title={t('settings.revoke')}
+                      >
+                        {t('settings.revoke')}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </div>
+        
+        <div data-tab-content data-tab-id="maintenance" style={{ display: activeTabRef.current === 'maintenance' ? 'block' : 'none' }}>
+          <div className="card">
+            {renderSettingsSection(maintenance, "maintenance", t('settings.maintenanceAndBackup'))}
+          </div>
+        </div>
       </div>
       
       {/* MFA Setup Modal */}
