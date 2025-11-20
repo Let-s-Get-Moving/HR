@@ -27,8 +27,8 @@ export default function Settings() {
   const [notifications, setNotifications] = useState([]);
   const [security, setSecurity] = useState([]);
   const [maintenance, setMaintenance] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState({});
+  const isLoadingRef = useRef(false);
   
   // MFA Setup Modal State
   const [showMFAModal, setShowMFAModal] = useState(false);
@@ -479,14 +479,6 @@ export default function Settings() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
-  // Load local settings after initial settings are loaded
-  useEffect(() => {
-    console.log('🎬 [Settings] useEffect #3 triggered - userPreferences.length:', userPreferences.length);
-    if (userPreferences.length > 0) {
-      console.log('✅ [Settings] Calling loadLocalSettings()');
-      loadLocalSettings();
-    }
-  }, [userPreferences.length]);
 
   // Helper function to enrich settings with options from SETTING_OPTIONS mapping
   // This ensures select-type settings always have their options array, even when loaded from database
@@ -549,23 +541,6 @@ export default function Settings() {
     });
   };
 
-  const loadLocalSettings = () => {
-    // ⚠️ CRITICAL CHANGE: NO MORE LOCALSTORAGE CACHING FOR SERVER SETTINGS!
-    // All settings (system, security, notifications, maintenance) now come from database
-    // Only cache theme preference for instant UI rendering before server response
-    
-    // Apply theme immediately from localStorage (for instant UI rendering)
-    const cachedTheme = localStorage.getItem('preferences_theme');
-    const currentTheme = cachedTheme || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
-    
-    // Update the theme setting in state to reflect the actual current theme
-    setUserPreferences(prev => prev.map(setting => 
-      setting.key === 'theme' ? { ...setting, value: currentTheme } : setting
-    ));
-    
-    console.log('✅ [Settings] Theme loaded from localStorage:', currentTheme);
-    console.log('✅ [Settings] All other settings will load from database');
-  };
 
   const applyTheme = (themeValue = null) => {
     const theme = themeValue || localStorage.getItem('preferences_theme') || 'dark';
@@ -602,30 +577,20 @@ export default function Settings() {
   };
 
   const loadSettings = async () => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔄 [Settings] loadSettings() called');
-    console.log('📊 [Settings] Current loading state:', loading);
-    console.log('📊 [Settings] Current userPreferences:', userPreferences.length);
-    console.log('📊 [Settings] Current security:', security.length);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    
-    // Prevent concurrent loads
-    if (loading) {
-      console.log('⏳ [Settings] Already loading, skipping duplicate request...');
-      console.log('⚠️ [Settings] THIS IS THE PROBLEM - loading is stuck at true!');
+    // Prevent concurrent loads using ref instead of state
+    if (isLoadingRef.current) {
       return;
     }
     
-    console.log('✅ [Settings] Starting to load settings...');
-    setLoading(true);
-    console.log('✅ [Settings] Loading state set to TRUE');
+    isLoadingRef.current = true;
     
     try {
       // Clean up any MFA status from localStorage (it should ONLY come from server)
       localStorage.removeItem('security_two_factor_auth');
       
-      // Detect current theme from DOM
-      const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+      // Get theme from localStorage or DOM (no state update needed)
+      const cachedTheme = localStorage.getItem('preferences_theme');
+      const currentTheme = cachedTheme || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
       
       // Default settings (used as fallback only)
       const defaultPreferences = [
@@ -653,91 +618,50 @@ export default function Settings() {
       // Check if user is authenticated before trying authenticated endpoints
       const sessionId = localStorage.getItem('sessionId');
       
-      // Load ALL settings in parallel, including system settings
+      // Load ALL settings in parallel
       let system, preferences, notifs, sec, maint;
       
       if (!sessionId) {
-        console.log('⚠️ [Settings] No session found, using default settings only');
         system = await API("/api/settings/system").catch(() => []);
         preferences = defaultPreferences;
         notifs = defaultNotifications;
         sec = defaultSecurity;
         maint = defaultMaintenance;
       } else {
-        // Try to load authenticated settings - if API returns 401, it will fall back to defaults
-        console.log('📡 [Settings] Attempting to load authenticated settings from API...');
         [system, preferences, notifs, sec, maint] = await Promise.all([
-        API("/api/settings/system").catch(() => []),
-        API("/api/settings/preferences").catch((err) => {
-          console.log('⚠️ [Settings] Preferences API failed, using defaults:', err.message);
-          return defaultPreferences;
-        }),
-        API("/api/settings/notifications").catch((err) => {
-          console.log('⚠️ [Settings] Notifications API failed, using defaults:', err.message);
-          return defaultNotifications;
-        }),
-        API("/api/settings/security").catch((err) => {
-          console.log('⚠️ [Settings] Security API failed, using defaults:', err.message);
-          return defaultSecurity;
-        }),
-        API("/api/settings/maintenance").catch((err) => {
-          console.log('⚠️ [Settings] Maintenance API failed, using defaults:', err.message);
-          return defaultMaintenance;
-        })
-      ]);
+          API("/api/settings/system").catch(() => []),
+          API("/api/settings/preferences").catch(() => defaultPreferences),
+          API("/api/settings/notifications").catch(() => defaultNotifications),
+          API("/api/settings/security").catch(() => defaultSecurity),
+          API("/api/settings/maintenance").catch(() => defaultMaintenance)
+        ]);
       }
       
-      console.log('✅ [Settings] Security settings loaded:', sec);
-      console.log('🔐 [Settings] MFA toggle value:', sec?.find(s => s.key === 'two_factor_auth')?.value);
-      
-      // Enrich all settings with options before setting state
-      // This ensures select dropdowns always have their options, even when loaded from database
+      // Enrich all settings with options
       const enrichedSystem = enrichSettingsWithOptions(system || []);
       const enrichedPreferences = enrichSettingsWithOptions(preferences || defaultPreferences);
       const enrichedNotifications = enrichSettingsWithOptions(notifs || defaultNotifications);
       const enrichedSecurity = enrichSettingsWithOptions(sec || defaultSecurity);
       const enrichedMaintenance = enrichSettingsWithOptions(maint || defaultMaintenance);
       
-      // Debug logging to verify options are present
-      console.log('🔍 [Debug] Enriched preferences:', enrichedPreferences);
-      enrichedPreferences.forEach(s => {
-        if (s.type === 'select') {
-          console.log(`  - ${s.key}: type=${s.type}, options=${s.options?.length || 0}`, s.options);
-        }
-      });
-      
-      console.log('🔍 [Debug] Enriched maintenance:', enrichedMaintenance);
-      enrichedMaintenance.forEach(s => {
-        if (s.type === 'select') {
-          console.log(`  - ${s.key}: type=${s.type}, options=${s.options?.length || 0}`, s.options);
-        }
-      });
-      
-      // Set ALL settings in a single batch to prevent blinking
-      console.log('✅ [Settings] Setting state with preferences:', enrichedPreferences?.length);
-      console.log('✅ [Settings] Setting state with security:', enrichedSecurity?.length);
+      // Single batch update - React 18 will batch these automatically
       setSystemSettings(enrichedSystem);
       setUserPreferences(enrichedPreferences);
       setNotifications(enrichedNotifications);
       setSecurity(enrichedSecurity);
       setMaintenance(enrichedMaintenance);
-      console.log('✅ [Settings] All settings state updated successfully');
     } catch (error) {
-      console.error("❌ [Settings] Error loading settings:", error);
-      // Set default settings to prevent empty arrays
-      setSystemSettings([]);
-      // Detect current theme from DOM for error fallback
+      console.error("Error loading settings:", error);
+      // Single batch update for error fallback
       const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
       const errorFallbackPreferences = [
         { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
         { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
-        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] },
-        { key: "dashboard_layout", label: "Dashboard Layout", type: "select", value: "grid", options: ["grid", "list"] }
+        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] }
       ];
       const errorFallbackNotifications = [
         { key: "email_notifications", label: "Email Notifications", type: "boolean", value: "true" },
-        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" },
-        { key: "sms_notifications", label: "SMS Notifications", type: "boolean", value: "false" }
+        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" }
       ];
       const errorFallbackSecurity = [
         { key: "two_factor_auth", label: "Two-Factor Authentication", type: "boolean", value: "false" },
@@ -746,18 +670,15 @@ export default function Settings() {
       ];
       const errorFallbackMaintenance = [
         { key: "auto_backup", label: "Automatic Backup", type: "boolean", value: "true" },
-        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] },
-        { key: "maintenance_mode", label: "Maintenance Mode", type: "boolean", value: "false" }
+        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] }
       ];
-      // Enrich error fallback settings with options (though they should already have them)
+      setSystemSettings([]);
       setUserPreferences(enrichSettingsWithOptions(errorFallbackPreferences));
       setNotifications(enrichSettingsWithOptions(errorFallbackNotifications));
       setSecurity(enrichSettingsWithOptions(errorFallbackSecurity));
       setMaintenance(enrichSettingsWithOptions(errorFallbackMaintenance));
     } finally {
-      console.log('🏁 [Settings] Finally block reached - setting loading to FALSE');
-      setLoading(false);
-      console.log('🏁 [Settings] Loading state set to FALSE');
+      isLoadingRef.current = false;
     }
   };
 
@@ -3899,14 +3820,6 @@ export default function Settings() {
       </div>
     );
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg">{t('settings.loadingSettings')}</div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-7xl mx-auto">
