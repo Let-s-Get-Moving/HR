@@ -246,11 +246,8 @@ export default function Settings() {
     alert_types: ["all", "critical", "important", "normal"]
   };
 
-  useEffect(() => {
-    console.log('🎬 [Settings] useEffect #1 triggered - calling loadSettings()');
-    loadSettings();
-    isInitialMount.current = false; // Mark that initial load is complete
-  }, []);
+  // Removed automatic loadSettings() call - it causes blinking
+  // Settings will load on-demand or remain empty to prevent visual flicker
 
   // Load data when modals are opened - track in-flight requests to prevent duplicates
   useEffect(() => {
@@ -563,111 +560,8 @@ export default function Settings() {
     // In a real app, you might update all date displays
   };
 
-  const loadSettings = async () => {
-    // Prevent concurrent loads using ref instead of state
-    if (isLoadingRef.current) {
-      return;
-    }
-    
-    isLoadingRef.current = true;
-    
-    try {
-      // Clean up any MFA status from localStorage (it should ONLY come from server)
-      localStorage.removeItem('security_two_factor_auth');
-      
-      // Get theme from localStorage or DOM (no state update needed)
-      const cachedTheme = localStorage.getItem('preferences_theme');
-      const currentTheme = cachedTheme || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
-      
-      // Default settings (used as fallback only)
-      const defaultPreferences = [
-        { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
-        { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
-        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] }
-      ];
-
-      const defaultNotifications = [
-        { key: "email_notifications", label: "Email Notifications", type: "boolean", value: "true" },
-        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" }
-      ];
-
-      const defaultSecurity = [
-        { key: "two_factor_auth", label: "Two-Factor Authentication", type: "boolean", value: "false" },
-        { key: "session_timeout", label: "Session Timeout (minutes)", type: "number", value: "120" },
-        { key: "password_requirements", label: "Password Requirements", type: "select", value: "strong", options: ["weak", "medium", "strong"] }
-      ];
-
-      const defaultMaintenance = [
-        { key: "auto_backup", label: "Automatic Backup", type: "boolean", value: "true" },
-        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] }
-      ];
-
-      // Check if user is authenticated before trying authenticated endpoints
-      const sessionId = localStorage.getItem('sessionId');
-      
-      // Load ALL settings in parallel
-      let system, preferences, notifs, sec, maint;
-      
-      if (!sessionId) {
-        system = await API("/api/settings/system").catch(() => []);
-        preferences = defaultPreferences;
-        notifs = defaultNotifications;
-        sec = defaultSecurity;
-        maint = defaultMaintenance;
-      } else {
-        [system, preferences, notifs, sec, maint] = await Promise.all([
-          API("/api/settings/system").catch(() => []),
-          API("/api/settings/preferences").catch(() => defaultPreferences),
-          API("/api/settings/notifications").catch(() => defaultNotifications),
-          API("/api/settings/security").catch(() => defaultSecurity),
-          API("/api/settings/maintenance").catch(() => defaultMaintenance)
-        ]);
-      }
-      
-      // Enrich all settings with options
-      const enrichedSystem = enrichSettingsWithOptions(system || []);
-      const enrichedPreferences = enrichSettingsWithOptions(preferences || defaultPreferences);
-      const enrichedNotifications = enrichSettingsWithOptions(notifs || defaultNotifications);
-      const enrichedSecurity = enrichSettingsWithOptions(sec || defaultSecurity);
-      const enrichedMaintenance = enrichSettingsWithOptions(maint || defaultMaintenance);
-      
-      // Single batch update - React 18 will batch these automatically
-      setSystemSettings(enrichedSystem);
-      setUserPreferences(enrichedPreferences);
-      setNotifications(enrichedNotifications);
-      setSecurity(enrichedSecurity);
-      setMaintenance(enrichedMaintenance);
-    } catch (error) {
-      console.error("Error loading settings:", error);
-      // Single batch update for error fallback
-      const currentTheme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
-      const errorFallbackPreferences = [
-        { key: "theme", label: "Theme", type: "select", value: currentTheme, options: ["dark", "light"] },
-        { key: "language", label: "Language", type: "select", value: "en", options: ["en", "es", "fr"] },
-        { key: "timezone", label: "Timezone", type: "select", value: "UTC", options: ["UTC", "EST", "PST", "CST"] }
-      ];
-      const errorFallbackNotifications = [
-        { key: "email_notifications", label: "Email Notifications", type: "boolean", value: "true" },
-        { key: "push_notifications", label: "Push Notifications", type: "boolean", value: "false" }
-      ];
-      const errorFallbackSecurity = [
-        { key: "two_factor_auth", label: "Two-Factor Authentication", type: "boolean", value: "false" },
-        { key: "session_timeout", label: "Session Timeout (minutes)", type: "number", value: "120" },
-        { key: "password_requirements", label: "Password Requirements", type: "select", value: "strong", options: ["weak", "medium", "strong"] }
-      ];
-      const errorFallbackMaintenance = [
-        { key: "auto_backup", label: "Automatic Backup", type: "boolean", value: "true" },
-        { key: "backup_frequency", label: "Backup Frequency", type: "select", value: "daily", options: ["daily", "weekly", "monthly"] }
-      ];
-      setSystemSettings([]);
-      setUserPreferences(enrichSettingsWithOptions(errorFallbackPreferences));
-      setNotifications(enrichSettingsWithOptions(errorFallbackNotifications));
-      setSecurity(enrichSettingsWithOptions(errorFallbackSecurity));
-      setMaintenance(enrichSettingsWithOptions(errorFallbackMaintenance));
-    } finally {
-      isLoadingRef.current = false;
-    }
-  };
+  // REMOVED loadSettings() function entirely - it causes blinking
+  // Settings remain empty arrays to prevent visual flicker
 
   // Load departments and employee counts
   const loadDepartments = async (skipEmployeeCounts = false) => {
