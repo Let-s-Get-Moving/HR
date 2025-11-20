@@ -2242,7 +2242,7 @@ export default function Settings() {
 
           {!canManage && (
             <div className="card p-6 text-center">
-              <p className="text-secondary">{t('settings.noSystemSettings')}</p>
+          <p className="text-secondary">{t('settings.noSystemSettings')}</p>
             </div>
           )}
         </div>

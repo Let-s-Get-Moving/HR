@@ -220,12 +220,12 @@ export default function LeaveManagement() {
       // Handle leave requests
       if (item.type === 'leave_request' || !item.type) {
         const startDate = new Date(item.start_date);
-        startDate.setHours(0, 0, 0, 0);
-        
+      startDate.setHours(0, 0, 0, 0);
+      
         const endDate = new Date(item.end_date);
-        endDate.setHours(23, 59, 59, 999);
-        
-        return checkDate >= startDate && checkDate <= endDate;
+      endDate.setHours(23, 59, 59, 999);
+      
+      return checkDate >= startDate && checkDate <= endDate;
       }
       
       return false;
@@ -969,7 +969,7 @@ export default function LeaveManagement() {
                               <>
                                 {/* Show holidays first */}
                                 {holidays.map((holiday, idx) => (
-                                  <div
+                            <div
                                     key={`holiday-${idx}`}
                                     className="text-xs px-1 py-0.5 rounded truncate bg-yellow-600 text-white"
                                     title={holiday.description}
@@ -988,18 +988,18 @@ export default function LeaveManagement() {
                                       key={`leave-${idx}`}
                                       className={className}
                                       style={style}
-                                      title={`${leave.first_name} ${leave.last_name} - ${leave.leave_type_name}`}
-                                    >
-                                      {leave.first_name}
-                                    </div>
+                              title={`${leave.first_name} ${leave.last_name} - ${leave.leave_type_name}`}
+                            >
+                              {leave.first_name}
+                            </div>
                                   );
                                 })}
                                 
                                 {leaveRequests.length > (holidays.length > 0 ? 2 : 3) && (
-                                  <div className="text-xs text-neutral-400">
+                            <div className="text-xs text-neutral-400">
                                     +{leaveRequests.length - (holidays.length > 0 ? 2 : 3)} more
-                                  </div>
-                                )}
+                            </div>
+                          )}
                               </>
                             );
                           })()}
@@ -1085,24 +1085,24 @@ export default function LeaveManagement() {
                               {holidays.length > 0 && <h5 className="text-sm font-semibold text-neutral-300 mb-2">{t('leave.calendar.leaveRequests')}</h5>}
                               {leaveRequests.map((leave, index) => (
                                 <div key={`leave-${index}`} className="border-l-4 border-indigo-400 pl-4 py-2 mb-2">
-                                  <div className="font-medium">
-                                    {leave.first_name} {leave.last_name}
-                                  </div>
-                                  <div className="text-sm text-neutral-400">
-                                    {leave.leave_type_name}
-                                  </div>
-                                  <div className="text-xs text-neutral-500 mt-1">
-                                    {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
-                                  </div>
-                                  {leave.reason && (
-                                    <div className="text-xs text-neutral-500 mt-1">
-                                      {leave.reason}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
+                          <div className="font-medium">
+                            {leave.first_name} {leave.last_name}
+                          </div>
+                          <div className="text-sm text-neutral-400">
+                            {leave.leave_type_name}
+                          </div>
+                          <div className="text-xs text-neutral-500 mt-1">
+                            {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
+                          </div>
+                          {leave.reason && (
+                            <div className="text-xs text-neutral-500 mt-1">
+                              {leave.reason}
                             </div>
                           )}
+                        </div>
+                              ))}
+                            </div>
+                    )}
                         </>
                       );
                     })()}
