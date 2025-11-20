@@ -14,52 +14,6 @@ export default function Settings() {
   const { t, i18n } = useTranslation();
   const activeTabRef = useRef("system");
 
-  // Load settings data for a specific tab category
-  const loadSettingsForTab = async (category) => {
-    // Map category to ref and setState function
-    const tabConfig = {
-      preferences: { ref: preferencesLoadedRef, setState: setUserPreferences },
-      notifications: { ref: notificationsLoadedRef, setState: setNotifications },
-      security: { ref: securityLoadedRef, setState: setSecurity },
-      maintenance: { ref: maintenanceLoadedRef, setState: setMaintenance }
-    };
-    
-    const config = tabConfig[category];
-    if (!config || config.ref.current) {
-      // Tab not in config or already loaded
-      return;
-    }
-    
-    // Check if request is already in flight
-    const requestKey = `settings_${category}`;
-    if (inFlightRequests.has(requestKey)) {
-      return;
-    }
-    
-    config.ref.current = true;
-    inFlightRequests.add(requestKey);
-    
-    try {
-      const settings = await API(`/api/settings/${category}`).catch(() => []);
-      
-      // Enrich settings with options from SETTING_OPTIONS mapping
-      const enrichedSettings = (settings || []).map(setting => {
-        const options = SETTING_OPTIONS[setting.key];
-        if (options) {
-          return { ...setting, options, type: 'select' };
-        }
-        return setting;
-      });
-      
-      // Update state in single batch (no blinking)
-      config.setState(enrichedSettings);
-    } catch (error) {
-      console.error(`Error loading ${category} settings:`, error);
-      config.setState([]);
-    } finally {
-      inFlightRequests.delete(requestKey);
-    }
-  };
   const [systemSettings, setSystemSettings] = useState([]);
   const [userPreferences, setUserPreferences] = useState([]);
   const [notifications, setNotifications] = useState([]);
