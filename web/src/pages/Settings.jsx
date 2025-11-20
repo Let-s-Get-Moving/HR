@@ -88,6 +88,112 @@ export default function Settings() {
   const [showDepartmentsModal, setShowDepartmentsModal] = useState(false);
   const [showLeavePoliciesModal, setShowLeavePoliciesModal] = useState(false);
   const [showHolidaysModal, setShowHolidaysModal] = useState(false);
+  const [showJobTitlesModal, setShowJobTitlesModal] = useState(false);
+  const [showBenefitsPackagesModal, setShowBenefitsPackagesModal] = useState(false);
+  const [showWorkSchedulesModal, setShowWorkSchedulesModal] = useState(false);
+  const [showOvertimePoliciesModal, setShowOvertimePoliciesModal] = useState(false);
+  const [showAttendancePoliciesModal, setShowAttendancePoliciesModal] = useState(false);
+  const [showRemoteWorkPoliciesModal, setShowRemoteWorkPoliciesModal] = useState(false);
+
+  // Job Titles State
+  const [jobTitles, setJobTitles] = useState([]);
+  const [newJobTitle, setNewJobTitle] = useState({
+    name: '',
+    description: '',
+    department_id: null,
+    level_grade: '',
+    reports_to_id: null,
+    min_salary: '',
+    max_salary: ''
+  });
+  const [editingJobTitle, setEditingJobTitle] = useState(null);
+  const [addingJobTitle, setAddingJobTitle] = useState(false);
+  const [deletingJobTitle, setDeletingJobTitle] = useState(null);
+  const [jobTitleError, setJobTitleError] = useState('');
+
+  // Benefits Packages State
+  const [benefitsPackages, setBenefitsPackages] = useState([]);
+  const [newBenefitsPackage, setNewBenefitsPackage] = useState({
+    name: '',
+    description: '',
+    benefit_types: [],
+    coverage_level: 'Standard',
+    employee_cost: 0,
+    employer_cost: 0
+  });
+  const [editingBenefitsPackage, setEditingBenefitsPackage] = useState(null);
+  const [addingBenefitsPackage, setAddingBenefitsPackage] = useState(false);
+  const [deletingBenefitsPackage, setDeletingBenefitsPackage] = useState(null);
+  const [benefitsPackageError, setBenefitsPackageError] = useState('');
+
+  // Work Schedules State
+  const [workSchedules, setWorkSchedules] = useState([]);
+  const [newWorkSchedule, setNewWorkSchedule] = useState({
+    name: '',
+    description: '',
+    start_time: '09:00',
+    end_time: '17:00',
+    days_of_week: [],
+    break_duration_minutes: 60,
+    flexible_hours: false,
+    max_hours_per_week: 40
+  });
+  const [editingWorkSchedule, setEditingWorkSchedule] = useState(null);
+  const [addingWorkSchedule, setAddingWorkSchedule] = useState(false);
+  const [deletingWorkSchedule, setDeletingWorkSchedule] = useState(null);
+  const [workScheduleError, setWorkScheduleError] = useState('');
+
+  // Overtime Policies State
+  const [overtimePolicies, setOvertimePolicies] = useState([]);
+  const [newOvertimePolicy, setNewOvertimePolicy] = useState({
+    name: '',
+    description: '',
+    weekly_threshold_hours: 40,
+    daily_threshold_hours: 8,
+    multiplier: 1.5,
+    requires_approval: true,
+    applies_to_type: 'All',
+    applies_to_id: null
+  });
+  const [editingOvertimePolicy, setEditingOvertimePolicy] = useState(null);
+  const [addingOvertimePolicy, setAddingOvertimePolicy] = useState(false);
+  const [deletingOvertimePolicy, setDeletingOvertimePolicy] = useState(null);
+  const [overtimePolicyError, setOvertimePolicyError] = useState('');
+
+  // Attendance Policies State
+  const [attendancePolicies, setAttendancePolicies] = useState([]);
+  const [newAttendancePolicy, setNewAttendancePolicy] = useState({
+    name: '',
+    description: '',
+    late_grace_period_minutes: 15,
+    absence_limit_per_month: 3,
+    tardiness_penalty_points: 1,
+    absence_penalty_points: 3,
+    point_threshold_termination: 10,
+    applies_to_type: 'All',
+    applies_to_id: null
+  });
+  const [editingAttendancePolicy, setEditingAttendancePolicy] = useState(null);
+  const [addingAttendancePolicy, setAddingAttendancePolicy] = useState(false);
+  const [deletingAttendancePolicy, setDeletingAttendancePolicy] = useState(null);
+  const [attendancePolicyError, setAttendancePolicyError] = useState('');
+
+  // Remote Work Policies State
+  const [remoteWorkPolicies, setRemoteWorkPolicies] = useState([]);
+  const [newRemoteWorkPolicy, setNewRemoteWorkPolicy] = useState({
+    name: '',
+    description: '',
+    eligibility_type: 'All',
+    eligibility_id: null,
+    days_per_week_allowed: 5,
+    requires_approval: true,
+    equipment_provided: '',
+    equipment_policy: ''
+  });
+  const [editingRemoteWorkPolicy, setEditingRemoteWorkPolicy] = useState(null);
+  const [addingRemoteWorkPolicy, setAddingRemoteWorkPolicy] = useState(false);
+  const [deletingRemoteWorkPolicy, setDeletingRemoteWorkPolicy] = useState(null);
+  const [remoteWorkPolicyError, setRemoteWorkPolicyError] = useState('');
 
   const tabs = [
     { id: "system", name: t('settings.system'), icon: "⚙️" },
@@ -149,6 +255,49 @@ export default function Settings() {
     }
   }, [showHolidaysModal]);
 
+  useEffect(() => {
+    if (showJobTitlesModal) {
+      loadJobTitles();
+      loadDepartments(); // Need departments for dropdown
+    }
+  }, [showJobTitlesModal]);
+
+  useEffect(() => {
+    if (showBenefitsPackagesModal) {
+      loadBenefitsPackages();
+    }
+  }, [showBenefitsPackagesModal]);
+
+  useEffect(() => {
+    if (showWorkSchedulesModal) {
+      loadWorkSchedules();
+    }
+  }, [showWorkSchedulesModal]);
+
+  useEffect(() => {
+    if (showOvertimePoliciesModal) {
+      loadOvertimePolicies();
+      loadDepartments();
+      loadJobTitles();
+    }
+  }, [showOvertimePoliciesModal]);
+
+  useEffect(() => {
+    if (showAttendancePoliciesModal) {
+      loadAttendancePolicies();
+      loadDepartments();
+      loadJobTitles();
+    }
+  }, [showAttendancePoliciesModal]);
+
+  useEffect(() => {
+    if (showRemoteWorkPoliciesModal) {
+      loadRemoteWorkPolicies();
+      loadDepartments();
+      loadJobTitles();
+    }
+  }, [showRemoteWorkPoliciesModal]);
+
   // Handle Escape key to close modals
   useEffect(() => {
     const handleEscape = (e) => {
@@ -177,6 +326,12 @@ export default function Settings() {
     if (showDepartmentsModal) {
       setShowLeavePoliciesModal(false);
       setShowHolidaysModal(false);
+      setShowJobTitlesModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowAttendancePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
     }
   }, [showDepartmentsModal]);
 
@@ -184,6 +339,12 @@ export default function Settings() {
     if (showLeavePoliciesModal) {
       setShowDepartmentsModal(false);
       setShowHolidaysModal(false);
+      setShowJobTitlesModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowAttendancePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
     }
   }, [showLeavePoliciesModal]);
 
@@ -191,8 +352,92 @@ export default function Settings() {
     if (showHolidaysModal) {
       setShowDepartmentsModal(false);
       setShowLeavePoliciesModal(false);
+      setShowJobTitlesModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowAttendancePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
     }
   }, [showHolidaysModal]);
+
+  useEffect(() => {
+    if (showJobTitlesModal) {
+      setShowDepartmentsModal(false);
+      setShowLeavePoliciesModal(false);
+      setShowHolidaysModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowAttendancePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
+    }
+  }, [showJobTitlesModal]);
+
+  useEffect(() => {
+    if (showBenefitsPackagesModal) {
+      setShowDepartmentsModal(false);
+      setShowLeavePoliciesModal(false);
+      setShowHolidaysModal(false);
+      setShowJobTitlesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowAttendancePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
+    }
+  }, [showBenefitsPackagesModal]);
+
+  useEffect(() => {
+    if (showWorkSchedulesModal) {
+      setShowDepartmentsModal(false);
+      setShowLeavePoliciesModal(false);
+      setShowHolidaysModal(false);
+      setShowJobTitlesModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowAttendancePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
+    }
+  }, [showWorkSchedulesModal]);
+
+  useEffect(() => {
+    if (showOvertimePoliciesModal) {
+      setShowDepartmentsModal(false);
+      setShowLeavePoliciesModal(false);
+      setShowHolidaysModal(false);
+      setShowJobTitlesModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowAttendancePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
+    }
+  }, [showOvertimePoliciesModal]);
+
+  useEffect(() => {
+    if (showAttendancePoliciesModal) {
+      setShowDepartmentsModal(false);
+      setShowLeavePoliciesModal(false);
+      setShowHolidaysModal(false);
+      setShowJobTitlesModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowRemoteWorkPoliciesModal(false);
+    }
+  }, [showAttendancePoliciesModal]);
+
+  useEffect(() => {
+    if (showRemoteWorkPoliciesModal) {
+      setShowDepartmentsModal(false);
+      setShowLeavePoliciesModal(false);
+      setShowHolidaysModal(false);
+      setShowJobTitlesModal(false);
+      setShowBenefitsPackagesModal(false);
+      setShowWorkSchedulesModal(false);
+      setShowOvertimePoliciesModal(false);
+      setShowAttendancePoliciesModal(false);
+    }
+  }, [showRemoteWorkPoliciesModal]);
 
   // Reload settings when user navigates back to settings (but not on initial mount)
   useEffect(() => {
@@ -767,6 +1012,620 @@ export default function Settings() {
     }
   };
 
+  // ============================================================================
+  // Job Titles Functions
+  // ============================================================================
+
+  const loadJobTitles = async () => {
+    try {
+      const titles = await API("/api/settings/job-titles").catch(() => []);
+      setJobTitles(titles || []);
+    } catch (error) {
+      console.error("Error loading job titles:", error);
+      setJobTitles([]);
+    }
+  };
+
+  const handleAddJobTitle = async (e) => {
+    e.preventDefault();
+    if (!newJobTitle.name.trim()) {
+      setJobTitleError(t('settings.jobTitles.nameRequired'));
+      return;
+    }
+
+    setAddingJobTitle(true);
+    setJobTitleError('');
+
+    try {
+      await API("/api/settings/job-titles", {
+        method: "POST",
+        body: JSON.stringify(newJobTitle)
+      });
+
+      setNewJobTitle({
+        name: '',
+        description: '',
+        department_id: null,
+        level_grade: '',
+        reports_to_id: null,
+        min_salary: '',
+        max_salary: ''
+      });
+      await loadJobTitles();
+    } catch (error) {
+      console.error("Error adding job title:", error);
+      setJobTitleError(error.message || t('settings.jobTitles.addError'));
+    } finally {
+      setAddingJobTitle(false);
+    }
+  };
+
+  const handleUpdateJobTitle = async (id) => {
+    const jobTitle = jobTitles.find(jt => jt.id === id);
+    if (!jobTitle) return;
+
+    setAddingJobTitle(true);
+    setJobTitleError('');
+
+    try {
+      await API(`/api/settings/job-titles/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: jobTitle.name.trim(),
+          description: jobTitle.description || null,
+          department_id: jobTitle.department_id || null,
+          level_grade: jobTitle.level_grade || null,
+          reports_to_id: jobTitle.reports_to_id || null,
+          min_salary: jobTitle.min_salary || null,
+          max_salary: jobTitle.max_salary || null
+        })
+      });
+
+      setEditingJobTitle(null);
+      await loadJobTitles();
+    } catch (error) {
+      console.error("Error updating job title:", error);
+      setJobTitleError(error.message || t('settings.jobTitles.updateError'));
+    } finally {
+      setAddingJobTitle(false);
+    }
+  };
+
+  const handleDeleteJobTitle = async (id) => {
+    if (!window.confirm(t('settings.jobTitles.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingJobTitle(id);
+
+    try {
+      await API(`/api/settings/job-titles/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadJobTitles();
+    } catch (error) {
+      console.error("Error deleting job title:", error);
+      const errorMsg = error.message || t('settings.jobTitles.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingJobTitle(null);
+    }
+  };
+
+  // ============================================================================
+  // Benefits Packages Functions
+  // ============================================================================
+
+  const loadBenefitsPackages = async () => {
+    try {
+      const packages = await API("/api/settings/benefits-packages").catch(() => []);
+      setBenefitsPackages(packages || []);
+    } catch (error) {
+      console.error("Error loading benefits packages:", error);
+      setBenefitsPackages([]);
+    }
+  };
+
+  const handleAddBenefitsPackage = async (e) => {
+    e.preventDefault();
+    if (!newBenefitsPackage.name.trim()) {
+      setBenefitsPackageError(t('settings.benefitsPackages.nameRequired'));
+      return;
+    }
+
+    setAddingBenefitsPackage(true);
+    setBenefitsPackageError('');
+
+    try {
+      await API("/api/settings/benefits-packages", {
+        method: "POST",
+        body: JSON.stringify(newBenefitsPackage)
+      });
+
+      setNewBenefitsPackage({
+        name: '',
+        description: '',
+        benefit_types: [],
+        coverage_level: 'Standard',
+        employee_cost: 0,
+        employer_cost: 0
+      });
+      await loadBenefitsPackages();
+    } catch (error) {
+      console.error("Error adding benefits package:", error);
+      setBenefitsPackageError(error.message || t('settings.benefitsPackages.addError'));
+    } finally {
+      setAddingBenefitsPackage(false);
+    }
+  };
+
+  const handleUpdateBenefitsPackage = async (id) => {
+    const pkg = benefitsPackages.find(bp => bp.id === id);
+    if (!pkg) return;
+
+    setAddingBenefitsPackage(true);
+    setBenefitsPackageError('');
+
+    try {
+      await API(`/api/settings/benefits-packages/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: pkg.name.trim(),
+          description: pkg.description || null,
+          benefit_types: pkg.benefit_types || [],
+          coverage_level: pkg.coverage_level || 'Standard',
+          employee_cost: pkg.employee_cost || 0,
+          employer_cost: pkg.employer_cost || 0
+        })
+      });
+
+      setEditingBenefitsPackage(null);
+      await loadBenefitsPackages();
+    } catch (error) {
+      console.error("Error updating benefits package:", error);
+      setBenefitsPackageError(error.message || t('settings.benefitsPackages.updateError'));
+    } finally {
+      setAddingBenefitsPackage(false);
+    }
+  };
+
+  const handleDeleteBenefitsPackage = async (id) => {
+    if (!window.confirm(t('settings.benefitsPackages.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingBenefitsPackage(id);
+
+    try {
+      await API(`/api/settings/benefits-packages/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadBenefitsPackages();
+    } catch (error) {
+      console.error("Error deleting benefits package:", error);
+      const errorMsg = error.message || t('settings.benefitsPackages.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingBenefitsPackage(null);
+    }
+  };
+
+  // ============================================================================
+  // Work Schedules Functions
+  // ============================================================================
+
+  const loadWorkSchedules = async () => {
+    try {
+      const schedules = await API("/api/settings/work-schedules").catch(() => []);
+      setWorkSchedules(schedules || []);
+    } catch (error) {
+      console.error("Error loading work schedules:", error);
+      setWorkSchedules([]);
+    }
+  };
+
+  const handleAddWorkSchedule = async (e) => {
+    e.preventDefault();
+    if (!newWorkSchedule.name.trim()) {
+      setWorkScheduleError(t('settings.workSchedules.nameRequired'));
+      return;
+    }
+
+    setAddingWorkSchedule(true);
+    setWorkScheduleError('');
+
+    try {
+      await API("/api/settings/work-schedules", {
+        method: "POST",
+        body: JSON.stringify(newWorkSchedule)
+      });
+
+      setNewWorkSchedule({
+        name: '',
+        description: '',
+        start_time: '09:00',
+        end_time: '17:00',
+        days_of_week: [],
+        break_duration_minutes: 60,
+        flexible_hours: false,
+        max_hours_per_week: 40
+      });
+      await loadWorkSchedules();
+    } catch (error) {
+      console.error("Error adding work schedule:", error);
+      setWorkScheduleError(error.message || t('settings.workSchedules.addError'));
+    } finally {
+      setAddingWorkSchedule(false);
+    }
+  };
+
+  const handleUpdateWorkSchedule = async (id) => {
+    const schedule = workSchedules.find(ws => ws.id === id);
+    if (!schedule) return;
+
+    setAddingWorkSchedule(true);
+    setWorkScheduleError('');
+
+    try {
+      await API(`/api/settings/work-schedules/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: schedule.name.trim(),
+          description: schedule.description || null,
+          start_time: schedule.start_time,
+          end_time: schedule.end_time,
+          days_of_week: schedule.days_of_week || [],
+          break_duration_minutes: schedule.break_duration_minutes || 0,
+          flexible_hours: schedule.flexible_hours || false,
+          max_hours_per_week: schedule.max_hours_per_week || 40
+        })
+      });
+
+      setEditingWorkSchedule(null);
+      await loadWorkSchedules();
+    } catch (error) {
+      console.error("Error updating work schedule:", error);
+      setWorkScheduleError(error.message || t('settings.workSchedules.updateError'));
+    } finally {
+      setAddingWorkSchedule(false);
+    }
+  };
+
+  const handleDeleteWorkSchedule = async (id) => {
+    if (!window.confirm(t('settings.workSchedules.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingWorkSchedule(id);
+
+    try {
+      await API(`/api/settings/work-schedules/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadWorkSchedules();
+    } catch (error) {
+      console.error("Error deleting work schedule:", error);
+      const errorMsg = error.message || t('settings.workSchedules.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingWorkSchedule(null);
+    }
+  };
+
+  // ============================================================================
+  // Overtime Policies Functions
+  // ============================================================================
+
+  const loadOvertimePolicies = async () => {
+    try {
+      const policies = await API("/api/settings/overtime-policies").catch(() => []);
+      setOvertimePolicies(policies || []);
+    } catch (error) {
+      console.error("Error loading overtime policies:", error);
+      setOvertimePolicies([]);
+    }
+  };
+
+  const handleAddOvertimePolicy = async (e) => {
+    e.preventDefault();
+    if (!newOvertimePolicy.name.trim()) {
+      setOvertimePolicyError(t('settings.overtimePolicies.nameRequired'));
+      return;
+    }
+
+    setAddingOvertimePolicy(true);
+    setOvertimePolicyError('');
+
+    try {
+      await API("/api/settings/overtime-policies", {
+        method: "POST",
+        body: JSON.stringify(newOvertimePolicy)
+      });
+
+      setNewOvertimePolicy({
+        name: '',
+        description: '',
+        weekly_threshold_hours: 40,
+        daily_threshold_hours: 8,
+        multiplier: 1.5,
+        requires_approval: true,
+        applies_to_type: 'All',
+        applies_to_id: null
+      });
+      await loadOvertimePolicies();
+    } catch (error) {
+      console.error("Error adding overtime policy:", error);
+      setOvertimePolicyError(error.message || t('settings.overtimePolicies.addError'));
+    } finally {
+      setAddingOvertimePolicy(false);
+    }
+  };
+
+  const handleUpdateOvertimePolicy = async (id) => {
+    const policy = overtimePolicies.find(op => op.id === id);
+    if (!policy) return;
+
+    setAddingOvertimePolicy(true);
+    setOvertimePolicyError('');
+
+    try {
+      await API(`/api/settings/overtime-policies/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: policy.name.trim(),
+          description: policy.description || null,
+          weekly_threshold_hours: policy.weekly_threshold_hours || 40,
+          daily_threshold_hours: policy.daily_threshold_hours || 8,
+          multiplier: policy.multiplier || 1.5,
+          requires_approval: policy.requires_approval !== false,
+          applies_to_type: policy.applies_to_type || 'All',
+          applies_to_id: policy.applies_to_id || null
+        })
+      });
+
+      setEditingOvertimePolicy(null);
+      await loadOvertimePolicies();
+    } catch (error) {
+      console.error("Error updating overtime policy:", error);
+      setOvertimePolicyError(error.message || t('settings.overtimePolicies.updateError'));
+    } finally {
+      setAddingOvertimePolicy(false);
+    }
+  };
+
+  const handleDeleteOvertimePolicy = async (id) => {
+    if (!window.confirm(t('settings.overtimePolicies.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingOvertimePolicy(id);
+
+    try {
+      await API(`/api/settings/overtime-policies/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadOvertimePolicies();
+    } catch (error) {
+      console.error("Error deleting overtime policy:", error);
+      const errorMsg = error.message || t('settings.overtimePolicies.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingOvertimePolicy(null);
+    }
+  };
+
+  // ============================================================================
+  // Attendance Policies Functions
+  // ============================================================================
+
+  const loadAttendancePolicies = async () => {
+    try {
+      const policies = await API("/api/settings/attendance-policies").catch(() => []);
+      setAttendancePolicies(policies || []);
+    } catch (error) {
+      console.error("Error loading attendance policies:", error);
+      setAttendancePolicies([]);
+    }
+  };
+
+  const handleAddAttendancePolicy = async (e) => {
+    e.preventDefault();
+    if (!newAttendancePolicy.name.trim()) {
+      setAttendancePolicyError(t('settings.attendancePolicies.nameRequired'));
+      return;
+    }
+
+    setAddingAttendancePolicy(true);
+    setAttendancePolicyError('');
+
+    try {
+      await API("/api/settings/attendance-policies", {
+        method: "POST",
+        body: JSON.stringify(newAttendancePolicy)
+      });
+
+      setNewAttendancePolicy({
+        name: '',
+        description: '',
+        late_grace_period_minutes: 15,
+        absence_limit_per_month: 3,
+        tardiness_penalty_points: 1,
+        absence_penalty_points: 3,
+        point_threshold_termination: 10,
+        applies_to_type: 'All',
+        applies_to_id: null
+      });
+      await loadAttendancePolicies();
+    } catch (error) {
+      console.error("Error adding attendance policy:", error);
+      setAttendancePolicyError(error.message || t('settings.attendancePolicies.addError'));
+    } finally {
+      setAddingAttendancePolicy(false);
+    }
+  };
+
+  const handleUpdateAttendancePolicy = async (id) => {
+    const policy = attendancePolicies.find(ap => ap.id === id);
+    if (!policy) return;
+
+    setAddingAttendancePolicy(true);
+    setAttendancePolicyError('');
+
+    try {
+      await API(`/api/settings/attendance-policies/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: policy.name.trim(),
+          description: policy.description || null,
+          late_grace_period_minutes: policy.late_grace_period_minutes || 15,
+          absence_limit_per_month: policy.absence_limit_per_month || 3,
+          tardiness_penalty_points: policy.tardiness_penalty_points || 1,
+          absence_penalty_points: policy.absence_penalty_points || 3,
+          point_threshold_termination: policy.point_threshold_termination || 10,
+          applies_to_type: policy.applies_to_type || 'All',
+          applies_to_id: policy.applies_to_id || null
+        })
+      });
+
+      setEditingAttendancePolicy(null);
+      await loadAttendancePolicies();
+    } catch (error) {
+      console.error("Error updating attendance policy:", error);
+      setAttendancePolicyError(error.message || t('settings.attendancePolicies.updateError'));
+    } finally {
+      setAddingAttendancePolicy(false);
+    }
+  };
+
+  const handleDeleteAttendancePolicy = async (id) => {
+    if (!window.confirm(t('settings.attendancePolicies.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingAttendancePolicy(id);
+
+    try {
+      await API(`/api/settings/attendance-policies/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadAttendancePolicies();
+    } catch (error) {
+      console.error("Error deleting attendance policy:", error);
+      const errorMsg = error.message || t('settings.attendancePolicies.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingAttendancePolicy(null);
+    }
+  };
+
+  // ============================================================================
+  // Remote Work Policies Functions
+  // ============================================================================
+
+  const loadRemoteWorkPolicies = async () => {
+    try {
+      const policies = await API("/api/settings/remote-work-policies").catch(() => []);
+      setRemoteWorkPolicies(policies || []);
+    } catch (error) {
+      console.error("Error loading remote work policies:", error);
+      setRemoteWorkPolicies([]);
+    }
+  };
+
+  const handleAddRemoteWorkPolicy = async (e) => {
+    e.preventDefault();
+    if (!newRemoteWorkPolicy.name.trim()) {
+      setRemoteWorkPolicyError(t('settings.remoteWorkPolicies.nameRequired'));
+      return;
+    }
+
+    setAddingRemoteWorkPolicy(true);
+    setRemoteWorkPolicyError('');
+
+    try {
+      await API("/api/settings/remote-work-policies", {
+        method: "POST",
+        body: JSON.stringify(newRemoteWorkPolicy)
+      });
+
+      setNewRemoteWorkPolicy({
+        name: '',
+        description: '',
+        eligibility_type: 'All',
+        eligibility_id: null,
+        days_per_week_allowed: 5,
+        requires_approval: true,
+        equipment_provided: '',
+        equipment_policy: ''
+      });
+      await loadRemoteWorkPolicies();
+    } catch (error) {
+      console.error("Error adding remote work policy:", error);
+      setRemoteWorkPolicyError(error.message || t('settings.remoteWorkPolicies.addError'));
+    } finally {
+      setAddingRemoteWorkPolicy(false);
+    }
+  };
+
+  const handleUpdateRemoteWorkPolicy = async (id) => {
+    const policy = remoteWorkPolicies.find(rwp => rwp.id === id);
+    if (!policy) return;
+
+    setAddingRemoteWorkPolicy(true);
+    setRemoteWorkPolicyError('');
+
+    try {
+      await API(`/api/settings/remote-work-policies/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          name: policy.name.trim(),
+          description: policy.description || null,
+          eligibility_type: policy.eligibility_type || 'All',
+          eligibility_id: policy.eligibility_id || null,
+          days_per_week_allowed: policy.days_per_week_allowed || 5,
+          requires_approval: policy.requires_approval !== false,
+          equipment_provided: policy.equipment_provided || null,
+          equipment_policy: policy.equipment_policy || null
+        })
+      });
+
+      setEditingRemoteWorkPolicy(null);
+      await loadRemoteWorkPolicies();
+    } catch (error) {
+      console.error("Error updating remote work policy:", error);
+      setRemoteWorkPolicyError(error.message || t('settings.remoteWorkPolicies.updateError'));
+    } finally {
+      setAddingRemoteWorkPolicy(false);
+    }
+  };
+
+  const handleDeleteRemoteWorkPolicy = async (id) => {
+    if (!window.confirm(t('settings.remoteWorkPolicies.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingRemoteWorkPolicy(id);
+
+    try {
+      await API(`/api/settings/remote-work-policies/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadRemoteWorkPolicies();
+    } catch (error) {
+      console.error("Error deleting remote work policy:", error);
+      const errorMsg = error.message || t('settings.remoteWorkPolicies.deleteError');
+      alert(errorMsg);
+    } finally {
+      setDeletingRemoteWorkPolicy(null);
+    }
+  };
+
   const handleSettingUpdate = async (category, key, value) => {
     // 🔐 SPECIAL HANDLING FOR MFA TOGGLE
     // Don't update state immediately - show modal first, update only after verification
@@ -1262,7 +2121,7 @@ export default function Settings() {
 
           {/* Management Buttons */}
           {canManage && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
               {/* Departments Button */}
               <motion.button
                 initial={{ opacity: 0, y: 20 }}
@@ -1299,6 +2158,84 @@ export default function Settings() {
                 <div className="text-3xl mb-3">🎉</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.holidays.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.holidays.description')}</p>
+              </motion.button>
+
+              {/* Job Titles Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                onClick={() => setShowJobTitlesModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">💼</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.jobTitles.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.jobTitles.description')}</p>
+              </motion.button>
+
+              {/* Benefits Packages Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                onClick={() => setShowBenefitsPackagesModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">🎁</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.benefitsPackages.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.benefitsPackages.description')}</p>
+              </motion.button>
+
+              {/* Work Schedules Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                onClick={() => setShowWorkSchedulesModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">⏰</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.workSchedules.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.workSchedules.description')}</p>
+              </motion.button>
+
+              {/* Overtime Policies Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                onClick={() => setShowOvertimePoliciesModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">⏱️</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.overtimePolicies.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.overtimePolicies.description')}</p>
+              </motion.button>
+
+              {/* Attendance Policies Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+                onClick={() => setShowAttendancePoliciesModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">📊</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.attendancePolicies.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.attendancePolicies.description')}</p>
+              </motion.button>
+
+              {/* Remote Work Policies Button */}
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8 }}
+                onClick={() => setShowRemoteWorkPoliciesModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">🏠</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.remoteWorkPolicies.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.remoteWorkPolicies.description')}</p>
               </motion.button>
             </div>
           )}
@@ -1873,6 +2810,1007 @@ export default function Settings() {
     );
   };
 
+  // ============================================================================
+  // Job Titles Modal
+  // ============================================================================
+
+  const JobTitlesModal = () => {
+    if (!showJobTitlesModal) return null;
+    const canManage = hasFullAccess(userRole);
+
+    const handleClose = () => {
+      setShowJobTitlesModal(false);
+      setEditingJobTitle(null);
+      setJobTitleError('');
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.jobTitles.title')}</h2>
+            <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.jobTitles.description')}</p>
+
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">
+                  {editingJobTitle ? t('settings.jobTitles.edit') : t('settings.jobTitles.addNew')}
+                </h4>
+                <form onSubmit={editingJobTitle ? (e) => { e.preventDefault(); handleUpdateJobTitle(editingJobTitle); } : handleAddJobTitle} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.name')} *</label>
+                      <input
+                        type="text"
+                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.name || '' : newJobTitle.name}
+                        onChange={(e) => {
+                          if (editingJobTitle) {
+                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, name: e.target.value } : jt));
+                          } else {
+                            setNewJobTitle({...newJobTitle, name: e.target.value});
+                          }
+                          setJobTitleError('');
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.department')}</label>
+                      <select
+                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.department_id || '' : newJobTitle.department_id || ''}
+                        onChange={(e) => {
+                          const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                          if (editingJobTitle) {
+                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, department_id: val } : jt));
+                          } else {
+                            setNewJobTitle({...newJobTitle, department_id: val});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      >
+                        <option value="">{t('settings.jobTitles.selectDepartment')}</option>
+                        {departments.map(dept => (
+                          <option key={dept.id} value={dept.id}>{dept.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.description')}</label>
+                    <textarea
+                      value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.description || '' : newJobTitle.description}
+                      onChange={(e) => {
+                        if (editingJobTitle) {
+                          setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, description: e.target.value } : jt));
+                        } else {
+                          setNewJobTitle({...newJobTitle, description: e.target.value});
+                        }
+                      }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      rows="2"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.levelGrade')}</label>
+                      <input
+                        type="text"
+                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.level_grade || '' : newJobTitle.level_grade}
+                        onChange={(e) => {
+                          if (editingJobTitle) {
+                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, level_grade: e.target.value } : jt));
+                          } else {
+                            setNewJobTitle({...newJobTitle, level_grade: e.target.value});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.reportsTo')}</label>
+                      <select
+                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.reports_to_id || '' : newJobTitle.reports_to_id || ''}
+                        onChange={(e) => {
+                          const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                          if (editingJobTitle) {
+                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, reports_to_id: val } : jt));
+                          } else {
+                            setNewJobTitle({...newJobTitle, reports_to_id: val});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      >
+                        <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
+                        {jobTitles.filter(jt => !editingJobTitle || jt.id !== editingJobTitle).map(jt => (
+                          <option key={jt.id} value={jt.id}>{jt.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.minSalary')}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.min_salary || '' : newJobTitle.min_salary}
+                        onChange={(e) => {
+                          const val = e.target.value ? parseFloat(e.target.value) : null;
+                          if (editingJobTitle) {
+                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, min_salary: val } : jt));
+                          } else {
+                            setNewJobTitle({...newJobTitle, min_salary: val});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.maxSalary')}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.max_salary || '' : newJobTitle.max_salary}
+                        onChange={(e) => {
+                          const val = e.target.value ? parseFloat(e.target.value) : null;
+                          if (editingJobTitle) {
+                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, max_salary: val } : jt));
+                          } else {
+                            setNewJobTitle({...newJobTitle, max_salary: val});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={addingJobTitle}
+                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {addingJobTitle ? t('settings.jobTitles.saving') : (editingJobTitle ? t('settings.jobTitles.update') : t('settings.jobTitles.add'))}
+                    </button>
+                    {editingJobTitle && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingJobTitle(null);
+                          setJobTitleError('');
+                        }}
+                        className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                      >
+                        {t('settings.jobTitles.cancel')}
+                      </button>
+                    )}
+                  </div>
+                </form>
+                {jobTitleError && (
+                  <p className="mt-2 text-sm text-red-400">{jobTitleError}</p>
+                )}
+              </div>
+            )}
+
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.jobTitles.list')}</h4>
+              {jobTitles.length === 0 ? (
+                <p className="text-secondary">{t('settings.jobTitles.noJobTitles')}</p>
+              ) : (
+                <div className="space-y-3">
+                  {jobTitles.map((jt) => (
+                    <motion.div
+                      key={jt.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{jt.name}</div>
+                        {jt.department_name && (
+                          <div className="text-sm text-secondary mt-1">{t('settings.jobTitles.department')}: {jt.department_name}</div>
+                        )}
+                        {jt.level_grade && (
+                          <div className="text-sm text-secondary mt-1">{t('settings.jobTitles.levelGrade')}: {jt.level_grade}</div>
+                        )}
+                        {(jt.min_salary || jt.max_salary) && (
+                          <div className="text-sm text-secondary mt-1">
+                            {jt.min_salary && jt.max_salary ? `$${jt.min_salary} - $${jt.max_salary}` : jt.min_salary ? `$${jt.min_salary}+` : `Up to $${jt.max_salary}`}
+                          </div>
+                        )}
+                        {jt.employee_count > 0 && (
+                          <div className="text-xs text-yellow-400 mt-1">
+                            {t('settings.jobTitles.inUse', { count: jt.employee_count })}
+                          </div>
+                        )}
+                      </div>
+                      {canManage && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingJobTitle(jt.id)}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                          >
+                            {t('settings.jobTitles.edit')}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteJobTitle(jt.id)}
+                            disabled={deletingJobTitle === jt.id || (jt.employee_count || 0) > 0}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            title={jt.employee_count > 0 ? t('settings.jobTitles.cannotDelete') : t('settings.jobTitles.delete')}
+                          >
+                            {deletingJobTitle === jt.id ? t('settings.jobTitles.deleting') : t('settings.jobTitles.delete')}
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // Benefits Packages Modal
+  // ============================================================================
+
+  const BenefitsPackagesModal = () => {
+    if (!showBenefitsPackagesModal) return null;
+    const canManage = hasFullAccess(userRole);
+
+    const handleClose = () => {
+      setShowBenefitsPackagesModal(false);
+      setEditingBenefitsPackage(null);
+      setBenefitsPackageError('');
+    };
+
+    const benefitTypesOptions = ['Health', 'Dental', 'Vision', 'Retirement', 'Life Insurance', 'Disability', 'Wellness', 'Other'];
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.benefitsPackages.title')}</h2>
+            <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.benefitsPackages.description')}</p>
+
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">
+                  {editingBenefitsPackage ? t('settings.benefitsPackages.edit') : t('settings.benefitsPackages.addNew')}
+                </h4>
+                <form onSubmit={editingBenefitsPackage ? (e) => { e.preventDefault(); handleUpdateBenefitsPackage(editingBenefitsPackage); } : handleAddBenefitsPackage} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.name')} *</label>
+                    <input
+                      type="text"
+                      value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.name || '' : newBenefitsPackage.name}
+                      onChange={(e) => {
+                        if (editingBenefitsPackage) {
+                          setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, name: e.target.value } : bp));
+                        } else {
+                          setNewBenefitsPackage({...newBenefitsPackage, name: e.target.value});
+                        }
+                        setBenefitsPackageError('');
+                      }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.description')}</label>
+                    <textarea
+                      value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.description || '' : newBenefitsPackage.description}
+                      onChange={(e) => {
+                        if (editingBenefitsPackage) {
+                          setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, description: e.target.value } : bp));
+                        } else {
+                          setNewBenefitsPackage({...newBenefitsPackage, description: e.target.value});
+                        }
+                      }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      rows="2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.benefitTypes')}</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {benefitTypesOptions.map(type => {
+                        const pkg = editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage) : newBenefitsPackage;
+                        const selected = (pkg?.benefit_types || []).includes(type);
+                        return (
+                          <label key={type} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={(e) => {
+                                const currentTypes = pkg?.benefit_types || [];
+                                const newTypes = e.target.checked
+                                  ? [...currentTypes, type]
+                                  : currentTypes.filter(t => t !== type);
+                                if (editingBenefitsPackage) {
+                                  setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, benefit_types: newTypes } : bp));
+                                } else {
+                                  setNewBenefitsPackage({...newBenefitsPackage, benefit_types: newTypes});
+                                }
+                              }}
+                              className="mr-2"
+                            />
+                            <span className="text-sm">{type}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.coverageLevel')}</label>
+                      <select
+                        value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.coverage_level || 'Standard' : newBenefitsPackage.coverage_level}
+                        onChange={(e) => {
+                          if (editingBenefitsPackage) {
+                            setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, coverage_level: e.target.value } : bp));
+                          } else {
+                            setNewBenefitsPackage({...newBenefitsPackage, coverage_level: e.target.value});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      >
+                        <option value="Basic">{t('settings.benefitsPackages.basic')}</option>
+                        <option value="Standard">{t('settings.benefitsPackages.standard')}</option>
+                        <option value="Premium">{t('settings.benefitsPackages.premium')}</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.employeeCost')}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.employee_cost || 0 : newBenefitsPackage.employee_cost}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          if (editingBenefitsPackage) {
+                            setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, employee_cost: val } : bp));
+                          } else {
+                            setNewBenefitsPackage({...newBenefitsPackage, employee_cost: val});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.employerCost')}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.employer_cost || 0 : newBenefitsPackage.employer_cost}
+                        onChange={(e) => {
+                          const val = parseFloat(e.target.value) || 0;
+                          if (editingBenefitsPackage) {
+                            setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, employer_cost: val } : bp));
+                          } else {
+                            setNewBenefitsPackage({...newBenefitsPackage, employer_cost: val});
+                          }
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={addingBenefitsPackage}
+                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {addingBenefitsPackage ? t('settings.benefitsPackages.saving') : (editingBenefitsPackage ? t('settings.benefitsPackages.update') : t('settings.benefitsPackages.add'))}
+                    </button>
+                    {editingBenefitsPackage && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingBenefitsPackage(null);
+                          setBenefitsPackageError('');
+                        }}
+                        className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                      >
+                        {t('settings.benefitsPackages.cancel')}
+                      </button>
+                    )}
+                  </div>
+                </form>
+                {benefitsPackageError && (
+                  <p className="mt-2 text-sm text-red-400">{benefitsPackageError}</p>
+                )}
+              </div>
+            )}
+
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.benefitsPackages.list')}</h4>
+              {benefitsPackages.length === 0 ? (
+                <p className="text-secondary">{t('settings.benefitsPackages.noPackages')}</p>
+              ) : (
+                <div className="space-y-3">
+                  {benefitsPackages.map((bp) => (
+                    <motion.div
+                      key={bp.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{bp.name}</div>
+                        {bp.description && (
+                          <div className="text-sm text-secondary mt-1">{bp.description}</div>
+                        )}
+                        <div className="text-xs text-secondary mt-1">
+                          {t('settings.benefitsPackages.coverageLevel')}: {bp.coverage_level} • 
+                          {bp.benefit_types && bp.benefit_types.length > 0 && ` ${bp.benefit_types.join(', ')}`}
+                        </div>
+                        {(bp.employee_cost > 0 || bp.employer_cost > 0) && (
+                          <div className="text-xs text-secondary mt-1">
+                            Employee: ${bp.employee_cost} • Employer: ${bp.employer_cost}
+                          </div>
+                        )}
+                        {bp.employee_count > 0 && (
+                          <div className="text-xs text-yellow-400 mt-1">
+                            {t('settings.benefitsPackages.inUse', { count: bp.employee_count })}
+                          </div>
+                        )}
+                      </div>
+                      {canManage && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingBenefitsPackage(bp.id)}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                          >
+                            {t('settings.benefitsPackages.edit')}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteBenefitsPackage(bp.id)}
+                            disabled={deletingBenefitsPackage === bp.id || (bp.employee_count || 0) > 0}
+                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            title={bp.employee_count > 0 ? t('settings.benefitsPackages.cannotDelete') : t('settings.benefitsPackages.delete')}
+                          >
+                            {deletingBenefitsPackage === bp.id ? t('settings.benefitsPackages.deleting') : t('settings.benefitsPackages.delete')}
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // Work Schedules Modal (Simplified - full implementation would be similar pattern)
+  // ============================================================================
+
+  const WorkSchedulesModal = () => {
+    if (!showWorkSchedulesModal) return null;
+    const canManage = hasFullAccess(userRole);
+    const handleClose = () => { setShowWorkSchedulesModal(false); setEditingWorkSchedule(null); setWorkScheduleError(''); };
+    const daysOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.workSchedules.title')}</h2>
+            <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.workSchedules.description')}</p>
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">{editingWorkSchedule ? t('settings.workSchedules.edit') : t('settings.workSchedules.addNew')}</h4>
+                <form onSubmit={editingWorkSchedule ? (e) => { e.preventDefault(); handleUpdateWorkSchedule(editingWorkSchedule); } : handleAddWorkSchedule} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.name')} *</label>
+                      <input type="text" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.name || '' : newWorkSchedule.name}
+                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, name: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, name: e.target.value}); } setWorkScheduleError(''); }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.description')}</label>
+                      <textarea value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.description || '' : newWorkSchedule.description}
+                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, description: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, description: e.target.value}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.startTime')} *</label>
+                      <input type="time" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.start_time || '09:00' : newWorkSchedule.start_time}
+                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, start_time: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, start_time: e.target.value}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.endTime')} *</label>
+                      <input type="time" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.end_time || '17:00' : newWorkSchedule.end_time}
+                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, end_time: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, end_time: e.target.value}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                    </div>
+                  </div>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.daysOfWeek')}</label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {daysOptions.map(day => {
+                        const schedule = editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule) : newWorkSchedule;
+                        const selected = (schedule?.days_of_week || []).includes(day);
+                        return (
+                          <label key={day} className="flex items-center">
+                            <input type="checkbox" checked={selected} onChange={(e) => {
+                              const currentDays = schedule?.days_of_week || [];
+                              const newDays = e.target.checked ? [...currentDays, day] : currentDays.filter(d => d !== day);
+                              if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, days_of_week: newDays } : ws)); }
+                              else { setNewWorkSchedule({...newWorkSchedule, days_of_week: newDays}); }
+                            }} className="mr-2" />
+                            <span className="text-sm">{day}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.breakDuration')}</label>
+                      <input type="number" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.break_duration_minutes || 60 : newWorkSchedule.break_duration_minutes}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 0; if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, break_duration_minutes: val } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, break_duration_minutes: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div className="flex items-center mt-6"><input type="checkbox" checked={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.flexible_hours || false : newWorkSchedule.flexible_hours}
+                      onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, flexible_hours: e.target.checked } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} className="mr-2" />
+                      <label className="text-sm">{t('settings.workSchedules.flexibleHours')}</label>
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.maxHoursPerWeek')}</label>
+                      <input type="number" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.max_hours_per_week || 40 : newWorkSchedule.max_hours_per_week}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 40; if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, max_hours_per_week: val } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, max_hours_per_week: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="submit" disabled={addingWorkSchedule} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                      {addingWorkSchedule ? t('settings.workSchedules.saving') : (editingWorkSchedule ? t('settings.workSchedules.update') : t('settings.workSchedules.add'))}
+                    </button>
+                    {editingWorkSchedule && <button type="button" onClick={() => { setEditingWorkSchedule(null); setWorkScheduleError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.workSchedules.cancel')}</button>}
+                  </div>
+                </form>
+                {workScheduleError && <p className="mt-2 text-sm text-red-400">{workScheduleError}</p>}
+              </div>
+            )}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.workSchedules.list')}</h4>
+              {workSchedules.length === 0 ? <p className="text-secondary">{t('settings.workSchedules.noSchedules')}</p> : (
+                <div className="space-y-3">
+                  {workSchedules.map((ws) => (
+                    <motion.div key={ws.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{ws.name}</div>
+                        {ws.description && <div className="text-sm text-secondary mt-1">{ws.description}</div>}
+                        <div className="text-xs text-secondary mt-1">{ws.start_time} - {ws.end_time} • {ws.days_of_week?.join(', ') || 'No days'} • {ws.flexible_hours ? t('settings.workSchedules.flexible') : t('settings.workSchedules.fixed')}</div>
+                        {ws.employee_count > 0 && <div className="text-xs text-yellow-400 mt-1">{t('settings.workSchedules.inUse', { count: ws.employee_count })}</div>}
+                      </div>
+                      {canManage && <div className="flex gap-2">
+                        <button onClick={() => setEditingWorkSchedule(ws.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.workSchedules.edit')}</button>
+                        <button onClick={() => handleDeleteWorkSchedule(ws.id)} disabled={deletingWorkSchedule === ws.id || (ws.employee_count || 0) > 0} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors" title={ws.employee_count > 0 ? t('settings.workSchedules.cannotDelete') : t('settings.workSchedules.delete')}>
+                          {deletingWorkSchedule === ws.id ? t('settings.workSchedules.deleting') : t('settings.workSchedules.delete')}
+                        </button>
+                      </div>}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // Overtime Policies Modal (Simplified)
+  // ============================================================================
+
+  const OvertimePoliciesModal = () => {
+    if (!showOvertimePoliciesModal) return null;
+    const canManage = hasFullAccess(userRole);
+    const handleClose = () => { setShowOvertimePoliciesModal(false); setEditingOvertimePolicy(null); setOvertimePolicyError(''); };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.overtimePolicies.title')}</h2>
+            <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.overtimePolicies.description')}</p>
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">{editingOvertimePolicy ? t('settings.overtimePolicies.edit') : t('settings.overtimePolicies.addNew')}</h4>
+                <form onSubmit={editingOvertimePolicy ? (e) => { e.preventDefault(); handleUpdateOvertimePolicy(editingOvertimePolicy); } : handleAddOvertimePolicy} className="space-y-4">
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.name')} *</label>
+                    <input type="text" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.name || '' : newOvertimePolicy.name}
+                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, name: e.target.value } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, name: e.target.value}); } setOvertimePolicyError(''); }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                  </div>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.description')}</label>
+                    <textarea value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.description || '' : newOvertimePolicy.description}
+                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, description: e.target.value } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, description: e.target.value}); } }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.weeklyThreshold')}</label>
+                      <input type="number" step="0.1" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.weekly_threshold_hours || 40 : newOvertimePolicy.weekly_threshold_hours}
+                        onChange={(e) => { const val = parseFloat(e.target.value) || 40; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, weekly_threshold_hours: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, weekly_threshold_hours: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.dailyThreshold')}</label>
+                      <input type="number" step="0.1" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.daily_threshold_hours || 8 : newOvertimePolicy.daily_threshold_hours}
+                        onChange={(e) => { const val = parseFloat(e.target.value) || 8; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, daily_threshold_hours: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, daily_threshold_hours: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.multiplier')}</label>
+                      <input type="number" step="0.1" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.multiplier || 1.5 : newOvertimePolicy.multiplier}
+                        onChange={(e) => { const val = parseFloat(e.target.value) || 1.5; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, multiplier: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, multiplier: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center"><input type="checkbox" checked={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.requires_approval !== false : newOvertimePolicy.requires_approval}
+                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, requires_approval: e.target.checked } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, requires_approval: e.target.checked}); } }} className="mr-2" />
+                      <label className="text-sm">{t('settings.overtimePolicies.requiresApproval')}</label>
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.appliesTo')}</label>
+                      <select value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type || 'All' : newOvertimePolicy.applies_to_type}
+                        onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, applies_to_type: e.target.value, applies_to_id: null } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        <option value="All">{t('settings.overtimePolicies.all')}</option>
+                        <option value="Department">{t('settings.overtimePolicies.department')}</option>
+                        <option value="JobTitle">{t('settings.overtimePolicies.jobTitle')}</option>
+                      </select>
+                    </div>
+                    {(editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type : newOvertimePolicy.applies_to_type) !== 'All' && (
+                      <div><label className="block text-sm font-medium mb-2">
+                        {(editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type : newOvertimePolicy.applies_to_type) === 'Department' ? t('settings.overtimePolicies.selectDepartment') : t('settings.overtimePolicies.selectJobTitle')}
+                      </label>
+                        <select value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_id || '' : newOvertimePolicy.applies_to_id || ''}
+                          onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, applies_to_id: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_id: val}); } }}
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                          <option value="">{t('settings.overtimePolicies.select')}</option>
+                          {(editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type : newOvertimePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="submit" disabled={addingOvertimePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                      {addingOvertimePolicy ? t('settings.overtimePolicies.saving') : (editingOvertimePolicy ? t('settings.overtimePolicies.update') : t('settings.overtimePolicies.add'))}
+                    </button>
+                    {editingOvertimePolicy && <button type="button" onClick={() => { setEditingOvertimePolicy(null); setOvertimePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.overtimePolicies.cancel')}</button>}
+                  </div>
+                </form>
+                {overtimePolicyError && <p className="mt-2 text-sm text-red-400">{overtimePolicyError}</p>}
+              </div>
+            )}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.overtimePolicies.list')}</h4>
+              {overtimePolicies.length === 0 ? <p className="text-secondary">{t('settings.overtimePolicies.noPolicies')}</p> : (
+                <div className="space-y-3">
+                  {overtimePolicies.map((op) => (
+                    <motion.div key={op.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{op.name}</div>
+                        {op.description && <div className="text-sm text-secondary mt-1">{op.description}</div>}
+                        <div className="text-xs text-secondary mt-1">{t('settings.overtimePolicies.weeklyThreshold')}: {op.weekly_threshold_hours}h • {t('settings.overtimePolicies.dailyThreshold')}: {op.daily_threshold_hours}h • {t('settings.overtimePolicies.multiplier')}: {op.multiplier}x</div>
+                        {op.applies_to_name && <div className="text-xs text-secondary mt-1">{t('settings.overtimePolicies.appliesTo')}: {op.applies_to_name}</div>}
+                      </div>
+                      {canManage && <div className="flex gap-2">
+                        <button onClick={() => setEditingOvertimePolicy(op.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.overtimePolicies.edit')}</button>
+                        <button onClick={() => handleDeleteOvertimePolicy(op.id)} disabled={deletingOvertimePolicy === op.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                          {deletingOvertimePolicy === op.id ? t('settings.overtimePolicies.deleting') : t('settings.overtimePolicies.delete')}
+                        </button>
+                      </div>}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // Attendance Policies Modal (Simplified)
+  // ============================================================================
+
+  const AttendancePoliciesModal = () => {
+    if (!showAttendancePoliciesModal) return null;
+    const canManage = hasFullAccess(userRole);
+    const handleClose = () => { setShowAttendancePoliciesModal(false); setEditingAttendancePolicy(null); setAttendancePolicyError(''); };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.attendancePolicies.title')}</h2>
+            <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.attendancePolicies.description')}</p>
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">{editingAttendancePolicy ? t('settings.attendancePolicies.edit') : t('settings.attendancePolicies.addNew')}</h4>
+                <form onSubmit={editingAttendancePolicy ? (e) => { e.preventDefault(); handleUpdateAttendancePolicy(editingAttendancePolicy); } : handleAddAttendancePolicy} className="space-y-4">
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.name')} *</label>
+                    <input type="text" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.name || '' : newAttendancePolicy.name}
+                      onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, name: e.target.value } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, name: e.target.value}); } setAttendancePolicyError(''); }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                  </div>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.description')}</label>
+                    <textarea value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.description || '' : newAttendancePolicy.description}
+                      onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, description: e.target.value } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, description: e.target.value}); } }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.lateGracePeriod')}</label>
+                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.late_grace_period_minutes || 15 : newAttendancePolicy.late_grace_period_minutes}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 15; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, late_grace_period_minutes: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, late_grace_period_minutes: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.absenceLimitPerMonth')}</label>
+                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.absence_limit_per_month || 3 : newAttendancePolicy.absence_limit_per_month}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, absence_limit_per_month: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_limit_per_month: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.tardinessPenalty')}</label>
+                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.tardiness_penalty_points || 1 : newAttendancePolicy.tardiness_penalty_points}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 1; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, tardiness_penalty_points: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, tardiness_penalty_points: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.absencePenalty')}</label>
+                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.absence_penalty_points || 3 : newAttendancePolicy.absence_penalty_points}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, absence_penalty_points: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_penalty_points: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.pointThresholdTermination')}</label>
+                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.point_threshold_termination || 10 : newAttendancePolicy.point_threshold_termination}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 10; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, point_threshold_termination: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, point_threshold_termination: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.appliesTo')}</label>
+                      <select value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type || 'All' : newAttendancePolicy.applies_to_type}
+                        onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, applies_to_type: e.target.value, applies_to_id: null } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        <option value="All">{t('settings.attendancePolicies.all')}</option>
+                        <option value="Department">{t('settings.attendancePolicies.department')}</option>
+                        <option value="JobTitle">{t('settings.attendancePolicies.jobTitle')}</option>
+                      </select>
+                    </div>
+                  </div>
+                  {(editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type : newAttendancePolicy.applies_to_type) !== 'All' && (
+                    <div><label className="block text-sm font-medium mb-2">
+                      {(editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type : newAttendancePolicy.applies_to_type) === 'Department' ? t('settings.attendancePolicies.selectDepartment') : t('settings.attendancePolicies.selectJobTitle')}
+                    </label>
+                      <select value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_id || '' : newAttendancePolicy.applies_to_id || ''}
+                        onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, applies_to_id: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_id: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        <option value="">{t('settings.attendancePolicies.select')}</option>
+                        {(editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type : newAttendancePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <button type="submit" disabled={addingAttendancePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                      {addingAttendancePolicy ? t('settings.attendancePolicies.saving') : (editingAttendancePolicy ? t('settings.attendancePolicies.update') : t('settings.attendancePolicies.add'))}
+                    </button>
+                    {editingAttendancePolicy && <button type="button" onClick={() => { setEditingAttendancePolicy(null); setAttendancePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.attendancePolicies.cancel')}</button>}
+                  </div>
+                </form>
+                {attendancePolicyError && <p className="mt-2 text-sm text-red-400">{attendancePolicyError}</p>}
+              </div>
+            )}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.attendancePolicies.list')}</h4>
+              {attendancePolicies.length === 0 ? <p className="text-secondary">{t('settings.attendancePolicies.noPolicies')}</p> : (
+                <div className="space-y-3">
+                  {attendancePolicies.map((ap) => (
+                    <motion.div key={ap.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{ap.name}</div>
+                        {ap.description && <div className="text-sm text-secondary mt-1">{ap.description}</div>}
+                        <div className="text-xs text-secondary mt-1">
+                          {t('settings.attendancePolicies.lateGracePeriod')}: {ap.late_grace_period_minutes}min • {t('settings.attendancePolicies.absenceLimitPerMonth')}: {ap.absence_limit_per_month} • {t('settings.attendancePolicies.pointThresholdTermination')}: {ap.point_threshold_termination}
+                        </div>
+                        {ap.applies_to_name && <div className="text-xs text-secondary mt-1">{t('settings.attendancePolicies.appliesTo')}: {ap.applies_to_name}</div>}
+                      </div>
+                      {canManage && <div className="flex gap-2">
+                        <button onClick={() => setEditingAttendancePolicy(ap.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.attendancePolicies.edit')}</button>
+                        <button onClick={() => handleDeleteAttendancePolicy(ap.id)} disabled={deletingAttendancePolicy === ap.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                          {deletingAttendancePolicy === ap.id ? t('settings.attendancePolicies.deleting') : t('settings.attendancePolicies.delete')}
+                        </button>
+                      </div>}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // Remote Work Policies Modal (Simplified)
+  // ============================================================================
+
+  const RemoteWorkPoliciesModal = () => {
+    if (!showRemoteWorkPoliciesModal) return null;
+    const canManage = hasFullAccess(userRole);
+    const handleClose = () => { setShowRemoteWorkPoliciesModal(false); setEditingRemoteWorkPolicy(null); setRemoteWorkPolicyError(''); };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.remoteWorkPolicies.title')}</h2>
+            <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.remoteWorkPolicies.description')}</p>
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">{editingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.edit') : t('settings.remoteWorkPolicies.addNew')}</h4>
+                <form onSubmit={editingRemoteWorkPolicy ? (e) => { e.preventDefault(); handleUpdateRemoteWorkPolicy(editingRemoteWorkPolicy); } : handleAddRemoteWorkPolicy} className="space-y-4">
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.name')} *</label>
+                    <input type="text" value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.name || '' : newRemoteWorkPolicy.name}
+                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, name: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, name: e.target.value}); } setRemoteWorkPolicyError(''); }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                  </div>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.description')}</label>
+                    <textarea value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.description || '' : newRemoteWorkPolicy.description}
+                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, description: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, description: e.target.value}); } }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.eligibilityCriteria')}</label>
+                      <select value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type || 'All' : newRemoteWorkPolicy.eligibility_type}
+                        onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, eligibility_type: e.target.value, eligibility_id: null } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_type: e.target.value, eligibility_id: null}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        <option value="All">{t('settings.remoteWorkPolicies.all')}</option>
+                        <option value="Department">{t('settings.remoteWorkPolicies.department')}</option>
+                        <option value="JobTitle">{t('settings.remoteWorkPolicies.jobTitle')}</option>
+                      </select>
+                    </div>
+                    <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.daysPerWeekAllowed')}</label>
+                      <input type="number" min="0" max="5" value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.days_per_week_allowed || 5 : newRemoteWorkPolicy.days_per_week_allowed}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 5; if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, days_per_week_allowed: val } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, days_per_week_allowed: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                    </div>
+                  </div>
+                  {(editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type : newRemoteWorkPolicy.eligibility_type) !== 'All' && (
+                    <div><label className="block text-sm font-medium mb-2">
+                      {(editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type : newRemoteWorkPolicy.eligibility_type) === 'Department' ? t('settings.remoteWorkPolicies.selectDepartment') : t('settings.remoteWorkPolicies.selectJobTitle')}
+                    </label>
+                      <select value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_id || '' : newRemoteWorkPolicy.eligibility_id || ''}
+                        onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, eligibility_id: val } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_id: val}); } }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        <option value="">{t('settings.remoteWorkPolicies.select')}</option>
+                        {(editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type : newRemoteWorkPolicy.eligibility_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  <div className="flex items-center"><input type="checkbox" checked={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.requires_approval !== false : newRemoteWorkPolicy.requires_approval}
+                    onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, requires_approval: e.target.checked } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, requires_approval: e.target.checked}); } }} className="mr-2" />
+                    <label className="text-sm">{t('settings.remoteWorkPolicies.requiresApproval')}</label>
+                  </div>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentProvided')}</label>
+                    <input type="text" value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.equipment_provided || '' : newRemoteWorkPolicy.equipment_provided}
+                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, equipment_provided: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_provided: e.target.value}); } }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                  </div>
+                  <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentPolicy')}</label>
+                    <textarea value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.equipment_policy || '' : newRemoteWorkPolicy.equipment_policy}
+                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, equipment_policy: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_policy: e.target.value}); } }}
+                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="3" />
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="submit" disabled={addingRemoteWorkPolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                      {addingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.saving') : (editingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.update') : t('settings.remoteWorkPolicies.add'))}
+                    </button>
+                    {editingRemoteWorkPolicy && <button type="button" onClick={() => { setEditingRemoteWorkPolicy(null); setRemoteWorkPolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.remoteWorkPolicies.cancel')}</button>}
+                  </div>
+                </form>
+                {remoteWorkPolicyError && <p className="mt-2 text-sm text-red-400">{remoteWorkPolicyError}</p>}
+              </div>
+            )}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.remoteWorkPolicies.list')}</h4>
+              {remoteWorkPolicies.length === 0 ? <p className="text-secondary">{t('settings.remoteWorkPolicies.noPolicies')}</p> : (
+                <div className="space-y-3">
+                  {remoteWorkPolicies.map((rwp) => (
+                    <motion.div key={rwp.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                      <div className="flex-1">
+                        <div className="font-medium text-white">{rwp.name}</div>
+                        {rwp.description && <div className="text-sm text-secondary mt-1">{rwp.description}</div>}
+                        <div className="text-xs text-secondary mt-1">
+                          {t('settings.remoteWorkPolicies.daysPerWeekAllowed')}: {rwp.days_per_week_allowed} • {rwp.requires_approval ? t('settings.remoteWorkPolicies.approvalRequired') : t('settings.remoteWorkPolicies.noApproval')}
+                        </div>
+                        {rwp.eligibility_name && <div className="text-xs text-secondary mt-1">{t('settings.remoteWorkPolicies.eligibilityCriteria')}: {rwp.eligibility_name}</div>}
+                        {rwp.equipment_provided && <div className="text-xs text-secondary mt-1">{t('settings.remoteWorkPolicies.equipmentProvided')}: {rwp.equipment_provided}</div>}
+                      </div>
+                      {canManage && <div className="flex gap-2">
+                        <button onClick={() => setEditingRemoteWorkPolicy(rwp.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.remoteWorkPolicies.edit')}</button>
+                        <button onClick={() => handleDeleteRemoteWorkPolicy(rwp.id)} disabled={deletingRemoteWorkPolicy === rwp.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                          {deletingRemoteWorkPolicy === rwp.id ? t('settings.remoteWorkPolicies.deleting') : t('settings.remoteWorkPolicies.delete')}
+                        </button>
+                      </div>}
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -2233,6 +4171,12 @@ export default function Settings() {
       <DepartmentsModal />
       <LeavePoliciesModal />
       <HolidaysModal />
+      <JobTitlesModal />
+      <BenefitsPackagesModal />
+      <WorkSchedulesModal />
+      <OvertimePoliciesModal />
+      <AttendancePoliciesModal />
+      <RemoteWorkPoliciesModal />
     </div>
   );
 }
