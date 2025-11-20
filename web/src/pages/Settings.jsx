@@ -17,10 +17,8 @@ export default function Settings() {
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    // Reload settings when switching to user-specific tabs
-    if (['preferences', 'notifications', 'security', 'maintenance'].includes(tabId)) {
-      loadSettings();
-    }
+    // Removed loadSettings() call - it causes blinking
+    // Settings are loaded once on mount, no need to reload on tab change
   };
   const [systemSettings, setSystemSettings] = useState([]);
   const [userPreferences, setUserPreferences] = useState([]);
@@ -465,19 +463,8 @@ export default function Settings() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [showDepartmentsModal, showLeavePoliciesModal, showHolidaysModal]);
 
-  // Reload settings when user navigates back to settings (but not on initial mount)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      // Only reload if document was hidden and is now visible AND not initial mount
-      if (!document.hidden && !isInitialMount.current) {
-        console.log('👁️ [Settings] Tab became visible (useEffect #2), reloading settings...');
-        loadSettings();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  // Removed visibility change handler - it causes blinking
+  // Settings load once on mount, no need to reload on tab visibility changes
 
 
   // Helper function to enrich settings with options from SETTING_OPTIONS mapping
