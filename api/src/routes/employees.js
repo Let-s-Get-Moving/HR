@@ -13,10 +13,22 @@ r.get("/", async (req, res) => {
   let query = `SELECT e.*, 
      e.first_name || ' ' || e.last_name AS name,
      d.name AS department, 
-     l.name AS location
+     l.name AS location,
+     jt.name AS job_title_name,
+     bp.name AS benefits_package_name,
+     ws.name AS work_schedule_name,
+     op.name AS overtime_policy_name,
+     ap.name AS attendance_policy_name,
+     rwp.name AS remote_work_policy_name
      FROM employees e
      LEFT JOIN departments d ON d.id = e.department_id
      LEFT JOIN locations l ON l.id = e.location_id
+     LEFT JOIN job_titles jt ON jt.id = e.job_title_id
+     LEFT JOIN benefits_packages bp ON bp.id = e.benefits_package_id
+     LEFT JOIN work_schedules ws ON ws.id = e.work_schedule_id
+     LEFT JOIN overtime_policies op ON op.id = e.overtime_policy_id
+     LEFT JOIN attendance_policies ap ON ap.id = e.attendance_policy_id
+     LEFT JOIN remote_work_policies rwp ON rwp.id = e.remote_work_policy_id
      WHERE e.status <> 'Terminated'`;
   
   const params = [];
@@ -39,10 +51,22 @@ r.get("/terminated", async (_req, res) => {
     `SELECT e.*, 
      e.first_name || ' ' || e.last_name AS name,
      d.name AS department, 
-     l.name AS location
+     l.name AS location,
+     jt.name AS job_title_name,
+     bp.name AS benefits_package_name,
+     ws.name AS work_schedule_name,
+     op.name AS overtime_policy_name,
+     ap.name AS attendance_policy_name,
+     rwp.name AS remote_work_policy_name
      FROM employees e
      LEFT JOIN departments d ON d.id = e.department_id
      LEFT JOIN locations l ON l.id = e.location_id
+     LEFT JOIN job_titles jt ON jt.id = e.job_title_id
+     LEFT JOIN benefits_packages bp ON bp.id = e.benefits_package_id
+     LEFT JOIN work_schedules ws ON ws.id = e.work_schedule_id
+     LEFT JOIN overtime_policies op ON op.id = e.overtime_policy_id
+     LEFT JOIN attendance_policies ap ON ap.id = e.attendance_policy_id
+     LEFT JOIN remote_work_policies rwp ON rwp.id = e.remote_work_policy_id
      WHERE e.status = 'Terminated'
      ORDER BY e.termination_date DESC NULLS LAST, e.first_name, e.last_name`
   );
@@ -158,6 +182,13 @@ const employeeSchema = z.object({
   role_title: z.string().nullable().optional(),
   probation_end: z.string().nullable().optional(),
   hourly_rate: z.number().min(0).optional(),
+  // Settings foreign keys
+  job_title_id: z.number().int().nullable().optional(),
+  benefits_package_id: z.number().int().nullable().optional(),
+  work_schedule_id: z.number().int().nullable().optional(),
+  overtime_policy_id: z.number().int().nullable().optional(),
+  attendance_policy_id: z.number().int().nullable().optional(),
+  remote_work_policy_id: z.number().int().nullable().optional(),
   // Personal details from onboarding
   full_address: z.string().nullable().optional(),
   sin_number: z.string().nullable().optional(),
@@ -172,16 +203,57 @@ const employeeSchema = z.object({
 r.post("/", async (req, res) => {
   try {
     const data = employeeSchema.parse(req.body);
+    
+    // Validate foreign keys exist if provided
+    if (data.job_title_id) {
+      const check = await q('SELECT id FROM job_titles WHERE id = $1', [data.job_title_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid job_title_id' });
+      }
+    }
+    if (data.benefits_package_id) {
+      const check = await q('SELECT id FROM benefits_packages WHERE id = $1', [data.benefits_package_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid benefits_package_id' });
+      }
+    }
+    if (data.work_schedule_id) {
+      const check = await q('SELECT id FROM work_schedules WHERE id = $1', [data.work_schedule_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid work_schedule_id' });
+      }
+    }
+    if (data.overtime_policy_id) {
+      const check = await q('SELECT id FROM overtime_policies WHERE id = $1', [data.overtime_policy_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid overtime_policy_id' });
+      }
+    }
+    if (data.attendance_policy_id) {
+      const check = await q('SELECT id FROM attendance_policies WHERE id = $1', [data.attendance_policy_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid attendance_policy_id' });
+      }
+    }
+    if (data.remote_work_policy_id) {
+      const check = await q('SELECT id FROM remote_work_policies WHERE id = $1', [data.remote_work_policy_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid remote_work_policy_id' });
+      }
+    }
+    
     const { rows } = await q(
       `INSERT INTO employees
-       (first_name,last_name,work_email,email,phone,gender,birth_date,hire_date,employment_type,department_id,location_id,role_title,probation_end,hourly_rate,full_address,sin_number,sin_expiry_date,bank_name,bank_account_number,bank_transit_number,emergency_contact_name,emergency_contact_phone)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
+       (first_name,last_name,work_email,email,phone,gender,birth_date,hire_date,employment_type,department_id,location_id,role_title,probation_end,hourly_rate,job_title_id,benefits_package_id,work_schedule_id,overtime_policy_id,attendance_policy_id,remote_work_policy_id,full_address,sin_number,sin_expiry_date,bank_name,bank_account_number,bank_transit_number,emergency_contact_name,emergency_contact_phone)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)
        RETURNING *`,
       [
         data.first_name, data.last_name, data.work_email, data.email ?? null,
         data.phone ?? null, data.gender ?? null, data.birth_date ?? null, data.hire_date,
         data.employment_type, data.department_id ?? null, data.location_id ?? null,
         data.role_title ?? null, data.probation_end ?? null, data.hourly_rate ?? 25,
+        data.job_title_id ?? null, data.benefits_package_id ?? null, data.work_schedule_id ?? null,
+        data.overtime_policy_id ?? null, data.attendance_policy_id ?? null, data.remote_work_policy_id ?? null,
         data.full_address ?? null, data.sin_number ?? null, data.sin_expiry_date ?? null,
         data.bank_name ?? null, data.bank_account_number ?? null, data.bank_transit_number ?? null,
         data.emergency_contact_name ?? null, data.emergency_contact_phone ?? null
@@ -216,6 +288,44 @@ r.put("/:id", async (req, res) => {
     }
     const existing = existingResult.rows[0];
     
+    // Validate foreign keys exist if provided
+    if (data.job_title_id !== undefined && data.job_title_id !== null) {
+      const check = await q('SELECT id FROM job_titles WHERE id = $1', [data.job_title_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid job_title_id' });
+      }
+    }
+    if (data.benefits_package_id !== undefined && data.benefits_package_id !== null) {
+      const check = await q('SELECT id FROM benefits_packages WHERE id = $1', [data.benefits_package_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid benefits_package_id' });
+      }
+    }
+    if (data.work_schedule_id !== undefined && data.work_schedule_id !== null) {
+      const check = await q('SELECT id FROM work_schedules WHERE id = $1', [data.work_schedule_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid work_schedule_id' });
+      }
+    }
+    if (data.overtime_policy_id !== undefined && data.overtime_policy_id !== null) {
+      const check = await q('SELECT id FROM overtime_policies WHERE id = $1', [data.overtime_policy_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid overtime_policy_id' });
+      }
+    }
+    if (data.attendance_policy_id !== undefined && data.attendance_policy_id !== null) {
+      const check = await q('SELECT id FROM attendance_policies WHERE id = $1', [data.attendance_policy_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid attendance_policy_id' });
+      }
+    }
+    if (data.remote_work_policy_id !== undefined && data.remote_work_policy_id !== null) {
+      const check = await q('SELECT id FROM remote_work_policies WHERE id = $1', [data.remote_work_policy_id]);
+      if (check.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid remote_work_policy_id' });
+      }
+    }
+    
     // Merge with existing data, preferring new data when provided
     const mergedData = {
       first_name: data.first_name || existing.first_name,
@@ -233,6 +343,12 @@ r.put("/:id", async (req, res) => {
       birth_date: data.birth_date !== undefined ? (data.birth_date || null) : existing.birth_date,
       status: data.status || existing.status,
       probation_end: data.probation_end !== undefined ? (data.probation_end || null) : existing.probation_end,
+      job_title_id: data.job_title_id !== undefined ? (data.job_title_id || null) : existing.job_title_id,
+      benefits_package_id: data.benefits_package_id !== undefined ? (data.benefits_package_id || null) : existing.benefits_package_id,
+      work_schedule_id: data.work_schedule_id !== undefined ? (data.work_schedule_id || null) : existing.work_schedule_id,
+      overtime_policy_id: data.overtime_policy_id !== undefined ? (data.overtime_policy_id || null) : existing.overtime_policy_id,
+      attendance_policy_id: data.attendance_policy_id !== undefined ? (data.attendance_policy_id || null) : existing.attendance_policy_id,
+      remote_work_policy_id: data.remote_work_policy_id !== undefined ? (data.remote_work_policy_id || null) : existing.remote_work_policy_id,
       full_address: data.full_address !== undefined ? (data.full_address || null) : existing.full_address,
       emergency_contact_name: data.emergency_contact_name !== undefined ? (data.emergency_contact_name || null) : existing.emergency_contact_name,
       emergency_contact_phone: data.emergency_contact_phone !== undefined ? (data.emergency_contact_phone || null) : existing.emergency_contact_phone,
@@ -252,11 +368,13 @@ r.put("/:id", async (req, res) => {
            role_title = $6, hourly_rate = $7, employment_type = $8,
            department_id = $9, location_id = $10, hire_date = $11,
            gender = $12, birth_date = $13, status = $14, probation_end = $15,
-           full_address = $16, emergency_contact_name = $17, emergency_contact_phone = $18,
-           sin_number = $19, sin_expiry_date = $20, bank_name = $21,
-           bank_transit_number = $22, bank_account_number = $23,
-           contract_status = $24, contract_signed_date = $25, gift_card_sent = $26
-       WHERE id = $27
+           job_title_id = $16, benefits_package_id = $17, work_schedule_id = $18,
+           overtime_policy_id = $19, attendance_policy_id = $20, remote_work_policy_id = $21,
+           full_address = $22, emergency_contact_name = $23, emergency_contact_phone = $24,
+           sin_number = $25, sin_expiry_date = $26, bank_name = $27,
+           bank_transit_number = $28, bank_account_number = $29,
+           contract_status = $30, contract_signed_date = $31, gift_card_sent = $32
+       WHERE id = $33
        RETURNING *`,
       [
         mergedData.first_name,
@@ -274,6 +392,12 @@ r.put("/:id", async (req, res) => {
         mergedData.birth_date,
         mergedData.status,
         mergedData.probation_end,
+        mergedData.job_title_id,
+        mergedData.benefits_package_id,
+        mergedData.work_schedule_id,
+        mergedData.overtime_policy_id,
+        mergedData.attendance_policy_id,
+        mergedData.remote_work_policy_id,
         mergedData.full_address,
         mergedData.emergency_contact_name,
         mergedData.emergency_contact_phone,
@@ -307,10 +431,22 @@ r.get("/:id", async (req, res) => {
     const { id } = req.params;
     const { rows } = await q(
       `SELECT e.*, d.name as department_name, l.name as location_name,
-              COALESCE(e.hourly_rate, comp.regular_rate) AS hourly_rate
+              COALESCE(e.hourly_rate, comp.regular_rate) AS hourly_rate,
+              jt.name AS job_title_name,
+              bp.name AS benefits_package_name,
+              ws.name AS work_schedule_name,
+              op.name AS overtime_policy_name,
+              ap.name AS attendance_policy_name,
+              rwp.name AS remote_work_policy_name
        FROM employees e 
        LEFT JOIN departments d ON e.department_id = d.id 
        LEFT JOIN locations l ON e.location_id = l.id 
+       LEFT JOIN job_titles jt ON jt.id = e.job_title_id
+       LEFT JOIN benefits_packages bp ON bp.id = e.benefits_package_id
+       LEFT JOIN work_schedules ws ON ws.id = e.work_schedule_id
+       LEFT JOIN overtime_policies op ON op.id = e.overtime_policy_id
+       LEFT JOIN attendance_policies ap ON ap.id = e.attendance_policy_id
+       LEFT JOIN remote_work_policies rwp ON rwp.id = e.remote_work_policy_id
        LEFT JOIN LATERAL (
          SELECT regular_rate
          FROM employee_compensation ec

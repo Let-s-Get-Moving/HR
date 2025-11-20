@@ -737,7 +737,16 @@
       "deleteError": "Échec de la suppression du jour férié",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce jour férié?",
       "noHolidays": "Aucun jour férié trouvé",
-      "upcoming": "À venir"
+      "upcoming": "À venir",
+      "appliesTo": "S'Applique À",
+      "appliesToAll": "Tous les Employés",
+      "appliesToDepartment": "Département",
+      "appliesToJobTitle": "Titre du Poste",
+      "appliesToEmployee": "Employé",
+      "selectDepartment": "Sélectionner le Département",
+      "selectJobTitle": "Sélectionner le Titre du Poste",
+      "selectEmployee": "Sélectionner l'Employé",
+      "select": "Sélectionner"
     },
     "jobTitles": {
       "title": "Titres de Poste et Positions",

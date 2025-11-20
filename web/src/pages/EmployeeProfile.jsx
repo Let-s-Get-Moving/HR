@@ -20,6 +20,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const [editData, setEditData] = useState({});
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
+  const [benefitsPackages, setBenefitsPackages] = useState([]);
+  const [workSchedules, setWorkSchedules] = useState([]);
+  const [overtimePolicies, setOvertimePolicies] = useState([]);
+  const [attendancePolicies, setAttendancePolicies] = useState([]);
+  const [remoteWorkPolicies, setRemoteWorkPolicies] = useState([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadData, setUploadData] = useState({
     doc_type: 'Other',
@@ -40,7 +46,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
     console.log(`🔄 [EmployeeProfile] ===== Loading data for employee ${employeeId} =====`);
     try {
       console.log(`🔄 [EmployeeProfile] Fetching employee data...`);
-      const [empData, timeData, docData, trainingData, payrollData, hrData, deptsData, locsData] = await Promise.all([
+      const [empData, timeData, docData, trainingData, payrollData, hrData, deptsData, locsData, jobTitlesData, benefitsData, schedulesData, overtimeData, attendanceData, remoteData] = await Promise.all([
         API(`/api/employees/${employeeId}`),
         API(`/api/employees/${employeeId}/time-entries`),
         API(`/api/employees/${employeeId}/documents`),
@@ -48,7 +54,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         API(`/api/employees/${employeeId}/payroll-history`),
         API(`/api/employees/${employeeId}/hr-details`),
         API(`/api/employees/departments`).catch(() => []),
-        API(`/api/employees/locations`).catch(() => [])
+        API(`/api/employees/locations`).catch(() => []),
+        API(`/api/settings/job-titles`).catch(() => []),
+        API(`/api/settings/benefits-packages`).catch(() => []),
+        API(`/api/settings/work-schedules`).catch(() => []),
+        API(`/api/settings/overtime-policies`).catch(() => []),
+        API(`/api/settings/attendance-policies`).catch(() => []),
+        API(`/api/settings/remote-work-policies`).catch(() => [])
       ]);
       
       console.log(`✅ [EmployeeProfile] Employee data loaded:`, {
@@ -87,6 +99,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       setHrDetails(hrData);
       setDepartments(deptsData || []);
       setLocations(locsData || []);
+      setJobTitles(jobTitlesData || []);
+      setBenefitsPackages(benefitsData || []);
+      setWorkSchedules(schedulesData || []);
+      setOvertimePolicies(overtimeData || []);
+      setAttendancePolicies(attendanceData || []);
+      setRemoteWorkPolicies(remoteData || []);
       
       // If employee is terminated, fetch termination details
       if (empData.status === 'Terminated') {
@@ -237,7 +255,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       bank_account_number: employee.bank_account_number || '',
       contract_status: employee.contract_status || 'Not Sent',
       contract_signed_date: employee.contract_signed_date ? employee.contract_signed_date.split('T')[0] : '',
-      gift_card_sent: employee.gift_card_sent || false
+      gift_card_sent: employee.gift_card_sent || false,
+      // Settings
+      job_title_id: employee.job_title_id || null,
+      benefits_package_id: employee.benefits_package_id || null,
+      work_schedule_id: employee.work_schedule_id || null,
+      overtime_policy_id: employee.overtime_policy_id || null,
+      attendance_policy_id: employee.attendance_policy_id || null,
+      remote_work_policy_id: employee.remote_work_policy_id || null
     });
     setIsEditing(true);
   };
@@ -851,6 +876,114 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   ) : (
                     <span>{employee.probation_end ? formatShortDate(employee.probation_end) : t('employeeProfile.notSet')}</span>
                   )}
+                </div>
+                {/* Settings Section */}
+                <div className="mt-6 pt-6 border-t border-neutral-700">
+                  <h4 className="text-md font-semibold mb-4 text-neutral-300">{t('employeeProfile.settings')}</h4>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">{t('employeeProfile.jobTitle')}:</span>
+                      {isEditing ? (
+                        <select
+                          value={editData.job_title_id || ''}
+                          onChange={(e) => setEditData({...editData, job_title_id: parseInt(e.target.value) || null})}
+                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                        >
+                          <option value="">{t('employeeProfile.notAssigned')}</option>
+                          {jobTitles.filter(jt => !editData.department_id || jt.department_id === editData.department_id).map(jt => (
+                            <option key={jt.id} value={jt.id}>{jt.name}{jt.department_name ? ` (${jt.department_name})` : ''}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{employee.job_title_name || t('employeeProfile.notAssigned')}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">{t('employeeProfile.benefitsPackage')}:</span>
+                      {isEditing ? (
+                        <select
+                          value={editData.benefits_package_id || ''}
+                          onChange={(e) => setEditData({...editData, benefits_package_id: parseInt(e.target.value) || null})}
+                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                        >
+                          <option value="">{t('employeeProfile.notAssigned')}</option>
+                          {benefitsPackages.map(bp => (
+                            <option key={bp.id} value={bp.id}>{bp.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{employee.benefits_package_name || t('employeeProfile.notAssigned')}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">{t('employeeProfile.workSchedule')}:</span>
+                      {isEditing ? (
+                        <select
+                          value={editData.work_schedule_id || ''}
+                          onChange={(e) => setEditData({...editData, work_schedule_id: parseInt(e.target.value) || null})}
+                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                        >
+                          <option value="">{t('employeeProfile.notAssigned')}</option>
+                          {workSchedules.map(ws => (
+                            <option key={ws.id} value={ws.id}>{ws.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{employee.work_schedule_name || t('employeeProfile.notAssigned')}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">{t('employeeProfile.overtimePolicy')}:</span>
+                      {isEditing ? (
+                        <select
+                          value={editData.overtime_policy_id || ''}
+                          onChange={(e) => setEditData({...editData, overtime_policy_id: parseInt(e.target.value) || null})}
+                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                        >
+                          <option value="">{t('employeeProfile.notAssigned')}</option>
+                          {overtimePolicies.map(op => (
+                            <option key={op.id} value={op.id}>{op.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{employee.overtime_policy_name || t('employeeProfile.notAssigned')}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">{t('employeeProfile.attendancePolicy')}:</span>
+                      {isEditing ? (
+                        <select
+                          value={editData.attendance_policy_id || ''}
+                          onChange={(e) => setEditData({...editData, attendance_policy_id: parseInt(e.target.value) || null})}
+                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                        >
+                          <option value="">{t('employeeProfile.notAssigned')}</option>
+                          {attendancePolicies.map(ap => (
+                            <option key={ap.id} value={ap.id}>{ap.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{employee.attendance_policy_name || t('employeeProfile.notAssigned')}</span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">{t('employeeProfile.remoteWorkPolicy')}:</span>
+                      {isEditing ? (
+                        <select
+                          value={editData.remote_work_policy_id || ''}
+                          onChange={(e) => setEditData({...editData, remote_work_policy_id: parseInt(e.target.value) || null})}
+                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                        >
+                          <option value="">{t('employeeProfile.notAssigned')}</option>
+                          {remoteWorkPolicies.map(rwp => (
+                            <option key={rwp.id} value={rwp.id}>{rwp.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{employee.remote_work_policy_name || t('employeeProfile.notAssigned')}</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

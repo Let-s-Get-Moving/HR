@@ -578,7 +578,7 @@ r.get("/holidays", async (_req, res) => {
 // POST /api/leave/holidays - Add holiday (manager/admin only)
 r.post("/holidays", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
-    const { date, description, is_company_closure } = req.body;
+    const { date, description, is_company_closure, applies_to_type, applies_to_id } = req.body;
     
     // Validation
     if (!date) {
@@ -601,6 +601,38 @@ r.post("/holidays", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), asyn
       return res.status(400).json({ error: 'Invalid date format' });
     }
     
+    // Validate applies_to_type
+    const validAppliesToTypes = ['All', 'Department', 'JobTitle', 'Employee'];
+    const finalAppliesToType = applies_to_type || 'All';
+    if (!validAppliesToTypes.includes(finalAppliesToType)) {
+      return res.status(400).json({ error: 'Invalid applies_to_type' });
+    }
+    
+    // Validate applies_to_id if type is not 'All'
+    if (finalAppliesToType !== 'All' && (!applies_to_id || isNaN(parseInt(applies_to_id, 10)))) {
+      return res.status(400).json({ error: 'applies_to_id is required when applies_to_type is not "All"' });
+    }
+    
+    // Validate applies_to_id exists in the referenced table
+    if (finalAppliesToType === 'Department' && applies_to_id) {
+      const deptCheck = await q('SELECT id FROM departments WHERE id = $1', [applies_to_id]);
+      if (deptCheck.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid department ID' });
+      }
+    }
+    if (finalAppliesToType === 'JobTitle' && applies_to_id) {
+      const jobCheck = await q('SELECT id FROM job_titles WHERE id = $1', [applies_to_id]);
+      if (jobCheck.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid job title ID' });
+      }
+    }
+    if (finalAppliesToType === 'Employee' && applies_to_id) {
+      const empCheck = await q('SELECT id FROM employees WHERE id = $1', [applies_to_id]);
+      if (empCheck.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid employee ID' });
+      }
+    }
+    
     // Check if holiday already exists for this date
     const existing = await q(`SELECT id FROM leave_calendar WHERE date = $1`, [date]);
     if (existing.rows.length > 0) {
@@ -609,15 +641,117 @@ r.post("/holidays", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), asyn
     
     // Insert new holiday
     const result = await q(`
-      INSERT INTO leave_calendar (date, description, is_holiday, is_company_closure) 
-      VALUES ($1, $2, true, $3) 
+      INSERT INTO leave_calendar (date, description, is_holiday, is_company_closure, applies_to_type, applies_to_id) 
+      VALUES ($1, $2, true, $3, $4, $5) 
       RETURNING *
-    `, [date, trimmedDescription, is_company_closure !== undefined ? is_company_closure : true]);
+    `, [
+      date, 
+      trimmedDescription, 
+      is_company_closure !== undefined ? is_company_closure : true,
+      finalAppliesToType,
+      finalAppliesToType === 'All' ? null : parseInt(applies_to_id, 10)
+    ]);
     
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creating holiday:', error);
     res.status(500).json({ error: 'Failed to create holiday' });
+  }
+});
+
+// PUT /api/leave/holidays/:id - Update holiday (manager/admin only)
+r.put("/holidays/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const holidayId = parseInt(req.params.id, 10);
+    const { date, description, is_company_closure, applies_to_type, applies_to_id } = req.body;
+    
+    if (isNaN(holidayId)) {
+      return res.status(400).json({ error: 'Invalid holiday ID' });
+    }
+    
+    // Check if holiday exists
+    const holidayCheck = await q(`SELECT id FROM leave_calendar WHERE id = $1 AND is_holiday = true`, [holidayId]);
+    if (holidayCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Holiday not found' });
+    }
+    
+    // Validate applies_to_type if provided
+    let finalAppliesToType = applies_to_type;
+    if (applies_to_type !== undefined) {
+      const validAppliesToTypes = ['All', 'Department', 'JobTitle', 'Employee'];
+      if (!validAppliesToTypes.includes(applies_to_type)) {
+        return res.status(400).json({ error: 'Invalid applies_to_type' });
+      }
+      finalAppliesToType = applies_to_type;
+    }
+    
+    // Validate applies_to_id if type is not 'All'
+    if (finalAppliesToType && finalAppliesToType !== 'All' && (!applies_to_id || isNaN(parseInt(applies_to_id, 10)))) {
+      return res.status(400).json({ error: 'applies_to_id is required when applies_to_type is not "All"' });
+    }
+    
+    // Validate applies_to_id exists
+    if (finalAppliesToType === 'Department' && applies_to_id) {
+      const deptCheck = await q('SELECT id FROM departments WHERE id = $1', [applies_to_id]);
+      if (deptCheck.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid department ID' });
+      }
+    }
+    if (finalAppliesToType === 'JobTitle' && applies_to_id) {
+      const jobCheck = await q('SELECT id FROM job_titles WHERE id = $1', [applies_to_id]);
+      if (jobCheck.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid job title ID' });
+      }
+    }
+    if (finalAppliesToType === 'Employee' && applies_to_id) {
+      const empCheck = await q('SELECT id FROM employees WHERE id = $1', [applies_to_id]);
+      if (empCheck.rows.length === 0) {
+        return res.status(400).json({ error: 'Invalid employee ID' });
+      }
+    }
+    
+    // Build update query dynamically
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+    
+    if (date !== undefined) {
+      updates.push(`date = $${paramCount++}`);
+      values.push(date);
+    }
+    if (description !== undefined) {
+      updates.push(`description = $${paramCount++}`);
+      values.push(description.trim());
+    }
+    if (is_company_closure !== undefined) {
+      updates.push(`is_company_closure = $${paramCount++}`);
+      values.push(is_company_closure);
+    }
+    if (finalAppliesToType !== undefined) {
+      updates.push(`applies_to_type = $${paramCount++}`);
+      values.push(finalAppliesToType);
+    }
+    if (applies_to_id !== undefined) {
+      updates.push(`applies_to_id = $${paramCount++}`);
+      values.push(finalAppliesToType === 'All' ? null : parseInt(applies_to_id, 10));
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+    
+    values.push(holidayId);
+    const result = await q(`
+      UPDATE leave_calendar 
+      SET ${updates.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating holiday:', error);
+    res.status(500).json({ error: 'Failed to update holiday' });
   }
 });
 
@@ -681,8 +815,8 @@ r.get("/calendar", async (req, res) => {
     
     leaveQuery += ` ORDER BY lr.start_date`;
     
-    // Get holidays
-    const holidaysQuery = `
+    // Get holidays - filter based on employee if provided
+    let holidaysQuery = `
       SELECT id, date, description, is_holiday, is_company_closure,
              NULL as employee_id, NULL as first_name, NULL as last_name,
              NULL as leave_type_name, NULL as color,
@@ -690,12 +824,43 @@ r.get("/calendar", async (req, res) => {
       FROM leave_calendar
       WHERE is_holiday = true
       AND date >= $1 AND date <= $2
-      ORDER BY date
     `;
+    
+    const holidayParams = [startDate, endDate];
+    
+    // Filter holidays based on employee's assignments if employee context is available
+    if (req.employeeId) {
+      // Get employee's department and job_title
+      const empResult = await q(`
+        SELECT department_id, job_title_id 
+        FROM employees 
+        WHERE id = $1
+      `, [req.employeeId]);
+      
+      if (empResult.rows.length > 0) {
+        const emp = empResult.rows[0];
+        const empDeptId = emp.department_id;
+        const empJobTitleId = emp.job_title_id;
+        
+        // Add filtering: show holidays that apply to 'All' OR match employee's department/job_title/employee_id
+        holidaysQuery += ` AND (
+          applies_to_type = 'All' 
+          OR (applies_to_type = 'Department' AND applies_to_id = $${holidayParams.length + 1})
+          OR (applies_to_type = 'JobTitle' AND applies_to_id = $${holidayParams.length + 2})
+          OR (applies_to_type = 'Employee' AND applies_to_id = $${holidayParams.length + 3})
+        )`;
+        holidayParams.push(empDeptId, empJobTitleId, req.employeeId);
+      }
+    } else {
+      // If no employee context, show only 'All' holidays (for managers viewing all)
+      holidaysQuery += ` AND applies_to_type = 'All'`;
+    }
+    
+    holidaysQuery += ` ORDER BY date`;
     
     const [leaveRows, holidayRows] = await Promise.all([
       q(leaveQuery, params),
-      q(holidaysQuery, [startDate, endDate])
+      q(holidaysQuery, holidayParams)
     ]);
     
     // Combine results

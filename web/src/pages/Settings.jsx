@@ -78,8 +78,12 @@ export default function Settings() {
   const [newHoliday, setNewHoliday] = useState({
     date: '',
     description: '',
-    is_company_closure: true
+    is_company_closure: true,
+    applies_to_type: 'All',
+    applies_to_id: null
   });
+  const [editingHoliday, setEditingHoliday] = useState(null);
+  const [employees, setEmployees] = useState([]);
   const [addingHoliday, setAddingHoliday] = useState(false);
   const [deletingHoliday, setDeletingHoliday] = useState(null);
   const [holidayError, setHolidayError] = useState('');
@@ -252,8 +256,21 @@ export default function Settings() {
   useEffect(() => {
     if (showHolidaysModal) {
       loadHolidays();
+      loadDepartments();
+      loadJobTitles();
+      loadEmployees();
     }
   }, [showHolidaysModal]);
+  
+  const loadEmployees = async () => {
+    try {
+      const emps = await API("/api/employees").catch(() => []);
+      setEmployees(emps || []);
+    } catch (error) {
+      console.error("Error loading employees:", error);
+      setEmployees([]);
+    }
+  };
 
   useEffect(() => {
     if (showJobTitlesModal) {
@@ -978,7 +995,9 @@ export default function Settings() {
       setNewHoliday({
         date: '',
         description: '',
-        is_company_closure: true
+        is_company_closure: true,
+        applies_to_type: 'All',
+        applies_to_id: null
       });
       await loadHolidays();
     } catch (error) {
@@ -2516,6 +2535,7 @@ export default function Settings() {
                             setNewLeaveType({...newLeaveType, is_paid: e.target.checked});
                           }
                         }}
+                        onClick={(e) => e.stopPropagation()}
                         className="mr-2"
                       />
                       <label htmlFor="modal_is_paid" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
@@ -2532,6 +2552,7 @@ export default function Settings() {
                             setNewLeaveType({...newLeaveType, requires_approval: e.target.checked});
                           }
                         }}
+                        onClick={(e) => e.stopPropagation()}
                         className="mr-2"
                       />
                       <label htmlFor="modal_requires_approval" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
@@ -2746,13 +2767,61 @@ export default function Settings() {
                       id="modal_is_company_closure"
                       checked={newHoliday.is_company_closure}
                       onChange={(e) => setNewHoliday({...newHoliday, is_company_closure: e.target.checked})}
+                      onClick={(e) => e.stopPropagation()}
                       className="mr-2"
                     />
                     <label htmlFor="modal_is_company_closure" className="text-sm">{t('settings.holidays.companyClosure')}</label>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">{t('settings.holidays.appliesTo')}</label>
+                      <select
+                        value={newHoliday.applies_to_type || 'All'}
+                        onChange={(e) => {
+                          const newType = e.target.value;
+                          setNewHoliday({
+                            ...newHoliday,
+                            applies_to_type: newType,
+                            applies_to_id: newType === 'All' ? null : null
+                          });
+                        }}
+                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      >
+                        <option value="All">{t('settings.holidays.appliesToAll')}</option>
+                        <option value="Department">{t('settings.holidays.appliesToDepartment')}</option>
+                        <option value="JobTitle">{t('settings.holidays.appliesToJobTitle')}</option>
+                        <option value="Employee">{t('settings.holidays.appliesToEmployee')}</option>
+                      </select>
+                    </div>
+                    {newHoliday.applies_to_type && newHoliday.applies_to_type !== 'All' && (
+                      <div>
+                        <label className="block text-sm font-medium mb-2">
+                          {newHoliday.applies_to_type === 'Department' ? t('settings.holidays.selectDepartment') :
+                           newHoliday.applies_to_type === 'JobTitle' ? t('settings.holidays.selectJobTitle') :
+                           t('settings.holidays.selectEmployee')}
+                        </label>
+                        <select
+                          value={newHoliday.applies_to_id || ''}
+                          onChange={(e) => setNewHoliday({...newHoliday, applies_to_id: e.target.value ? parseInt(e.target.value, 10) : null})}
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        >
+                          <option value="">{t('settings.holidays.select')}</option>
+                          {newHoliday.applies_to_type === 'Department' && departments.map(dept => (
+                            <option key={dept.id} value={dept.id}>{dept.name}</option>
+                          ))}
+                          {newHoliday.applies_to_type === 'JobTitle' && jobTitles.map(jt => (
+                            <option key={jt.id} value={jt.id}>{jt.name}{jt.department_name ? ` (${jt.department_name})` : ''}</option>
+                          ))}
+                          {newHoliday.applies_to_type === 'Employee' && employees.map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
                   <button
                     type="submit"
-                    disabled={addingHoliday || !newHoliday.date || !newHoliday.description.trim()}
+                    disabled={addingHoliday || !newHoliday.date || !newHoliday.description.trim() || (newHoliday.applies_to_type !== 'All' && !newHoliday.applies_to_id)}
                     className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {addingHoliday ? t('settings.holidays.adding') : t('settings.holidays.add')}
@@ -2787,6 +2856,13 @@ export default function Settings() {
                             {holidayDate.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                             {holiday.is_company_closure && ` • ${t('settings.holidays.companyClosure')}`}
                             {isUpcoming && ` • ${t('settings.holidays.upcoming')}`}
+                            {holiday.applies_to_type && holiday.applies_to_type !== 'All' && (
+                              <span className="text-xs text-indigo-400 ml-2">
+                                • {holiday.applies_to_type === 'Department' ? t('settings.holidays.appliesToDepartment') :
+                                    holiday.applies_to_type === 'JobTitle' ? t('settings.holidays.appliesToJobTitle') :
+                                    t('settings.holidays.appliesToEmployee')}
+                              </span>
+                            )}
                           </div>
                         </div>
                         {canManage && (
@@ -3170,6 +3246,7 @@ export default function Settings() {
                                   setNewBenefitsPackage({...newBenefitsPackage, benefit_types: newTypes});
                                 }
                               }}
+                              onClick={(e) => e.stopPropagation()}
                               className="mr-2"
                             />
                             <span className="text-sm">{type}</span>
@@ -3385,7 +3462,7 @@ export default function Settings() {
                               const newDays = e.target.checked ? [...currentDays, day] : currentDays.filter(d => d !== day);
                               if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, days_of_week: newDays } : ws)); }
                               else { setNewWorkSchedule({...newWorkSchedule, days_of_week: newDays}); }
-                            }} className="mr-2" />
+                            }} onClick={(e) => e.stopPropagation()} className="mr-2" />
                             <span className="text-sm">{day}</span>
                           </label>
                         );
@@ -3399,7 +3476,7 @@ export default function Settings() {
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div className="flex items-center mt-6"><input type="checkbox" checked={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.flexible_hours || false : newWorkSchedule.flexible_hours}
-                      onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, flexible_hours: e.target.checked } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} className="mr-2" />
+                      onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, flexible_hours: e.target.checked } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} onClick={(e) => e.stopPropagation()} className="mr-2" />
                       <label className="text-sm">{t('settings.workSchedules.flexibleHours')}</label>
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.maxHoursPerWeek')}</label>
@@ -3502,7 +3579,7 @@ export default function Settings() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center"><input type="checkbox" checked={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.requires_approval !== false : newOvertimePolicy.requires_approval}
-                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, requires_approval: e.target.checked } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, requires_approval: e.target.checked}); } }} className="mr-2" />
+                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, requires_approval: e.target.checked } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, requires_approval: e.target.checked}); } }} onClick={(e) => e.stopPropagation()} className="mr-2" />
                       <label className="text-sm">{t('settings.overtimePolicies.requiresApproval')}</label>
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.appliesTo')}</label>
@@ -3756,7 +3833,7 @@ export default function Settings() {
                     </div>
                   )}
                   <div className="flex items-center"><input type="checkbox" checked={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.requires_approval !== false : newRemoteWorkPolicy.requires_approval}
-                    onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, requires_approval: e.target.checked } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, requires_approval: e.target.checked}); } }} className="mr-2" />
+                    onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, requires_approval: e.target.checked } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, requires_approval: e.target.checked}); } }} onClick={(e) => e.stopPropagation()} className="mr-2" />
                     <label className="text-sm">{t('settings.remoteWorkPolicies.requiresApproval')}</label>
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentProvided')}</label>

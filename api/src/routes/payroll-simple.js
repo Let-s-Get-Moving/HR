@@ -90,6 +90,7 @@ r.get("/calculate-live", async (req, res) => {
         e.email,
         d.name as department,
         COALESCE(e.hourly_rate, 0) as hourly_rate,
+        e.overtime_policy_id,
         
         -- Sum ALL timecard entries where work_date is in the period (no approval filter)
         COALESCE((
@@ -132,14 +133,26 @@ r.get("/calculate-live", async (req, res) => {
     
     console.log('💰 [PAYROLL] Calculating pay for each employee...');
     // Calculate pay for each employee
-    const results = payrolls.map(emp => {
+    const results = await Promise.all(payrolls.map(async (emp) => {
       const totalHours = parseFloat(emp.total_hours || 0);
       const overtimeHours = parseFloat(emp.overtime_hours || 0);
       const regularHours = totalHours - overtimeHours;
       const hourlyRate = parseFloat(emp.hourly_rate || 0);
       
+      // Get overtime policy for employee (default to 1.0x multiplier if none assigned)
+      let overtimeMultiplier = 1.0;
+      if (emp.overtime_policy_id) {
+        const policyResult = await q(
+          `SELECT multiplier FROM overtime_policies WHERE id = $1`,
+          [emp.overtime_policy_id]
+        );
+        if (policyResult.rows.length > 0) {
+          overtimeMultiplier = parseFloat(policyResult.rows[0].multiplier) || 1.0;
+        }
+      }
+      
       const regularPay = regularHours * hourlyRate;
-      const overtimePay = overtimeHours * hourlyRate * 1.5;
+      const overtimePay = overtimeHours * hourlyRate * overtimeMultiplier;
       const grossPay = regularPay + overtimePay;
       
       // 4% vacation
@@ -167,13 +180,15 @@ r.get("/calculate-live", async (req, res) => {
         net_pay: netPay,
         pay_date: payDate.toISOString().split('T')[0]
       };
-    }).filter(p => p.total_hours > 0); // Only show employees with hours
+    }));
     
-    const employeesWithHours = results.length;
-    const totalGrossPay = results.reduce((sum, emp) => sum + emp.gross_pay, 0);
-    const totalNetPay = results.reduce((sum, emp) => sum + emp.net_pay, 0);
-    const totalHours = results.reduce((sum, emp) => sum + emp.total_hours, 0);
-    const totalOvertimeHours = results.reduce((sum, emp) => sum + emp.overtime_hours, 0);
+    const filteredResults = results.filter(p => p.total_hours > 0); // Only show employees with hours
+    
+    const employeesWithHours = filteredResults.length;
+    const totalGrossPay = filteredResults.reduce((sum, emp) => sum + emp.gross_pay, 0);
+    const totalNetPay = filteredResults.reduce((sum, emp) => sum + emp.net_pay, 0);
+    const totalHours = filteredResults.reduce((sum, emp) => sum + emp.total_hours, 0);
+    const totalOvertimeHours = filteredResults.reduce((sum, emp) => sum + emp.overtime_hours, 0);
     
     const totalTime = Date.now() - startTime;
     console.log(`💰 [PAYROLL] ✅ Calculations complete!`);
@@ -184,7 +199,7 @@ r.get("/calculate-live", async (req, res) => {
     console.log(`💰 [PAYROLL] Total net pay: $${totalNetPay.toFixed(2)}`);
     console.log('═══════════════════════════════════════════════════════════\n');
     
-    res.json(results);
+    res.json(filteredResults);
   } catch (error) {
     const totalTime = Date.now() - startTime;
     console.error('\n═══════════════════════════════════════════════════════════');

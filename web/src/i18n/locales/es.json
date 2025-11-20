@@ -737,7 +737,16 @@
       "deleteError": "Error al eliminar día festivo",
       "confirmDelete": "¿Está seguro de que desea eliminar este día festivo?",
       "noHolidays": "No se encontraron días festivos",
-      "upcoming": "Próximo"
+      "upcoming": "Próximo",
+      "appliesTo": "Se Aplica A",
+      "appliesToAll": "Todos los Empleados",
+      "appliesToDepartment": "Departamento",
+      "appliesToJobTitle": "Título del Trabajo",
+      "appliesToEmployee": "Empleado",
+      "selectDepartment": "Seleccionar Departamento",
+      "selectJobTitle": "Seleccionar Título del Trabajo",
+      "selectEmployee": "Seleccionar Empleado",
+      "select": "Seleccionar"
     },
     "jobTitles": {
       "title": "Títulos de Trabajo y Posiciones",

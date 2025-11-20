@@ -9,6 +9,12 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [jobTitles, setJobTitles] = useState([]);
+  const [benefitsPackages, setBenefitsPackages] = useState([]);
+  const [workSchedules, setWorkSchedules] = useState([]);
+  const [overtimePolicies, setOvertimePolicies] = useState([]);
+  const [attendancePolicies, setAttendancePolicies] = useState([]);
+  const [remoteWorkPolicies, setRemoteWorkPolicies] = useState([]);
   const [formData, setFormData] = useState({
     // Step 1: Basic Information
     first_name: "",
@@ -26,6 +32,13 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
     user_role: "user",  // System Access Role - determines RBAC permissions
     probation_end: "",
     hourly_rate: 25,
+    // Settings
+    job_title_id: "",
+    benefits_package_id: "",
+    work_schedule_id: "",
+    overtime_policy_id: "",
+    attendance_policy_id: "",
+    remote_work_policy_id: "",
     
     // Step 3: Personal Details & Banking
     full_address: "",
@@ -54,12 +67,24 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
 
   const loadReferenceData = async () => {
     try {
-      const [deptData, locData] = await Promise.all([
+      const [deptData, locData, jobTitlesData, benefitsData, schedulesData, overtimeData, attendanceData, remoteData] = await Promise.all([
         API("/api/employees/departments"),
-        API("/api/employees/locations")
+        API("/api/employees/locations"),
+        API("/api/settings/job-titles"),
+        API("/api/settings/benefits-packages"),
+        API("/api/settings/work-schedules"),
+        API("/api/settings/overtime-policies"),
+        API("/api/settings/attendance-policies"),
+        API("/api/settings/remote-work-policies")
       ]);
       setDepartments(deptData);
       setLocations(locData);
+      setJobTitles(jobTitlesData);
+      setBenefitsPackages(benefitsData);
+      setWorkSchedules(schedulesData);
+      setOvertimePolicies(overtimeData);
+      setAttendancePolicies(attendanceData);
+      setRemoteWorkPolicies(remoteData);
     } catch (error) {
       console.error("Error loading reference data:", error);
     }
@@ -86,6 +111,13 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
           department_id: formData.department_id || null,
           probation_end: formData.probation_end,
           hourly_rate: formData.hourly_rate,
+          // Settings
+          job_title_id: formData.job_title_id || null,
+          benefits_package_id: formData.benefits_package_id || null,
+          work_schedule_id: formData.work_schedule_id || null,
+          overtime_policy_id: formData.overtime_policy_id || null,
+          attendance_policy_id: formData.attendance_policy_id || null,
+          remote_work_policy_id: formData.remote_work_policy_id || null,
           // Step 3 data
           full_address: formData.full_address,
           sin_number: formData.sin_number,
@@ -335,6 +367,93 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               </div>
             </div>
             <p className="text-xs text-neutral-400">{t('employeeOnboarding.standardProbationPeriod')}</p>
+            
+            {/* Settings Section */}
+            <div className="mt-6 pt-6 border-t border-neutral-700">
+              <h4 className="text-md font-semibold mb-4 text-neutral-300">{t('employeeOnboarding.settings')}</h4>
+              <p className="text-xs text-neutral-400 mb-4">{t('employeeOnboarding.settingsOptional')}</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.jobTitle')}</label>
+                  <select
+                    value={formData.job_title_id}
+                    onChange={(e) => setFormData({...formData, job_title_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">{t('employeeOnboarding.selectJobTitle')}</option>
+                    {jobTitles.filter(jt => !formData.department_id || jt.department_id === parseInt(formData.department_id)).map(jt => (
+                      <option key={jt.id} value={jt.id}>{jt.name}{jt.department_name ? ` (${jt.department_name})` : ''}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.benefitsPackage')}</label>
+                  <select
+                    value={formData.benefits_package_id}
+                    onChange={(e) => setFormData({...formData, benefits_package_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">{t('employeeOnboarding.selectBenefitsPackage')}</option>
+                    {benefitsPackages.map(bp => (
+                      <option key={bp.id} value={bp.id}>{bp.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.workSchedule')}</label>
+                  <select
+                    value={formData.work_schedule_id}
+                    onChange={(e) => setFormData({...formData, work_schedule_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">{t('employeeOnboarding.selectWorkSchedule')}</option>
+                    {workSchedules.map(ws => (
+                      <option key={ws.id} value={ws.id}>{ws.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.overtimePolicy')}</label>
+                  <select
+                    value={formData.overtime_policy_id}
+                    onChange={(e) => setFormData({...formData, overtime_policy_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">{t('employeeOnboarding.selectOvertimePolicy')}</option>
+                    {overtimePolicies.map(op => (
+                      <option key={op.id} value={op.id}>{op.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.attendancePolicy')}</label>
+                  <select
+                    value={formData.attendance_policy_id}
+                    onChange={(e) => setFormData({...formData, attendance_policy_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">{t('employeeOnboarding.selectAttendancePolicy')}</option>
+                    {attendancePolicies.map(ap => (
+                      <option key={ap.id} value={ap.id}>{ap.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.remoteWorkPolicy')}</label>
+                  <select
+                    value={formData.remote_work_policy_id}
+                    onChange={(e) => setFormData({...formData, remote_work_policy_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
+                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">{t('employeeOnboarding.selectRemoteWorkPolicy')}</option>
+                    {remoteWorkPolicies.map(rwp => (
+                      <option key={rwp.id} value={rwp.id}>{rwp.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
           </motion.div>
         );
 

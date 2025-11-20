@@ -445,9 +445,9 @@ r.post("/calculate/:periodId", async (req, res) => {
     
     const period = periodResult.rows[0];
     
-    // Get all active employees
+    // Get all active employees with overtime policy
     const employeesResult = await q(
-      `SELECT e.*, d.name as department
+      `SELECT e.*, d.name as department, e.overtime_policy_id
        FROM employees e
        LEFT JOIN departments d ON e.department_id = d.id
        WHERE e.status = 'Active'`
@@ -461,6 +461,25 @@ r.post("/calculate/:periodId", async (req, res) => {
     for (const employee of employeesResult.rows) {
       try {
         console.log(`Processing employee ${employee.id}: ${employee.first_name} ${employee.last_name}`);
+        
+        // Get overtime policy for employee (default to 1.0x multiplier if none assigned)
+        let overtimeMultiplier = 1.0;
+        let weeklyThreshold = 40.0;
+        let dailyThreshold = 8.0;
+        
+        if (employee.overtime_policy_id) {
+          const policyResult = await q(
+            `SELECT multiplier, weekly_threshold_hours, daily_threshold_hours 
+             FROM overtime_policies 
+             WHERE id = $1`,
+            [employee.overtime_policy_id]
+          );
+          if (policyResult.rows.length > 0) {
+            overtimeMultiplier = parseFloat(policyResult.rows[0].multiplier) || 1.0;
+            weeklyThreshold = parseFloat(policyResult.rows[0].weekly_threshold_hours) || 40.0;
+            dailyThreshold = parseFloat(policyResult.rows[0].daily_threshold_hours) || 8.0;
+          }
+        }
         
         // Get time entries for the period
         const timeEntriesResult = await q(
@@ -477,11 +496,13 @@ r.post("/calculate/:periodId", async (req, res) => {
         const totalHours = parseFloat(timeData.total_hours) || 0;
         const totalOvertime = parseFloat(timeData.total_overtime) || 0;
         
-        const baseHours = Math.min(totalHours, 40); // Regular hours capped at 40
-        const overtimeHours = Math.max(0, totalHours - 40) + totalOvertime;
+        // Use policy thresholds instead of hardcoded 40
+        const baseHours = Math.min(totalHours, weeklyThreshold);
+        const overtimeHours = Math.max(0, totalHours - weeklyThreshold) + totalOvertime;
         const hourlyRate = parseFloat(employee.hourly_rate) || 0;
         
         console.log(`  Time data: ${totalHours} total hours, ${totalOvertime} overtime hours`);
+        console.log(`  Policy: ${weeklyThreshold}h weekly threshold, ${overtimeMultiplier}x multiplier`);
         console.log(`  Calculated: ${baseHours} base hours, ${overtimeHours} overtime hours, $${hourlyRate}/hr`);
         
         // Calculate commission (simplified)
