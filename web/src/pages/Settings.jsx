@@ -209,6 +209,20 @@ export default function Settings() {
 
   // Track if component is mounted (avoid double-loading on first render)
   const isInitialMount = React.useRef(true);
+  
+  // Loading refs to prevent duplicate API requests
+  const loadingRefs = useRef({
+    departments: false,
+    holidays: false,
+    jobTitles: false,
+    employees: false,
+    leaveTypes: false,
+    benefitsPackages: false,
+    workSchedules: false,
+    overtimePolicies: false,
+    attendancePolicies: false,
+    remoteWorkPolicies: false
+  });
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -240,25 +254,63 @@ export default function Settings() {
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
 
-  // Load data when modals are opened
+  // Load data when modals are opened - with duplicate prevention
   useEffect(() => {
-    if (showDepartmentsModal) {
-      loadDepartments();
+    if (showDepartmentsModal && !loadingRefs.current.departments) {
+      loadingRefs.current.departments = true;
+      loadDepartments().finally(() => {
+        loadingRefs.current.departments = false;
+      });
+    }
+    if (!showDepartmentsModal) {
+      loadingRefs.current.departments = false;
     }
   }, [showDepartmentsModal]);
 
   useEffect(() => {
-    if (showLeavePoliciesModal) {
-      loadLeaveTypes();
+    if (showLeavePoliciesModal && !loadingRefs.current.leaveTypes) {
+      loadingRefs.current.leaveTypes = true;
+      loadLeaveTypes().finally(() => {
+        loadingRefs.current.leaveTypes = false;
+      });
+    }
+    if (!showLeavePoliciesModal) {
+      loadingRefs.current.leaveTypes = false;
     }
   }, [showLeavePoliciesModal]);
 
   useEffect(() => {
     if (showHolidaysModal) {
-      loadHolidays();
-      loadDepartments();
-      loadJobTitles();
-      loadEmployees();
+      if (!loadingRefs.current.holidays) {
+        loadingRefs.current.holidays = true;
+        loadHolidays().finally(() => {
+          loadingRefs.current.holidays = false;
+        });
+      }
+      if (!loadingRefs.current.departments) {
+        loadingRefs.current.departments = true;
+        loadDepartments().finally(() => {
+          loadingRefs.current.departments = false;
+        });
+      }
+      if (!loadingRefs.current.jobTitles) {
+        loadingRefs.current.jobTitles = true;
+        loadJobTitles().finally(() => {
+          loadingRefs.current.jobTitles = false;
+        });
+      }
+      if (!loadingRefs.current.employees) {
+        loadingRefs.current.employees = true;
+        loadEmployees().finally(() => {
+          loadingRefs.current.employees = false;
+        });
+      }
+    }
+    if (!showHolidaysModal) {
+      loadingRefs.current.holidays = false;
+      loadingRefs.current.departments = false;
+      loadingRefs.current.jobTitles = false;
+      loadingRefs.current.employees = false;
     }
   }, [showHolidaysModal]);
   
@@ -274,44 +326,130 @@ export default function Settings() {
 
   useEffect(() => {
     if (showJobTitlesModal) {
-      loadJobTitles();
-      loadDepartments(); // Need departments for dropdown
+      if (!loadingRefs.current.jobTitles) {
+        loadingRefs.current.jobTitles = true;
+        loadJobTitles().finally(() => {
+          loadingRefs.current.jobTitles = false;
+        });
+      }
+      if (!loadingRefs.current.departments) {
+        loadingRefs.current.departments = true;
+        loadDepartments().finally(() => {
+          loadingRefs.current.departments = false;
+        });
+      }
+    }
+    if (!showJobTitlesModal) {
+      loadingRefs.current.jobTitles = false;
+      loadingRefs.current.departments = false;
     }
   }, [showJobTitlesModal]);
 
   useEffect(() => {
-    if (showBenefitsPackagesModal) {
-      loadBenefitsPackages();
+    if (showBenefitsPackagesModal && !loadingRefs.current.benefitsPackages) {
+      loadingRefs.current.benefitsPackages = true;
+      loadBenefitsPackages().finally(() => {
+        loadingRefs.current.benefitsPackages = false;
+      });
+    }
+    if (!showBenefitsPackagesModal) {
+      loadingRefs.current.benefitsPackages = false;
     }
   }, [showBenefitsPackagesModal]);
 
   useEffect(() => {
-    if (showWorkSchedulesModal) {
-      loadWorkSchedules();
+    if (showWorkSchedulesModal && !loadingRefs.current.workSchedules) {
+      loadingRefs.current.workSchedules = true;
+      loadWorkSchedules().finally(() => {
+        loadingRefs.current.workSchedules = false;
+      });
+    }
+    if (!showWorkSchedulesModal) {
+      loadingRefs.current.workSchedules = false;
     }
   }, [showWorkSchedulesModal]);
 
   useEffect(() => {
     if (showOvertimePoliciesModal) {
-      loadOvertimePolicies();
-      loadDepartments();
-      loadJobTitles();
+      if (!loadingRefs.current.overtimePolicies) {
+        loadingRefs.current.overtimePolicies = true;
+        loadOvertimePolicies().finally(() => {
+          loadingRefs.current.overtimePolicies = false;
+        });
+      }
+      if (!loadingRefs.current.departments) {
+        loadingRefs.current.departments = true;
+        loadDepartments().finally(() => {
+          loadingRefs.current.departments = false;
+        });
+      }
+      if (!loadingRefs.current.jobTitles) {
+        loadingRefs.current.jobTitles = true;
+        loadJobTitles().finally(() => {
+          loadingRefs.current.jobTitles = false;
+        });
+      }
+    }
+    if (!showOvertimePoliciesModal) {
+      loadingRefs.current.overtimePolicies = false;
+      loadingRefs.current.departments = false;
+      loadingRefs.current.jobTitles = false;
     }
   }, [showOvertimePoliciesModal]);
 
   useEffect(() => {
     if (showAttendancePoliciesModal) {
-      loadAttendancePolicies();
-      loadDepartments();
-      loadJobTitles();
+      if (!loadingRefs.current.attendancePolicies) {
+        loadingRefs.current.attendancePolicies = true;
+        loadAttendancePolicies().finally(() => {
+          loadingRefs.current.attendancePolicies = false;
+        });
+      }
+      if (!loadingRefs.current.departments) {
+        loadingRefs.current.departments = true;
+        loadDepartments().finally(() => {
+          loadingRefs.current.departments = false;
+        });
+      }
+      if (!loadingRefs.current.jobTitles) {
+        loadingRefs.current.jobTitles = true;
+        loadJobTitles().finally(() => {
+          loadingRefs.current.jobTitles = false;
+        });
+      }
+    }
+    if (!showAttendancePoliciesModal) {
+      loadingRefs.current.attendancePolicies = false;
+      loadingRefs.current.departments = false;
+      loadingRefs.current.jobTitles = false;
     }
   }, [showAttendancePoliciesModal]);
 
   useEffect(() => {
     if (showRemoteWorkPoliciesModal) {
-      loadRemoteWorkPolicies();
-      loadDepartments();
-      loadJobTitles();
+      if (!loadingRefs.current.remoteWorkPolicies) {
+        loadingRefs.current.remoteWorkPolicies = true;
+        loadRemoteWorkPolicies().finally(() => {
+          loadingRefs.current.remoteWorkPolicies = false;
+        });
+      }
+      if (!loadingRefs.current.departments) {
+        loadingRefs.current.departments = true;
+        loadDepartments().finally(() => {
+          loadingRefs.current.departments = false;
+        });
+      }
+      if (!loadingRefs.current.jobTitles) {
+        loadingRefs.current.jobTitles = true;
+        loadJobTitles().finally(() => {
+          loadingRefs.current.jobTitles = false;
+        });
+      }
+    }
+    if (!showRemoteWorkPoliciesModal) {
+      loadingRefs.current.remoteWorkPolicies = false;
+      loadingRefs.current.departments = false;
+      loadingRefs.current.jobTitles = false;
     }
   }, [showRemoteWorkPoliciesModal]);
 
