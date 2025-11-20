@@ -215,9 +215,6 @@ export default function Settings() {
   
   // Track which modals have already loaded to prevent double-loading
   const loadedModalsRef = useRef(new Set());
-  
-  // Loading states for modals to prevent blinking
-  const [loadingModalData, setLoadingModalData] = useState(false);
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -285,20 +282,13 @@ export default function Settings() {
       loadedModalsRef.current.add('holidays');
       
       const loadAll = async () => {
-        setLoadingModalData(true);
-        
         try {
           const promises = [];
-          let holidaysData = null;
-          let deptsData = null;
-          let titlesData = null;
-          let empsData = null;
           
           if (!inFlightRequests.has('holidays')) {
             inFlightRequests.add('holidays');
             promises.push(
-              API("/api/leave/holidays").catch(() => []).then(data => {
-                holidaysData = data;
+              API("/api/leave/holidays").catch(() => []).finally(() => {
                 inFlightRequests.delete('holidays');
               })
             );
@@ -306,8 +296,7 @@ export default function Settings() {
           if (!inFlightRequests.has('departments')) {
             inFlightRequests.add('departments');
             promises.push(
-              API("/api/employees/departments").catch(() => []).then(data => {
-                deptsData = data;
+              API("/api/employees/departments").catch(() => []).finally(() => {
                 inFlightRequests.delete('departments');
               })
             );
@@ -315,8 +304,7 @@ export default function Settings() {
           if (!inFlightRequests.has('jobTitles')) {
             inFlightRequests.add('jobTitles');
             promises.push(
-              API("/api/settings/job-titles").catch(() => []).then(data => {
-                titlesData = data;
+              API("/api/settings/job-titles").catch(() => []).finally(() => {
                 inFlightRequests.delete('jobTitles');
               })
             );
@@ -324,29 +312,27 @@ export default function Settings() {
           if (!inFlightRequests.has('employees')) {
             inFlightRequests.add('employees');
             promises.push(
-              API("/api/employees").catch(() => []).then(data => {
-                empsData = data;
+              API("/api/employees").catch(() => []).finally(() => {
                 inFlightRequests.delete('employees');
               })
             );
           }
           
-          await Promise.all(promises);
+          const [holidaysData, deptsData, titlesData, empsData] = await Promise.all(promises);
           
-          // Set ALL state at once
-          if (holidaysData !== null) setHolidays(holidaysData || []);
-          if (deptsData !== null) setDepartments(deptsData || []);
-          if (titlesData !== null) setJobTitles(titlesData || []);
-          if (empsData !== null) setEmployees(empsData || []);
-        } finally {
-          setLoadingModalData(false);
+          // Update state in a single batch
+          setHolidays(holidaysData || []);
+          setDepartments(deptsData || []);
+          setJobTitles(titlesData || []);
+          setEmployees(empsData || []);
+        } catch (error) {
+          console.error('Error loading modal data:', error);
         }
       };
       
       loadAll();
     } else if (!showHolidaysModal) {
       loadedModalsRef.current.delete('holidays');
-      setLoadingModalData(false);
     }
   }, [showHolidaysModal]);
   
@@ -365,18 +351,13 @@ export default function Settings() {
       loadedModalsRef.current.add('jobTitles');
       
       const loadAll = async () => {
-        setLoadingModalData(true);
-        
         try {
           const promises = [];
-          let titlesData = null;
-          let deptsData = null;
           
           if (!inFlightRequests.has('jobTitles')) {
             inFlightRequests.add('jobTitles');
             promises.push(
-              API("/api/settings/job-titles").catch(() => []).then(data => {
-                titlesData = data;
+              API("/api/settings/job-titles").catch(() => []).finally(() => {
                 inFlightRequests.delete('jobTitles');
               })
             );
@@ -384,27 +365,25 @@ export default function Settings() {
           if (!inFlightRequests.has('departments')) {
             inFlightRequests.add('departments');
             promises.push(
-              API("/api/employees/departments").catch(() => []).then(data => {
-                deptsData = data;
+              API("/api/employees/departments").catch(() => []).finally(() => {
                 inFlightRequests.delete('departments');
               })
             );
           }
           
-          await Promise.all(promises);
+          const [titlesData, deptsData] = await Promise.all(promises);
           
-          // Set ALL state at once in a single synchronous block
-          if (titlesData !== null) setJobTitles(titlesData || []);
-          if (deptsData !== null) setDepartments(deptsData || []);
-        } finally {
-          setLoadingModalData(false);
+          // Update state in a single batch
+          setJobTitles(titlesData || []);
+          setDepartments(deptsData || []);
+        } catch (error) {
+          console.error('Error loading modal data:', error);
         }
       };
       
       loadAll();
     } else if (!showJobTitlesModal) {
       loadedModalsRef.current.delete('jobTitles');
-      setLoadingModalData(false);
     }
   }, [showJobTitlesModal]);
 
@@ -443,19 +422,13 @@ export default function Settings() {
       loadedModalsRef.current.add('overtimePolicies');
       
       const loadAll = async () => {
-        setLoadingModalData(true);
-        
         try {
           const promises = [];
-          let policiesData = null;
-          let deptsData = null;
-          let titlesData = null;
           
           if (!inFlightRequests.has('overtimePolicies')) {
             inFlightRequests.add('overtimePolicies');
             promises.push(
-              API("/api/settings/overtime-policies").catch(() => []).then(data => {
-                policiesData = data;
+              API("/api/settings/overtime-policies").catch(() => []).finally(() => {
                 inFlightRequests.delete('overtimePolicies');
               })
             );
@@ -463,8 +436,7 @@ export default function Settings() {
           if (!inFlightRequests.has('departments')) {
             inFlightRequests.add('departments');
             promises.push(
-              API("/api/employees/departments").catch(() => []).then(data => {
-                deptsData = data;
+              API("/api/employees/departments").catch(() => []).finally(() => {
                 inFlightRequests.delete('departments');
               })
             );
@@ -472,28 +444,26 @@ export default function Settings() {
           if (!inFlightRequests.has('jobTitles')) {
             inFlightRequests.add('jobTitles');
             promises.push(
-              API("/api/settings/job-titles").catch(() => []).then(data => {
-                titlesData = data;
+              API("/api/settings/job-titles").catch(() => []).finally(() => {
                 inFlightRequests.delete('jobTitles');
               })
             );
           }
           
-          await Promise.all(promises);
+          const [policiesData, deptsData, titlesData] = await Promise.all(promises);
           
-          // Set ALL state at once
-          if (policiesData !== null) setOvertimePolicies(policiesData || []);
-          if (deptsData !== null) setDepartments(deptsData || []);
-          if (titlesData !== null) setJobTitles(titlesData || []);
-        } finally {
-          setLoadingModalData(false);
+          // Update state in a single batch
+          setOvertimePolicies(policiesData || []);
+          setDepartments(deptsData || []);
+          setJobTitles(titlesData || []);
+        } catch (error) {
+          console.error('Error loading modal data:', error);
         }
       };
       
       loadAll();
     } else if (!showOvertimePoliciesModal) {
       loadedModalsRef.current.delete('overtimePolicies');
-      setLoadingModalData(false);
     }
   }, [showOvertimePoliciesModal]);
 
@@ -502,19 +472,13 @@ export default function Settings() {
       loadedModalsRef.current.add('attendancePolicies');
       
       const loadAll = async () => {
-        setLoadingModalData(true);
-        
         try {
           const promises = [];
-          let policiesData = null;
-          let deptsData = null;
-          let titlesData = null;
           
           if (!inFlightRequests.has('attendancePolicies')) {
             inFlightRequests.add('attendancePolicies');
             promises.push(
-              API("/api/settings/attendance-policies").catch(() => []).then(data => {
-                policiesData = data;
+              API("/api/settings/attendance-policies").catch(() => []).finally(() => {
                 inFlightRequests.delete('attendancePolicies');
               })
             );
@@ -522,8 +486,7 @@ export default function Settings() {
           if (!inFlightRequests.has('departments')) {
             inFlightRequests.add('departments');
             promises.push(
-              API("/api/employees/departments").catch(() => []).then(data => {
-                deptsData = data;
+              API("/api/employees/departments").catch(() => []).finally(() => {
                 inFlightRequests.delete('departments');
               })
             );
@@ -531,28 +494,26 @@ export default function Settings() {
           if (!inFlightRequests.has('jobTitles')) {
             inFlightRequests.add('jobTitles');
             promises.push(
-              API("/api/settings/job-titles").catch(() => []).then(data => {
-                titlesData = data;
+              API("/api/settings/job-titles").catch(() => []).finally(() => {
                 inFlightRequests.delete('jobTitles');
               })
             );
           }
           
-          await Promise.all(promises);
+          const [policiesData, deptsData, titlesData] = await Promise.all(promises);
           
-          // Set ALL state at once
-          if (policiesData !== null) setAttendancePolicies(policiesData || []);
-          if (deptsData !== null) setDepartments(deptsData || []);
-          if (titlesData !== null) setJobTitles(titlesData || []);
-        } finally {
-          setLoadingModalData(false);
+          // Update state in a single batch
+          setAttendancePolicies(policiesData || []);
+          setDepartments(deptsData || []);
+          setJobTitles(titlesData || []);
+        } catch (error) {
+          console.error('Error loading modal data:', error);
         }
       };
       
       loadAll();
     } else if (!showAttendancePoliciesModal) {
       loadedModalsRef.current.delete('attendancePolicies');
-      setLoadingModalData(false);
     }
   }, [showAttendancePoliciesModal]);
 
@@ -561,19 +522,13 @@ export default function Settings() {
       loadedModalsRef.current.add('remoteWorkPolicies');
       
       const loadAll = async () => {
-        setLoadingModalData(true);
-        
         try {
           const promises = [];
-          let policiesData = null;
-          let deptsData = null;
-          let titlesData = null;
           
           if (!inFlightRequests.has('remoteWorkPolicies')) {
             inFlightRequests.add('remoteWorkPolicies');
             promises.push(
-              API("/api/settings/remote-work-policies").catch(() => []).then(data => {
-                policiesData = data;
+              API("/api/settings/remote-work-policies").catch(() => []).finally(() => {
                 inFlightRequests.delete('remoteWorkPolicies');
               })
             );
@@ -581,8 +536,7 @@ export default function Settings() {
           if (!inFlightRequests.has('departments')) {
             inFlightRequests.add('departments');
             promises.push(
-              API("/api/employees/departments").catch(() => []).then(data => {
-                deptsData = data;
+              API("/api/employees/departments").catch(() => []).finally(() => {
                 inFlightRequests.delete('departments');
               })
             );
@@ -590,28 +544,26 @@ export default function Settings() {
           if (!inFlightRequests.has('jobTitles')) {
             inFlightRequests.add('jobTitles');
             promises.push(
-              API("/api/settings/job-titles").catch(() => []).then(data => {
-                titlesData = data;
+              API("/api/settings/job-titles").catch(() => []).finally(() => {
                 inFlightRequests.delete('jobTitles');
               })
             );
           }
           
-          await Promise.all(promises);
+          const [policiesData, deptsData, titlesData] = await Promise.all(promises);
           
-          // Set ALL state at once
-          if (policiesData !== null) setRemoteWorkPolicies(policiesData || []);
-          if (deptsData !== null) setDepartments(deptsData || []);
-          if (titlesData !== null) setJobTitles(titlesData || []);
-        } finally {
-          setLoadingModalData(false);
+          // Update state in a single batch
+          setRemoteWorkPolicies(policiesData || []);
+          setDepartments(deptsData || []);
+          setJobTitles(titlesData || []);
+        } catch (error) {
+          console.error('Error loading modal data:', error);
         }
       };
       
       loadAll();
     } else if (!showRemoteWorkPoliciesModal) {
       loadedModalsRef.current.delete('remoteWorkPolicies');
-      setLoadingModalData(false);
     }
   }, [showRemoteWorkPoliciesModal]);
 
@@ -3105,14 +3057,6 @@ export default function Settings() {
             </button>
           </div>
 
-          {loadingModalData ? (
-            <div className="p-6 flex items-center justify-center min-h-[300px]">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-                <p className="text-secondary">Loading...</p>
-              </div>
-            </div>
-          ) : (
           <div className="p-6 overflow-y-auto flex-1">
             <p className="text-sm text-secondary mb-6">{t('settings.jobTitles.description')}</p>
 
@@ -3333,7 +3277,6 @@ export default function Settings() {
               )}
             </div>
           </div>
-          )}
         </motion.div>
       </div>
     );
