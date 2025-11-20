@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
@@ -338,123 +338,60 @@ export default function Settings() {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [showDepartmentsModal, showLeavePoliciesModal, showHolidaysModal]);
 
-  // Ensure only one modal is open at a time
+  // Ensure only one modal is open at a time - consolidated to prevent blinking
+  const isClosingModalsRef = useRef(false);
   useEffect(() => {
-    if (showDepartmentsModal) {
-      setShowLeavePoliciesModal(false);
-      setShowHolidaysModal(false);
-      setShowJobTitlesModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowAttendancePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
+    // Prevent infinite loops and unnecessary updates
+    if (isClosingModalsRef.current) return;
+    
+    const modalStates = {
+      departments: showDepartmentsModal,
+      leavePolicies: showLeavePoliciesModal,
+      holidays: showHolidaysModal,
+      jobTitles: showJobTitlesModal,
+      benefitsPackages: showBenefitsPackagesModal,
+      workSchedules: showWorkSchedulesModal,
+      overtimePolicies: showOvertimePoliciesModal,
+      attendancePolicies: showAttendancePoliciesModal,
+      remoteWorkPolicies: showRemoteWorkPoliciesModal
+    };
+    
+    const openModals = Object.entries(modalStates)
+      .filter(([_, isOpen]) => isOpen)
+      .map(([name]) => name);
+    
+    // If more than one modal is open, close all except the first one
+    if (openModals.length > 1) {
+      isClosingModalsRef.current = true;
+      const firstModal = openModals[0];
+      
+      // Batch all state updates - React 18+ automatically batches these
+      if (firstModal !== 'departments') setShowDepartmentsModal(false);
+      if (firstModal !== 'leavePolicies') setShowLeavePoliciesModal(false);
+      if (firstModal !== 'holidays') setShowHolidaysModal(false);
+      if (firstModal !== 'jobTitles') setShowJobTitlesModal(false);
+      if (firstModal !== 'benefitsPackages') setShowBenefitsPackagesModal(false);
+      if (firstModal !== 'workSchedules') setShowWorkSchedulesModal(false);
+      if (firstModal !== 'overtimePolicies') setShowOvertimePoliciesModal(false);
+      if (firstModal !== 'attendancePolicies') setShowAttendancePoliciesModal(false);
+      if (firstModal !== 'remoteWorkPolicies') setShowRemoteWorkPoliciesModal(false);
+      
+      // Reset ref after state updates complete
+      setTimeout(() => {
+        isClosingModalsRef.current = false;
+      }, 0);
     }
-  }, [showDepartmentsModal]);
-
-  useEffect(() => {
-    if (showLeavePoliciesModal) {
-      setShowDepartmentsModal(false);
-      setShowHolidaysModal(false);
-      setShowJobTitlesModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowAttendancePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
-    }
-  }, [showLeavePoliciesModal]);
-
-  useEffect(() => {
-    if (showHolidaysModal) {
-      setShowDepartmentsModal(false);
-      setShowLeavePoliciesModal(false);
-      setShowJobTitlesModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowAttendancePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
-    }
-  }, [showHolidaysModal]);
-
-  useEffect(() => {
-    if (showJobTitlesModal) {
-      setShowDepartmentsModal(false);
-      setShowLeavePoliciesModal(false);
-      setShowHolidaysModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowAttendancePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
-    }
-  }, [showJobTitlesModal]);
-
-  useEffect(() => {
-    if (showBenefitsPackagesModal) {
-      setShowDepartmentsModal(false);
-      setShowLeavePoliciesModal(false);
-      setShowHolidaysModal(false);
-      setShowJobTitlesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowAttendancePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
-    }
-  }, [showBenefitsPackagesModal]);
-
-  useEffect(() => {
-    if (showWorkSchedulesModal) {
-      setShowDepartmentsModal(false);
-      setShowLeavePoliciesModal(false);
-      setShowHolidaysModal(false);
-      setShowJobTitlesModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowAttendancePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
-    }
-  }, [showWorkSchedulesModal]);
-
-  useEffect(() => {
-    if (showOvertimePoliciesModal) {
-      setShowDepartmentsModal(false);
-      setShowLeavePoliciesModal(false);
-      setShowHolidaysModal(false);
-      setShowJobTitlesModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowAttendancePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
-    }
-  }, [showOvertimePoliciesModal]);
-
-  useEffect(() => {
-    if (showAttendancePoliciesModal) {
-      setShowDepartmentsModal(false);
-      setShowLeavePoliciesModal(false);
-      setShowHolidaysModal(false);
-      setShowJobTitlesModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowRemoteWorkPoliciesModal(false);
-    }
-  }, [showAttendancePoliciesModal]);
-
-  useEffect(() => {
-    if (showRemoteWorkPoliciesModal) {
-      setShowDepartmentsModal(false);
-      setShowLeavePoliciesModal(false);
-      setShowHolidaysModal(false);
-      setShowJobTitlesModal(false);
-      setShowBenefitsPackagesModal(false);
-      setShowWorkSchedulesModal(false);
-      setShowOvertimePoliciesModal(false);
-      setShowAttendancePoliciesModal(false);
-    }
-  }, [showRemoteWorkPoliciesModal]);
+  }, [
+    showDepartmentsModal,
+    showLeavePoliciesModal,
+    showHolidaysModal,
+    showJobTitlesModal,
+    showBenefitsPackagesModal,
+    showWorkSchedulesModal,
+    showOvertimePoliciesModal,
+    showAttendancePoliciesModal,
+    showRemoteWorkPoliciesModal
+  ]);
 
   // Reload settings when user navigates back to settings (but not on initial mount)
   useEffect(() => {
@@ -2535,7 +2472,7 @@ export default function Settings() {
                             setNewLeaveType({...newLeaveType, is_paid: e.target.checked});
                           }
                         }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
                         className="mr-2"
                       />
                       <label htmlFor="modal_is_paid" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
@@ -2552,7 +2489,7 @@ export default function Settings() {
                             setNewLeaveType({...newLeaveType, requires_approval: e.target.checked});
                           }
                         }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
                         className="mr-2"
                       />
                       <label htmlFor="modal_requires_approval" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
@@ -2767,7 +2704,7 @@ export default function Settings() {
                       id="modal_is_company_closure"
                       checked={newHoliday.is_company_closure}
                       onChange={(e) => setNewHoliday({...newHoliday, is_company_closure: e.target.checked})}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
                       className="mr-2"
                     />
                     <label htmlFor="modal_is_company_closure" className="text-sm">{t('settings.holidays.companyClosure')}</label>
@@ -3246,7 +3183,7 @@ export default function Settings() {
                                   setNewBenefitsPackage({...newBenefitsPackage, benefit_types: newTypes});
                                 }
                               }}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
                               className="mr-2"
                             />
                             <span className="text-sm">{type}</span>
@@ -3462,7 +3399,7 @@ export default function Settings() {
                               const newDays = e.target.checked ? [...currentDays, day] : currentDays.filter(d => d !== day);
                               if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, days_of_week: newDays } : ws)); }
                               else { setNewWorkSchedule({...newWorkSchedule, days_of_week: newDays}); }
-                            }} onClick={(e) => e.stopPropagation()} className="mr-2" />
+                            }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                             <span className="text-sm">{day}</span>
                           </label>
                         );
@@ -3476,7 +3413,7 @@ export default function Settings() {
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div className="flex items-center mt-6"><input type="checkbox" checked={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.flexible_hours || false : newWorkSchedule.flexible_hours}
-                      onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, flexible_hours: e.target.checked } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} onClick={(e) => e.stopPropagation()} className="mr-2" />
+                      onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, flexible_hours: e.target.checked } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                       <label className="text-sm">{t('settings.workSchedules.flexibleHours')}</label>
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.maxHoursPerWeek')}</label>
@@ -3579,7 +3516,7 @@ export default function Settings() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center"><input type="checkbox" checked={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.requires_approval !== false : newOvertimePolicy.requires_approval}
-                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, requires_approval: e.target.checked } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, requires_approval: e.target.checked}); } }} onClick={(e) => e.stopPropagation()} className="mr-2" />
+                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, requires_approval: e.target.checked } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, requires_approval: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                       <label className="text-sm">{t('settings.overtimePolicies.requiresApproval')}</label>
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.appliesTo')}</label>
@@ -3833,7 +3770,7 @@ export default function Settings() {
                     </div>
                   )}
                   <div className="flex items-center"><input type="checkbox" checked={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.requires_approval !== false : newRemoteWorkPolicy.requires_approval}
-                    onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, requires_approval: e.target.checked } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, requires_approval: e.target.checked}); } }} onClick={(e) => e.stopPropagation()} className="mr-2" />
+                    onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, requires_approval: e.target.checked } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, requires_approval: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                     <label className="text-sm">{t('settings.remoteWorkPolicies.requiresApproval')}</label>
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentProvided')}</label>
