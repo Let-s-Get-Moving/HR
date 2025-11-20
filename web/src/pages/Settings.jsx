@@ -210,8 +210,8 @@ export default function Settings() {
   // Track if component is mounted (avoid double-loading on first render)
   const isInitialMount = React.useRef(true);
   
-  // Track which data sources have been loaded to prevent duplicates
-  const loadedDataRef = useRef(new Set());
+  // Track requests currently in-flight to prevent duplicates
+  const inFlightRequestsRef = useRef(new Set());
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -243,54 +243,55 @@ export default function Settings() {
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
 
-  // Load data when modals are opened - track individual data sources to prevent duplicates
+  // Load data when modals are opened - track in-flight requests to prevent duplicates
   useEffect(() => {
     if (showDepartmentsModal) {
-      if (!loadedDataRef.current.has('departments')) {
-        loadedDataRef.current.add('departments');
-        loadDepartments();
+      if (!inFlightRequestsRef.current.has('departments')) {
+        inFlightRequestsRef.current.add('departments');
+        loadDepartments().finally(() => {
+          inFlightRequestsRef.current.delete('departments');
+        });
       }
-    }
-    if (!showDepartmentsModal) {
-      loadedDataRef.current.delete('departments');
     }
   }, [showDepartmentsModal]);
 
   useEffect(() => {
     if (showLeavePoliciesModal) {
-      if (!loadedDataRef.current.has('leaveTypes')) {
-        loadedDataRef.current.add('leaveTypes');
-        loadLeaveTypes();
+      if (!inFlightRequestsRef.current.has('leaveTypes')) {
+        inFlightRequestsRef.current.add('leaveTypes');
+        loadLeaveTypes().finally(() => {
+          inFlightRequestsRef.current.delete('leaveTypes');
+        });
       }
-    }
-    if (!showLeavePoliciesModal) {
-      loadedDataRef.current.delete('leaveTypes');
     }
   }, [showLeavePoliciesModal]);
 
   useEffect(() => {
     if (showHolidaysModal) {
-      if (!loadedDataRef.current.has('holidays')) {
-        loadedDataRef.current.add('holidays');
-        loadHolidays();
+      if (!inFlightRequestsRef.current.has('holidays')) {
+        inFlightRequestsRef.current.add('holidays');
+        loadHolidays().finally(() => {
+          inFlightRequestsRef.current.delete('holidays');
+        });
       }
-      if (!loadedDataRef.current.has('departments')) {
-        loadedDataRef.current.add('departments');
-        loadDepartments();
+      if (!inFlightRequestsRef.current.has('departments')) {
+        inFlightRequestsRef.current.add('departments');
+        loadDepartments().finally(() => {
+          inFlightRequestsRef.current.delete('departments');
+        });
       }
-      if (!loadedDataRef.current.has('jobTitles')) {
-        loadedDataRef.current.add('jobTitles');
-        loadJobTitles();
+      if (!inFlightRequestsRef.current.has('jobTitles')) {
+        inFlightRequestsRef.current.add('jobTitles');
+        loadJobTitles().finally(() => {
+          inFlightRequestsRef.current.delete('jobTitles');
+        });
       }
-      if (!loadedDataRef.current.has('employees')) {
-        loadedDataRef.current.add('employees');
-        loadEmployees();
+      if (!inFlightRequestsRef.current.has('employees')) {
+        inFlightRequestsRef.current.add('employees');
+        loadEmployees().finally(() => {
+          inFlightRequestsRef.current.delete('employees');
+        });
       }
-    }
-    if (!showHolidaysModal) {
-      loadedDataRef.current.delete('holidays');
-      loadedDataRef.current.delete('employees');
-      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showHolidaysModal]);
   
@@ -306,105 +307,109 @@ export default function Settings() {
 
   useEffect(() => {
     if (showJobTitlesModal) {
-      if (!loadedDataRef.current.has('jobTitles')) {
-        loadedDataRef.current.add('jobTitles');
-        loadJobTitles();
+      if (!inFlightRequestsRef.current.has('jobTitles')) {
+        inFlightRequestsRef.current.add('jobTitles');
+        loadJobTitles().finally(() => {
+          inFlightRequestsRef.current.delete('jobTitles');
+        });
       }
-      if (!loadedDataRef.current.has('departments')) {
-        loadedDataRef.current.add('departments');
-        loadDepartments();
+      if (!inFlightRequestsRef.current.has('departments')) {
+        inFlightRequestsRef.current.add('departments');
+        loadDepartments().finally(() => {
+          inFlightRequestsRef.current.delete('departments');
+        });
       }
-    }
-    if (!showJobTitlesModal) {
-      loadedDataRef.current.delete('jobTitles');
-      // Don't delete departments - other modals might need it
     }
   }, [showJobTitlesModal]);
 
   useEffect(() => {
     if (showBenefitsPackagesModal) {
-      if (!loadedDataRef.current.has('benefitsPackages')) {
-        loadedDataRef.current.add('benefitsPackages');
-        loadBenefitsPackages();
+      if (!inFlightRequestsRef.current.has('benefitsPackages')) {
+        inFlightRequestsRef.current.add('benefitsPackages');
+        loadBenefitsPackages().finally(() => {
+          inFlightRequestsRef.current.delete('benefitsPackages');
+        });
       }
-    }
-    if (!showBenefitsPackagesModal) {
-      loadedDataRef.current.delete('benefitsPackages');
     }
   }, [showBenefitsPackagesModal]);
 
   useEffect(() => {
     if (showWorkSchedulesModal) {
-      if (!loadedDataRef.current.has('workSchedules')) {
-        loadedDataRef.current.add('workSchedules');
-        loadWorkSchedules();
+      if (!inFlightRequestsRef.current.has('workSchedules')) {
+        inFlightRequestsRef.current.add('workSchedules');
+        loadWorkSchedules().finally(() => {
+          inFlightRequestsRef.current.delete('workSchedules');
+        });
       }
-    }
-    if (!showWorkSchedulesModal) {
-      loadedDataRef.current.delete('workSchedules');
     }
   }, [showWorkSchedulesModal]);
 
   useEffect(() => {
     if (showOvertimePoliciesModal) {
-      if (!loadedDataRef.current.has('overtimePolicies')) {
-        loadedDataRef.current.add('overtimePolicies');
-        loadOvertimePolicies();
+      if (!inFlightRequestsRef.current.has('overtimePolicies')) {
+        inFlightRequestsRef.current.add('overtimePolicies');
+        loadOvertimePolicies().finally(() => {
+          inFlightRequestsRef.current.delete('overtimePolicies');
+        });
       }
-      if (!loadedDataRef.current.has('departments')) {
-        loadedDataRef.current.add('departments');
-        loadDepartments();
+      if (!inFlightRequestsRef.current.has('departments')) {
+        inFlightRequestsRef.current.add('departments');
+        loadDepartments().finally(() => {
+          inFlightRequestsRef.current.delete('departments');
+        });
       }
-      if (!loadedDataRef.current.has('jobTitles')) {
-        loadedDataRef.current.add('jobTitles');
-        loadJobTitles();
+      if (!inFlightRequestsRef.current.has('jobTitles')) {
+        inFlightRequestsRef.current.add('jobTitles');
+        loadJobTitles().finally(() => {
+          inFlightRequestsRef.current.delete('jobTitles');
+        });
       }
-    }
-    if (!showOvertimePoliciesModal) {
-      loadedDataRef.current.delete('overtimePolicies');
-      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showOvertimePoliciesModal]);
 
   useEffect(() => {
     if (showAttendancePoliciesModal) {
-      if (!loadedDataRef.current.has('attendancePolicies')) {
-        loadedDataRef.current.add('attendancePolicies');
-        loadAttendancePolicies();
+      if (!inFlightRequestsRef.current.has('attendancePolicies')) {
+        inFlightRequestsRef.current.add('attendancePolicies');
+        loadAttendancePolicies().finally(() => {
+          inFlightRequestsRef.current.delete('attendancePolicies');
+        });
       }
-      if (!loadedDataRef.current.has('departments')) {
-        loadedDataRef.current.add('departments');
-        loadDepartments();
+      if (!inFlightRequestsRef.current.has('departments')) {
+        inFlightRequestsRef.current.add('departments');
+        loadDepartments().finally(() => {
+          inFlightRequestsRef.current.delete('departments');
+        });
       }
-      if (!loadedDataRef.current.has('jobTitles')) {
-        loadedDataRef.current.add('jobTitles');
-        loadJobTitles();
+      if (!inFlightRequestsRef.current.has('jobTitles')) {
+        inFlightRequestsRef.current.add('jobTitles');
+        loadJobTitles().finally(() => {
+          inFlightRequestsRef.current.delete('jobTitles');
+        });
       }
-    }
-    if (!showAttendancePoliciesModal) {
-      loadedDataRef.current.delete('attendancePolicies');
-      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showAttendancePoliciesModal]);
 
   useEffect(() => {
     if (showRemoteWorkPoliciesModal) {
-      if (!loadedDataRef.current.has('remoteWorkPolicies')) {
-        loadedDataRef.current.add('remoteWorkPolicies');
-        loadRemoteWorkPolicies();
+      if (!inFlightRequestsRef.current.has('remoteWorkPolicies')) {
+        inFlightRequestsRef.current.add('remoteWorkPolicies');
+        loadRemoteWorkPolicies().finally(() => {
+          inFlightRequestsRef.current.delete('remoteWorkPolicies');
+        });
       }
-      if (!loadedDataRef.current.has('departments')) {
-        loadedDataRef.current.add('departments');
-        loadDepartments();
+      if (!inFlightRequestsRef.current.has('departments')) {
+        inFlightRequestsRef.current.add('departments');
+        loadDepartments().finally(() => {
+          inFlightRequestsRef.current.delete('departments');
+        });
       }
-      if (!loadedDataRef.current.has('jobTitles')) {
-        loadedDataRef.current.add('jobTitles');
-        loadJobTitles();
+      if (!inFlightRequestsRef.current.has('jobTitles')) {
+        inFlightRequestsRef.current.add('jobTitles');
+        loadJobTitles().finally(() => {
+          inFlightRequestsRef.current.delete('jobTitles');
+        });
       }
-    }
-    if (!showRemoteWorkPoliciesModal) {
-      loadedDataRef.current.delete('remoteWorkPolicies');
-      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showRemoteWorkPoliciesModal]);
 
