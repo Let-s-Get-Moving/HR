@@ -213,8 +213,12 @@ export default function Settings() {
   // Track if component is mounted (avoid double-loading on first render)
   const isInitialMount = React.useRef(true);
   
-  // Track which modals have already loaded to prevent double-loading
-  const loadedModalsRef = useRef(new Set());
+  // Track if individual modals have loaded (one ref per modal)
+  const jobTitlesLoadedRef = useRef(false);
+  const holidaysLoadedRef = useRef(false);
+  const overtimeLoadedRef = useRef(false);
+  const attendanceLoadedRef = useRef(false);
+  const remoteWorkLoadedRef = useRef(false);
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -278,8 +282,8 @@ export default function Settings() {
   }, [showLeavePoliciesModal]);
 
   useEffect(() => {
-    if (showHolidaysModal && !loadedModalsRef.current.has('holidays')) {
-      loadedModalsRef.current.add('holidays');
+    if (showHolidaysModal && !holidaysLoadedRef.current) {
+      holidaysLoadedRef.current = true;
       
       const loadAll = async () => {
         try {
@@ -331,8 +335,6 @@ export default function Settings() {
       };
       
       loadAll();
-    } else if (!showHolidaysModal) {
-      loadedModalsRef.current.delete('holidays');
     }
   }, [showHolidaysModal]);
   
@@ -347,8 +349,8 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    if (showJobTitlesModal && !loadedModalsRef.current.has('jobTitles')) {
-      loadedModalsRef.current.add('jobTitles');
+    if (showJobTitlesModal && !jobTitlesLoadedRef.current) {
+      jobTitlesLoadedRef.current = true;
       
       const loadAll = async () => {
         try {
@@ -382,8 +384,6 @@ export default function Settings() {
       };
       
       loadAll();
-    } else if (!showJobTitlesModal) {
-      loadedModalsRef.current.delete('jobTitles');
     }
   }, [showJobTitlesModal]);
 
@@ -418,8 +418,8 @@ export default function Settings() {
   }, [showWorkSchedulesModal]);
 
   useEffect(() => {
-    if (showOvertimePoliciesModal && !loadedModalsRef.current.has('overtimePolicies')) {
-      loadedModalsRef.current.add('overtimePolicies');
+    if (showOvertimePoliciesModal && !overtimeLoadedRef.current) {
+      overtimeLoadedRef.current = true;
       
       const loadAll = async () => {
         try {
@@ -462,14 +462,12 @@ export default function Settings() {
       };
       
       loadAll();
-    } else if (!showOvertimePoliciesModal) {
-      loadedModalsRef.current.delete('overtimePolicies');
     }
   }, [showOvertimePoliciesModal]);
 
   useEffect(() => {
-    if (showAttendancePoliciesModal && !loadedModalsRef.current.has('attendancePolicies')) {
-      loadedModalsRef.current.add('attendancePolicies');
+    if (showAttendancePoliciesModal && !attendanceLoadedRef.current) {
+      attendanceLoadedRef.current = true;
       
       const loadAll = async () => {
         try {
@@ -512,14 +510,12 @@ export default function Settings() {
       };
       
       loadAll();
-    } else if (!showAttendancePoliciesModal) {
-      loadedModalsRef.current.delete('attendancePolicies');
     }
   }, [showAttendancePoliciesModal]);
 
   useEffect(() => {
-    if (showRemoteWorkPoliciesModal && !loadedModalsRef.current.has('remoteWorkPolicies')) {
-      loadedModalsRef.current.add('remoteWorkPolicies');
+    if (showRemoteWorkPoliciesModal && !remoteWorkLoadedRef.current) {
+      remoteWorkLoadedRef.current = true;
       
       const loadAll = async () => {
         try {
@@ -562,8 +558,6 @@ export default function Settings() {
       };
       
       loadAll();
-    } else if (!showRemoteWorkPoliciesModal) {
-      loadedModalsRef.current.delete('remoteWorkPolicies');
     }
   }, [showRemoteWorkPoliciesModal]);
 
