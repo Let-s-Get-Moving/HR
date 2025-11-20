@@ -897,7 +897,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       ) : (
                         <span>{employee.job_title_name || t('employeeProfile.notAssigned')}</span>
                       )}
-                    </div>
+              </div>
                     <div className="flex justify-between">
                       <span className="text-neutral-400">{t('employeeProfile.benefitsPackage')}:</span>
                       {isEditing ? (
