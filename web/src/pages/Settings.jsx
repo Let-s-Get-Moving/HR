@@ -210,8 +210,8 @@ export default function Settings() {
   // Track if component is mounted (avoid double-loading on first render)
   const isInitialMount = React.useRef(true);
   
-  // Track which modals have loaded data in current session to prevent duplicates
-  const loadedModalsRef = useRef(new Set());
+  // Track which data sources have been loaded to prevent duplicates
+  const loadedDataRef = useRef(new Set());
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -243,37 +243,54 @@ export default function Settings() {
     isInitialMount.current = false; // Mark that initial load is complete
   }, []);
 
-  // Load data when modals are opened - track loaded modals to prevent duplicates
+  // Load data when modals are opened - track individual data sources to prevent duplicates
   useEffect(() => {
-    if (showDepartmentsModal && !loadedModalsRef.current.has('departments')) {
-      loadedModalsRef.current.add('departments');
-      loadDepartments();
+    if (showDepartmentsModal) {
+      if (!loadedDataRef.current.has('departments')) {
+        loadedDataRef.current.add('departments');
+        loadDepartments();
+      }
     }
     if (!showDepartmentsModal) {
-      loadedModalsRef.current.delete('departments');
+      loadedDataRef.current.delete('departments');
     }
   }, [showDepartmentsModal]);
 
   useEffect(() => {
-    if (showLeavePoliciesModal && !loadedModalsRef.current.has('leavePolicies')) {
-      loadedModalsRef.current.add('leavePolicies');
-      loadLeaveTypes();
+    if (showLeavePoliciesModal) {
+      if (!loadedDataRef.current.has('leaveTypes')) {
+        loadedDataRef.current.add('leaveTypes');
+        loadLeaveTypes();
+      }
     }
     if (!showLeavePoliciesModal) {
-      loadedModalsRef.current.delete('leavePolicies');
+      loadedDataRef.current.delete('leaveTypes');
     }
   }, [showLeavePoliciesModal]);
 
   useEffect(() => {
-    if (showHolidaysModal && !loadedModalsRef.current.has('holidays')) {
-      loadedModalsRef.current.add('holidays');
-      loadHolidays();
-      loadDepartments();
-      loadJobTitles();
-      loadEmployees();
+    if (showHolidaysModal) {
+      if (!loadedDataRef.current.has('holidays')) {
+        loadedDataRef.current.add('holidays');
+        loadHolidays();
+      }
+      if (!loadedDataRef.current.has('departments')) {
+        loadedDataRef.current.add('departments');
+        loadDepartments();
+      }
+      if (!loadedDataRef.current.has('jobTitles')) {
+        loadedDataRef.current.add('jobTitles');
+        loadJobTitles();
+      }
+      if (!loadedDataRef.current.has('employees')) {
+        loadedDataRef.current.add('employees');
+        loadEmployees();
+      }
     }
     if (!showHolidaysModal) {
-      loadedModalsRef.current.delete('holidays');
+      loadedDataRef.current.delete('holidays');
+      loadedDataRef.current.delete('employees');
+      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showHolidaysModal]);
   
@@ -288,69 +305,106 @@ export default function Settings() {
   };
 
   useEffect(() => {
-    if (showJobTitlesModal && !loadedModalsRef.current.has('jobTitles')) {
-      loadedModalsRef.current.add('jobTitles');
-      loadJobTitles();
-      loadDepartments();
+    if (showJobTitlesModal) {
+      if (!loadedDataRef.current.has('jobTitles')) {
+        loadedDataRef.current.add('jobTitles');
+        loadJobTitles();
+      }
+      if (!loadedDataRef.current.has('departments')) {
+        loadedDataRef.current.add('departments');
+        loadDepartments();
+      }
     }
     if (!showJobTitlesModal) {
-      loadedModalsRef.current.delete('jobTitles');
+      loadedDataRef.current.delete('jobTitles');
+      // Don't delete departments - other modals might need it
     }
   }, [showJobTitlesModal]);
 
   useEffect(() => {
-    if (showBenefitsPackagesModal && !loadedModalsRef.current.has('benefitsPackages')) {
-      loadedModalsRef.current.add('benefitsPackages');
-      loadBenefitsPackages();
+    if (showBenefitsPackagesModal) {
+      if (!loadedDataRef.current.has('benefitsPackages')) {
+        loadedDataRef.current.add('benefitsPackages');
+        loadBenefitsPackages();
+      }
     }
     if (!showBenefitsPackagesModal) {
-      loadedModalsRef.current.delete('benefitsPackages');
+      loadedDataRef.current.delete('benefitsPackages');
     }
   }, [showBenefitsPackagesModal]);
 
   useEffect(() => {
-    if (showWorkSchedulesModal && !loadedModalsRef.current.has('workSchedules')) {
-      loadedModalsRef.current.add('workSchedules');
-      loadWorkSchedules();
+    if (showWorkSchedulesModal) {
+      if (!loadedDataRef.current.has('workSchedules')) {
+        loadedDataRef.current.add('workSchedules');
+        loadWorkSchedules();
+      }
     }
     if (!showWorkSchedulesModal) {
-      loadedModalsRef.current.delete('workSchedules');
+      loadedDataRef.current.delete('workSchedules');
     }
   }, [showWorkSchedulesModal]);
 
   useEffect(() => {
-    if (showOvertimePoliciesModal && !loadedModalsRef.current.has('overtimePolicies')) {
-      loadedModalsRef.current.add('overtimePolicies');
-      loadOvertimePolicies();
-      loadDepartments();
-      loadJobTitles();
+    if (showOvertimePoliciesModal) {
+      if (!loadedDataRef.current.has('overtimePolicies')) {
+        loadedDataRef.current.add('overtimePolicies');
+        loadOvertimePolicies();
+      }
+      if (!loadedDataRef.current.has('departments')) {
+        loadedDataRef.current.add('departments');
+        loadDepartments();
+      }
+      if (!loadedDataRef.current.has('jobTitles')) {
+        loadedDataRef.current.add('jobTitles');
+        loadJobTitles();
+      }
     }
     if (!showOvertimePoliciesModal) {
-      loadedModalsRef.current.delete('overtimePolicies');
+      loadedDataRef.current.delete('overtimePolicies');
+      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showOvertimePoliciesModal]);
 
   useEffect(() => {
-    if (showAttendancePoliciesModal && !loadedModalsRef.current.has('attendancePolicies')) {
-      loadedModalsRef.current.add('attendancePolicies');
-      loadAttendancePolicies();
-      loadDepartments();
-      loadJobTitles();
+    if (showAttendancePoliciesModal) {
+      if (!loadedDataRef.current.has('attendancePolicies')) {
+        loadedDataRef.current.add('attendancePolicies');
+        loadAttendancePolicies();
+      }
+      if (!loadedDataRef.current.has('departments')) {
+        loadedDataRef.current.add('departments');
+        loadDepartments();
+      }
+      if (!loadedDataRef.current.has('jobTitles')) {
+        loadedDataRef.current.add('jobTitles');
+        loadJobTitles();
+      }
     }
     if (!showAttendancePoliciesModal) {
-      loadedModalsRef.current.delete('attendancePolicies');
+      loadedDataRef.current.delete('attendancePolicies');
+      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showAttendancePoliciesModal]);
 
   useEffect(() => {
-    if (showRemoteWorkPoliciesModal && !loadedModalsRef.current.has('remoteWorkPolicies')) {
-      loadedModalsRef.current.add('remoteWorkPolicies');
-      loadRemoteWorkPolicies();
-      loadDepartments();
-      loadJobTitles();
+    if (showRemoteWorkPoliciesModal) {
+      if (!loadedDataRef.current.has('remoteWorkPolicies')) {
+        loadedDataRef.current.add('remoteWorkPolicies');
+        loadRemoteWorkPolicies();
+      }
+      if (!loadedDataRef.current.has('departments')) {
+        loadedDataRef.current.add('departments');
+        loadDepartments();
+      }
+      if (!loadedDataRef.current.has('jobTitles')) {
+        loadedDataRef.current.add('jobTitles');
+        loadJobTitles();
+      }
     }
     if (!showRemoteWorkPoliciesModal) {
-      loadedModalsRef.current.delete('remoteWorkPolicies');
+      loadedDataRef.current.delete('remoteWorkPolicies');
+      // Don't delete departments/jobTitles - other modals might need them
     }
   }, [showRemoteWorkPoliciesModal]);
 
