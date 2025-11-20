@@ -14,26 +14,51 @@ export default function Settings() {
   const { t, i18n } = useTranslation();
   const activeTabRef = useRef("system");
 
-  const handleTabChange = (tabId) => {
-    activeTabRef.current = tabId;
-    // Update button styles manually (no re-render needed)
-    const buttons = document.querySelectorAll('[data-tab-button]');
-    buttons.forEach(btn => {
-      if (btn.dataset.tabId === tabId) {
-        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-primary text-white";
-      } else {
-        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors text-secondary hover:text-white hover:bg-tertiary";
-      }
-    });
-    // Update content visibility with CSS
-    const contents = document.querySelectorAll('[data-tab-content]');
-    contents.forEach(content => {
-      if (content.dataset.tabId === tabId) {
-        content.style.display = 'block';
-      } else {
-        content.style.display = 'none';
-      }
-    });
+  // Load settings data for a specific tab category
+  const loadSettingsForTab = async (category) => {
+    // Map category to ref and setState function
+    const tabConfig = {
+      preferences: { ref: preferencesLoadedRef, setState: setUserPreferences },
+      notifications: { ref: notificationsLoadedRef, setState: setNotifications },
+      security: { ref: securityLoadedRef, setState: setSecurity },
+      maintenance: { ref: maintenanceLoadedRef, setState: setMaintenance }
+    };
+    
+    const config = tabConfig[category];
+    if (!config || config.ref.current) {
+      // Tab not in config or already loaded
+      return;
+    }
+    
+    // Check if request is already in flight
+    const requestKey = `settings_${category}`;
+    if (inFlightRequests.has(requestKey)) {
+      return;
+    }
+    
+    config.ref.current = true;
+    inFlightRequests.add(requestKey);
+    
+    try {
+      const settings = await API(`/api/settings/${category}`).catch(() => []);
+      
+      // Enrich settings with options from SETTING_OPTIONS mapping
+      const enrichedSettings = (settings || []).map(setting => {
+        const options = SETTING_OPTIONS[setting.key];
+        if (options) {
+          return { ...setting, options, type: 'select' };
+        }
+        return setting;
+      });
+      
+      // Update state in single batch (no blinking)
+      config.setState(enrichedSettings);
+    } catch (error) {
+      console.error(`Error loading ${category} settings:`, error);
+      config.setState([]);
+    } finally {
+      inFlightRequests.delete(requestKey);
+    }
   };
   const [systemSettings, setSystemSettings] = useState([]);
   const [userPreferences, setUserPreferences] = useState([]);
@@ -236,6 +261,12 @@ export default function Settings() {
   const overtimeLoadedRef = useRef(false);
   const attendanceLoadedRef = useRef(false);
   const remoteWorkLoadedRef = useRef(false);
+  
+  // Track if tabs have loaded their data (one ref per tab)
+  const preferencesLoadedRef = useRef(false);
+  const notificationsLoadedRef = useRef(false);
+  const securityLoadedRef = useRef(false);
+  const maintenanceLoadedRef = useRef(false);
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -263,6 +294,78 @@ export default function Settings() {
 
   // Removed automatic loadSettings() call - it causes blinking
   // Settings will load on-demand or remain empty to prevent visual flicker
+
+  // Load settings data for a specific tab category
+  const loadSettingsForTab = async (category) => {
+    // Map category to ref and setState function
+    const tabConfig = {
+      preferences: { ref: preferencesLoadedRef, setState: setUserPreferences },
+      notifications: { ref: notificationsLoadedRef, setState: setNotifications },
+      security: { ref: securityLoadedRef, setState: setSecurity },
+      maintenance: { ref: maintenanceLoadedRef, setState: setMaintenance }
+    };
+    
+    const config = tabConfig[category];
+    if (!config || config.ref.current) {
+      // Tab not in config or already loaded
+      return;
+    }
+    
+    // Check if request is already in flight
+    const requestKey = `settings_${category}`;
+    if (inFlightRequests.has(requestKey)) {
+      return;
+    }
+    
+    config.ref.current = true;
+    inFlightRequests.add(requestKey);
+    
+    try {
+      const settings = await API(`/api/settings/${category}`).catch(() => []);
+      
+      // Enrich settings with options from SETTING_OPTIONS mapping
+      const enrichedSettings = (settings || []).map(setting => {
+        const options = SETTING_OPTIONS[setting.key];
+        if (options) {
+          return { ...setting, options, type: 'select' };
+        }
+        return setting;
+      });
+      
+      // Update state in single batch (no blinking)
+      config.setState(enrichedSettings);
+    } catch (error) {
+      console.error(`Error loading ${category} settings:`, error);
+      config.setState([]);
+    } finally {
+      inFlightRequests.delete(requestKey);
+    }
+  };
+
+  const handleTabChange = (tabId) => {
+    activeTabRef.current = tabId;
+    // Update button styles manually (no re-render needed)
+    const buttons = document.querySelectorAll('[data-tab-button]');
+    buttons.forEach(btn => {
+      if (btn.dataset.tabId === tabId) {
+        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-primary text-white";
+      } else {
+        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors text-secondary hover:text-white hover:bg-tertiary";
+      }
+    });
+    // Update content visibility with CSS
+    const contents = document.querySelectorAll('[data-tab-content]');
+    contents.forEach(content => {
+      if (content.dataset.tabId === tabId) {
+        content.style.display = 'block';
+      } else {
+        content.style.display = 'none';
+      }
+    });
+    
+    // Load data for the tab if not already loaded
+    loadSettingsForTab(tabId);
+  };
 
   // Load data when modals are opened - track in-flight requests to prevent duplicates
   useEffect(() => {
@@ -1679,6 +1782,11 @@ export default function Settings() {
   // Load trusted devices on mount (security tab is visible by default)
   useEffect(() => {
     loadTrustedDevices();
+  }, []);
+  
+  // Load security settings on mount (commonly accessed tab)
+  useEffect(() => {
+    loadSettingsForTab('security');
   }, []);
   
   // Open Change Password Modal
