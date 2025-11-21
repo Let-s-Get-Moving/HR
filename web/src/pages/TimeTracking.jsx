@@ -559,6 +559,7 @@ export default function TimeTracking() {
             searchQuery={dayViewSearch}
             onSearchChange={setDayViewSearch}
             userRole={userRole}
+            t={t}
           />
         )}
         {view === "uploads" && (
@@ -612,6 +613,7 @@ export default function TimeTracking() {
           }}
           setManualPeriodStart={setManualPeriodStart}
           setManualPeriodEnd={setManualPeriodEnd}
+          t={t}
         />
       )}
     </div>
@@ -834,6 +836,13 @@ const formatHoursAsTime = (decimalHours) => {
   return `${hours}:${minutes.toString().padStart(2, '0')}`;
 };
 
+// Format date to short format (e.g., "Jan 15, 2024")
+const formatShortDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
 // Individual Timecard View Component
 function IndividualView({ timecard, onBack, t }) {
   if (!timecard) {
@@ -963,7 +972,7 @@ function IndividualView({ timecard, onBack, t }) {
 }
 
 // Upload Modal Component
-function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriodEnd, onFileChange, onUpload, onClose, setManualPeriodStart, setManualPeriodEnd }) {
+function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriodEnd, onFileChange, onUpload, onClose, setManualPeriodStart, setManualPeriodEnd, t }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
@@ -1067,7 +1076,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
 }
 
 // Day View Component
-function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData, searchQuery, onSearchChange, userRole }) {
+function DayView({ selectedDate, onDateChange, dayViewData, availableDates, loading, loadDayViewData, searchQuery, onSearchChange, userRole, t }) {
   const [editingEntryId, setEditingEntryId] = React.useState(null);
   const [editForm, setEditForm] = React.useState({});
   const [saving, setSaving] = React.useState(false);
