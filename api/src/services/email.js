@@ -1,16 +1,25 @@
-import axios from 'axios';
+import nodemailer from 'nodemailer';
 
 class EmailService {
   constructor() {
-    this.apiKey = process.env.BREVO_API_KEY;
-    this.senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@hrapp.com';
-    this.senderName = process.env.BREVO_SENDER_NAME || 'HR System';
-    this.apiUrl = 'https://api.brevo.com/v3/smtp/email';
+    this.senderEmail = process.env.GMAIL_USER || 'lgmdashboardlgm@gmail.com';
+    this.senderName = process.env.GMAIL_SENDER_NAME || 'HR APP';
+    this.appPassword = process.env.GMAIL_APP_PASSWORD;
+    
+    this.transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: this.senderEmail,
+        pass: this.appPassword
+      }
+    });
   }
 
   async send({ to, subject, textContent, htmlContent }) {
-    if (!this.apiKey) {
-      console.warn('⚠️  Brevo API key not configured, email skipped');
+    if (!this.appPassword) {
+      console.warn('⚠️  Gmail app password not configured, email skipped');
       return { success: false, reason: 'not_configured' };
     }
 
@@ -20,28 +29,18 @@ class EmailService {
     }
 
     try {
-      const response = await axios.post(
-        this.apiUrl,
-        {
-          sender: { email: this.senderEmail, name: this.senderName },
-          to: [{ email: to }],
-          subject,
-          textContent,
-          htmlContent: htmlContent || textContent
-        },
-        {
-          headers: {
-            'api-key': this.apiKey,
-            'Content-Type': 'application/json'
-          },
-          timeout: 10000 // 10 second timeout
-        }
-      );
+      const info = await this.transporter.sendMail({
+        from: `"${this.senderName}" <${this.senderEmail}>`,
+        to: to,
+        subject: subject,
+        text: textContent,
+        html: htmlContent || textContent
+      });
 
-      console.log(`✅ Email sent to ${to}: ${subject}`);
-      return { success: true, messageId: response.data.messageId };
+      console.log(`✅ Email sent to ${to}: ${subject} (Message ID: ${info.messageId})`);
+      return { success: true, messageId: info.messageId };
     } catch (error) {
-      console.error(`❌ Failed to send email to ${to}:`, error.response?.data || error.message);
+      console.error(`❌ Failed to send email to ${to}:`, error.message);
       return { success: false, error: error.message };
     }
   }
