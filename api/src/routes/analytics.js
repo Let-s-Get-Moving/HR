@@ -96,15 +96,55 @@ r.get("/dashboard", async (req, res) => {
       FROM employees
     `);
 
-    // Payroll stats for the specific time range
+    // Payroll stats for the specific time range - calculate from timecards directly
     const payrollStats = await q(`
+      WITH employee_daily_hours AS (
+        -- Calculate daily totals per employee
+        SELECT 
+          e.id as employee_id,
+          te.work_date,
+          SUM(te.hours_worked) as daily_total
+        FROM timecard_entries te
+        JOIN timecards tc ON te.timecard_id = tc.id
+        JOIN employees e ON tc.employee_id = e.id
+        WHERE te.work_date >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
+          AND e.status = 'Active'
+        GROUP BY e.id, te.work_date
+      ),
+      employee_totals AS (
+        -- Calculate total hours and overtime per employee
+        SELECT 
+          employee_id,
+          SUM(daily_total) as total_hours,
+          SUM(GREATEST(daily_total - 8, 0)) as overtime_hours
+        FROM employee_daily_hours
+        GROUP BY employee_id
+      ),
+      employee_pay AS (
+        -- Calculate pay per employee with overtime policies
+        SELECT 
+          et.employee_id,
+          e.hourly_rate,
+          COALESCE(op.multiplier, 1.0) as overtime_multiplier,
+          et.total_hours,
+          et.overtime_hours,
+          (et.total_hours - et.overtime_hours) as regular_hours,
+          -- Regular pay
+          (et.total_hours - et.overtime_hours) * COALESCE(e.hourly_rate, 0) as regular_pay,
+          -- Overtime pay
+          et.overtime_hours * COALESCE(e.hourly_rate, 0) * COALESCE(op.multiplier, 1.0) as overtime_pay
+        FROM employee_totals et
+        JOIN employees e ON et.employee_id = e.id
+        LEFT JOIN overtime_policies op ON e.overtime_policy_id = op.id
+        WHERE e.status = 'Active'
+      )
       SELECT 
-        COUNT(*) as total_calculations,
-        COUNT(CASE WHEN status = 'Calculated' THEN 1 END) as completed_calculations,
-        ROUND(COALESCE(AVG(CAST(total_gross AS NUMERIC)), 0), 2) as avg_gross_pay,
-        ROUND(COALESCE(SUM(CAST(total_gross AS NUMERIC)), 0), 2) as total_payroll_amount
-      FROM payroll_calculations
-      WHERE calculated_at >= CURRENT_DATE - INTERVAL '${timeIntervalDays} days'
+        0 as total_calculations,
+        0 as completed_calculations,
+        ROUND(COALESCE(AVG(regular_pay + overtime_pay), 0), 2) as avg_gross_pay,
+        ROUND(COALESCE(SUM(regular_pay + overtime_pay), 0), 2) as total_payroll_amount
+      FROM employee_pay
+      WHERE total_hours > 0
     `);
 
     // Get real department distribution
