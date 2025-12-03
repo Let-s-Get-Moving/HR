@@ -2,39 +2,30 @@
 
 ## Overview
 
-A robust Excel commission import system integrated into the existing Node.js/Express API. This system replaces the old commissions table with three new specialized tables for handling complex commission data from Excel imports.
+A robust Excel commission import system integrated into the existing Node.js/Express API. This system uses a unified table structure where all commission data (including US commissions and pay periods) is stored in a single `employee_commission_monthly` table.
 
 ## Database Changes
 
-### New Tables
+### Unified Table Structure
 
-#### 1. `employee_commission_monthly`
-Main commission data with detailed revenue and deduction tracking.
+#### `employee_commission_monthly`
+Unified commission data table containing all commission, bonus, and payout information.
 
 **Key Fields:**
 - `employee_id`, `period_month` (unique constraint)
-- Revenue fields: `rev_sm_all_locations`, `rev_add_ons`, `total_revenue_all`
-- Commission fields: `commission_pct`, `commission_earned`, `spiff_bonus`
-- Deduction fields: `deduction_sales_manager_minus`, `deduction_customer_support_minus`, etc.
-- Payment tracking: `total_due`, `amount_paid`, `remaining_amount`
+- **Revenue fields:** `rev_sm_all_locations`, `rev_add_ons`, `rev_deduction`, `total_revenue_all`
+- **Commission fields:** `booking_pct`, `commission_pct`, `commission_earned`, `spiff_bonus`, `revenue_bonus`
+- **US Commission fields:** `total_us_revenue`, `commission_pct_us`, `commission_earned_us`, `commission_125x`, `bonus_us_jobs_125x`
+- **Pay Period fields:** `pay_period_1`, `pay_period_1_cash_paid`, `pay_period_2`, `pay_period_2_cash_paid`, `pay_period_3`, `pay_period_3_cash_paid`
+- **Booking bonuses:** `booking_bonus_plus`, `booking_bonus_minus`
+- **Deduction fields:** `hourly_paid_out_minus`, `deduction_sales_manager_minus`, `deduction_missing_punch_minus`, `deduction_customer_support_minus`, `deduction_post_commission_collected_minus`, `deduction_dispatch_minus`, `deduction_other_minus`
+- **Payment tracking:** `total_due`, `amount_paid`, `remaining_amount`
+- **Notes:** `corporate_open_jobs_note`, `parking_pass_fee_note`
 
-#### 2. `agent_commission_us`
-US-specific agent commission data.
-
-**Key Fields:**
-- `employee_id`, `period_month` (unique constraint)  
-- `total_us_revenue`, `commission_pct`, `commission_earned`, `commission_125x`, `bonus`
-
-#### 3. `hourly_payout`
-Hourly payout tracking with period labels.
-
-**Key Fields:**
-- `employee_id`, `period_month`, `period_label` (unique constraint)
-- `amount`, `total_for_month`
-
-### Migration
-- **File:** `db/init/025_commission_import_schema.sql`
-- **Action:** Drops old `commissions` table, creates new schema with proper indexes and triggers
+### Migrations
+- **File:** `db/init/025_commission_import_schema.sql` - Creates the unified table structure
+- **File:** `db/migrations/merge_commission_tables.sql` - Adds US commission and pay period fields
+- **File:** `db/migrations/drop_old_commission_tables.sql` - Removes deprecated `agent_commission_us` and `hourly_payout` tables
 
 ## API Endpoints
 
@@ -64,58 +55,59 @@ POST /api/commissions/import
         {"row": 12, "reason": "Missing employee name"}
       ]
     },
-    "agents_us": {
-      "inserted": 8,
-      "updated": 1,
-      "skipped": 0,
-      "errors": []
-    },
-    "hourly": {
-      "inserted": 24,
-      "updated": 0,
-      "skipped": 1,
-      "errors": []
-    },
     "warnings": [
-      "Processed main commission block with 20 rows",
-      "Agents US commission block not detected"
+      "Processed unified commission block with 20 rows"
     ]
   }
 }
 ```
 
+**Note:** The import now processes a single unified commission block containing all data (main commissions, US commissions, and pay periods) in one table.
+
 ### Data Retrieval Endpoints
 
-#### Get Monthly Commission Data
+#### Get Monthly Commission Data (Unified)
 ```
 GET /api/commissions/monthly?period_month=2025-07-01&employee_id=123
 ```
 
-#### Get Agent US Commission Data  
+Returns all commission data including US commissions and pay periods in a unified format. Each record includes:
+- Main commission fields (revenue, commission %, commission earned)
+- US commission fields (total_us_revenue, commission_pct_us, commission_earned_us, commission_125x)
+- Pay period fields (pay_period_1, pay_period_1_cash_paid, pay_period_2, pay_period_2_cash_paid, pay_period_3, pay_period_3_cash_paid)
+- All deductions and payment tracking fields
+
+#### Get Available Periods
 ```
-GET /api/commissions/agents-us?period_month=2025-07-01
+GET /api/commissions/periods
 ```
 
-#### Get Hourly Payout Data
-```
-GET /api/commissions/hourly-payouts?period_month=2025-07-01
-```
+Returns list of available commission periods with period dates and paydays.
 
 #### Get Commission Summary
 ```
 GET /api/commissions/summary?period_month=2025-07-01
 ```
 
-Returns aggregated metrics like total commission earned, total revenue, etc.
+Returns aggregated metrics like total commission earned, total revenue, total due, amount paid, and remaining amount for the specified period.
+
+#### Update Commission Record (Manager/Admin Only)
+```
+PUT /api/commissions/monthly/:id
+```
+
+Allows managers and admins to update individual commission records with inline editing support.
 
 ## Excel Processing Features
 
 ### Block Detection
-The system automatically detects three types of data blocks in Excel files:
+The system automatically detects the unified commission data block in Excel files:
 
-1. **Main Commission Table** - Detected by keywords like "Name", "Commission Earned", "Total Revenue"
-2. **Agent US Table** - Detected by "Agents", "total US revenue", "1.25X" 
-3. **Hourly Payout Table** - Detected by "hourly paid out", date range columns
+1. **Unified Commission Table** - Detected by keywords like "Name", "Commission Earned", "Total Revenue", "total US revenue", "Pay Period 1", etc.
+   - Contains all commission data in a single table structure
+   - Includes US commission fields (total US revenue, commission % (US), Commission earned US, 1.25X)
+   - Includes pay period fields (Pay Period 1-3 with cash paid columns)
+   - All data is imported into the unified `employee_commission_monthly` table
 
 ### Data Normalization
 - **Money parsing:** Handles `$1,234.56`, `(500.00)` (negative), removes formatting
@@ -195,13 +187,14 @@ The system is designed for your existing Render deployment:
 
 ## Key Features
 
-✅ **Drop-in replacement** - Works with existing API structure  
+✅ **Unified structure** - All commission data in single table for easier management  
 ✅ **Robust parsing** - Handles varying Excel layouts and formats  
 ✅ **Complete transaction safety** - All-or-nothing imports  
 ✅ **Detailed reporting** - Full import summaries with error details  
 ✅ **Production ready** - Built for Render deployment  
 ✅ **Idempotent operations** - Safe to re-run imports  
-✅ **Employee auto-creation** - Seamlessly handles new employees  
-✅ **Multiple data types** - Supports main, agent US, and hourly payout data  
+✅ **Employee matching** - Links commission data to existing employee records  
+✅ **Inline editing** - Managers can edit commission records directly from the UI  
+✅ **Comprehensive fields** - Includes US commissions, pay periods, deductions, and payment tracking  
 
 The system is ready for production use and will handle the complex commission Excel files with full reliability and detailed reporting.
