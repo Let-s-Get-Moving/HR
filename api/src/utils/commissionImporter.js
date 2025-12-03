@@ -267,8 +267,25 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 spiff_bonus: parseMoney(getColumnValue(row, 'Spiff Bonus', ' Spiff Bonus '), debug ? `${debug}_spiff` : null),
                 revenue_bonus: parseMoney(getColumnValue(row, 'Revenue Bonus', ' Revenue Bonus '), debug ? `${debug}_rev_bonus` : null),
                 bonus_us_jobs_125x: parseMoney(getColumnValue(row, 'Bonuses for booking US jobs  1.25X', ' Bonuses for booking US jobs  1.25X '), debug ? `${debug}_bonus_125x` : null),
+                
+                // US commission fields (separate)
+                total_us_revenue: parseMoney(getColumnValue(row, 'total US revenue', ' total US revenue '), debug ? `${debug}_total_us_rev` : null),
+                commission_pct_us: parsePercent(getColumnValue(row, 'commission %__2', ' commission %__2 ', 'commission %'), debug ? `${debug}_commission_pct_us` : null), // Second "commission %" column (US)
+                commission_earned_us: parseMoney(getColumnValue(row, 'Commission earned  US ', 'Commission earned  US', 'Commission earned US'), debug ? `${debug}_commission_earned_us` : null),
+                commission_125x: parseMoney(getColumnValue(row, '1.25X', ' 1.25X '), debug ? `${debug}_commission_125x` : null),
+                
                 booking_bonus_plus: parseMoney(getColumnValue(row, '$5/$10 Bonus for Booking Bonus', ' $5/$10 Bonus for Booking Bonus '), debug ? `${debug}_booking_plus` : null),
                 booking_bonus_minus: parseMoney(getColumnValue(row, '$5/$10 Deduction for Booking Bonus', ' $5/$10 Deduction for Booking Bonus '), debug ? `${debug}_booking_minus` : null),
+                
+                // Pay Period fields (NUMERIC amounts)
+                // Excel parser handles duplicate "cash paid" columns by adding suffixes: cash paid, cash paid__2, cash paid__3
+                pay_period_1: parseMoney(getColumnValue(row, 'Pay Period 1', ' Pay Period 1 '), debug ? `${debug}_pp1` : null),
+                pay_period_1_cash_paid: parseMoney(getColumnValue(row, 'cash paid', ' cash paid '), debug ? `${debug}_pp1_cash` : null),
+                pay_period_2: parseMoney(getColumnValue(row, 'Pay Period 2', ' Pay Period 2 '), debug ? `${debug}_pp2` : null),
+                pay_period_2_cash_paid: parseMoney(getColumnValue(row, 'cash paid__2', ' cash paid__2 '), debug ? `${debug}_pp2_cash` : null),
+                pay_period_3: parseMoney(getColumnValue(row, 'Pay Period 3', ' Pay Period 3 '), debug ? `${debug}_pp3` : null),
+                pay_period_3_cash_paid: parseMoney(getColumnValue(row, 'cash paid__3', ' cash paid__3 '), debug ? `${debug}_pp3_cash` : null),
+                
                 hourly_paid_out_minus: parseMoney(getColumnValue(row, '- Hourly Paid Out', ' - Hourly Paid Out '), debug ? `${debug}_hourly_paid_out` : null),
                 deduction_sales_manager_minus: parseMoney(getColumnValue(row, '-Deduction by Sales Manager', ' -Deduction by Sales Manager '), debug ? `${debug}_ded_sales_mgr` : null),
                 deduction_missing_punch_minus: parseMoney(getColumnValue(row, 'Deductions for missing punch in/out on the time report for all pay periods of the month', ' Deductions for missing punch in/out …', 'Deductions for missing punch in/out'), debug ? `${debug}_ded_punch` : null),
@@ -309,30 +326,42 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 
                 let upsertResult;
                 if (existing.rows.length > 0) {
-                    // UPDATE existing record
+                    // UPDATE existing record with all new fields
+                    // Note: Object.values(data) order: employee_id, period_month, period_start, period_end, payday_1, payday_2, name_raw, ...
                     upsertResult = await queryFn(`
                         UPDATE employee_commission_monthly
-                        SET employee_id = $1, name_raw = $3, hourly_rate = $4, rev_sm_all_locations = $5,
-                            rev_add_ons = $6, rev_deduction = $7, total_revenue_all = $8, booking_pct = $9, commission_pct = $10,
-                            commission_earned = $11, spiff_bonus = $12, revenue_bonus = $13, bonus_us_jobs_125x = $14,
-                            booking_bonus_plus = $15, booking_bonus_minus = $16, hourly_paid_out_minus = $17,
-                            deduction_sales_manager_minus = $18, deduction_missing_punch_minus = $19,
-                            deduction_customer_support_minus = $20, deduction_post_commission_collected_minus = $21,
-                            deduction_dispatch_minus = $22, deduction_other_minus = $23, total_due = $24, amount_paid = $25,
-                            remaining_amount = $26, corporate_open_jobs_note = $27, parking_pass_fee_note = $28,
-                            source_file = $29, sheet_name = $30, updated_at = CURRENT_TIMESTAMP
-                        WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($3)) AND period_month = $2
+                        SET employee_id = $1, period_start = $3, period_end = $4, payday_1 = $5, payday_2 = $6,
+                            name_raw = $7, hourly_rate = $8, rev_sm_all_locations = $9,
+                            rev_add_ons = $10, rev_deduction = $11, total_revenue_all = $12, booking_pct = $13, commission_pct = $14,
+                            commission_earned = $15, spiff_bonus = $16, revenue_bonus = $17, bonus_us_jobs_125x = $18,
+                            total_us_revenue = $19, commission_pct_us = $20, commission_earned_us = $21, commission_125x = $22,
+                            booking_bonus_plus = $23, booking_bonus_minus = $24,
+                            pay_period_1 = $25, pay_period_1_cash_paid = $26,
+                            pay_period_2 = $27, pay_period_2_cash_paid = $28,
+                            pay_period_3 = $29, pay_period_3_cash_paid = $30,
+                            hourly_paid_out_minus = $31,
+                            deduction_sales_manager_minus = $32, deduction_missing_punch_minus = $33,
+                            deduction_customer_support_minus = $34, deduction_post_commission_collected_minus = $35,
+                            deduction_dispatch_minus = $36, deduction_other_minus = $37, total_due = $38, amount_paid = $39,
+                            remaining_amount = $40, corporate_open_jobs_note = $41, parking_pass_fee_note = $42,
+                            source_file = $43, sheet_name = $44, updated_at = CURRENT_TIMESTAMP
+                        WHERE LOWER(TRIM(name_raw)) = LOWER(TRIM($7)) AND period_month = $2
                         RETURNING id
                     `, Object.values(data));
                 } else {
-                    // INSERT new record
+                    // INSERT new record with all fields
                     upsertResult = await queryFn(`
                         INSERT INTO employee_commission_monthly (
                             employee_id, period_month, period_start, period_end, payday_1, payday_2,
                             name_raw, hourly_rate, rev_sm_all_locations,
                             rev_add_ons, rev_deduction, total_revenue_all, booking_pct, commission_pct,
                             commission_earned, spiff_bonus, revenue_bonus, bonus_us_jobs_125x,
-                            booking_bonus_plus, booking_bonus_minus, hourly_paid_out_minus,
+                            total_us_revenue, commission_pct_us, commission_earned_us, commission_125x,
+                            booking_bonus_plus, booking_bonus_minus,
+                            pay_period_1, pay_period_1_cash_paid,
+                            pay_period_2, pay_period_2_cash_paid,
+                            pay_period_3, pay_period_3_cash_paid,
+                            hourly_paid_out_minus,
                             deduction_sales_manager_minus, deduction_missing_punch_minus,
                             deduction_customer_support_minus, deduction_post_commission_collected_minus,
                             deduction_dispatch_minus, deduction_other_minus, total_due, amount_paid,
@@ -342,7 +371,8 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                             $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
                             $11, $12, $13, $14, $15, $16, $17, $18, $19,
                             $20, $21, $22, $23, $24, $25, $26, $27, $28,
-                            $29, $30, $31, $32, $33, $34, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                            $29, $30, $31, $32, $33, $34, $35, $36, $37,
+                            $38, $39, $40, $41, $42, $43, $44, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
                         )
                         RETURNING id
                     `, Object.values(data));

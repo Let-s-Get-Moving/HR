@@ -4,7 +4,8 @@ import { q } from "../db.js";
 import { z } from "zod";
 import { formatCurrency, formatNumber } from "../utils/formatting.js";
 import { importCommissionsFromExcel } from "../utils/commissionImporter.js";
-import { applyScopeFilter } from "../middleware/rbac.js";
+import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
+import { requireAuth } from "../session.js";
 
 const r = Router();
 
@@ -187,22 +188,82 @@ r.get("/monthly", async (req, res) => {
     
     console.log(`📊 [COMMISSIONS] Found ${rows.length} monthly commission records`);
     
-    const formattedRows = rows.map(row => ({
-      ...row,
-      hourly_rate: formatCurrency(row.hourly_rate),
-      rev_sm_all_locations: formatCurrency(row.rev_sm_all_locations),
-      rev_add_ons: formatCurrency(row.rev_add_ons),
-      rev_deduction: formatCurrency(row.rev_deduction),
-      total_revenue_all: formatCurrency(row.total_revenue_all),
-      booking_pct: formatNumber(row.booking_pct, 1),
-      commission_pct: formatNumber(row.commission_pct, 1),
-      commission_earned: formatCurrency(row.commission_earned),
-      spiff_bonus: formatCurrency(row.spiff_bonus),
-      revenue_bonus: formatCurrency(row.revenue_bonus),
-      total_due: formatCurrency(row.total_due),
-      amount_paid: formatCurrency(row.amount_paid),
-      remaining_amount: formatCurrency(row.remaining_amount)
-    }));
+    const formattedRows = rows.map(row => {
+      // Keep raw values for editing, add formatted versions with _formatted suffix for display
+      const formatted = { ...row };
+      
+      // Store raw values (keep original)
+      formatted.hourly_rate_raw = row.hourly_rate;
+      formatted.rev_sm_all_locations_raw = row.rev_sm_all_locations;
+      formatted.rev_add_ons_raw = row.rev_add_ons;
+      formatted.rev_deduction_raw = row.rev_deduction;
+      formatted.total_revenue_all_raw = row.total_revenue_all;
+      formatted.booking_pct_raw = row.booking_pct;
+      formatted.commission_pct_raw = row.commission_pct;
+      formatted.commission_earned_raw = row.commission_earned;
+      formatted.spiff_bonus_raw = row.spiff_bonus;
+      formatted.revenue_bonus_raw = row.revenue_bonus;
+      formatted.bonus_us_jobs_125x_raw = row.bonus_us_jobs_125x;
+      formatted.total_us_revenue_raw = row.total_us_revenue;
+      formatted.commission_pct_us_raw = row.commission_pct_us;
+      formatted.commission_earned_us_raw = row.commission_earned_us;
+      formatted.commission_125x_raw = row.commission_125x;
+      formatted.booking_bonus_plus_raw = row.booking_bonus_plus;
+      formatted.booking_bonus_minus_raw = row.booking_bonus_minus;
+      formatted.pay_period_1_raw = row.pay_period_1;
+      formatted.pay_period_1_cash_paid_raw = row.pay_period_1_cash_paid;
+      formatted.pay_period_2_raw = row.pay_period_2;
+      formatted.pay_period_2_cash_paid_raw = row.pay_period_2_cash_paid;
+      formatted.pay_period_3_raw = row.pay_period_3;
+      formatted.pay_period_3_cash_paid_raw = row.pay_period_3_cash_paid;
+      formatted.hourly_paid_out_minus_raw = row.hourly_paid_out_minus;
+      formatted.deduction_sales_manager_minus_raw = row.deduction_sales_manager_minus;
+      formatted.deduction_missing_punch_minus_raw = row.deduction_missing_punch_minus;
+      formatted.deduction_customer_support_minus_raw = row.deduction_customer_support_minus;
+      formatted.deduction_post_commission_collected_minus_raw = row.deduction_post_commission_collected_minus;
+      formatted.deduction_dispatch_minus_raw = row.deduction_dispatch_minus;
+      formatted.deduction_other_minus_raw = row.deduction_other_minus;
+      formatted.total_due_raw = row.total_due;
+      formatted.amount_paid_raw = row.amount_paid;
+      formatted.remaining_amount_raw = row.remaining_amount;
+      
+      // Format for display
+      formatted.hourly_rate = formatCurrency(row.hourly_rate);
+      formatted.rev_sm_all_locations = formatCurrency(row.rev_sm_all_locations);
+      formatted.rev_add_ons = formatCurrency(row.rev_add_ons);
+      formatted.rev_deduction = formatCurrency(row.rev_deduction);
+      formatted.total_revenue_all = formatCurrency(row.total_revenue_all);
+      formatted.booking_pct = formatNumber(row.booking_pct, 1);
+      formatted.commission_pct = formatNumber(row.commission_pct, 1);
+      formatted.commission_earned = formatCurrency(row.commission_earned);
+      formatted.spiff_bonus = formatCurrency(row.spiff_bonus);
+      formatted.revenue_bonus = formatCurrency(row.revenue_bonus);
+      formatted.bonus_us_jobs_125x = formatCurrency(row.bonus_us_jobs_125x);
+      formatted.total_us_revenue = formatCurrency(row.total_us_revenue);
+      formatted.commission_pct_us = formatNumber(row.commission_pct_us, 1);
+      formatted.commission_earned_us = formatCurrency(row.commission_earned_us);
+      formatted.commission_125x = formatCurrency(row.commission_125x);
+      formatted.booking_bonus_plus = formatCurrency(row.booking_bonus_plus);
+      formatted.booking_bonus_minus = formatCurrency(row.booking_bonus_minus);
+      formatted.pay_period_1 = formatCurrency(row.pay_period_1);
+      formatted.pay_period_1_cash_paid = formatCurrency(row.pay_period_1_cash_paid);
+      formatted.pay_period_2 = formatCurrency(row.pay_period_2);
+      formatted.pay_period_2_cash_paid = formatCurrency(row.pay_period_2_cash_paid);
+      formatted.pay_period_3 = formatCurrency(row.pay_period_3);
+      formatted.pay_period_3_cash_paid = formatCurrency(row.pay_period_3_cash_paid);
+      formatted.hourly_paid_out_minus = formatCurrency(row.hourly_paid_out_minus);
+      formatted.deduction_sales_manager_minus = formatCurrency(row.deduction_sales_manager_minus);
+      formatted.deduction_missing_punch_minus = formatCurrency(row.deduction_missing_punch_minus);
+      formatted.deduction_customer_support_minus = formatCurrency(row.deduction_customer_support_minus);
+      formatted.deduction_post_commission_collected_minus = formatCurrency(row.deduction_post_commission_collected_minus);
+      formatted.deduction_dispatch_minus = formatCurrency(row.deduction_dispatch_minus);
+      formatted.deduction_other_minus = formatCurrency(row.deduction_other_minus);
+      formatted.total_due = formatCurrency(row.total_due);
+      formatted.amount_paid = formatCurrency(row.amount_paid);
+      formatted.remaining_amount = formatCurrency(row.remaining_amount);
+      
+      return formatted;
+    });
     
     const elapsed = Date.now() - startTime;
     console.log(`✅ [COMMISSIONS] GET /monthly completed in ${elapsed}ms`);
@@ -527,6 +588,196 @@ r.get("/summary", async (req, res) => {
   } catch (error) {
     console.error("Error fetching commission summary:", error);
     res.status(500).json({ error: "Failed to fetch commission summary" });
+  }
+});
+
+// Update monthly commission record (manager/admin only)
+r.put("/monthly/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+    
+    console.log(`📝 [COMMISSIONS] PUT /monthly/${id} - Update request received`);
+    console.log(`📝 [COMMISSIONS] Update data:`, Object.keys(updateData));
+    
+    // Validate that record exists
+    const existing = await q(`
+      SELECT id FROM employee_commission_monthly WHERE id = $1
+    `, [id]);
+    
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: "Commission record not found" });
+    }
+    
+    // Build dynamic update query - only update fields that are provided
+    const allowedFields = [
+      'hourly_rate', 'rev_sm_all_locations', 'rev_add_ons', 'rev_deduction', 'total_revenue_all',
+      'booking_pct', 'commission_pct', 'commission_earned',
+      'spiff_bonus', 'revenue_bonus', 'bonus_us_jobs_125x',
+      'total_us_revenue', 'commission_pct_us', 'commission_earned_us', 'commission_125x',
+      'booking_bonus_plus', 'booking_bonus_minus',
+      'pay_period_1', 'pay_period_1_cash_paid', 'pay_period_2', 'pay_period_2_cash_paid',
+      'pay_period_3', 'pay_period_3_cash_paid',
+      'hourly_paid_out_minus', 'deduction_sales_manager_minus', 'deduction_missing_punch_minus',
+      'deduction_customer_support_minus', 'deduction_post_commission_collected_minus',
+      'deduction_dispatch_minus', 'deduction_other_minus',
+      'total_due', 'amount_paid', 'remaining_amount',
+      'corporate_open_jobs_note', 'parking_pass_fee_note'
+    ];
+    
+    const updates = [];
+    const values = [];
+    let paramIndex = 1;
+    
+    for (const field of allowedFields) {
+      if (updateData.hasOwnProperty(field)) {
+        // Convert formatted strings back to numbers for numeric fields
+        let value = updateData[field];
+        
+        if (value === '' || value === null || value === undefined) {
+          value = null;
+        } else if (typeof value === 'string') {
+          // Remove currency formatting ($, commas)
+          const cleaned = value.replace(/[$,]/g, '').trim();
+          if (cleaned === '' || cleaned === '-') {
+            value = null;
+          } else {
+            // Try to parse as number
+            const parsed = parseFloat(cleaned);
+            if (!isNaN(parsed)) {
+              value = parsed;
+            }
+          }
+        }
+        
+        // For percentage fields, handle both decimal (0.035) and percentage (3.5) formats
+        if (field.includes('_pct') && value !== null) {
+          if (value > 1 && value <= 100) {
+            // Assume it's a percentage (3.5), keep as is
+          } else if (value > 0 && value < 1) {
+            // Assume it's a decimal (0.035), convert to percentage
+            value = value * 100;
+          }
+        }
+        
+        updates.push(`${field} = $${paramIndex}`);
+        values.push(value);
+        paramIndex++;
+      }
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ error: "No valid fields to update" });
+    }
+    
+    // Add updated_at
+    updates.push(`updated_at = CURRENT_TIMESTAMP`);
+    
+    // Add id as last parameter
+    values.push(id);
+    
+    const updateQuery = `
+      UPDATE employee_commission_monthly
+      SET ${updates.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING *
+    `;
+    
+    const { rows } = await q(updateQuery, values);
+    
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Failed to update commission record" });
+    }
+    
+    const updated = rows[0];
+    
+    // Format the response (include raw values for editing)
+    const formatted = {
+      ...updated,
+      // Store raw values
+      hourly_rate_raw: updated.hourly_rate,
+      rev_sm_all_locations_raw: updated.rev_sm_all_locations,
+      rev_add_ons_raw: updated.rev_add_ons,
+      rev_deduction_raw: updated.rev_deduction,
+      total_revenue_all_raw: updated.total_revenue_all,
+      booking_pct_raw: updated.booking_pct,
+      commission_pct_raw: updated.commission_pct,
+      commission_earned_raw: updated.commission_earned,
+      spiff_bonus_raw: updated.spiff_bonus,
+      revenue_bonus_raw: updated.revenue_bonus,
+      bonus_us_jobs_125x_raw: updated.bonus_us_jobs_125x,
+      total_us_revenue_raw: updated.total_us_revenue,
+      commission_pct_us_raw: updated.commission_pct_us,
+      commission_earned_us_raw: updated.commission_earned_us,
+      commission_125x_raw: updated.commission_125x,
+      booking_bonus_plus_raw: updated.booking_bonus_plus,
+      booking_bonus_minus_raw: updated.booking_bonus_minus,
+      pay_period_1_raw: updated.pay_period_1,
+      pay_period_1_cash_paid_raw: updated.pay_period_1_cash_paid,
+      pay_period_2_raw: updated.pay_period_2,
+      pay_period_2_cash_paid_raw: updated.pay_period_2_cash_paid,
+      pay_period_3_raw: updated.pay_period_3,
+      pay_period_3_cash_paid_raw: updated.pay_period_3_cash_paid,
+      hourly_paid_out_minus_raw: updated.hourly_paid_out_minus,
+      deduction_sales_manager_minus_raw: updated.deduction_sales_manager_minus,
+      deduction_missing_punch_minus_raw: updated.deduction_missing_punch_minus,
+      deduction_customer_support_minus_raw: updated.deduction_customer_support_minus,
+      deduction_post_commission_collected_minus_raw: updated.deduction_post_commission_collected_minus,
+      deduction_dispatch_minus_raw: updated.deduction_dispatch_minus,
+      deduction_other_minus_raw: updated.deduction_other_minus,
+      total_due_raw: updated.total_due,
+      amount_paid_raw: updated.amount_paid,
+      remaining_amount_raw: updated.remaining_amount,
+      // Format for display
+      hourly_rate: formatCurrency(updated.hourly_rate),
+      rev_sm_all_locations: formatCurrency(updated.rev_sm_all_locations),
+      rev_add_ons: formatCurrency(updated.rev_add_ons),
+      rev_deduction: formatCurrency(updated.rev_deduction),
+      total_revenue_all: formatCurrency(updated.total_revenue_all),
+      booking_pct: formatNumber(updated.booking_pct, 1),
+      commission_pct: formatNumber(updated.commission_pct, 1),
+      commission_earned: formatCurrency(updated.commission_earned),
+      spiff_bonus: formatCurrency(updated.spiff_bonus),
+      revenue_bonus: formatCurrency(updated.revenue_bonus),
+      bonus_us_jobs_125x: formatCurrency(updated.bonus_us_jobs_125x),
+      total_us_revenue: formatCurrency(updated.total_us_revenue),
+      commission_pct_us: formatNumber(updated.commission_pct_us, 1),
+      commission_earned_us: formatCurrency(updated.commission_earned_us),
+      commission_125x: formatCurrency(updated.commission_125x),
+      booking_bonus_plus: formatCurrency(updated.booking_bonus_plus),
+      booking_bonus_minus: formatCurrency(updated.booking_bonus_minus),
+      pay_period_1: formatCurrency(updated.pay_period_1),
+      pay_period_1_cash_paid: formatCurrency(updated.pay_period_1_cash_paid),
+      pay_period_2: formatCurrency(updated.pay_period_2),
+      pay_period_2_cash_paid: formatCurrency(updated.pay_period_2_cash_paid),
+      pay_period_3: formatCurrency(updated.pay_period_3),
+      pay_period_3_cash_paid: formatCurrency(updated.pay_period_3_cash_paid),
+      hourly_paid_out_minus: formatCurrency(updated.hourly_paid_out_minus),
+      deduction_sales_manager_minus: formatCurrency(updated.deduction_sales_manager_minus),
+      deduction_missing_punch_minus: formatCurrency(updated.deduction_missing_punch_minus),
+      deduction_customer_support_minus: formatCurrency(updated.deduction_customer_support_minus),
+      deduction_post_commission_collected_minus: formatCurrency(updated.deduction_post_commission_collected_minus),
+      deduction_dispatch_minus: formatCurrency(updated.deduction_dispatch_minus),
+      deduction_other_minus: formatCurrency(updated.deduction_other_minus),
+      total_due: formatCurrency(updated.total_due),
+      amount_paid: formatCurrency(updated.amount_paid),
+      remaining_amount: formatCurrency(updated.remaining_amount)
+    };
+    
+    const elapsed = Date.now() - startTime;
+    console.log(`✅ [COMMISSIONS] PUT /monthly/${id} completed in ${elapsed}ms`);
+    
+    res.json(formatted);
+  } catch (error) {
+    const elapsed = Date.now() - startTime;
+    console.error(`❌ [COMMISSIONS] PUT /monthly/:id failed after ${elapsed}ms:`, error);
+    console.error('❌ [COMMISSIONS] Error stack:', error.stack);
+    
+    res.status(500).json({ 
+      error: "Failed to update commission record", 
+      details: error.message 
+    });
   }
 });
 

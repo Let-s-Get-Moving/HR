@@ -9,6 +9,26 @@ import { formatShortDate } from '../utils/timezone.js';
 export default function BonusesCommissions() {
   const { t } = useTranslation();
   const { userRole } = useUserRole();
+  
+  // Helper to format currency for display
+  const formatCurrencyDisplay = (value) => {
+    if (value === null || value === undefined || value === '') return '$0';
+    const num = typeof value === 'string' ? parseFloat(value.replace(/[$,]/g, '')) : value;
+    if (isNaN(num)) return '$0';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(num);
+  };
+  
+  // Helper to format percentage for display
+  const formatPercentageDisplay = (value) => {
+    if (value === null || value === undefined || value === '') return '0%';
+    const num = typeof value === 'string' ? parseFloat(value.replace('%', '')) : value;
+    if (isNaN(num)) return '0%';
+    return `${num.toFixed(1)}%`;
+  };
   const [activeTab, setActiveTab] = useState("analytics");
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -102,23 +122,23 @@ export default function BonusesCommissions() {
   const [importStatus, setImportStatus] = useState(null);
   const [manualPeriod, setManualPeriod] = useState(''); // For manual month/year selection
   const [monthlyCommissions, setMonthlyCommissions] = useState([]);
-  const [agentCommissions, setAgentCommissions] = useState([]);
-  const [hourlyPayouts, setHourlyPayouts] = useState([]);
   
   // Analytics data
   const [analyticsData, setAnalyticsData] = useState(null);
   const [availablePeriods, setAvailablePeriods] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('');
   const [analyticsMonthly, setAnalyticsMonthly] = useState([]);
-  const [analyticsAgents, setAnalyticsAgents] = useState([]);
-  const [analyticsHourly, setAnalyticsHourly] = useState([]);
   const [showCalendar, setShowCalendar] = useState(false);
   
   // Search states
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredMonthly, setFilteredMonthly] = useState([]);
-  const [filteredAgents, setFilteredAgents] = useState([]);
-  const [filteredHourly, setFilteredHourly] = useState([]);
+  
+  // Inline editing states
+  const [editingRecordId, setEditingRecordId] = useState(null);
+  const [editingField, setEditingField] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
+  const [savingField, setSavingField] = useState(null);
 
   const tabs = [
     // Hide import tab for user role
@@ -150,13 +170,11 @@ export default function BonusesCommissions() {
   // Filter analytics data when search query changes
   useEffect(() => {
     handleSearch(searchQuery);
-  }, [analyticsMonthly, analyticsAgents, analyticsHourly, searchQuery]);
+  }, [analyticsMonthly, searchQuery]);
 
   const handleSearch = (query) => {
     if (!query.trim()) {
       setFilteredMonthly(analyticsMonthly);
-      setFilteredAgents(analyticsAgents);
-      setFilteredHourly(analyticsHourly);
       return;
     }
 
@@ -168,21 +186,7 @@ export default function BonusesCommissions() {
       return name.includes(searchTerm);
     });
     
-    // Filter agents by employee name
-    const filteredA = analyticsAgents.filter(item => {
-      const name = (item.employee_name || item.name_raw || '').toLowerCase();
-      return name.includes(searchTerm);
-    });
-    
-    // Filter hourly payouts by employee name
-    const filteredH = analyticsHourly.filter(item => {
-      const name = (item.employee_name || item.name_raw || '').toLowerCase();
-      return name.includes(searchTerm);
-    });
-
     setFilteredMonthly(filteredM);
-    setFilteredAgents(filteredA);
-    setFilteredHourly(filteredH);
   };
 
   // Close calendar when clicking outside
@@ -244,8 +248,8 @@ export default function BonusesCommissions() {
       console.log(`💰 [Frontend Commissions] LOADING ANALYTICS for period: ${selectedPeriod}`);
       console.log(`💰 [Frontend Commissions] Time: ${new Date().toISOString()}`);
       
-      // Load all analytics data for selected period
-      const [summary, monthly, agents, hourly] = await Promise.all([
+      // Load unified commission data for selected period
+      const [summary, monthly] = await Promise.all([
         API(`/api/commissions/summary?period_month=${selectedPeriod}`).catch((err) => {
           console.error('❌ [Frontend Commissions] Summary failed:', err);
           return null;
@@ -253,44 +257,17 @@ export default function BonusesCommissions() {
         API(`/api/commissions/monthly?period_month=${selectedPeriod}`).catch((err) => {
           console.error('❌ [Frontend Commissions] Monthly failed:', err);
           return [];
-        }),
-        API(`/api/commissions/agents-us?period_month=${selectedPeriod}`).catch((err) => {
-          console.error('❌ [Frontend Commissions] Agents US failed:', err);
-          return [];
-        }),
-        API(`/api/commissions/hourly-payouts?period_month=${selectedPeriod}`).catch((err) => {
-          console.error('❌ [Frontend Commissions] Hourly Payouts failed:', err);
-          return [];
         })
       ]);
       
       console.log('✅ [Frontend Commissions] API responses received:');
       console.log('   - Summary:', summary ? 'OK' : 'null');
       console.log('   - Monthly:', `${monthly?.length || 0} records`);
-      console.log('   - Agents US:', `${agents?.length || 0} records`);
-      console.log('   - Hourly Payouts:', `${hourly?.length || 0} records`);
-      
-      if (hourly && hourly.length > 0) {
-        console.log('💰 [Frontend Commissions] Hourly payout samples:');
-        hourly.slice(0, 3).forEach((h, idx) => {
-          console.log(`   ${idx + 1}. ${h.employee_name || h.name_raw}`);
-          console.log(`      - Total: $${h.total_for_month}`);
-          console.log(`      - Date periods: ${h.date_periods?.length || 0} entries`);
-        });
-      } else {
-        console.error('⚠️ [Frontend Commissions] NO HOURLY PAYOUTS received!');
-        console.error('   - This means hourly_payout table is empty for this period');
-        console.error(`   - Period requested: ${selectedPeriod}`);
-      }
       
       console.log('✅ [Frontend Commissions] Setting state...');
       setAnalyticsData(summary);
       setAnalyticsMonthly(monthly);
-      setAnalyticsAgents(agents);
-      setAnalyticsHourly(hourly);
       setFilteredMonthly(monthly);
-      setFilteredAgents(agents);
-      setFilteredHourly(hourly);
       console.log('✅ [Frontend Commissions] State updated');
       console.log('═══════════════════════════════════════════════════════════\n');
       
@@ -301,8 +278,6 @@ export default function BonusesCommissions() {
       console.error('═══════════════════════════════════════════════════════════\n');
       setAnalyticsData(null);
       setAnalyticsMonthly([]);
-      setAnalyticsAgents([]);
-      setAnalyticsHourly([]);
     } finally {
       setLoading(false);
     }
@@ -312,15 +287,9 @@ export default function BonusesCommissions() {
   const refreshImportedData = async () => {
     try {
       // Get the most recent data (this will be updated after successful import)
-      const [monthly, agents, hourly] = await Promise.all([
-        API('/api/commissions/monthly?period_month=2025-07-01').catch(() => []),
-        API('/api/commissions/agents-us?period_month=2025-07-01').catch(() => []),
-        API('/api/commissions/hourly-payouts?period_month=2025-07-01').catch(() => [])
-      ]);
+      const monthly = await API('/api/commissions/monthly?period_month=2025-07-01').catch(() => []);
       
       setMonthlyCommissions(monthly);
-      setAgentCommissions(agents);
-      setHourlyPayouts(hourly);
       
       // Refresh periods list and analytics
       await loadAvailablePeriods();
@@ -1145,6 +1114,151 @@ export default function BonusesCommissions() {
     </div>
   );
 
+  // Inline editing functions
+  const handleCellEdit = (recordId, fieldName, rawValue) => {
+    if (userRole === 'user') return; // Users cannot edit
+    
+    setEditingRecordId(recordId);
+    setEditingField(fieldName);
+    // Use raw value (already extracted by getRawValue)
+    setEditingValue(rawValue === null || rawValue === undefined ? '' : rawValue.toString());
+  };
+
+  const handleCellSave = async (recordId, fieldName) => {
+    if (userRole === 'user') return;
+    
+    setSavingField(`${recordId}-${fieldName}`);
+    try {
+      // Convert editingValue to appropriate type
+      let value = editingValue;
+      
+      // For numeric fields (currency, percentage), convert to number
+      if (fieldName.includes('_pct') || fieldName.includes('_rate') || 
+          fieldName.includes('revenue') || fieldName.includes('bonus') || 
+          fieldName.includes('commission') || fieldName.includes('deduction') ||
+          fieldName.includes('pay_period') || fieldName.includes('total') ||
+          fieldName.includes('amount') || fieldName.includes('due')) {
+        if (value === '' || value === null || value === undefined) {
+          value = null;
+        } else {
+          const numValue = parseFloat(value);
+          value = isNaN(numValue) ? null : numValue;
+        }
+      }
+      
+      const updateData = { [fieldName]: value };
+      
+      await API(`/api/commissions/monthly/${recordId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updateData)
+      });
+      
+      // Refresh data
+      await loadAnalyticsData();
+      
+      setEditingRecordId(null);
+      setEditingField(null);
+      setEditingValue('');
+      setSuccessMessage('Field updated successfully');
+      setShowSuccessMessage(true);
+    } catch (error) {
+      console.error('Error updating field:', error);
+      setErrorMessage(`Failed to update field: ${error.message}`);
+      setShowErrorMessage(true);
+    } finally {
+      setSavingField(null);
+    }
+  };
+
+  const handleCellCancel = () => {
+    setEditingRecordId(null);
+    setEditingField(null);
+    setEditingValue('');
+  };
+
+  const renderEditableCell = (record, fieldName, displayValue, fieldType = 'currency', className = '') => {
+    const isEditing = editingRecordId === record.id && editingField === fieldName;
+    const isSaving = savingField === `${record.id}-${fieldName}`;
+    const canEdit = userRole === 'manager' || userRole === 'admin';
+    
+    // Get raw value from record for editing (not formatted)
+    const getRawValue = () => {
+      // Try to get raw value first (from API)
+      const rawValue = record[`${fieldName}_raw`];
+      if (rawValue !== null && rawValue !== undefined) {
+        return rawValue.toString();
+      }
+      
+      // Fallback to formatted value and extract number
+      const formatted = record[fieldName];
+      if (formatted === null || formatted === undefined) return '';
+      if (typeof formatted === 'string') {
+        // If it's a formatted string, extract number
+        const cleaned = formatted.replace(/[$,%]/g, '').trim();
+        return cleaned === '' || cleaned === '-' ? '' : cleaned;
+      }
+      return formatted.toString();
+    };
+    
+    if (isEditing && canEdit) {
+      return (
+        <td className={`py-2 px-3 ${className}`}>
+          <div className="flex items-center gap-1">
+            <input
+              type={fieldType === 'percentage' ? 'number' : fieldType === 'text' ? 'text' : 'number'}
+              step={fieldType === 'percentage' ? '0.1' : '0.01'}
+              value={editingValue}
+              onChange={(e) => setEditingValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleCellSave(record.id, fieldName);
+                } else if (e.key === 'Escape') {
+                  handleCellCancel();
+                }
+              }}
+              className="w-24 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded text-sm text-white"
+              autoFocus
+            />
+            <button
+              onClick={() => handleCellSave(record.id, fieldName)}
+              disabled={isSaving}
+              className="px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs disabled:opacity-50"
+              title="Save (Enter)"
+            >
+              ✓
+            </button>
+            <button
+              onClick={handleCellCancel}
+              className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs"
+              title="Cancel (Esc)"
+            >
+              ✕
+            </button>
+          </div>
+        </td>
+      );
+    }
+    
+    return (
+      <td
+        className={`py-2 px-3 ${className} ${canEdit ? 'cursor-pointer hover:bg-neutral-700/50' : ''}`}
+        onDoubleClick={() => {
+          if (canEdit) {
+            const rawVal = getRawValue();
+            handleCellEdit(record.id, fieldName, rawVal);
+          }
+        }}
+        title={canEdit ? 'Double-click to edit' : ''}
+      >
+        {isSaving ? (
+          <span className="text-neutral-500">Saving...</span>
+        ) : (
+          displayValue
+        )}
+      </td>
+    );
+  };
+
   const renderAnalytics = () => {
     if (loading) {
       return <div className="text-center py-8">{t('bonuses.loadingAnalytics')}</div>;
@@ -1275,7 +1389,7 @@ export default function BonusesCommissions() {
           </div>
           {searchQuery && (
             <div className="mt-2 text-sm text-secondary">
-              Found {filteredMonthly.length + filteredAgents.length + filteredHourly.length} result{(filteredMonthly.length + filteredAgents.length + filteredHourly.length) !== 1 ? 's' : ''} matching "{searchQuery}"
+              Found {filteredMonthly.length} result{filteredMonthly.length !== 1 ? 's' : ''} matching "{searchQuery}"
             </div>
           )}
         </div>
@@ -1321,10 +1435,10 @@ export default function BonusesCommissions() {
           </div>
         )}
 
-        {/* Monthly Commissions Table - Dynamic Columns */}
+        {/* Unified Commissions & Bonuses Table - All Fields Combined */}
         <div className="card p-6">
           <h4 className="text-lg font-semibold mb-4 text-indigo-400">
-            📋 Monthly Commissions ({filteredMonthly.length})
+            📋 Commissions & Bonuses ({filteredMonthly.length})
           </h4>
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
@@ -1332,66 +1446,104 @@ export default function BonusesCommissions() {
                 <tr className="border-b border-neutral-700">
                   <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
                   <th className="text-left py-2 px-3 bg-neutral-900">Hourly Rate</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue SM</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Add Ons</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Deduction</th>
+                  
+                  {/* Revenue Fields */}
+                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue SM (All locations)</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue Add Ons+</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue Deduction</th>
                   <th className="text-left py-2 px-3 bg-neutral-900">Total Revenue</th>
+                  
+                  {/* Commission Fields */}
                   <th className="text-left py-2 px-3 bg-neutral-900">Booking %</th>
                   <th className="text-left py-2 px-3 bg-neutral-900">Commission %</th>
                   <th className="text-left py-2 px-3 bg-neutral-900">Commission Earned</th>
+                  
+                  {/* Bonus Fields */}
                   <th className="text-left py-2 px-3 bg-neutral-900">Spiff Bonus</th>
                   <th className="text-left py-2 px-3 bg-neutral-900">Revenue Bonus</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">US Jobs 1.25X</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Booking Bonus +</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Booking Bonus -</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Hourly Paid Out</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Sales Mgr Ded</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Missing Punch</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Cust Support</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Post Comm</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Dispatch Ded</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Other Ded</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400">Total Due</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-blue-400">Amount Paid</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-purple-400">Remaining</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Corporate Jobs Note</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Parking Pass Note</th>
+                  
+                  {/* US Revenue & Commission Fields */}
+                  <th className="text-left py-2 px-3 bg-neutral-900">Total US Revenue</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Commission % (US)</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Commission Earned US</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">1.25X</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Bonuses for US Jobs 1.25X</th>
+                  
+                  {/* Booking Bonus/Deduction */}
+                  <th className="text-left py-2 px-3 bg-neutral-900">$5/$10 Bonus</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">$5/$10 Deduction</th>
+                  
+                  {/* Pay Periods */}
+                  <th className="text-left py-2 px-3 bg-neutral-900">Pay Period 1</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Cash Paid (PP1)</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Pay Period 2</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Cash Paid (PP2)</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Pay Period 3</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Cash Paid (PP3)</th>
+                  
+                  {/* Deductions */}
+                  <th className="text-left py-2 px-3 bg-neutral-900">- Hourly Paid Out</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">- Deduction by Sales Manager</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Missing Punch Deduction</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Customer Support Deduction</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Post Commission Deduction</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Dispatch Deduction</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Other Deduction</th>
+                  
+                  {/* Totals */}
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400 font-semibold">Total Due</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-blue-400 font-semibold">Amount Paid</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900 text-purple-400 font-semibold">Remaining Amount</th>
+                  
+                  {/* Notes */}
+                  <th className="text-left py-2 px-3 bg-neutral-900">Corporate Open Jobs</th>
+                  <th className="text-left py-2 px-3 bg-neutral-900">Parking Pass Fee</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMonthly.length > 0 ? filteredMonthly.map((record, idx) => (
-                  <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
+                  <tr key={record.id || idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
                     <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
-                    <td className="py-2 px-3">${record.hourly_rate || 0}</td>
-                    <td className="py-2 px-3">${(record.rev_sm_all_locations || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.rev_add_ons || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.rev_deduction || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.total_revenue_all || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">{(record.booking_pct || 0)}%</td>
-                    <td className="py-2 px-3">{(record.commission_pct || 0)}%</td>
-                    <td className="py-2 px-3 text-green-400">${(record.commission_earned || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.spiff_bonus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.revenue_bonus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.bonus_us_jobs_125x || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.booking_bonus_plus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.booking_bonus_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.hourly_paid_out_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.deduction_sales_manager_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.deduction_missing_punch_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.deduction_customer_support_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.deduction_post_commission_collected_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.deduction_dispatch_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">${(record.deduction_other_minus || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_due || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3 text-blue-400 font-semibold">${(record.amount_paid || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3 text-purple-400 font-semibold">${(record.remaining_amount || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3 text-neutral-400 text-xs">{record.corporate_open_jobs_note || '-'}</td>
-                    <td className="py-2 px-3 text-neutral-400 text-xs">{record.parking_pass_fee_note || '-'}</td>
+                    {renderEditableCell(record, 'hourly_rate', formatCurrencyDisplay(record.hourly_rate), 'currency')}
+                    {renderEditableCell(record, 'rev_sm_all_locations', formatCurrencyDisplay(record.rev_sm_all_locations), 'currency')}
+                    {renderEditableCell(record, 'rev_add_ons', formatCurrencyDisplay(record.rev_add_ons), 'currency')}
+                    {renderEditableCell(record, 'rev_deduction', formatCurrencyDisplay(record.rev_deduction), 'currency')}
+                    {renderEditableCell(record, 'total_revenue_all', formatCurrencyDisplay(record.total_revenue_all), 'currency')}
+                    {renderEditableCell(record, 'booking_pct', formatPercentageDisplay(record.booking_pct), 'percentage')}
+                    {renderEditableCell(record, 'commission_pct', formatPercentageDisplay(record.commission_pct), 'percentage')}
+                    {renderEditableCell(record, 'commission_earned', formatCurrencyDisplay(record.commission_earned), 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'spiff_bonus', formatCurrencyDisplay(record.spiff_bonus), 'currency')}
+                    {renderEditableCell(record, 'revenue_bonus', formatCurrencyDisplay(record.revenue_bonus), 'currency')}
+                    {renderEditableCell(record, 'bonus_us_jobs_125x', formatCurrencyDisplay(record.bonus_us_jobs_125x), 'currency')}
+                    {renderEditableCell(record, 'total_us_revenue', formatCurrencyDisplay(record.total_us_revenue), 'currency')}
+                    {renderEditableCell(record, 'commission_pct_us', formatPercentageDisplay(record.commission_pct_us), 'percentage')}
+                    {renderEditableCell(record, 'commission_earned_us', formatCurrencyDisplay(record.commission_earned_us), 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'commission_125x', formatCurrencyDisplay(record.commission_125x), 'currency', 'text-yellow-400')}
+                    {renderEditableCell(record, 'booking_bonus_plus', formatCurrencyDisplay(record.booking_bonus_plus), 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'booking_bonus_minus', formatCurrencyDisplay(record.booking_bonus_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'pay_period_1', formatCurrencyDisplay(record.pay_period_1), 'currency')}
+                    {renderEditableCell(record, 'pay_period_1_cash_paid', record.pay_period_1_cash_paid ? formatCurrencyDisplay(record.pay_period_1_cash_paid) : '-', 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'pay_period_2', formatCurrencyDisplay(record.pay_period_2), 'currency')}
+                    {renderEditableCell(record, 'pay_period_2_cash_paid', record.pay_period_2_cash_paid ? formatCurrencyDisplay(record.pay_period_2_cash_paid) : '-', 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'pay_period_3', formatCurrencyDisplay(record.pay_period_3), 'currency')}
+                    {renderEditableCell(record, 'pay_period_3_cash_paid', record.pay_period_3_cash_paid ? formatCurrencyDisplay(record.pay_period_3_cash_paid) : '-', 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'hourly_paid_out_minus', formatCurrencyDisplay(record.hourly_paid_out_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'deduction_sales_manager_minus', formatCurrencyDisplay(record.deduction_sales_manager_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'deduction_missing_punch_minus', formatCurrencyDisplay(record.deduction_missing_punch_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'deduction_customer_support_minus', formatCurrencyDisplay(record.deduction_customer_support_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'deduction_post_commission_collected_minus', formatCurrencyDisplay(record.deduction_post_commission_collected_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'deduction_dispatch_minus', formatCurrencyDisplay(record.deduction_dispatch_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'deduction_other_minus', formatCurrencyDisplay(record.deduction_other_minus), 'currency', 'text-red-400')}
+                    {renderEditableCell(record, 'total_due', formatCurrencyDisplay(record.total_due), 'currency', 'text-green-400 font-semibold')}
+                    {renderEditableCell(record, 'amount_paid', formatCurrencyDisplay(record.amount_paid), 'currency', 'text-blue-400 font-semibold')}
+                    {renderEditableCell(record, 'remaining_amount', formatCurrencyDisplay(record.remaining_amount), 'currency', 'text-purple-400 font-semibold')}
+                    {renderEditableCell(record, 'corporate_open_jobs_note', record.corporate_open_jobs_note || '-', 'text', 'text-neutral-400 text-xs')}
+                    {renderEditableCell(record, 'parking_pass_fee_note', record.parking_pass_fee_note || '-', 'text', 'text-neutral-400 text-xs')}
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="26" className="py-4 px-4 text-center text-neutral-500">
-                      No monthly commission data for this period
+                    <td colSpan="38" className="py-4 px-4 text-center text-neutral-500">
+                      No commission data for this period
                     </td>
                   </tr>
                 )}
@@ -1399,94 +1551,6 @@ export default function BonusesCommissions() {
             </table>
           </div>
         </div>
-
-        {/* Agent US Commissions Table - All Columns */}
-        <div className="card p-6">
-          <h4 className="text-lg font-semibold mb-4 text-indigo-400">
-            🇺🇸 Agent US Commissions ({filteredAgents.length})
-          </h4>
-          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-neutral-900 z-20">
-                <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Total US Revenue</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Commission %</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Commission Earned</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">1.25X Bonus</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Other Bonus</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAgents.length > 0 ? filteredAgents.map((record, idx) => (
-                  <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
-                    <td className="py-2 px-3">${(record.total_us_revenue || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3">{(record.commission_pct || 0)}%</td>
-                    <td className="py-2 px-3 text-green-400 font-semibold">${(record.commission_earned || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3 text-yellow-400">${(record.commission_125x || 0).toLocaleString()}</td>
-                    <td className="py-2 px-3 text-blue-400">${(record.bonus || 0).toLocaleString()}</td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="6" className="py-4 px-4 text-center text-neutral-500">
-                      No agent US commission data for this period
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-        </div>
-      </div>
-
-        {/* Hourly Payouts Table - Dynamic Date Columns */}
-      <div className="card p-6">
-          <h4 className="text-lg font-semibold mb-4 text-indigo-400">
-            ⏰ Hourly Payouts ({filteredHourly.length})
-          </h4>
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-neutral-900 z-20">
-              <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
-                  {/* Dynamically render date period columns from first record */}
-                  {filteredHourly.length > 0 && filteredHourly[0].date_periods && 
-                    analyticsHourly[0].date_periods.map((period, idx) => (
-                      <th key={idx} className="text-left py-2 px-3 bg-neutral-900">
-                        {period.label}
-                        {period.cash_paid && <span className="ml-1 text-xs text-green-400">(in cash)</span>}
-                      </th>
-                    ))
-                  }
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-                {filteredHourly.length > 0 ? filteredHourly.map((record, idx) => {
-                  const periods = record.date_periods || [];
-                  return (
-                    <tr key={idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                      <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
-                      {periods.map((period, pIdx) => (
-                        <td key={pIdx} className="py-2 px-3 text-blue-400">
-                          ${(period.amount || 0).toLocaleString()}
-                          {period.cash_paid && <span className="ml-1 text-xs text-green-400">(in cash)</span>}
-                        </td>
-                      ))}
-                      <td className="py-2 px-3 text-green-400 font-semibold">${(record.total_for_month || 0).toLocaleString()}</td>
-                    </tr>
-                  );
-                }) : (
-                  <tr>
-                    <td colSpan="10" className="py-4 px-4 text-center text-neutral-500">
-                      No hourly payout data for this period
-                    </td>
-                  </tr>
-                )}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
   };
