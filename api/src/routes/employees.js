@@ -197,7 +197,8 @@ const employeeSchema = z.object({
   bank_account_number: z.string().nullable().optional(),
   bank_transit_number: z.string().nullable().optional(),
   emergency_contact_name: z.string().nullable().optional(),
-  emergency_contact_phone: z.string().nullable().optional()
+  emergency_contact_phone: z.string().nullable().optional(),
+  nickname: z.string().nullable().optional()
 });
 
 r.post("/", async (req, res) => {
@@ -359,7 +360,8 @@ r.put("/:id", async (req, res) => {
       bank_account_number: data.bank_account_number !== undefined ? (data.bank_account_number || null) : existing.bank_account_number,
       contract_status: data.contract_status !== undefined ? (data.contract_status || null) : existing.contract_status,
       contract_signed_date: data.contract_signed_date !== undefined ? (data.contract_signed_date || null) : existing.contract_signed_date,
-      gift_card_sent: data.gift_card_sent !== undefined ? data.gift_card_sent : (existing.gift_card_sent || false)
+      gift_card_sent: data.gift_card_sent !== undefined ? data.gift_card_sent : (existing.gift_card_sent || false),
+      nickname: data.nickname !== undefined ? nullIfEmpty(data.nickname) : existing.nickname
     };
     
     const { rows } = await q(
@@ -373,8 +375,9 @@ r.put("/:id", async (req, res) => {
            full_address = $22, emergency_contact_name = $23, emergency_contact_phone = $24,
            sin_number = $25, sin_expiry_date = $26, bank_name = $27,
            bank_transit_number = $28, bank_account_number = $29,
-           contract_status = $30, contract_signed_date = $31, gift_card_sent = $32
-       WHERE id = $33
+           contract_status = $30, contract_signed_date = $31, gift_card_sent = $32,
+           nickname = $33
+       WHERE id = $34
        RETURNING *`,
       [
         mergedData.first_name,
@@ -409,6 +412,7 @@ r.put("/:id", async (req, res) => {
         mergedData.contract_status,
         mergedData.contract_signed_date,
         mergedData.gift_card_sent,
+        mergedData.nickname,
         id
       ]
     );

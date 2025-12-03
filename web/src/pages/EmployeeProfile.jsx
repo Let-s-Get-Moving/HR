@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
+import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
 
 export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const { t } = useTranslation();
@@ -35,6 +36,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
     notes: '',
     signed: false
   });
+  
+  const { userRole } = useUserRole();
 
   useEffect(() => {
     if (employeeId) {
@@ -256,6 +259,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       contract_status: employee.contract_status || 'Not Sent',
       contract_signed_date: employee.contract_signed_date ? employee.contract_signed_date.split('T')[0] : '',
       gift_card_sent: employee.gift_card_sent || false,
+      nickname: employee.nickname || '',
       // Settings
       job_title_id: employee.job_title_id || null,
       benefits_package_id: employee.benefits_package_id || null,
@@ -745,6 +749,24 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <span>{employee.phone || t('employeeProfile.notProvided')}</span>
                   )}
                 </div>
+                {hasFullAccess(userRole) && (
+                  <div className="flex justify-between">
+                    <span className="text-neutral-400">Nickname:</span>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editData.nickname || ''}
+                        onChange={(e) => setEditData({...editData, nickname: e.target.value})}
+                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right"
+                        placeholder="e.g., Dmytro Benz"
+                      />
+                    ) : (
+                      <span className="text-neutral-300">
+                        {employee.nickname || <span className="text-neutral-500 italic">Not set</span>}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-neutral-400">{t('employeeProfile.gender')}:</span>
                   {isEditing ? (

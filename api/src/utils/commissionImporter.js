@@ -89,8 +89,7 @@ class ImportSummary {
         this.sheet = sheetName;
         this.period_month = null;
         this.main = { inserted: 0, updated: 0, skipped: 0, errors: [] };
-        this.agents_us = { inserted: 0, updated: 0, skipped: 0, errors: [] };
-        this.hourly = { inserted: 0, updated: 0, skipped: 0, errors: [] };
+        // Note: agents_us and hourly removed - all data now unified in main table
         this.warnings = [];
         this.debug_logs = [];
     }
@@ -143,6 +142,7 @@ async function findEmployeeOnly(nameRaw, queryFn) {
     
     // Try to find by normalized name
     // SQL applies same normalization: lowercase, trim, collapse spaces, remove special chars
+    // Also check nickname field for alternative name matching
     const existingResult = await queryFn(`
         SELECT id, first_name, last_name
         FROM employees 
@@ -153,6 +153,13 @@ async function findEmployeeOnly(nameRaw, queryFn) {
             ),
             '\\s+', ' ', 'g'
         )) = $1
+        OR (nickname IS NOT NULL AND TRIM(REGEXP_REPLACE(
+            REGEXP_REPLACE(
+                LOWER(TRIM(nickname)),
+                '[^a-z0-9\\s-]', '', 'g'
+            ),
+            '\\s+', ' ', 'g'
+        )) = $1)
         LIMIT 1
     `, [nameKey]);
     
@@ -184,7 +191,7 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
     summary.addDebugLog(`Using period: ${periodMonth}`);
     
     // Track parking pass fees - collect names who need to be marked
-    const parkingPassNames = new Set();
+    // Note: Parking pass fee column removed from CSV - no longer processing
     
     for (let i = 0; i < blockData.length; i++) {
         const row = blockData[i];
@@ -270,7 +277,7 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 
                 // US commission fields (separate)
                 total_us_revenue: parseMoney(getColumnValue(row, 'total US revenue', ' total US revenue '), debug ? `${debug}_total_us_rev` : null),
-                commission_pct_us: parsePercent(getColumnValue(row, 'commission %__2', ' commission %__2 ', 'commission %'), debug ? `${debug}_commission_pct_us` : null), // Second "commission %" column (US)
+                commission_pct_us: parsePercent(getColumnValue(row, 'commission %__2', 'Commission %__2', ' commission %__2 ', 'commission %', 'Commission %'), debug ? `${debug}_commission_pct_us` : null), // Second "commission %" column (US) - handles case variations
                 commission_earned_us: parseMoney(getColumnValue(row, 'Commission earned  US ', 'Commission earned  US', 'Commission earned US'), debug ? `${debug}_commission_earned_us` : null),
                 commission_125x: parseMoney(getColumnValue(row, '1.25X', ' 1.25X '), debug ? `${debug}_commission_125x` : null),
                 
@@ -296,18 +303,11 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
                 total_due: parseMoney(getColumnValue(row, 'Total due', ' Total due '), debug ? `${debug}_total_due` : null),
                 amount_paid: parseMoney(getColumnValue(row, 'Amount paid (date included in comment)', ' Amount paid (date included in comment) '), debug ? `${debug}_amount_paid` : null),
                 remaining_amount: parseMoney(getColumnValue(row, 'Remaining amount', ' Remaining amount '), debug ? `${debug}_remaining` : null),
-                corporate_open_jobs_note: cleanCellValue(getColumnValue(row, 'CORPORATE LOCATIONS JOBS STILL OPEN', ' CORPORATE LOCATIONS JOBS STILL OPEN …')),
-                parking_pass_fee_note: null, // Will be set in second pass if this person owes parking fees
+                corporate_open_jobs_note: null, // Not in CSV - column removed
+                parking_pass_fee_note: null, // Not in CSV - column removed
                 source_file: filename,
                 sheet_name: sheetName
             };
-            
-            // If this row mentions someone who owes parking fees, collect their name
-            const parkingPassName = cleanCellValue(getColumnValue(row, 'Paid parking pass fee to be deducted from', ' Paid parking pass fee to be deducted from '));
-            if (parkingPassName && parkingPassName.trim()) {
-                parkingPassNames.add(parkingPassName.trim());
-                summary.addDebugLog(`🅿️ Parking fee: ${parkingPassName} owes parking pass fee`);
-            }
             
             // Debug log for first few rows
             if (rowNum <= 3) {
@@ -402,33 +402,19 @@ async function processMainCommissionData(blockData, periodMonth, filename, sheet
         }
     }
     
-    // Second pass: Mark employees who owe parking pass fees
-    if (parkingPassNames.size > 0) {
-        summary.addDebugLog(`🅿️ Processing ${parkingPassNames.size} parking pass fee assignments...`);
-        
-        for (const name of parkingPassNames) {
-            try {
-                // Find employee by normalized name and update their parking_pass_fee_note
-                const employeeId = await findEmployeeOnly(name, queryFn);
-                
-                await queryFn(`
-                    UPDATE employee_commission_monthly
-                    SET parking_pass_fee_note = $1,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE employee_id = $2 AND period_month = $3
-                `, [name, employeeId, periodMonth]);
-                
-                summary.addDebugLog(`🅿️ Marked parking fee for: ${name} (Employee ID ${employeeId})`);
-            } catch (error) {
-                summary.addDebugLog(`⚠️ Failed to mark parking fee for: ${name} - ${error.message}`);
-            }
-        }
-    }
+    // Note: Parking pass fee processing removed - column no longer in CSV
 }
 
 /**
- * Process agent US commission data block
+ * DEPRECATED: Process agent US commission data block
+ * 
+ * This function is no longer used. All commission data (including US commissions)
+ * is now processed in processMainCommissionData() and stored in the unified
+ * employee_commission_monthly table.
+ * 
+ * Kept for historical reference only.
  */
+/*
 async function processAgentUSCommissionData(blockData, periodMonth, filename, sheetName, summary, client) {
     const queryFn = client ? 
         (sql, params) => client.query(sql, params) : 
@@ -538,11 +524,18 @@ async function processAgentUSCommissionData(blockData, periodMonth, filename, sh
         }
     }
 }
+*/
 
 /**
- * Process hourly payout data block
- * Structure: Name | Date1 | cash paid | Date2 | cash paid | TOTAL
+ * DEPRECATED: Process hourly payout data block
+ * 
+ * This function is no longer used. All commission data (including pay periods)
+ * is now processed in processMainCommissionData() and stored in the unified
+ * employee_commission_monthly table with pay_period_1, pay_period_1_cash_paid, etc. fields.
+ * 
+ * Kept for historical reference only.
  */
+/*
 async function processHourlyPayoutData(blockData, block, periodMonth, filename, sheetName, summary, client) {
     const queryFn = client ? 
         (sql, params) => client.query(sql, params) : 
@@ -761,6 +754,7 @@ async function processHourlyPayoutData(blockData, block, periodMonth, filename, 
         }
     }
 }
+*/
 
 /**
  * Main import function
@@ -830,10 +824,10 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
             }
         }
         
-        // Detect all blocks
+        // Detect main commission block (unified structure - all data in one table)
         const blocks = detectAllBlocks(data);
         
-        summary.addDebugLog(`Block detection results: Main=${blocks.main ? 'Row ' + blocks.main.headerRow : 'Not found'}, Agent US=${blocks.agents_us ? 'Row ' + blocks.agents_us.headerRow : 'Not found'}, Hourly=${blocks.hourly ? 'Row ' + blocks.hourly.headerRow : 'Not found'}`);
+        summary.addDebugLog(`Block detection results: Main=${blocks.main ? 'Row ' + blocks.main.headerRow : 'Not found'}`);
         
         // Start database transaction
         const client = await pool.connect();
@@ -841,45 +835,19 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
         try {
             await client.query('BEGIN');
             
-            // Process each block if detected
+            // Process main commission block (contains all unified data including US commissions and pay periods)
             if (blocks.main) {
-                summary.addDebugLog('Processing main commission block...');
+                summary.addDebugLog('Processing unified commission block...');
                 const mainBlockData = extractBlockData(data, blocks.main);
-                summary.addDebugLog(`Extracted ${mainBlockData.length} rows from main block`);
-                summary.addDebugLog(`First 2 main rows: ${JSON.stringify(mainBlockData.slice(0, 2))}`);
+                summary.addDebugLog(`Extracted ${mainBlockData.length} rows from unified commission block`);
+                summary.addDebugLog(`First 2 rows: ${JSON.stringify(mainBlockData.slice(0, 2))}`);
                 
                 await processMainCommissionData(mainBlockData, summary.period_month, filename, actualSheetName, summary, client);
-                summary.addWarning(`Processed main commission block with ${mainBlockData.length} rows`);
-                summary.addDebugLog(`Main block results: ${summary.main.inserted} inserted, ${summary.main.updated} updated, ${summary.main.skipped} skipped`);
+                summary.addWarning(`Processed unified commission block with ${mainBlockData.length} rows`);
+                summary.addDebugLog(`Results: ${summary.main.inserted} inserted, ${summary.main.updated} updated, ${summary.main.skipped} skipped`);
             } else {
                 summary.addWarning('Main commission block not detected');
                 summary.addDebugLog('WARNING: Main commission block not detected');
-            }
-            
-            if (blocks.agents_us) {
-                summary.addDebugLog('Processing agents US commission block...');
-                const agentsUSBlockData = extractBlockData(data, blocks.agents_us);
-                summary.addDebugLog(`Extracted ${agentsUSBlockData.length} rows from agents US block`);
-                
-                await processAgentUSCommissionData(agentsUSBlockData, summary.period_month, filename, actualSheetName, summary, client);
-                summary.addWarning(`Processed agents US commission block with ${agentsUSBlockData.length} rows`);
-                summary.addDebugLog(`Agents US block results: ${summary.agents_us.inserted} inserted, ${summary.agents_us.updated} updated, ${summary.agents_us.skipped} skipped`);
-            } else {
-                summary.addWarning('Agents US commission block not detected');
-                summary.addDebugLog('WARNING: Agents US commission block not detected');
-            }
-            
-            if (blocks.hourly) {
-                summary.addDebugLog('Processing hourly payout block...');
-                const hourlyBlockData = extractBlockData(data, blocks.hourly);
-                summary.addDebugLog(`Extracted ${hourlyBlockData.length} rows from hourly block`);
-                
-                await processHourlyPayoutData(hourlyBlockData, blocks.hourly, summary.period_month, filename, actualSheetName, summary, client);
-                summary.addWarning(`Processed hourly payout block with ${hourlyBlockData.length} rows`);
-                summary.addDebugLog(`Hourly block results: ${summary.hourly.inserted} inserted, ${summary.hourly.updated} updated, ${summary.hourly.skipped} skipped`);
-            } else {
-                summary.addWarning('Hourly payout block not detected');
-                summary.addDebugLog('WARNING: Hourly payout block not detected');
             }
             
             await client.query('COMMIT');

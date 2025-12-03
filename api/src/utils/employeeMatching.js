@@ -6,9 +6,11 @@
  * 
  * Matching strategy:
  * 1. Exact first + last name match (case-insensitive)
- * 2. Email match (if email provided)
- * 3. Fuzzy name match (handles abbreviations like "Brian N" vs "Brian Nguyen")
- * 4. Phone number match (as fallback)
+ * 2. Nickname match (if nickname provided)
+ * 3. Email match (if email provided)
+ * 4. Fuzzy name match (handles abbreviations like "Brian N" vs "Brian Nguyen")
+ * 5. Full name without last name (for single-word names)
+ * 6. Phone number match (as fallback)
  */
 
 /**
@@ -203,7 +205,31 @@ export async function findExistingEmployee(employeeData, queryFn) {
     }
   }
   
-  // Strategy 2: Email match (if email provided and not the default company email)
+  // Strategy 2: Nickname match (if nickname provided)
+  const fullNameKey = name ? normalizeName(name) : (firstName && lastName ? normalizeName(`${firstName} ${lastName}`) : normalizeName(firstName));
+  if (fullNameKey) {
+    const nicknameMatch = await queryFn(
+      `SELECT * FROM employees 
+       WHERE nickname IS NOT NULL 
+       AND TRIM(REGEXP_REPLACE(
+         REGEXP_REPLACE(
+           LOWER(TRIM(nickname)),
+           '[^a-z0-9\\s-]', '', 'g'
+         ),
+         '\\s+', ' ', 'g'
+       )) = $1
+       AND status <> 'Terminated'
+       LIMIT 1`,
+      [fullNameKey]
+    );
+    
+    if (nicknameMatch.rows.length > 0) {
+      console.log(`[EmployeeMatching] ✓ Found by nickname: ID ${nicknameMatch.rows[0].id}`);
+      return nicknameMatch.rows[0];
+    }
+  }
+  
+  // Strategy 3: Email match (if email provided and not the default company email)
   if (email && !email.endsWith('@letsgetmovinggroup.com')) {
     const emailMatch = await queryFn(
       `SELECT * FROM employees 
@@ -219,7 +245,7 @@ export async function findExistingEmployee(employeeData, queryFn) {
     }
   }
   
-  // Strategy 3: Fuzzy name match (handles abbreviations, middle names, etc.)
+  // Strategy 4: Fuzzy name match (handles abbreviations, middle names, etc.)
   if (lastName) {
     const allMatches = await queryFn(
       `SELECT * FROM employees 
@@ -242,7 +268,7 @@ export async function findExistingEmployee(employeeData, queryFn) {
     }
   }
   
-  // Strategy 4: Full name without last name (for single-word names)
+  // Strategy 5: Full name without last name (for single-word names)
   if (!lastName) {
     const singleNameMatch = await queryFn(
       `SELECT * FROM employees 
@@ -258,7 +284,7 @@ export async function findExistingEmployee(employeeData, queryFn) {
     }
   }
   
-  // Strategy 5: Phone match (as last resort)
+  // Strategy 6: Phone match (as last resort)
   if (phone) {
     const cleanPhone = phone.replace(/\D/g, ''); // Remove non-digits
     if (cleanPhone.length >= 10) {
