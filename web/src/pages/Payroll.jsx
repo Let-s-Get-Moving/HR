@@ -298,6 +298,7 @@ export default function Payroll() {
       {showDetailModal && selectedEmployee && (
         <EmployeeDetailModal
           employee={selectedEmployee}
+          selectedPeriod={selectedPeriod}
           onClose={() => {
             setShowDetailModal(false);
             setSelectedEmployee(null);
@@ -441,8 +442,57 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
 }
 
 // Employee Detail Modal Component
-function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours }) {
+function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency, formatHours }) {
   const { t } = useTranslation();
+  
+  // Helper function to safely format dates
+  const safeFormatDate = (dateValue) => {
+    // Handle null, undefined, empty string, etc.
+    if (!dateValue) return 'N/A';
+    
+    try {
+      let date;
+      
+      // If it's already a Date object, use it directly
+      if (dateValue instanceof Date) {
+        date = dateValue;
+      } 
+      // If it's a string, handle different formats
+      else if (typeof dateValue === 'string') {
+        // If it's already in ISO format with time, use as-is
+        if (dateValue.includes('T')) {
+          date = new Date(dateValue);
+        }
+        // If it's in YYYY-MM-DD format, append time for UTC
+        else {
+          date = new Date(dateValue + 'T00:00:00Z');
+        }
+      }
+      // If it's a number (timestamp), use it directly
+      else if (typeof dateValue === 'number') {
+        date = new Date(dateValue);
+      }
+      // For any other type, try to convert
+      else {
+        date = new Date(dateValue);
+      }
+      
+      // Validate the date is actually valid
+      if (isNaN(date.getTime())) {
+        return 'N/A';
+      }
+      
+      return formatShortDate(date);
+    } catch (error) {
+      console.error('Error formatting date:', error, dateValue);
+      return 'N/A';
+    }
+  };
+  
+  // Get dates with fallback to selectedPeriod
+  const payPeriodStart = employee.pay_period_start || selectedPeriod?.pay_period_start;
+  const payPeriodEnd = employee.pay_period_end || selectedPeriod?.pay_period_end;
+  const payDate = employee.pay_date || selectedPeriod?.pay_date;
   
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -463,11 +513,13 @@ function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours })
                 <p className="text-sm text-secondary mt-1">{t('payroll.department')}: {employee.department}</p>
               )}
               <p className="text-sm text-secondary">
-                Pay Period: {formatShortDate(new Date(employee.pay_period_start + 'T00:00:00Z'))} - {formatShortDate(new Date(employee.pay_period_end + 'T00:00:00Z'))}
+                Pay Period: {safeFormatDate(payPeriodStart)} - {safeFormatDate(payPeriodEnd)}
               </p>
-              <p className="text-sm text-secondary">
-                Pay Date: {formatShortDate(new Date(employee.pay_date + 'T00:00:00Z'))}
-              </p>
+              {payDate && (
+                <p className="text-sm text-secondary">
+                  Pay Date: {safeFormatDate(payDate)}
+                </p>
+              )}
             </div>
             <button
               onClick={onClose}
