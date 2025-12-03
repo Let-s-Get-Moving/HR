@@ -175,6 +175,19 @@ export default function Payroll() {
     return `${h}:${m.toString().padStart(2, '0')}`;
   };
 
+  // Safe date formatting helper
+  const safeFormatShortDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString + 'T00:00:00Z');
+      if (isNaN(date.getTime())) return '';
+      return formatShortDate(date);
+    } catch (error) {
+      console.error('Error formatting date:', error, dateString);
+      return '';
+    }
+  };
+
   if (loading && payrollData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -210,12 +223,21 @@ export default function Payroll() {
               <option value="">{t('payroll.selectPayDate')}</option>
               {payPeriods.map((period) => {
                 // Parse date as UTC to avoid timezone shifts
-                const payDate = new Date(period.pay_date + 'T00:00:00Z');
-                const formattedDate = formatShortDate(payDate).toUpperCase();
+                let formattedDate = '';
+                if (period.pay_date) {
+                  try {
+                    const payDate = new Date(period.pay_date + 'T00:00:00Z');
+                    if (!isNaN(payDate.getTime())) {
+                      formattedDate = formatShortDate(payDate).toUpperCase();
+                    }
+                  } catch (error) {
+                    console.error('Error formatting pay date:', error, period.pay_date);
+                  }
+                }
                 
                 return (
-                  <option key={period.pay_date} value={period.pay_date}>
-                    {formattedDate}
+                  <option key={period.pay_date || `period-${period.key}`} value={period.pay_date || ''}>
+                    {formattedDate || 'Invalid Date'}
                   </option>
                 );
               })}
@@ -229,7 +251,7 @@ export default function Payroll() {
                 <div>
                   <div className="text-xs text-secondary uppercase">{t('payroll.workPeriod')}</div>
                   <div className="text-sm font-medium text-primary">
-                    {formatShortDate(new Date(selectedPeriod.pay_period_start + 'T00:00:00Z'))} - {formatShortDate(new Date(selectedPeriod.pay_period_end + 'T00:00:00Z'))}
+                    {safeFormatShortDate(selectedPeriod.pay_period_start)} - {safeFormatShortDate(selectedPeriod.pay_period_end)}
                   </div>
                 </div>
                 <div>

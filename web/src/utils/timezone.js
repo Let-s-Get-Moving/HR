@@ -14,15 +14,45 @@ export function getUserTimezone() {
  * @returns {string} Formatted date string
  */
 export function formatInTimezone(date, formatStr = 'yyyy-MM-dd HH:mm:ss') {
+  // Handle null, undefined, or empty input
+  if (!date) {
+    return '';
+  }
+  
   const timezone = getUserTimezone();
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  let dateObj;
+  
+  // Convert string to Date object if needed
+  if (typeof date === 'string') {
+    dateObj = new Date(date);
+  } else if (date instanceof Date) {
+    dateObj = date;
+  } else {
+    // For other types, try to convert
+    dateObj = new Date(date);
+  }
+  
+  // Validate the date is actually valid
+  if (isNaN(dateObj.getTime())) {
+    console.error('Invalid date provided to formatInTimezone:', date);
+    return '';
+  }
   
   try {
     const zonedDate = toZonedTime(dateObj, timezone);
     return format(zonedDate, formatStr, { timeZone: timezone });
   } catch (error) {
-    console.error('Error formatting date with timezone:', error);
-    return format(dateObj, formatStr); // Fallback to local time
+    console.error('Error formatting date with timezone:', error, date);
+    // Fallback: try formatting without timezone conversion
+    try {
+      // Validate again before fallback formatting
+      if (!isNaN(dateObj.getTime())) {
+        return format(dateObj, formatStr);
+      }
+    } catch (fallbackError) {
+      console.error('Fallback formatting also failed:', fallbackError);
+    }
+    return '';
   }
 }
 
