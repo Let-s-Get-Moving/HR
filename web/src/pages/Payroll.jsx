@@ -442,6 +442,8 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
 
 // Employee Detail Modal Component
 function EmployeeDetailModal({ employee, onClose, formatCurrency, formatHours }) {
+  const { t } = useTranslation();
+  
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <motion.div
