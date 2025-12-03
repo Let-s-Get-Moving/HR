@@ -39,6 +39,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   
   const { userRole } = useUserRole();
 
+  // Debug: Log userRole to see if it's loading correctly
+  useEffect(() => {
+    console.log('[EmployeeProfile] userRole:', userRole);
+    console.log('[EmployeeProfile] hasFullAccess(userRole):', hasFullAccess(userRole));
+  }, [userRole]);
+
   useEffect(() => {
     if (employeeId) {
       loadEmployeeData();
@@ -83,6 +89,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         departments: deptsData?.length || 0,
         locations: locsData?.length || 0
       });
+      
+      // Debug: Check if nickname field exists in employee data
+      console.log(`[EmployeeProfile] Employee nickname field:`, empData?.nickname);
+      console.log(`[EmployeeProfile] Employee data keys:`, Object.keys(empData || {}));
       
       console.log(`📄 [EmployeeProfile] Documents received:`, docData);
       console.log(`👤 [EmployeeProfile] Employee details:`, {

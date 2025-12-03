@@ -219,4 +219,61 @@ r.post("/run-migrations", async (req, res) => {
   }
 });
 
+// Run nickname migration
+r.post("/nickname", async (req, res) => {
+  try {
+    console.log('🚀 Starting nickname migration...');
+    
+    // Check if column already exists
+    const checkColumn = await q(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'employees' AND column_name = 'nickname'
+    `);
+    
+    if (checkColumn.rows.length > 0) {
+      console.log('✅ Nickname column already exists!');
+      return res.json({
+        success: true,
+        message: 'Nickname column already exists',
+        alreadyExists: true
+      });
+    }
+    
+    // Execute the migration
+    console.log('🚀 Executing nickname migration...');
+    
+    // Add nickname column
+    await q(`ALTER TABLE employees ADD COLUMN IF NOT EXISTS nickname TEXT`);
+    
+    // Create index
+    await q(`CREATE INDEX IF NOT EXISTS idx_employees_nickname ON employees(LOWER(TRIM(nickname))) WHERE nickname IS NOT NULL`);
+    
+    // Add comment
+    await q(`COMMENT ON COLUMN employees.nickname IS 'Alternative name/nickname for employee matching in imports (e.g., "Dmytro Benz" for "Dmytro Brovko")'`);
+    
+    console.log('✅ Nickname migration completed successfully!');
+    
+    // Verify the column was created
+    const verifyColumn = await q(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns 
+      WHERE table_name = 'employees' AND column_name = 'nickname'
+    `);
+    
+    res.json({
+      success: true,
+      message: 'Nickname migration completed successfully',
+      column: verifyColumn.rows[0] || null
+    });
+    
+  } catch (error) {
+    console.error('❌ Nickname migration failed:', error.message);
+    res.status(500).json({
+      success: false,
+      error: 'Migration failed: ' + error.message
+    });
+  }
+});
+
 export default r;
