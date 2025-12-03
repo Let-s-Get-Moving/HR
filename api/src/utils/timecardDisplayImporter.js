@@ -1,6 +1,6 @@
 import XLSX from 'xlsx';
 import { pool } from '../db.js';
-import { findExistingEmployee, mergeEmployeeData } from './employeeMatching.js';
+import { findExistingEmployee } from './employeeMatching.js';
 import { findAndMergeDuplicates } from './autoMergeDuplicates.js';
 
 /**
@@ -379,28 +379,10 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
             let employeeId;
             
             if (existing) {
-                // Employee found - use existing
+                // Employee found - use existing ID, don't update anything
                 employeeId = existing.id;
                 console.log(`✓ Matched existing employee: ${emp.name} (ID: ${employeeId})`);
-                
-                // Merge any missing data from timecard
-                const updates = mergeEmployeeData(existing, {
-                    hire_date: payPeriod.start,
-                    employment_type: 'Full-time',
-                    role_title: 'Employee'
-                }, 'timecard');
-                
-                if (Object.keys(updates).length > 0) {
-                    const setClause = Object.keys(updates)
-                        .map((key, i) => `${key} = $${i + 2}`)
-                        .join(', ');
-                    
-                    await client.query(
-                        `UPDATE employees SET ${setClause} WHERE id = $1`,
-                        [employeeId, ...Object.values(updates)]
-                    );
-                    console.log(`  Updated employee with timecard data: ${Object.keys(updates).join(', ')}`);
-                }
+                // No updates - just use existing employee data
             } else {
                 // Auto-create employee if not found
                 console.log(`➕ Creating new employee: ${emp.name}`);
