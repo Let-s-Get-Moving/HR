@@ -411,22 +411,40 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
                 // Generate work email (allow duplicates, HR will fix manually)
                 const workEmail = `${firstName.toLowerCase().replace(/\s/g, '')}@letsgetmovinggroup.com`;
                 
-                const createResult = await client.query(`
-                    INSERT INTO employees (
-                        first_name, last_name, work_email, hire_date, 
-                        employment_type, status, role_title
-                    )
-                    VALUES ($1, $2, $3, $4, 'Full-time', 'Active', 'Employee')
-                    RETURNING id
-                `, [
-                    firstName, 
-                    lastName, 
-                    workEmail,
-                    payPeriod.start
-                ]);
+                // Validate hire_date before INSERT
+                if (!payPeriod.start) {
+                    throw new Error(`Cannot create employee ${emp.name}: pay period start date is missing`);
+                }
                 
-                employeeId = createResult.rows[0].id;
-                console.log(`   ✓ Created employee ID ${employeeId} with work_email: ${workEmail}`);
+                // Validate it's a valid date format
+                const hireDate = new Date(payPeriod.start);
+                if (isNaN(hireDate.getTime())) {
+                    throw new Error(`Cannot create employee ${emp.name}: invalid hire_date format: ${payPeriod.start}`);
+                }
+                
+                // Insert with explicit probation_end = NULL to satisfy constraint
+                try {
+                    const createResult = await client.query(`
+                        INSERT INTO employees (
+                            first_name, last_name, work_email, hire_date, 
+                            employment_type, status, role_title, probation_end
+                        )
+                        VALUES ($1, $2, $3, $4, 'Full-time', 'Active', 'Employee', NULL)
+                        RETURNING id
+                    `, [
+                        firstName, 
+                        lastName, 
+                        workEmail,
+                        payPeriod.start
+                    ]);
+                    
+                    employeeId = createResult.rows[0].id;
+                    console.log(`   ✓ Created employee ID ${employeeId} with work_email: ${workEmail}`);
+                } catch (error) {
+                    console.error(`   ❌ Failed to create employee ${emp.name}:`, error.message);
+                    console.error(`   Details: firstName=${firstName}, lastName=${lastName}, workEmail=${workEmail}, hire_date=${payPeriod.start}`);
+                    throw new Error(`Failed to create employee ${emp.name}: ${error.message}`);
+                }
             }
             
             // Calculate total hours
