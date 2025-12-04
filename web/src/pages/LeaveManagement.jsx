@@ -90,10 +90,47 @@ export default function LeaveManagement() {
     setFilteredRequests(requests);
   }, [requests]);
 
+  // Silent refresh function - updates data without blocking UI
+  const refreshData = async () => {
+    try {
+      console.log('🔄 Silently refreshing leave data...');
+      const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData] = await Promise.all([
+        API("/api/leave/requests"),
+        API("/api/leave/balances"),
+        API("/api/leave/calendar"),
+        API("/api/leave/analytics"),
+        API("/api/employees"),
+        API("/api/leave/types")
+      ]);
+      
+      console.log('✅ Leave data refreshed:', {
+        requests: requestsData.length,
+        balances: balancesData.length,
+        calendar: calendarData.length,
+        analytics: analyticsData,
+        employees: employeesData.length,
+        leaveTypes: leaveTypesData.length
+      });
+      
+      // Update state immediately - React will re-render automatically
+      setRequests(requestsData);
+      setFilteredRequests(requestsData);
+      setBalances(balancesData);
+      setCalendar(calendarData);
+      setAnalytics(analyticsData);
+      setEmployees(employeesData);
+      setLeaveTypes(leaveTypesData || []);
+    } catch (error) {
+      console.error("Error refreshing leave data:", error);
+      // Don't block UI on error - just log it
+    }
+  };
+
   // Callback to refresh all data after leave request approval/rejection
   const handleApprovalChange = async () => {
     console.log('🔄 Refreshing all leave data after approval change...');
-    await loadData();
+    // Use silent refresh for instant updates without blocking UI
+    await refreshData();
     // Increment refresh trigger to refresh other components
     setRefreshTrigger(prev => prev + 1);
   };
