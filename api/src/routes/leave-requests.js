@@ -197,7 +197,25 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
   try {
     const { id } = req.params;
     const { status, review_notes } = req.body;
-    const approved_by = req.user.id;
+    
+    // Get employee_id from request (set by RBAC middleware) or fetch from database
+    // approved_by must be an employee_id, not a user_id
+    let approved_by = req.employeeId;
+    
+    if (!approved_by) {
+      // Fallback: get employee_id from user account
+      const userResult = await q(`
+        SELECT employee_id FROM users WHERE id = $1
+      `, [req.user.id]);
+      
+      if (userResult.rows.length > 0 && userResult.rows[0].employee_id) {
+        approved_by = userResult.rows[0].employee_id;
+      } else {
+        // If user has no employee_id linked, set to null (column allows NULL)
+        approved_by = null;
+        console.log(`⚠️ User ${req.user.id} has no employee_id linked, setting approved_by to NULL`);
+      }
+    }
 
     // Validate status
     if (!['Approved', 'Rejected'].includes(status)) {
@@ -207,10 +225,11 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
       });
     }
 
-    // Update the leave request - using old schema column names
+    // Update the leave request
+    // approved_by references employees(id), not users(id)
     const updateQuery = `
       UPDATE leave_requests 
-      SET status = $1, notes = $2, approved_by = $3, approved_at = CURRENT_TIMESTAMP
+      SET status = $1, notes = $2, approved_by = $3, approved_at = CASE WHEN $1 = 'Approved' THEN CURRENT_TIMESTAMP ELSE approved_at END
       WHERE id = $4
       RETURNING *
     `;
