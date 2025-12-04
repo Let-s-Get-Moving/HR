@@ -599,7 +599,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
                   <div>
                     <div className="font-medium text-primary">{t('payroll.overtimePayLabel')}</div>
                     <div className="text-xs text-secondary">
-                      {formatHours(employee.overtime_hours)} hours × {formatCurrency(employee.hourly_rate * 1.5)} (1.5×)
+                      {formatHours(employee.overtime_hours)} hours × {formatCurrency(employee.hourly_rate * (employee.overtime_multiplier || 1.0))} ({employee.overtime_multiplier || 1.0}×)
       </div>
     </div>
                   <div className="text-xl font-bold text-amber-600 dark:text-amber-400">
@@ -661,7 +661,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
               <h3 className="text-sm font-semibold text-primary mb-2">💡 Calculation Notes</h3>
               <ul className="text-xs text-secondary space-y-1">
                 <li>• Regular hours: All hours up to 8 per day</li>
-                <li>• Overtime: Hours over 8 per day at 1.5× rate</li>
+                <li>• Overtime: Hours over 8 per day at overtime rate (based on policy)</li>
                 <li>• Vacation accrual: 4% of total hours and gross pay</li>
                 <li>• All timecard entries are automatically included in payroll</li>
               </ul>

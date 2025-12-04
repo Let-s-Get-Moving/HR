@@ -230,11 +230,17 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
 
   const calculateTotalEarnings = () => {
     if (!timeEntries || !Array.isArray(timeEntries) || timeEntries.length === 0) return 0;
+    
+    // Get overtime multiplier from employee's policy (default to 1.0)
+    const overtimeMultiplier = employee?.overtime_policy_id && overtimePolicies.length > 0
+      ? (overtimePolicies.find(op => op.id === employee.overtime_policy_id)?.multiplier || 1.0)
+      : 1.0;
+    
     const total = timeEntries.reduce((total, entry) => {
       const hours = parseFloat(entry.hours_worked) || 0;
       const rate = parseFloat(employee?.hourly_rate) || 25;
       const overtimeHours = parseFloat(entry.overtime_hours) || 0;
-      const overtimeRate = rate * 1.5;
+      const overtimeRate = rate * overtimeMultiplier;
       
       return total + (hours * rate) + (overtimeHours * overtimeRate);
     }, 0);
@@ -1151,11 +1157,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <div className="flex justify-between">
                   <span>{t('employeeProfile.overtime')}:</span>
-                  <span>${(timeEntries || []).reduce((total, entry) => {
-                    const overtimeHours = entry.overtime_hours || 0;
-                    const overtimeRate = (parseFloat(employee.hourly_rate) || 25) * 1.5;
-                    return total + (overtimeHours * overtimeRate);
-                  }, 0).toFixed(2)}</span>
+                  <span>${(() => {
+                    // Get overtime multiplier from employee's policy (default to 1.0) - calculate once
+                    const overtimeMultiplier = employee?.overtime_policy_id && overtimePolicies.length > 0
+                      ? (overtimePolicies.find(op => op.id === employee.overtime_policy_id)?.multiplier || 1.0)
+                      : 1.0;
+                    const hourlyRate = parseFloat(employee?.hourly_rate) || 25;
+                    return (timeEntries || []).reduce((total, entry) => {
+                      const overtimeHours = entry.overtime_hours || 0;
+                      const overtimeRate = hourlyRate * overtimeMultiplier;
+                      return total + (overtimeHours * overtimeRate);
+                    }, 0).toFixed(2);
+                  })()}</span>
                 </div>
                 <hr className="border-neutral-700" />
                 <div className="flex justify-between font-bold">

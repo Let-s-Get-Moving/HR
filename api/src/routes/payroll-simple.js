@@ -178,7 +178,8 @@ r.get("/calculate-live", async (req, res) => {
         vacation_pay_accrued: vacationPay,
         deductions: 0,
         net_pay: netPay,
-        pay_date: payDate.toISOString().split('T')[0]
+        pay_date: payDate.toISOString().split('T')[0],
+        overtime_multiplier: overtimeMultiplier
       };
     }));
     

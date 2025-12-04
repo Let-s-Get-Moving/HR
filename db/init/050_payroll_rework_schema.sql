@@ -186,6 +186,7 @@ DECLARE
     v_overtime_hours NUMERIC;
     v_regular_hours NUMERIC;
     v_hourly_rate NUMERIC;
+    v_overtime_multiplier NUMERIC;
     v_regular_pay NUMERIC;
     v_overtime_pay NUMERIC;
     v_gross_pay NUMERIC;
@@ -230,15 +231,18 @@ BEGIN
             -- Calculate regular hours (total - overtime)
             v_regular_hours := v_total_hours - v_overtime_hours;
             
-            -- Get employee's hourly rate
-            SELECT COALESCE(hourly_rate, 0)
-            INTO v_hourly_rate
-            FROM employees
-            WHERE id = v_employee_id;
+            -- Get employee's hourly rate and overtime policy multiplier
+            SELECT 
+                COALESCE(e.hourly_rate, 0),
+                COALESCE(op.multiplier, 1.0)
+            INTO STRICT v_hourly_rate, v_overtime_multiplier
+            FROM employees e
+            LEFT JOIN overtime_policies op ON e.overtime_policy_id = op.id
+            WHERE e.id = v_employee_id;
             
-            -- Calculate pay
+            -- Calculate pay using overtime policy multiplier (defaults to 1.0 if no policy)
             v_regular_pay := v_regular_hours * v_hourly_rate;
-            v_overtime_pay := v_overtime_hours * v_hourly_rate * 1.5;
+            v_overtime_pay := v_overtime_hours * v_hourly_rate * v_overtime_multiplier;
             v_gross_pay := v_regular_pay + v_overtime_pay;
             
             -- Calculate vacation (4%)
