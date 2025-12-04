@@ -90,6 +90,14 @@ export default function LeaveManagement() {
     setFilteredRequests(requests);
   }, [requests]);
 
+  // Callback to refresh all data after leave request approval/rejection
+  const handleApprovalChange = async () => {
+    console.log('🔄 Refreshing all leave data after approval change...');
+    await loadData();
+    // Increment refresh trigger to refresh other components
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   // Calculate total days between two dates (excluding weekends)
   const calculateTotalDays = (startDate, endDate) => {
     if (!startDate || !endDate) return 0;
@@ -316,7 +324,10 @@ export default function LeaveManagement() {
 
       {/* Leave Request Approvals Tab - HR Role Only */}
       {userRole !== 'user' && activeTab === "approvals" && (
-        <LeaveRequestApproval />
+        <LeaveRequestApproval 
+          onApprovalChange={handleApprovalChange}
+          refreshTrigger={refreshTrigger}
+        />
       )}
 
       {/* Leave Requests Tab - HR Role Only */}

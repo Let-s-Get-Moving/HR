@@ -16,7 +16,7 @@ const STATUS_ICONS = {
   'Rejected': '❌'
 };
 
-export default function LeaveRequestApproval() {
+export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger }) {
   const { t } = useTranslation();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [allRequests, setAllRequests] = useState([]);
@@ -29,6 +29,13 @@ export default function LeaveRequestApproval() {
   useEffect(() => {
     loadRequests();
   }, []);
+
+  // Reload requests when refreshTrigger changes (from parent)
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      loadRequests();
+    }
+  }, [refreshTrigger]);
 
   const loadRequests = async () => {
     try {
@@ -68,6 +75,11 @@ export default function LeaveRequestApproval() {
         setReviewNotes('');
         setSelectedRequest(null);
         await loadRequests(); // Refresh the list
+        
+        // Notify parent component to refresh calendar, analytics, and all data
+        if (onApprovalChange) {
+          onApprovalChange();
+        }
       } else {
         alert(response.message || t('leave.failedToUpdateStatus'));
       }
