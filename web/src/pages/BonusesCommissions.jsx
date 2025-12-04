@@ -5,6 +5,7 @@ import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
+import CommissionLegend from '../components/CommissionLegend.jsx';
 
 export default function BonusesCommissions() {
   const { t } = useTranslation();
@@ -1434,6 +1435,9 @@ export default function BonusesCommissions() {
       </div>
           </div>
         )}
+
+        {/* Commission Structure Legend */}
+        <CommissionLegend />
 
         {/* Unified Commissions & Bonuses Table - All Fields Combined */}
         <div className="card p-6">

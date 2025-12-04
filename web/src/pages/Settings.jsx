@@ -22,6 +22,14 @@ export default function Settings() {
   const [saving, setSaving] = useState({});
   const isLoadingRef = useRef(false);
   
+  // Commission Structures State
+  const [commissionStructures, setCommissionStructures] = useState({
+    salesAgent: Array(7).fill(null).map(() => ({ leadPct: '', revenue: '', commission: '' })),
+    vacationPackage: '',
+    salesManager: Array(6).fill(null).map(() => ({ min: '', max: '', commission: '' }))
+  });
+  const [commissionStructuresLoaded, setCommissionStructuresLoaded] = useState(false);
+  
   // MFA Setup Modal State
   const [showMFAModal, setShowMFAModal] = useState(false);
   const [mfaData, setMfaData] = useState(null);
@@ -249,6 +257,131 @@ export default function Settings() {
   // Removed automatic loadSettings() call - it causes blinking
   // Settings will load on-demand or remain empty to prevent visual flicker
 
+  // Load commission structures from settings
+  const loadCommissionStructures = async () => {
+    if (commissionStructuresLoaded) return;
+    
+    try {
+      const settings = await API('/api/settings/system').catch(() => []);
+      
+      // Also load system settings if not already loaded
+      if (systemSettings.length === 0) {
+        setSystemSettings(settings);
+      }
+      
+      const agentThresholds = [];
+      let vacationPackage = '5000';
+      
+      // Load Sales Agent thresholds
+      for (let i = 1; i <= 7; i++) {
+        const key = `sales_agent_threshold_${i}`;
+        const setting = settings.find(s => s.key === key);
+        if (setting && setting.value) {
+          const parts = setting.value.split(',');
+          if (parts.length === 3) {
+            agentThresholds.push({
+              leadPct: parts[0],
+              revenue: parts[1],
+              commission: parts[2]
+            });
+          } else {
+            agentThresholds.push({ leadPct: '', revenue: '', commission: '' });
+          }
+        } else {
+          agentThresholds.push({ leadPct: '', revenue: '', commission: '' });
+        }
+      }
+      
+      // Load vacation package
+      const vacationSetting = settings.find(s => s.key === 'sales_agent_vacation_package_value');
+      if (vacationSetting && vacationSetting.value) {
+        vacationPackage = vacationSetting.value;
+      }
+      
+      // Load Sales Manager thresholds
+      const managerThresholds = [];
+      for (let i = 1; i <= 6; i++) {
+        const key = `sales_manager_threshold_${i}`;
+        const setting = settings.find(s => s.key === key);
+        if (setting && setting.value) {
+          const parts = setting.value.split(',');
+          if (parts.length === 3) {
+            managerThresholds.push({
+              min: parts[0],
+              max: parts[1],
+              commission: parts[2]
+            });
+          } else {
+            managerThresholds.push({ min: '', max: '', commission: '' });
+          }
+        } else {
+          managerThresholds.push({ min: '', max: '', commission: '' });
+        }
+      }
+      
+      setCommissionStructures({
+        salesAgent: agentThresholds,
+        vacationPackage,
+        salesManager: managerThresholds
+      });
+      setCommissionStructuresLoaded(true);
+    } catch (error) {
+      console.error('Error loading commission structures:', error);
+    }
+  };
+
+  // Save commission structures to settings
+  const saveCommissionStructures = async () => {
+    const canManage = hasFullAccess(userRole);
+    if (!canManage) return;
+    
+    setSaving(prev => ({ ...prev, commission_structures: true }));
+    
+    try {
+      // Save Sales Agent thresholds
+      for (let i = 0; i < 7; i++) {
+        const threshold = commissionStructures.salesAgent[i];
+        if (threshold.leadPct && threshold.revenue && threshold.commission) {
+          const value = `${threshold.leadPct},${threshold.revenue},${threshold.commission}`;
+          await API(`/api/settings/system/sales_agent_threshold_${i + 1}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value })
+          }).catch(err => console.error(`Error saving threshold ${i + 1}:`, err));
+        }
+      }
+      
+      // Save vacation package
+      if (commissionStructures.vacationPackage) {
+        await API('/api/settings/system/sales_agent_vacation_package_value', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ value: commissionStructures.vacationPackage })
+        }).catch(err => console.error('Error saving vacation package:', err));
+      }
+      
+      // Save Sales Manager thresholds
+      for (let i = 0; i < 6; i++) {
+        const threshold = commissionStructures.salesManager[i];
+        if (threshold.min && threshold.max && threshold.commission) {
+          const value = `${threshold.min},${threshold.max},${threshold.commission}`;
+          await API(`/api/settings/system/sales_manager_threshold_${i + 1}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value })
+          }).catch(err => console.error(`Error saving manager threshold ${i + 1}:`, err));
+        }
+      }
+      
+      alert('Commission structures saved successfully');
+    } catch (error) {
+      console.error('Error saving commission structures:', error);
+      alert('Error saving commission structures: ' + error.message);
+    } finally {
+      setSaving(prev => ({ ...prev, commission_structures: false }));
+    }
+  };
+
   // Load settings data for a specific tab category
   const loadSettingsForTab = async (category) => {
     // Map category to ref and setState function
@@ -319,6 +452,11 @@ export default function Settings() {
     
     // Load data for the tab if not already loaded
     loadSettingsForTab(tabId);
+    
+    // Load commission structures when system tab is active
+    if (tabId === 'system') {
+      loadCommissionStructures();
+    }
   };
 
   // Load data when modals are opened - track in-flight requests to prevent duplicates
@@ -2140,6 +2278,156 @@ export default function Settings() {
 
     return (
       <div className="space-y-8">
+        {/* Commission Structures Section */}
+        {hasFullAccess(userRole) && (
+          <div className="card p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-primary">Commission Structures</h3>
+              <button
+                onClick={saveCommissionStructures}
+                disabled={saving.commission_structures}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {saving.commission_structures ? 'Saving...' : 'Save All Changes'}
+              </button>
+            </div>
+            
+            {/* Sales Agents Commission Structure */}
+            <div className="mb-6">
+              <h4 className="text-md font-medium text-primary mb-4">Sales Agents Commission Structure</h4>
+              <div className="space-y-3">
+                {commissionStructures.salesAgent.map((threshold, index) => (
+                  <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                    <div>
+                      <label className="block text-xs text-secondary mb-1">Lead Conversion %</label>
+                      <input
+                        type="number"
+                        value={threshold.leadPct}
+                        onChange={(e) => {
+                          const newAgent = [...commissionStructures.salesAgent];
+                          newAgent[index] = { ...newAgent[index], leadPct: e.target.value };
+                          setCommissionStructures({ ...commissionStructures, salesAgent: newAgent });
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                        placeholder="30"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-secondary mb-1">Revenue Threshold</label>
+                      <input
+                        type="number"
+                        value={threshold.revenue}
+                        onChange={(e) => {
+                          const newAgent = [...commissionStructures.salesAgent];
+                          newAgent[index] = { ...newAgent[index], revenue: e.target.value };
+                          setCommissionStructures({ ...commissionStructures, salesAgent: newAgent });
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                        placeholder="115000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-secondary mb-1">Commission %</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={threshold.commission}
+                        onChange={(e) => {
+                          const newAgent = [...commissionStructures.salesAgent];
+                          newAgent[index] = { ...newAgent[index], commission: e.target.value };
+                          setCommissionStructures({ ...commissionStructures, salesAgent: newAgent });
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                        placeholder="3.5"
+                      />
+                    </div>
+                    <div className="text-xs text-secondary">
+                      Threshold {index + 1}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Vacation Package */}
+                <div className="grid grid-cols-2 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg mt-4">
+                  <div>
+                    <label className="block text-xs text-secondary mb-1">Vacation Package Value ($)</label>
+                    <input
+                      type="number"
+                      value={commissionStructures.vacationPackage}
+                      onChange={(e) => {
+                        setCommissionStructures({ ...commissionStructures, vacationPackage: e.target.value });
+                      }}
+                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                      placeholder="5000"
+                    />
+                  </div>
+                  <div className="text-xs text-secondary">
+                    For threshold with ≥55% leads & ≥$250k revenue
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Sales Managers Commission Structure */}
+            <div>
+              <h4 className="text-md font-medium text-primary mb-4">Sales Managers Commission Structure</h4>
+              <div className="space-y-3">
+                {commissionStructures.salesManager.map((threshold, index) => (
+                  <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                    <div>
+                      <label className="block text-xs text-secondary mb-1">Min Booking %</label>
+                      <input
+                        type="number"
+                        value={threshold.min}
+                        onChange={(e) => {
+                          const newManager = [...commissionStructures.salesManager];
+                          newManager[index] = { ...newManager[index], min: e.target.value };
+                          setCommissionStructures({ ...commissionStructures, salesManager: newManager });
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-secondary mb-1">Max Booking %</label>
+                      <input
+                        type="number"
+                        value={threshold.max}
+                        onChange={(e) => {
+                          const newManager = [...commissionStructures.salesManager];
+                          newManager[index] = { ...newManager[index], max: e.target.value };
+                          setCommissionStructures({ ...commissionStructures, salesManager: newManager });
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                        placeholder="19"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-secondary mb-1">Commission %</label>
+                      <input
+                        type="number"
+                        step="0.001"
+                        value={threshold.commission}
+                        onChange={(e) => {
+                          const newManager = [...commissionStructures.salesManager];
+                          newManager[index] = { ...newManager[index], commission: e.target.value };
+                          setCommissionStructures({ ...commissionStructures, salesManager: newManager });
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                        placeholder="0.25"
+                      />
+                    </div>
+                    <div className="text-xs text-secondary">
+                      Range {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Regular System Settings */}
         {Object.entries(categories).map(([category, settings]) => (
           <div key={category}>
             <h4 className="text-md font-medium text-neutral-300 mb-4">{category}</h4>
