@@ -266,8 +266,15 @@ export default function Settings() {
       const settings = await API('/api/settings/system').catch(() => []);
       
       // Also load system settings if not already loaded
+      // Filter out commission structure settings - they should ONLY appear in the modal
       if (systemSettings.length === 0) {
-        setSystemSettings(settings);
+        const filteredSettings = settings.filter(setting => {
+          const key = setting?.key || '';
+          return !key.startsWith('sales_agent_threshold_') &&
+                 !key.startsWith('sales_manager_threshold_') &&
+                 key !== 'sales_agent_vacation_package_value';
+        });
+        setSystemSettings(filteredSettings);
       }
       
       const agentThresholds = [];
@@ -2279,8 +2286,16 @@ export default function Settings() {
     }
 
     // Show regular system settings if they exist
+    // Filter out commission structure settings - they should ONLY appear in the modal
+    const filteredSettings = systemSettings.filter(setting => {
+      const key = setting?.key || '';
+      return !key.startsWith('sales_agent_threshold_') &&
+             !key.startsWith('sales_manager_threshold_') &&
+             key !== 'sales_agent_vacation_package_value';
+    });
+    
     const categories = {};
-    systemSettings.forEach(setting => {
+    filteredSettings.forEach(setting => {
       if (!categories[setting.category]) {
         categories[setting.category] = [];
       }
