@@ -1436,7 +1436,7 @@ export default function BonusesCommissions() {
           </div>
         )}
 
-        {/* Commission Structure Legend */}
+        {/* Commission Structure Legend - Always visible */}
         <CommissionLegend />
 
         {/* Unified Commissions & Bonuses Table - All Fields Combined */}

@@ -101,6 +101,7 @@ export default function Settings() {
   const [showOvertimePoliciesModal, setShowOvertimePoliciesModal] = useState(false);
   const [showAttendancePoliciesModal, setShowAttendancePoliciesModal] = useState(false);
   const [showRemoteWorkPoliciesModal, setShowRemoteWorkPoliciesModal] = useState(false);
+  const [showCommissionStructuresModal, setShowCommissionStructuresModal] = useState(false);
 
   // Job Titles State
   const [jobTitles, setJobTitles] = useState([]);
@@ -2255,6 +2256,16 @@ export default function Settings() {
                 <h4 className="text-lg font-semibold mb-2">{t('settings.remoteWorkPolicies.title')}</h4>
                 <p className="text-sm text-secondary">{t('settings.remoteWorkPolicies.description')}</p>
               </button>
+
+              {/* Commission Structures Button */}
+              <button
+                onClick={() => setShowCommissionStructuresModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">💰</div>
+                <h4 className="text-lg font-semibold mb-2">Commission Structures</h4>
+                <p className="text-sm text-secondary">Configure commission percentages and thresholds for Sales Agents and Sales Managers</p>
+              </button>
             </div>
           )}
 
@@ -2278,155 +2289,6 @@ export default function Settings() {
 
     return (
       <div className="space-y-8">
-        {/* Commission Structures Section */}
-        {hasFullAccess(userRole) && (
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-primary">Commission Structures</h3>
-              <button
-                onClick={saveCommissionStructures}
-                disabled={saving.commission_structures}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saving.commission_structures ? 'Saving...' : 'Save All Changes'}
-              </button>
-            </div>
-            
-            {/* Sales Agents Commission Structure */}
-            <div className="mb-6">
-              <h4 className="text-md font-medium text-primary mb-4">Sales Agents Commission Structure</h4>
-              <div className="space-y-3">
-                {commissionStructures.salesAgent.map((threshold, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                    <div>
-                      <label className="block text-xs text-secondary mb-1">Lead Conversion %</label>
-                      <input
-                        type="number"
-                        value={threshold.leadPct}
-                        onChange={(e) => {
-                          const newAgent = [...commissionStructures.salesAgent];
-                          newAgent[index] = { ...newAgent[index], leadPct: e.target.value };
-                          setCommissionStructures({ ...commissionStructures, salesAgent: newAgent });
-                        }}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                        placeholder="30"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-secondary mb-1">Revenue Threshold</label>
-                      <input
-                        type="number"
-                        value={threshold.revenue}
-                        onChange={(e) => {
-                          const newAgent = [...commissionStructures.salesAgent];
-                          newAgent[index] = { ...newAgent[index], revenue: e.target.value };
-                          setCommissionStructures({ ...commissionStructures, salesAgent: newAgent });
-                        }}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                        placeholder="115000"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-secondary mb-1">Commission %</label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={threshold.commission}
-                        onChange={(e) => {
-                          const newAgent = [...commissionStructures.salesAgent];
-                          newAgent[index] = { ...newAgent[index], commission: e.target.value };
-                          setCommissionStructures({ ...commissionStructures, salesAgent: newAgent });
-                        }}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                        placeholder="3.5"
-                      />
-                    </div>
-                    <div className="text-xs text-secondary">
-                      Threshold {index + 1}
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Vacation Package */}
-                <div className="grid grid-cols-2 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg mt-4">
-                  <div>
-                    <label className="block text-xs text-secondary mb-1">Vacation Package Value ($)</label>
-                    <input
-                      type="number"
-                      value={commissionStructures.vacationPackage}
-                      onChange={(e) => {
-                        setCommissionStructures({ ...commissionStructures, vacationPackage: e.target.value });
-                      }}
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                      placeholder="5000"
-                    />
-                  </div>
-                  <div className="text-xs text-secondary">
-                    For threshold with ≥55% leads & ≥$250k revenue
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Sales Managers Commission Structure */}
-            <div>
-              <h4 className="text-md font-medium text-primary mb-4">Sales Managers Commission Structure</h4>
-              <div className="space-y-3">
-                {commissionStructures.salesManager.map((threshold, index) => (
-                  <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                    <div>
-                      <label className="block text-xs text-secondary mb-1">Min Booking %</label>
-                      <input
-                        type="number"
-                        value={threshold.min}
-                        onChange={(e) => {
-                          const newManager = [...commissionStructures.salesManager];
-                          newManager[index] = { ...newManager[index], min: e.target.value };
-                          setCommissionStructures({ ...commissionStructures, salesManager: newManager });
-                        }}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                        placeholder="0"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-secondary mb-1">Max Booking %</label>
-                      <input
-                        type="number"
-                        value={threshold.max}
-                        onChange={(e) => {
-                          const newManager = [...commissionStructures.salesManager];
-                          newManager[index] = { ...newManager[index], max: e.target.value };
-                          setCommissionStructures({ ...commissionStructures, salesManager: newManager });
-                        }}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                        placeholder="19"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-secondary mb-1">Commission %</label>
-                      <input
-                        type="number"
-                        step="0.001"
-                        value={threshold.commission}
-                        onChange={(e) => {
-                          const newManager = [...commissionStructures.salesManager];
-                          newManager[index] = { ...newManager[index], commission: e.target.value };
-                          setCommissionStructures({ ...commissionStructures, salesManager: newManager });
-                        }}
-                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
-                        placeholder="0.25"
-                      />
-                    </div>
-                    <div className="text-xs text-secondary">
-                      Range {index + 1}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        
         {/* Regular System Settings */}
         {Object.entries(categories).map(([category, settings]) => (
           <div key={category}>
@@ -4356,6 +4218,266 @@ export default function Settings() {
       <OvertimePoliciesModal />
       <AttendancePoliciesModal />
       <RemoteWorkPoliciesModal />
+      <CommissionStructuresModal />
     </div>
   );
-}
+
+  // Commission Structures Modal Component
+  const CommissionStructuresModal = () => {
+    const canManage = hasFullAccess(userRole);
+    
+    const [localCommissionStructures, setLocalCommissionStructures] = useState({
+      salesAgent: Array(7).fill(null).map(() => ({ leadPct: '', revenue: '', commission: '' })),
+      vacationPackage: '',
+      salesManager: Array(6).fill(null).map(() => ({ min: '', max: '', commission: '' }))
+    });
+    const [localSaving, setLocalSaving] = useState(false);
+    
+    useEffect(() => {
+      if (showCommissionStructuresModal && !commissionStructuresLoaded) {
+        loadCommissionStructures().then(() => {
+          setLocalCommissionStructures(commissionStructures);
+        });
+      } else if (showCommissionStructuresModal && commissionStructuresLoaded) {
+        setLocalCommissionStructures(commissionStructures);
+      }
+    }, [showCommissionStructuresModal]);
+    
+    const handleSave = async () => {
+      if (!canManage) return;
+      
+      setLocalSaving(true);
+      
+      try {
+        // Save Sales Agent thresholds
+        for (let i = 0; i < 7; i++) {
+          const threshold = localCommissionStructures.salesAgent[i];
+          if (threshold.leadPct && threshold.revenue && threshold.commission) {
+            const value = `${threshold.leadPct},${threshold.revenue},${threshold.commission}`;
+            await API(`/api/settings/system/sales_agent_threshold_${i + 1}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ value })
+            }).catch(err => console.error(`Error saving threshold ${i + 1}:`, err));
+          }
+        }
+        
+        // Save vacation package
+        if (localCommissionStructures.vacationPackage) {
+          await API('/api/settings/system/sales_agent_vacation_package_value', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ value: localCommissionStructures.vacationPackage })
+          }).catch(err => console.error('Error saving vacation package:', err));
+        }
+        
+        // Save Sales Manager thresholds
+        for (let i = 0; i < 6; i++) {
+          const threshold = localCommissionStructures.salesManager[i];
+          if (threshold.min && threshold.max && threshold.commission) {
+            const value = `${threshold.min},${threshold.max},${threshold.commission}`;
+            await API(`/api/settings/system/sales_manager_threshold_${i + 1}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ value })
+            }).catch(err => console.error(`Error saving manager threshold ${i + 1}:`, err));
+          }
+        }
+        
+        // Update global state
+        setCommissionStructures(localCommissionStructures);
+        setCommissionStructuresLoaded(true);
+        
+        alert('Commission structures saved successfully');
+        setShowCommissionStructuresModal(false);
+      } catch (error) {
+        console.error('Error saving commission structures:', error);
+        alert('Error saving commission structures: ' + error.message);
+      } finally {
+        setLocalSaving(false);
+      }
+    };
+    
+    if (!showCommissionStructuresModal) return null;
+    
+    const handleClose = () => {
+      setShowCommissionStructuresModal(false);
+    };
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
+      <div className="bg-black/50 absolute inset-0" />
+      <div
+        className="relative bg-neutral-900 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          <h2 className="text-2xl font-semibold">Commission Structures</h2>
+          <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <div className="p-6 overflow-y-auto flex-1">
+          <p className="text-sm text-secondary mb-6">Configure commission percentages and thresholds for Sales Agents and Sales Managers</p>
+          
+          {canManage && (
+            <>
+              {/* Sales Agents Commission Structure */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium text-primary mb-4">Sales Agents Commission Structure</h4>
+                <div className="space-y-3">
+                  {localCommissionStructures.salesAgent.map((threshold, index) => (
+                    <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                      <div>
+                        <label className="block text-xs text-secondary mb-1">Lead Conversion %</label>
+                        <input
+                          type="number"
+                          value={threshold.leadPct}
+                          onChange={(e) => {
+                            const newAgent = [...localCommissionStructures.salesAgent];
+                            newAgent[index] = { ...newAgent[index], leadPct: e.target.value };
+                            setLocalCommissionStructures({ ...localCommissionStructures, salesAgent: newAgent });
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                          placeholder="30"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-secondary mb-1">Revenue Threshold</label>
+                        <input
+                          type="number"
+                          value={threshold.revenue}
+                          onChange={(e) => {
+                            const newAgent = [...localCommissionStructures.salesAgent];
+                            newAgent[index] = { ...newAgent[index], revenue: e.target.value };
+                            setLocalCommissionStructures({ ...localCommissionStructures, salesAgent: newAgent });
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                          placeholder="115000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-secondary mb-1">Commission %</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={threshold.commission}
+                          onChange={(e) => {
+                            const newAgent = [...localCommissionStructures.salesAgent];
+                            newAgent[index] = { ...newAgent[index], commission: e.target.value };
+                            setLocalCommissionStructures({ ...localCommissionStructures, salesAgent: newAgent });
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                          placeholder="3.5"
+                        />
+                      </div>
+                      <div className="text-xs text-secondary">
+                        Threshold {index + 1}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Vacation Package */}
+                  <div className="grid grid-cols-2 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg mt-4">
+                    <div>
+                      <label className="block text-xs text-secondary mb-1">Vacation Package Value ($)</label>
+                      <input
+                        type="number"
+                        value={localCommissionStructures.vacationPackage}
+                        onChange={(e) => {
+                          setLocalCommissionStructures({ ...localCommissionStructures, vacationPackage: e.target.value });
+                        }}
+                        className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                        placeholder="5000"
+                      />
+                    </div>
+                    <div className="text-xs text-secondary">
+                      For threshold with ≥55% leads & ≥$250k revenue
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Sales Managers Commission Structure */}
+              <div className="mb-6">
+                <h4 className="text-md font-medium text-primary mb-4">Sales Managers Commission Structure</h4>
+                <div className="space-y-3">
+                  {localCommissionStructures.salesManager.map((threshold, index) => (
+                    <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                      <div>
+                        <label className="block text-xs text-secondary mb-1">Min Booking %</label>
+                        <input
+                          type="number"
+                          value={threshold.min}
+                          onChange={(e) => {
+                            const newManager = [...localCommissionStructures.salesManager];
+                            newManager[index] = { ...newManager[index], min: e.target.value };
+                            setLocalCommissionStructures({ ...localCommissionStructures, salesManager: newManager });
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-secondary mb-1">Max Booking %</label>
+                        <input
+                          type="number"
+                          value={threshold.max}
+                          onChange={(e) => {
+                            const newManager = [...localCommissionStructures.salesManager];
+                            newManager[index] = { ...newManager[index], max: e.target.value };
+                            setLocalCommissionStructures({ ...localCommissionStructures, salesManager: newManager });
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                          placeholder="19"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-secondary mb-1">Commission %</label>
+                        <input
+                          type="number"
+                          step="0.001"
+                          value={threshold.commission}
+                          onChange={(e) => {
+                            const newManager = [...localCommissionStructures.salesManager];
+                            newManager[index] = { ...newManager[index], commission: e.target.value };
+                            setLocalCommissionStructures({ ...localCommissionStructures, salesManager: newManager });
+                          }}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                          placeholder="0.25"
+                        />
+                      </div>
+                      <div className="text-xs text-secondary">
+                        Range {index + 1}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSave}
+                  disabled={localSaving}
+                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {localSaving ? 'Saving...' : 'Save All Changes'}
+                </button>
+                <button
+                  onClick={handleClose}
+                  className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+          
+          {!canManage && (
+            <div className="text-center py-8">
+              <p className="text-secondary">You don't have permission to manage commission structures</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
