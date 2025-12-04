@@ -1267,9 +1267,14 @@ export default function BonusesCommissions() {
     
     if (availablePeriods.length === 0) {
       return (
-        <div className="text-center py-8">
-          <div className="text-neutral-400">{t('bonuses.noCommissionDataAvailable')}</div>
-          <div className="text-sm text-neutral-500 mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
+        <div className="space-y-6">
+          <div className="text-center py-8">
+            <div className="text-neutral-400">{t('bonuses.noCommissionDataAvailable')}</div>
+            <div className="text-sm text-neutral-500 mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
+          </div>
+          
+          {/* Commission Structure Legend - Always visible */}
+          <CommissionLegend />
         </div>
       );
     }
