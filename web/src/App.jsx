@@ -95,7 +95,7 @@ const getPagesConfig = (t) => ({
   compliance: { name: t('nav.compliance'), component: Compliance, icon: Icons.compliance },
   benefits: { name: t('nav.benefits'), component: Benefits, icon: Icons.benefits },
   bonuses: { name: t('nav.bonuses'), component: BonusesCommissions, icon: Icons.bonuses },
-  messages: { name: t('nav.messages') || 'Messages', component: Messages, icon: Icons.messages },
+  messages: { name: t('nav.messages'), component: Messages, icon: Icons.messages },
   testing: { name: t('nav.testing'), component: Testing, icon: Icons.testing },
   settings: { name: t('nav.settings'), component: Settings, icon: Icons.settings }
 });

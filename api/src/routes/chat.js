@@ -13,7 +13,7 @@ const router = express.Router();
 router.use(requireAuth);
 router.use(applyScopeFilter);
 
-// Get available users for messaging
+// Get available users for messaging (only active employees)
 router.get('/available-users', async (req, res) => {
   try {
     const userId = req.user.id;
@@ -23,34 +23,42 @@ router.get('/available-users', async (req, res) => {
     let params = [];
 
     if (userRole === 'user') {
-      // Users can only message HR (manager/admin)
+      // Users can only message HR (manager/admin) who are active employees
       query = `
         SELECT 
           u.id,
           u.username,
-          COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
+          e.first_name || ' ' || e.last_name as employee_name,
+          e.first_name,
+          e.last_name,
           u.email,
           COALESCE(r.role_name, 'user') as role
         FROM users u
+        INNER JOIN employees e ON u.employee_id = e.id
         LEFT JOIN hr_roles r ON u.role_id = r.id
         WHERE u.id != $1 
+          AND e.status = 'Active'
           AND COALESCE(r.role_name, 'user') IN ('manager', 'admin')
-        ORDER BY u.username
+        ORDER BY e.first_name, e.last_name
       `;
       params = [userId];
     } else {
-      // HR can message anyone
+      // HR can message any active employee
       query = `
         SELECT 
           u.id,
           u.username,
-          COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
+          e.first_name || ' ' || e.last_name as employee_name,
+          e.first_name,
+          e.last_name,
           u.email,
           COALESCE(r.role_name, 'user') as role
         FROM users u
+        INNER JOIN employees e ON u.employee_id = e.id
         LEFT JOIN hr_roles r ON u.role_id = r.id
         WHERE u.id != $1
-        ORDER BY u.username
+          AND e.status = 'Active'
+        ORDER BY e.first_name, e.last_name
       `;
       params = [userId];
     }
@@ -160,8 +168,8 @@ router.get('/threads', async (req, res) => {
             ELSE u1.id
           END as other_user_id,
           CASE 
-            WHEN t.participant1_id = $1 THEN COALESCE(u2.first_name || ' ' || u2.last_name, u2.username)
-            ELSE COALESCE(u1.first_name || ' ' || u1.last_name, u1.username)
+            WHEN t.participant1_id = $1 THEN COALESCE(e2.first_name || ' ' || e2.last_name, u2.username)
+            ELSE COALESCE(e1.first_name || ' ' || e1.last_name, u1.username)
           END as other_user_name,
           CASE 
             WHEN t.participant1_id = $1 THEN u2.username
@@ -171,6 +179,8 @@ router.get('/threads', async (req, res) => {
         FROM chat_threads t
         JOIN users u1 ON t.participant1_id = u1.id
         JOIN users u2 ON t.participant2_id = u2.id
+        LEFT JOIN employees e1 ON u1.employee_id = e1.id
+        LEFT JOIN employees e2 ON u2.employee_id = e2.id
         LEFT JOIN hr_roles r1 ON u1.role_id = r1.id
         LEFT JOIN hr_roles r2 ON u2.role_id = r2.id
         WHERE (t.participant1_id = $1 OR t.participant2_id = $1)
@@ -193,8 +203,8 @@ router.get('/threads', async (req, res) => {
             ELSE u1.id
           END as other_user_id,
           CASE 
-            WHEN t.participant1_id = $1 THEN COALESCE(u2.first_name || ' ' || u2.last_name, u2.username)
-            ELSE COALESCE(u1.first_name || ' ' || u1.last_name, u1.username)
+            WHEN t.participant1_id = $1 THEN COALESCE(e2.first_name || ' ' || e2.last_name, u2.username)
+            ELSE COALESCE(e1.first_name || ' ' || e1.last_name, u1.username)
           END as other_user_name,
           CASE 
             WHEN t.participant1_id = $1 THEN u2.username
@@ -207,6 +217,8 @@ router.get('/threads', async (req, res) => {
         FROM chat_threads t
         JOIN users u1 ON t.participant1_id = u1.id
         JOIN users u2 ON t.participant2_id = u2.id
+        LEFT JOIN employees e1 ON u1.employee_id = e1.id
+        LEFT JOIN employees e2 ON u2.employee_id = e2.id
         LEFT JOIN hr_roles r1 ON u1.role_id = r1.id
         LEFT JOIN hr_roles r2 ON u2.role_id = r2.id
         WHERE t.participant1_id = $1 OR t.participant2_id = $1
@@ -291,24 +303,27 @@ router.post('/threads', async (req, res) => {
 
     const thread = result.rows[0];
 
-    // Get other participant info
+    // Get other participant info with employee name
     const otherParticipantId = thread.participant1_id === userId 
       ? thread.participant2_id 
       : thread.participant1_id;
 
     const otherUserResult = await q(`
       SELECT 
-        id,
-        COALESCE(first_name || ' ' || last_name, username) as full_name,
-        username
-      FROM users
-      WHERE id = $1
+        u.id,
+        u.username,
+        COALESCE(e.first_name || ' ' || e.last_name, u.username) as employee_name,
+        e.first_name,
+        e.last_name
+      FROM users u
+      LEFT JOIN employees e ON u.employee_id = e.id
+      WHERE u.id = $1
     `, [otherParticipantId]);
 
     const threadWithUser = {
       ...thread,
       other_user_id: otherParticipantId,
-      other_user_name: otherUserResult.rows[0]?.full_name,
+      other_user_name: otherUserResult.rows[0]?.employee_name || otherUserResult.rows[0]?.username,
       other_username: otherUserResult.rows[0]?.username
     };
 
