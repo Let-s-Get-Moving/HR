@@ -38,7 +38,25 @@ export default function NotificationCenter({ onNavigate }) {
       const newNotifications = response.notifications || [];
       
       // Smart update: merge old and new notifications to prevent blinking
+      // Only update if data actually changed (deep comparison)
       setNotifications(prev => {
+        // Check if data actually changed
+        const prevMap = new Map(prev.map(n => [n.id, n]));
+        const hasChanged = newNotifications.some(newNotif => {
+          const oldNotif = prevMap.get(newNotif.id);
+          if (!oldNotif) return true; // New notification
+          // Compare relevant fields
+          return oldNotif.is_read !== newNotif.is_read ||
+                 oldNotif.title !== newNotif.title ||
+                 oldNotif.message !== newNotif.message ||
+                 oldNotif.created_at !== newNotif.created_at;
+        }) || prev.length !== newNotifications.length;
+        
+        // If nothing changed, return previous state to prevent re-render
+        if (!hasChanged) {
+          return prev;
+        }
+        
         // Create a map of existing notifications by ID
         const notificationMap = new Map(prev.map(n => [n.id, n]));
         
@@ -91,19 +109,13 @@ export default function NotificationCenter({ onNavigate }) {
       loadNotifications();
     });
 
-    // Refresh periodically when open
-    const interval = setInterval(() => {
-      if (isOpen) {
-        loadNotifications();
-      }
-    }, 10000); // Refresh every 10 seconds when open
+    // No periodic polling - rely on WebSocket for real-time updates
 
     return () => {
       unsubscribeNew();
       unsubscribeRead();
       unsubscribeDeleted();
       unsubscribeAllRead();
-      clearInterval(interval);
     };
   }, [isOpen, subscribe]);
 

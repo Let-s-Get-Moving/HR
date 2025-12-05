@@ -165,6 +165,7 @@ export default function Messages({ pageParams = {} }) {
               thread={selectedThread}
               currentUserId={currentUserId}
               highlightMessageId={highlightMessageId}
+              onClearHighlight={() => setHighlightMessageId(null)}
               onBack={() => {
                 if (isMobile) {
                   setShowSidebar(true);

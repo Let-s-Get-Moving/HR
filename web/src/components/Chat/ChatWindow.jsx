@@ -4,7 +4,7 @@ import { API } from '../../config/api.js';
 import { useChatMessages } from '../../hooks/useWebSocket.js';
 import ChatMessage from './ChatMessage.jsx';
 
-export default function ChatWindow({ thread, currentUserId, onBack, highlightMessageId }) {
+export default function ChatWindow({ thread, currentUserId, onBack, highlightMessageId, onClearHighlight }) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,12 +61,14 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
       // Scroll to highlighted message
       highlightMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
       // Clear highlight after scrolling
-      setTimeout(() => setHighlightMessageId(null), 3000);
+      if (onClearHighlight) {
+        setTimeout(() => onClearHighlight(), 3000);
+      }
     } else {
       // Scroll to bottom for new messages
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, highlightMessageId]);
+  }, [messages, highlightMessageId, onClearHighlight]);
 
   const sendMessage = async () => {
     if (!message.trim() || !thread?.id || sending) return;

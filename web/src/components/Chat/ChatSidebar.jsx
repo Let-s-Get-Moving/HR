@@ -16,7 +16,24 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
       console.log('[ChatSidebar] Loaded threads:', newThreads.length);
       
       // Smart update: merge old and new threads to prevent blinking
+      // Only update if data actually changed (deep comparison)
       setThreads(prev => {
+        // Check if data actually changed
+        const prevMap = new Map(prev.map(t => [t.id, t]));
+        const hasChanged = newThreads.some(newThread => {
+          const oldThread = prevMap.get(newThread.id);
+          if (!oldThread) return true; // New thread
+          // Compare relevant fields
+          return oldThread.last_message_at !== newThread.last_message_at ||
+                 oldThread.subject !== newThread.subject ||
+                 oldThread.other_user_name !== newThread.other_user_name;
+        }) || prev.length !== newThreads.length;
+        
+        // If nothing changed, return previous state to prevent re-render
+        if (!hasChanged) {
+          return prev;
+        }
+        
         // Create a map of existing threads by ID
         const threadMap = new Map(prev.map(t => [t.id, t]));
         
@@ -42,9 +59,7 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
 
   useEffect(() => {
     loadThreads();
-    // Refresh threads every 10 seconds
-    const interval = setInterval(loadThreads, 10000);
-    return () => clearInterval(interval);
+    // No periodic polling - rely on WebSocket for real-time updates
   }, []);
 
   // Memoize filtered threads to prevent unnecessary re-renders
