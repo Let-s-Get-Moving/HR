@@ -60,6 +60,19 @@ export default function Settings() {
   const [departmentError, setDepartmentError] = useState('');
   const [departmentEmployeeCounts, setDepartmentEmployeeCounts] = useState({});
 
+  // Location Management State
+  const [locations, setLocations] = useState([]);
+  const [newLocation, setNewLocation] = useState({
+    name: '',
+    region: '',
+    is_active: true
+  });
+  const [editingLocation, setEditingLocation] = useState(null);
+  const [addingLocation, setAddingLocation] = useState(false);
+  const [deletingLocation, setDeletingLocation] = useState(null);
+  const [locationError, setLocationError] = useState('');
+  const [locationEmployeeCounts, setLocationEmployeeCounts] = useState({});
+
   // Leave Policies Management State
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [newLeaveType, setNewLeaveType] = useState({
@@ -93,6 +106,7 @@ export default function Settings() {
 
   // Modal State
   const [showDepartmentsModal, setShowDepartmentsModal] = useState(false);
+  const [showLocationsModal, setShowLocationsModal] = useState(false);
   const [showLeavePoliciesModal, setShowLeavePoliciesModal] = useState(false);
   const [showHolidaysModal, setShowHolidaysModal] = useState(false);
   const [showJobTitlesModal, setShowJobTitlesModal] = useState(false);
@@ -216,6 +230,7 @@ export default function Settings() {
   
   // Track if individual modals have loaded (one ref per modal)
   const departmentsLoadedRef = useRef(false);
+  const locationsLoadedRef = useRef(false);
   const leavePoliciesLoadedRef = useRef(false);
   const benefitsPackagesLoadedRef = useRef(false);
   const workSchedulesLoadedRef = useRef(false);
@@ -480,6 +495,19 @@ export default function Settings() {
       }
     }
   }, [showDepartmentsModal]);
+
+  useEffect(() => {
+    if (showLocationsModal && !locationsLoadedRef.current) {
+      locationsLoadedRef.current = true;
+      
+      if (!inFlightRequests.has('locations')) {
+        inFlightRequests.add('locations');
+        loadLocations().finally(() => {
+          inFlightRequests.delete('locations');
+        });
+      }
+    }
+  }, [showLocationsModal]);
 
   useEffect(() => {
     if (showLeavePoliciesModal && !leavePoliciesLoadedRef.current) {
@@ -866,6 +894,125 @@ export default function Settings() {
       alert(errorMsg);
     } finally {
       setDeletingDepartment(null);
+    }
+  };
+
+  // Load locations and employee counts
+  const loadLocations = async (skipEmployeeCounts = false) => {
+    try {
+      // Get all locations (including inactive) for management
+      const locs = await API("/api/employees/locations?all=true").catch(() => []);
+      setLocations(locs || []);
+
+      // Load all employees and count by location (only if not skipped)
+      if (!skipEmployeeCounts) {
+        try {
+          const employees = await API("/api/employees").catch(() => []);
+          const counts = {};
+          (locs || []).forEach(loc => {
+            counts[loc.id] = 0;
+          });
+          (employees || []).forEach(emp => {
+            const locId = emp.location_id;
+            if (locId && counts[locId] !== undefined) {
+              counts[locId] = (counts[locId] || 0) + 1;
+            }
+          });
+          setLocationEmployeeCounts(counts);
+        } catch (err) {
+          console.error("Error loading location employee counts:", err);
+          const counts = {};
+          (locs || []).forEach(loc => {
+            counts[loc.id] = 0;
+          });
+          setLocationEmployeeCounts(counts);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading locations:", error);
+      setLocations([]);
+    }
+  };
+
+  // Add new location
+  const handleAddLocation = async (e) => {
+    e.preventDefault();
+    if (!newLocation.name.trim()) {
+      setLocationError(t('settings.locations.nameRequired'));
+      return;
+    }
+
+    setAddingLocation(true);
+    setLocationError('');
+
+    try {
+      await API("/api/employees/locations", {
+        method: "POST",
+        body: JSON.stringify({
+          name: newLocation.name.trim(),
+          region: newLocation.region.trim() || null,
+          is_active: newLocation.is_active
+        })
+      });
+
+      setNewLocation({ name: '', region: '', is_active: true });
+      await loadLocations();
+    } catch (error) {
+      console.error("Error adding location:", error);
+      setLocationError(error.message || t('settings.locations.addError'));
+    } finally {
+      setAddingLocation(false);
+    }
+  };
+
+  // Update location
+  const handleUpdateLocation = async (id, updates) => {
+    setLocationError('');
+
+    try {
+      await API(`/api/employees/locations/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(updates)
+      });
+
+      setEditingLocation(null);
+      await loadLocations();
+    } catch (error) {
+      console.error("Error updating location:", error);
+      setLocationError(error.message || t('settings.locations.updateError'));
+    }
+  };
+
+  // Delete location
+  const handleDeleteLocation = async (id) => {
+    const count = locationEmployeeCounts[id] || 0;
+    if (count > 0) {
+      alert(t('settings.locations.cannotDelete', { count }));
+      return;
+    }
+
+    if (!window.confirm(t('settings.locations.confirmDelete'))) {
+      return;
+    }
+
+    setDeletingLocation(id);
+
+    try {
+      await API(`/api/employees/locations/${id}`, {
+        method: "DELETE"
+      });
+
+      await loadLocations();
+    } catch (error) {
+      console.error("Error deleting location:", error);
+      const errorMsg = error.message || t('settings.locations.deleteError');
+      if (error.employee_count) {
+        alert(t('settings.locations.cannotDelete', { count: error.employee_count }));
+      } else {
+        alert(errorMsg);
+      }
+    } finally {
+      setDeletingLocation(null);
     }
   };
 
@@ -2184,6 +2331,16 @@ export default function Settings() {
                 <p className="text-sm text-secondary">{t('settings.departments.description')}</p>
               </button>
 
+              {/* Locations Button */}
+              <button
+                onClick={() => setShowLocationsModal(true)}
+                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+              >
+                <div className="text-3xl mb-3">📍</div>
+                <h4 className="text-lg font-semibold mb-2">{t('settings.locations.title')}</h4>
+                <p className="text-sm text-secondary">{t('settings.locations.description')}</p>
+              </button>
+
               {/* Leave Policies Button */}
               <button
                 onClick={() => setShowLeavePoliciesModal(true)}
@@ -2431,6 +2588,222 @@ export default function Settings() {
                       )}
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const LocationsModal = () => {
+    if (!showLocationsModal) return null;
+    const canManage = hasFullAccess(userRole);
+
+    const handleClose = () => {
+      setShowLocationsModal(false);
+      setEditingLocation(null);
+      setLocationError('');
+      setNewLocation({ name: '', region: '', is_active: true });
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <div
+          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+            <h2 className="text-2xl font-semibold">{t('settings.locations.title')}</h2>
+            <button
+              onClick={handleClose}
+              className="text-secondary hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">{t('settings.locations.description')}</p>
+
+            {/* Add Location Form */}
+            {canManage && (
+              <div className="card p-6 mb-6">
+                <h4 className="text-lg font-medium mb-4">{t('settings.locations.addNew')}</h4>
+                <form onSubmit={handleAddLocation} className="space-y-4">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => {
+                        setNewLocation({...newLocation, name: e.target.value});
+                        setLocationError('');
+                      }}
+                      placeholder={t('settings.locations.namePlaceholder')}
+                      className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      maxLength={100}
+                    />
+                    <input
+                      type="text"
+                      value={newLocation.region}
+                      onChange={(e) => {
+                        setNewLocation({...newLocation, region: e.target.value});
+                        setLocationError('');
+                      }}
+                      placeholder={t('settings.locations.regionPlaceholder')}
+                      className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      maxLength={50}
+                    />
+                    <label className="flex items-center gap-2 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newLocation.is_active}
+                        onChange={(e) => {
+                          setNewLocation({...newLocation, is_active: e.target.checked});
+                        }}
+                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-white">{t('settings.locations.active')}</span>
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={addingLocation || !newLocation.name.trim()}
+                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {addingLocation ? t('settings.locations.adding') : t('settings.locations.add')}
+                    </button>
+                  </div>
+                  {locationError && (
+                    <p className="text-sm text-red-400">{locationError}</p>
+                  )}
+                </form>
+              </div>
+            )}
+
+            {/* Locations List */}
+            <div className="card p-6">
+              <h4 className="text-lg font-medium mb-4">{t('settings.locations.list')}</h4>
+              {locations.length === 0 ? (
+                <p className="text-secondary">{t('settings.locations.noLocations')}</p>
+              ) : (
+                <div className="space-y-3">
+                  {locations.map((loc) => {
+                    const isEditing = editingLocation?.id === loc.id;
+                    return (
+                      <div
+                        key={loc.id}
+                        className="p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                      >
+                        {isEditing ? (
+                          <div className="space-y-3">
+                            <div className="flex gap-3">
+                              <input
+                                type="text"
+                                value={editingLocation.name}
+                                onChange={(e) => setEditingLocation({...editingLocation, name: e.target.value})}
+                                className="flex-1 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded text-white"
+                                placeholder={t('settings.locations.namePlaceholder')}
+                              />
+                              <input
+                                type="text"
+                                value={editingLocation.region || ''}
+                                onChange={(e) => setEditingLocation({...editingLocation, region: e.target.value})}
+                                className="flex-1 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded text-white"
+                                placeholder={t('settings.locations.regionPlaceholder')}
+                              />
+                              <label className="flex items-center gap-2 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={editingLocation.is_active}
+                                  onChange={(e) => setEditingLocation({...editingLocation, is_active: e.target.checked})}
+                                  className="w-4 h-4 text-indigo-600 rounded"
+                                />
+                                <span className="text-sm text-white">{t('settings.locations.active')}</span>
+                              </label>
+                            </div>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleUpdateLocation(loc.id, {
+                                  name: editingLocation.name.trim(),
+                                  region: editingLocation.region.trim() || null,
+                                  is_active: editingLocation.is_active
+                                })}
+                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                              >
+                                {t('settings.locations.save')}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingLocation(null);
+                                  setLocationError('');
+                                }}
+                                className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
+                              >
+                                {t('settings.locations.cancel')}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3">
+                                <span className="font-medium text-white">{loc.name}</span>
+                                {loc.region && (
+                                  <span className="text-sm text-secondary">({loc.region})</span>
+                                )}
+                                {loc.is_active ? (
+                                  <span className="px-2 py-1 text-xs bg-green-600/20 text-green-400 rounded">
+                                    {t('settings.locations.active')}
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-1 text-xs bg-red-600/20 text-red-400 rounded">
+                                    {t('settings.locations.inactive')}
+                                  </span>
+                                )}
+                              </div>
+                              {locationEmployeeCounts[loc.id] !== undefined && (
+                                <div className="text-sm text-secondary mt-1">
+                                  {locationEmployeeCounts[loc.id] === 0
+                                    ? t('settings.locations.noEmployees')
+                                    : t('settings.locations.employeeCount', { count: locationEmployeeCounts[loc.id] })}
+                                </div>
+                              )}
+                            </div>
+                            {canManage && (
+                              <div className="flex gap-2 ml-4">
+                                <button
+                                  onClick={() => setEditingLocation({...loc})}
+                                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                                >
+                                  {t('settings.locations.edit')}
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLocation(loc.id)}
+                                  disabled={deletingLocation === loc.id || (locationEmployeeCounts[loc.id] || 0) > 0}
+                                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                                  title={
+                                    (locationEmployeeCounts[loc.id] || 0) > 0
+                                      ? t('settings.locations.cannotDelete', { count: locationEmployeeCounts[loc.id] })
+                                      : t('settings.locations.delete')
+                                  }
+                                >
+                                  {deletingLocation === loc.id ? t('settings.locations.deleting') : t('settings.locations.delete')}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -4487,6 +4860,7 @@ export default function Settings() {
 
       {/* Management Modals */}
       <DepartmentsModal />
+      <LocationsModal />
       <LeavePoliciesModal />
       <HolidaysModal />
       <JobTitlesModal />

@@ -155,9 +155,200 @@ r.delete("/departments/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMI
   }
 });
 
-r.get("/locations", async (_req, res) => {
-  const { rows } = await q(`SELECT * FROM locations WHERE is_active = true ORDER BY name`);
+r.get("/locations", async (req, res) => {
+  // Support ?all=true query param to get all locations (for management)
+  const all = req.query.all === 'true';
+  const query = all 
+    ? `SELECT * FROM locations ORDER BY is_active DESC, name`
+    : `SELECT * FROM locations WHERE is_active = true ORDER BY name`;
+  const { rows } = await q(query);
   res.json(rows);
+});
+
+// POST /api/employees/locations - Create new location (manager/admin only)
+r.post("/locations", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { name, region, is_active } = req.body;
+    
+    // Validation
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Location name is required' });
+    }
+    
+    const trimmedName = name.trim();
+    
+    if (trimmedName.length > 100) {
+      return res.status(400).json({ error: 'Location name must be 100 characters or less' });
+    }
+    
+    // Check if location already exists
+    const existing = await q(`SELECT id FROM locations WHERE name = $1`, [trimmedName]);
+    if (existing.rows.length > 0) {
+      return res.status(409).json({ error: 'Location already exists' });
+    }
+    
+    // Insert new location
+    const result = await q(`
+      INSERT INTO locations (name, region, is_active) 
+      VALUES ($1, $2, $3) 
+      RETURNING *
+    `, [
+      trimmedName,
+      region && typeof region === 'string' ? region.trim() : null,
+      is_active !== undefined ? Boolean(is_active) : true
+    ]);
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating location:', error);
+    
+    // Handle unique constraint violation
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Location already exists' });
+    }
+    
+    res.status(500).json({ error: 'Failed to create location' });
+  }
+});
+
+// PUT /api/employees/locations/:id - Update location (manager/admin only)
+r.put("/locations/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const locationId = parseInt(req.params.id, 10);
+    if (isNaN(locationId)) {
+      return res.status(400).json({ error: 'Invalid location ID' });
+    }
+    
+    const { name, region, is_active } = req.body;
+    
+    // Validation
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim().length === 0) {
+        return res.status(400).json({ error: 'Location name cannot be empty' });
+      }
+      if (name.trim().length > 100) {
+        return res.status(400).json({ error: 'Location name must be 100 characters or less' });
+      }
+    }
+    
+    // Check if location exists
+    const existing = await q(`SELECT id FROM locations WHERE id = $1`, [locationId]);
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Location not found' });
+    }
+    
+    // Check if new name conflicts with another location
+    if (name !== undefined) {
+      const trimmedName = name.trim();
+      const conflict = await q(`SELECT id FROM locations WHERE name = $1 AND id != $2`, [trimmedName, locationId]);
+      if (conflict.rows.length > 0) {
+        return res.status(409).json({ error: 'Location name already exists' });
+      }
+    }
+    
+    // Build update query dynamically
+    const updates = [];
+    const values = [];
+    let paramCount = 1;
+    
+    if (name !== undefined) {
+      updates.push(`name = $${paramCount++}`);
+      values.push(name.trim());
+    }
+    if (region !== undefined) {
+      updates.push(`region = $${paramCount++}`);
+      values.push(region && typeof region === 'string' ? region.trim() : null);
+    }
+    if (is_active !== undefined) {
+      updates.push(`is_active = $${paramCount++}`);
+      values.push(Boolean(is_active));
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+    
+    values.push(locationId);
+    
+    const result = await q(`
+      UPDATE locations 
+      SET ${updates.join(', ')}
+      WHERE id = $${paramCount}
+      RETURNING *
+    `, values);
+    
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating location:', error);
+    
+    // Handle unique constraint violation
+    if (error.code === '23505') {
+      return res.status(409).json({ error: 'Location name already exists' });
+    }
+    
+    res.status(500).json({ error: 'Failed to update location' });
+  }
+});
+
+// DELETE /api/employees/locations/:id - Delete location (manager/admin only)
+r.delete("/locations/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const locationId = parseInt(req.params.id, 10);
+    if (isNaN(locationId)) {
+      return res.status(400).json({ error: 'Invalid location ID' });
+    }
+    
+    // Check if location exists
+    const locationCheck = await q(`SELECT id FROM locations WHERE id = $1`, [locationId]);
+    if (locationCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Location not found' });
+    }
+    
+    // Check if any employees are assigned to this location
+    const employeeCount = await q(`
+      SELECT COUNT(*) as count 
+      FROM employees 
+      WHERE location_id = $1
+    `, [locationId]);
+    
+    const count = parseInt(employeeCount.rows[0].count, 10);
+    if (count > 0) {
+      return res.status(409).json({ 
+        error: `Cannot delete location: ${count} employee(s) assigned. Please reassign employees first.`,
+        employee_count: count
+      });
+    }
+    
+    // Delete the location
+    await q(`DELETE FROM locations WHERE id = $1`, [locationId]);
+    
+    res.json({ success: true, message: 'Location deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting location:', error);
+    res.status(500).json({ error: 'Failed to delete location' });
+  }
+});
+
+// GET /api/employees/locations/:id/employees - Get employees assigned to location
+r.get("/locations/:id/employees", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const locationId = parseInt(req.params.id, 10);
+    if (isNaN(locationId)) {
+      return res.status(400).json({ error: 'Invalid location ID' });
+    }
+    
+    const { rows } = await q(`
+      SELECT id, first_name, last_name, email, status
+      FROM employees
+      WHERE location_id = $1
+      ORDER BY first_name, last_name
+    `, [locationId]);
+    
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching location employees:', error);
+    res.status(500).json({ error: 'Failed to fetch employees' });
+  }
 });
 
 r.get("/time-entries", async (_req, res) => {
