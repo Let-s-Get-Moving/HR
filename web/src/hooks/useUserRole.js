@@ -43,13 +43,14 @@ export function canViewAllEmployees(role) {
 }
 
 // Pages that users can access (limited role)
-// User role can ONLY see: Employees, Time Tracking, Leave Management, Payroll, Bonuses & Commissions, Settings
+// User role can ONLY see: Employees, Time Tracking, Leave Management, Payroll, Bonuses & Commissions, Messages, Settings
 export const USER_ALLOWED_PAGES = [
   'employees',      // Users can see their own employee info
   'timeTracking',   // Time Tracking
   'leave',          // Leave Management  
   'payroll',        // Payroll
   'bonuses',        // Bonuses & Commissions
+  'messages',       // Messages - users can chat with HR
   'settings'        // Settings
 ];
 
