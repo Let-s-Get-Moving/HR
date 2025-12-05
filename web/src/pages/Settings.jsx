@@ -1189,10 +1189,18 @@ export default function Settings() {
   // Add new holiday
   const handleAddHoliday = async (e) => {
     e.preventDefault();
-    if (!newHoliday.date || !newHoliday.description.trim()) {
+    const date = holidayInputRefs.current.date?.value || '';
+    const description = holidayInputRefs.current.description?.value?.trim() || '';
+    
+    if (!date || !description) {
       setHolidayError(t('settings.holidays.dateAndDescriptionRequired'));
       return;
     }
+
+    // Get other form values (selects, checkboxes need to be read differently)
+    const is_company_closure = true; // Default
+    const applies_to_type = 'All'; // Default
+    const applies_to_id = null; // Default
 
     setAddingHoliday(true);
     setHolidayError('');
@@ -1200,16 +1208,18 @@ export default function Settings() {
     try {
       await API("/api/leave/holidays", {
         method: "POST",
-        body: JSON.stringify(newHoliday)
+        body: JSON.stringify({
+          date,
+          description,
+          is_company_closure,
+          applies_to_type,
+          applies_to_id
+        })
       });
 
-      setNewHoliday({
-        date: '',
-        description: '',
-        is_company_closure: true,
-        applies_to_type: 'All',
-        applies_to_id: null
-      });
+      // Clear inputs
+      if (holidayInputRefs.current.date) holidayInputRefs.current.date.value = '';
+      if (holidayInputRefs.current.description) holidayInputRefs.current.description.value = '';
       await loadHolidays();
     } catch (error) {
       console.error("Error adding holiday:", error);
@@ -3249,43 +3259,125 @@ export default function Settings() {
                             />
                             <input
                               type="text"
-                          value={editingLeaveTypeData?.color ?? newLeaveType.color}
-                          onChange={(e) => {
-                            if (editingLeaveTypeData) {
-                              setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
-                            } else {
-                              setNewLeaveType({...newLeaveType, color: e.target.value});
-                            }
+                              value={editingLeaveTypeData?.color ?? '#3B82F6'}
+                              onChange={(e) => {
+                                setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
+                              }}
+                              placeholder="#3B82F6"
+                              className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                              pattern="^#[0-9A-Fa-f]{6}$"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={addingLeaveType}
+                          className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {addingLeaveType ? t('settings.leavePolicies.saving') : t('settings.leavePolicies.update')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingLeaveType(null);
+                            setEditingLeaveTypeData(null);
+                            setLeaveTypeError('');
                           }}
-                          placeholder="#3B82F6"
-                          className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                          pattern="^#[0-9A-Fa-f]{6}$"
+                          className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                        >
+                          {t('settings.leavePolicies.cancel')}
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    // Add new mode - uncontrolled inputs
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.name')} *</label>
+                          <input
+                            ref={(el) => leaveTypeInputRefs.current.name = el}
+                            type="text"
+                            defaultValue=""
+                            placeholder={t('settings.leavePolicies.namePlaceholder')}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            maxLength={100}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.annualEntitlement')} *</label>
+                          <input
+                            ref={(el) => leaveTypeInputRefs.current.default_annual_entitlement = el}
+                            type="number"
+                            min="0"
+                            defaultValue="0"
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.descriptionLabel')}</label>
+                        <textarea
+                          ref={(el) => leaveTypeInputRefs.current.description = el}
+                          defaultValue=""
+                          placeholder={t('settings.leavePolicies.descriptionPlaceholder')}
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          rows="2"
                         />
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="submit"
-                      disabled={addingLeaveType}
-                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {addingLeaveType ? t('settings.leavePolicies.saving') : (editingLeaveType ? t('settings.leavePolicies.update') : t('settings.leavePolicies.add'))}
-                    </button>
-                    {editingLeaveType && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingLeaveType(null);
-                          setEditingLeaveTypeData(null);
-                          setLeaveTypeError('');
-                        }}
-                        className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
-                      >
-                        {t('settings.leavePolicies.cancel')}
-                      </button>
-                    )}
-                  </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="modal_is_paid_add"
+                            defaultChecked={true}
+                            className="mr-2"
+                          />
+                          <label htmlFor="modal_is_paid_add" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="modal_requires_approval_add"
+                            defaultChecked={true}
+                            className="mr-2"
+                          />
+                          <label htmlFor="modal_requires_approval_add" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.color')}</label>
+                          <div className="flex gap-2">
+                            <input
+                              ref={(el) => leaveTypeInputRefs.current.color = el}
+                              type="color"
+                              defaultValue="#3B82F6"
+                              className="h-10 w-20 rounded border border-neutral-700"
+                            />
+                            <input
+                              type="text"
+                              defaultValue="#3B82F6"
+                              pattern="^#[0-9A-Fa-f]{6}$"
+                              placeholder="#3B82F6"
+                              className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <button
+                          type="submit"
+                          disabled={addingLeaveType}
+                          className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {addingLeaveType ? t('settings.leavePolicies.saving') : t('settings.leavePolicies.add')}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </form>
                 {leaveTypeError && (
                   <p className="mt-2 text-sm text-red-400">{leaveTypeError}</p>
@@ -3410,12 +3502,9 @@ export default function Settings() {
                     <div>
                       <label className="block text-sm font-medium mb-2">{t('settings.holidays.date')} *</label>
                       <input
+                        ref={(el) => holidayInputRefs.current.date = el}
                         type="date"
-                        value={newHoliday.date}
-                        onChange={(e) => {
-                          setNewHoliday({...newHoliday, date: e.target.value});
-                          setHolidayError('');
-                        }}
+                        defaultValue=""
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                         required
                       />
@@ -3423,12 +3512,9 @@ export default function Settings() {
                     <div>
                       <label className="block text-sm font-medium mb-2">{t('settings.holidays.descriptionLabel')} *</label>
                       <input
+                        ref={(el) => holidayInputRefs.current.description = el}
                         type="text"
-                        value={newHoliday.description}
-                        onChange={(e) => {
-                          setNewHoliday({...newHoliday, description: e.target.value});
-                          setHolidayError('');
-                        }}
+                        defaultValue=""
                         placeholder={t('settings.holidays.descriptionPlaceholder')}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                         maxLength={200}
