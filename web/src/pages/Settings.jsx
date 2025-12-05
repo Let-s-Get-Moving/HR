@@ -84,6 +84,7 @@ export default function Settings() {
     color: '#3B82F6'
   });
   const [editingLeaveType, setEditingLeaveType] = useState(null);
+  const [editingLeaveTypeData, setEditingLeaveTypeData] = useState(null);
   const [addingLeaveType, setAddingLeaveType] = useState(false);
   const [deletingLeaveType, setDeletingLeaveType] = useState(null);
   const [leaveTypeError, setLeaveTypeError] = useState('');
@@ -129,6 +130,7 @@ export default function Settings() {
     max_salary: ''
   });
   const [editingJobTitle, setEditingJobTitle] = useState(null);
+  const [editingJobTitleData, setEditingJobTitleData] = useState(null);
   const [addingJobTitle, setAddingJobTitle] = useState(false);
   const [deletingJobTitle, setDeletingJobTitle] = useState(null);
   const [jobTitleError, setJobTitleError] = useState('');
@@ -144,6 +146,7 @@ export default function Settings() {
     employer_cost: 0
   });
   const [editingBenefitsPackage, setEditingBenefitsPackage] = useState(null);
+  const [editingBenefitsPackageData, setEditingBenefitsPackageData] = useState(null);
   const [addingBenefitsPackage, setAddingBenefitsPackage] = useState(false);
   const [deletingBenefitsPackage, setDeletingBenefitsPackage] = useState(null);
   const [benefitsPackageError, setBenefitsPackageError] = useState('');
@@ -161,6 +164,7 @@ export default function Settings() {
     max_hours_per_week: 40
   });
   const [editingWorkSchedule, setEditingWorkSchedule] = useState(null);
+  const [editingWorkScheduleData, setEditingWorkScheduleData] = useState(null);
   const [addingWorkSchedule, setAddingWorkSchedule] = useState(false);
   const [deletingWorkSchedule, setDeletingWorkSchedule] = useState(null);
   const [workScheduleError, setWorkScheduleError] = useState('');
@@ -178,6 +182,7 @@ export default function Settings() {
     applies_to_id: null
   });
   const [editingOvertimePolicy, setEditingOvertimePolicy] = useState(null);
+  const [editingOvertimePolicyData, setEditingOvertimePolicyData] = useState(null);
   const [addingOvertimePolicy, setAddingOvertimePolicy] = useState(false);
   const [deletingOvertimePolicy, setDeletingOvertimePolicy] = useState(null);
   const [overtimePolicyError, setOvertimePolicyError] = useState('');
@@ -196,6 +201,7 @@ export default function Settings() {
     applies_to_id: null
   });
   const [editingAttendancePolicy, setEditingAttendancePolicy] = useState(null);
+  const [editingAttendancePolicyData, setEditingAttendancePolicyData] = useState(null);
   const [addingAttendancePolicy, setAddingAttendancePolicy] = useState(false);
   const [deletingAttendancePolicy, setDeletingAttendancePolicy] = useState(null);
   const [attendancePolicyError, setAttendancePolicyError] = useState('');
@@ -213,6 +219,7 @@ export default function Settings() {
     equipment_policy: ''
   });
   const [editingRemoteWorkPolicy, setEditingRemoteWorkPolicy] = useState(null);
+  const [editingRemoteWorkPolicyData, setEditingRemoteWorkPolicyData] = useState(null);
   const [addingRemoteWorkPolicy, setAddingRemoteWorkPolicy] = useState(false);
   const [deletingRemoteWorkPolicy, setDeletingRemoteWorkPolicy] = useState(null);
   const [remoteWorkPolicyError, setRemoteWorkPolicyError] = useState('');
@@ -1086,10 +1093,9 @@ export default function Settings() {
 
   // Update leave type
   const handleUpdateLeaveType = async (id) => {
-    const leaveType = leaveTypes.find(lt => lt.id === id);
-    if (!leaveType) return;
+    if (!editingLeaveTypeData) return;
 
-    if (!leaveType.name || !leaveType.name.trim()) {
+    if (!editingLeaveTypeData.name || !editingLeaveTypeData.name.trim()) {
       setLeaveTypeError(t('settings.leavePolicies.nameRequired'));
       return;
     }
@@ -1101,16 +1107,17 @@ export default function Settings() {
       await API(`/api/leave/types/${id}`, {
         method: "PUT",
         body: JSON.stringify({
-          name: leaveType.name.trim(),
-          description: leaveType.description || null,
-          default_annual_entitlement: leaveType.default_annual_entitlement || 0,
-          is_paid: leaveType.is_paid !== false,
-          requires_approval: leaveType.requires_approval !== false,
-          color: leaveType.color || '#3B82F6'
+          name: editingLeaveTypeData.name.trim(),
+          description: editingLeaveTypeData.description || null,
+          default_annual_entitlement: editingLeaveTypeData.default_annual_entitlement || 0,
+          is_paid: editingLeaveTypeData.is_paid !== false,
+          requires_approval: editingLeaveTypeData.requires_approval !== false,
+          color: editingLeaveTypeData.color || '#3B82F6'
         })
       });
 
       setEditingLeaveType(null);
+      setEditingLeaveTypeData(null);
       await loadLeaveTypes();
     } catch (error) {
       console.error("Error updating leave type:", error);
@@ -1259,8 +1266,7 @@ export default function Settings() {
   };
 
   const handleUpdateJobTitle = async (id) => {
-    const jobTitle = jobTitles.find(jt => jt.id === id);
-    if (!jobTitle) return;
+    if (!editingJobTitleData) return;
 
     setAddingJobTitle(true);
     setJobTitleError('');
@@ -1269,17 +1275,18 @@ export default function Settings() {
       await API(`/api/settings/job-titles/${id}`, {
         method: "PUT",
         body: JSON.stringify({
-          name: jobTitle.name.trim(),
-          description: jobTitle.description || null,
-          department_id: jobTitle.department_id || null,
-          level_grade: jobTitle.level_grade || null,
-          reports_to_id: jobTitle.reports_to_id || null,
-          min_salary: jobTitle.min_salary || null,
-          max_salary: jobTitle.max_salary || null
+          name: editingJobTitleData.name.trim(),
+          description: editingJobTitleData.description || null,
+          department_id: editingJobTitleData.department_id || null,
+          level_grade: editingJobTitleData.level_grade || null,
+          reports_to_id: editingJobTitleData.reports_to_id || null,
+          min_salary: editingJobTitleData.min_salary || null,
+          max_salary: editingJobTitleData.max_salary || null
         })
       });
 
       setEditingJobTitle(null);
+      setEditingJobTitleData(null);
       await loadJobTitles();
     } catch (error) {
       console.error("Error updating job title:", error);
@@ -1359,8 +1366,7 @@ export default function Settings() {
   };
 
   const handleUpdateBenefitsPackage = async (id) => {
-    const pkg = benefitsPackages.find(bp => bp.id === id);
-    if (!pkg) return;
+    if (!editingBenefitsPackageData) return;
 
     setAddingBenefitsPackage(true);
     setBenefitsPackageError('');
@@ -1369,16 +1375,17 @@ export default function Settings() {
       await API(`/api/settings/benefits-packages/${id}`, {
         method: "PUT",
         body: JSON.stringify({
-          name: pkg.name.trim(),
-          description: pkg.description || null,
-          benefit_types: pkg.benefit_types || [],
-          coverage_level: pkg.coverage_level || 'Standard',
-          employee_cost: pkg.employee_cost || 0,
-          employer_cost: pkg.employer_cost || 0
+          name: editingBenefitsPackageData.name.trim(),
+          description: editingBenefitsPackageData.description || null,
+          benefit_types: editingBenefitsPackageData.benefit_types || [],
+          coverage_level: editingBenefitsPackageData.coverage_level || 'Standard',
+          employee_cost: editingBenefitsPackageData.employee_cost || 0,
+          employer_cost: editingBenefitsPackageData.employer_cost || 0
         })
       });
 
       setEditingBenefitsPackage(null);
+      setEditingBenefitsPackageData(null);
       await loadBenefitsPackages();
     } catch (error) {
       console.error("Error updating benefits package:", error);
@@ -1460,8 +1467,7 @@ export default function Settings() {
   };
 
   const handleUpdateWorkSchedule = async (id) => {
-    const schedule = workSchedules.find(ws => ws.id === id);
-    if (!schedule) return;
+    if (!editingWorkScheduleData) return;
 
     setAddingWorkSchedule(true);
     setWorkScheduleError('');
@@ -1470,18 +1476,19 @@ export default function Settings() {
       await API(`/api/settings/work-schedules/${id}`, {
         method: "PUT",
         body: JSON.stringify({
-          name: schedule.name.trim(),
-          description: schedule.description || null,
-          start_time: schedule.start_time,
-          end_time: schedule.end_time,
-          days_of_week: schedule.days_of_week || [],
-          break_duration_minutes: schedule.break_duration_minutes || 0,
-          flexible_hours: schedule.flexible_hours || false,
-          max_hours_per_week: schedule.max_hours_per_week || 40
+          name: editingWorkScheduleData.name.trim(),
+          description: editingWorkScheduleData.description || null,
+          start_time: editingWorkScheduleData.start_time,
+          end_time: editingWorkScheduleData.end_time,
+          days_of_week: editingWorkScheduleData.days_of_week || [],
+          break_duration_minutes: editingWorkScheduleData.break_duration_minutes || 0,
+          flexible_hours: editingWorkScheduleData.flexible_hours || false,
+          max_hours_per_week: editingWorkScheduleData.max_hours_per_week || 40
         })
       });
 
       setEditingWorkSchedule(null);
+      setEditingWorkScheduleData(null);
       await loadWorkSchedules();
     } catch (error) {
       console.error("Error updating work schedule:", error);
@@ -1563,8 +1570,7 @@ export default function Settings() {
   };
 
   const handleUpdateOvertimePolicy = async (id) => {
-    const policy = overtimePolicies.find(op => op.id === id);
-    if (!policy) return;
+    if (!editingOvertimePolicyData) return;
 
     setAddingOvertimePolicy(true);
     setOvertimePolicyError('');
@@ -1573,18 +1579,19 @@ export default function Settings() {
       await API(`/api/settings/overtime-policies/${id}`, {
         method: "PUT",
         body: JSON.stringify({
-          name: policy.name.trim(),
-          description: policy.description || null,
-          weekly_threshold_hours: policy.weekly_threshold_hours || 40,
-          daily_threshold_hours: policy.daily_threshold_hours || 8,
-          multiplier: policy.multiplier || 1.5,
-          requires_approval: policy.requires_approval !== false,
-          applies_to_type: policy.applies_to_type || 'All',
-          applies_to_id: policy.applies_to_id || null
+          name: editingOvertimePolicyData.name.trim(),
+          description: editingOvertimePolicyData.description || null,
+          weekly_threshold_hours: editingOvertimePolicyData.weekly_threshold_hours || 40,
+          daily_threshold_hours: editingOvertimePolicyData.daily_threshold_hours || 8,
+          multiplier: editingOvertimePolicyData.multiplier || 1.5,
+          requires_approval: editingOvertimePolicyData.requires_approval !== false,
+          applies_to_type: editingOvertimePolicyData.applies_to_type || 'All',
+          applies_to_id: editingOvertimePolicyData.applies_to_id || null
         })
       });
 
       setEditingOvertimePolicy(null);
+      setEditingOvertimePolicyData(null);
       await loadOvertimePolicies();
     } catch (error) {
       console.error("Error updating overtime policy:", error);
@@ -1667,8 +1674,7 @@ export default function Settings() {
   };
 
   const handleUpdateAttendancePolicy = async (id) => {
-    const policy = attendancePolicies.find(ap => ap.id === id);
-    if (!policy) return;
+    if (!editingAttendancePolicyData) return;
 
     setAddingAttendancePolicy(true);
     setAttendancePolicyError('');
@@ -1677,19 +1683,20 @@ export default function Settings() {
       await API(`/api/settings/attendance-policies/${id}`, {
         method: "PUT",
         body: JSON.stringify({
-          name: policy.name.trim(),
-          description: policy.description || null,
-          late_grace_period_minutes: policy.late_grace_period_minutes || 15,
-          absence_limit_per_month: policy.absence_limit_per_month || 3,
-          tardiness_penalty_points: policy.tardiness_penalty_points || 1,
-          absence_penalty_points: policy.absence_penalty_points || 3,
-          point_threshold_termination: policy.point_threshold_termination || 10,
-          applies_to_type: policy.applies_to_type || 'All',
-          applies_to_id: policy.applies_to_id || null
+          name: editingAttendancePolicyData.name.trim(),
+          description: editingAttendancePolicyData.description || null,
+          late_grace_period_minutes: editingAttendancePolicyData.late_grace_period_minutes || 15,
+          absence_limit_per_month: editingAttendancePolicyData.absence_limit_per_month || 3,
+          tardiness_penalty_points: editingAttendancePolicyData.tardiness_penalty_points || 1,
+          absence_penalty_points: editingAttendancePolicyData.absence_penalty_points || 3,
+          point_threshold_termination: editingAttendancePolicyData.point_threshold_termination || 10,
+          applies_to_type: editingAttendancePolicyData.applies_to_type || 'All',
+          applies_to_id: editingAttendancePolicyData.applies_to_id || null
         })
       });
 
       setEditingAttendancePolicy(null);
+      setEditingAttendancePolicyData(null);
       await loadAttendancePolicies();
     } catch (error) {
       console.error("Error updating attendance policy:", error);
@@ -1771,8 +1778,7 @@ export default function Settings() {
   };
 
   const handleUpdateRemoteWorkPolicy = async (id) => {
-    const policy = remoteWorkPolicies.find(rwp => rwp.id === id);
-    if (!policy) return;
+    if (!editingRemoteWorkPolicyData) return;
 
     setAddingRemoteWorkPolicy(true);
     setRemoteWorkPolicyError('');
@@ -1781,18 +1787,19 @@ export default function Settings() {
       await API(`/api/settings/remote-work-policies/${id}`, {
         method: "PUT",
         body: JSON.stringify({
-          name: policy.name.trim(),
-          description: policy.description || null,
-          eligibility_type: policy.eligibility_type || 'All',
-          eligibility_id: policy.eligibility_id || null,
-          days_per_week_allowed: policy.days_per_week_allowed || 5,
-          requires_approval: policy.requires_approval !== false,
-          equipment_provided: policy.equipment_provided || null,
-          equipment_policy: policy.equipment_policy || null
+          name: editingRemoteWorkPolicyData.name.trim(),
+          description: editingRemoteWorkPolicyData.description || null,
+          eligibility_type: editingRemoteWorkPolicyData.eligibility_type || 'All',
+          eligibility_id: editingRemoteWorkPolicyData.eligibility_id || null,
+          days_per_week_allowed: editingRemoteWorkPolicyData.days_per_week_allowed || 5,
+          requires_approval: editingRemoteWorkPolicyData.requires_approval !== false,
+          equipment_provided: editingRemoteWorkPolicyData.equipment_provided || null,
+          equipment_policy: editingRemoteWorkPolicyData.equipment_policy || null
         })
       });
 
       setEditingRemoteWorkPolicy(null);
+      setEditingRemoteWorkPolicyData(null);
       await loadRemoteWorkPolicies();
     } catch (error) {
       console.error("Error updating remote work policy:", error);
@@ -2861,10 +2868,10 @@ export default function Settings() {
                       <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.name')} *</label>
                       <input
                         type="text"
-                        value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.name || '' : newLeaveType.name}
+                        value={editingLeaveTypeData?.name ?? newLeaveType.name}
                         onChange={(e) => {
-                          if (editingLeaveType) {
-                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, name: e.target.value } : lt));
+                          if (editingLeaveTypeData) {
+                            setEditingLeaveTypeData({...editingLeaveTypeData, name: e.target.value});
                           } else {
                             setNewLeaveType({...newLeaveType, name: e.target.value});
                           }
@@ -2881,11 +2888,11 @@ export default function Settings() {
                       <input
                         type="number"
                         min="0"
-                        value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.default_annual_entitlement || 0 : newLeaveType.default_annual_entitlement}
+                        value={editingLeaveTypeData?.default_annual_entitlement ?? newLeaveType.default_annual_entitlement}
                         onChange={(e) => {
                           const val = parseInt(e.target.value, 10) || 0;
-                          if (editingLeaveType) {
-                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, default_annual_entitlement: val } : lt));
+                          if (editingLeaveTypeData) {
+                            setEditingLeaveTypeData({...editingLeaveTypeData, default_annual_entitlement: val});
                           } else {
                             setNewLeaveType({...newLeaveType, default_annual_entitlement: val});
                           }
@@ -2898,10 +2905,10 @@ export default function Settings() {
                   <div>
                     <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.descriptionLabel')}</label>
                     <textarea
-                      value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.description || '' : newLeaveType.description}
+                      value={editingLeaveTypeData?.description ?? newLeaveType.description}
                       onChange={(e) => {
-                        if (editingLeaveType) {
-                          setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, description: e.target.value } : lt));
+                        if (editingLeaveTypeData) {
+                          setEditingLeaveTypeData({...editingLeaveTypeData, description: e.target.value});
                         } else {
                           setNewLeaveType({...newLeaveType, description: e.target.value});
                         }
@@ -2916,10 +2923,10 @@ export default function Settings() {
                       <input
                         type="checkbox"
                         id="modal_is_paid"
-                        checked={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.is_paid !== false : newLeaveType.is_paid}
+                        checked={editingLeaveTypeData?.is_paid ?? newLeaveType.is_paid}
                         onChange={(e) => {
-                          if (editingLeaveType) {
-                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, is_paid: e.target.checked } : lt));
+                          if (editingLeaveTypeData) {
+                            setEditingLeaveTypeData({...editingLeaveTypeData, is_paid: e.target.checked});
                           } else {
                             setNewLeaveType({...newLeaveType, is_paid: e.target.checked});
                           }
@@ -2933,10 +2940,10 @@ export default function Settings() {
                       <input
                         type="checkbox"
                         id="modal_requires_approval"
-                        checked={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.requires_approval !== false : newLeaveType.requires_approval}
+                        checked={editingLeaveTypeData?.requires_approval ?? newLeaveType.requires_approval}
                         onChange={(e) => {
-                          if (editingLeaveType) {
-                            setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, requires_approval: e.target.checked } : lt));
+                          if (editingLeaveTypeData) {
+                            setEditingLeaveTypeData({...editingLeaveTypeData, requires_approval: e.target.checked});
                           } else {
                             setNewLeaveType({...newLeaveType, requires_approval: e.target.checked});
                           }
@@ -2951,10 +2958,10 @@ export default function Settings() {
                       <div className="flex gap-2">
                         <input
                           type="color"
-                          value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.color || '#3B82F6' : newLeaveType.color}
+                          value={editingLeaveTypeData?.color ?? newLeaveType.color}
                           onChange={(e) => {
-                            if (editingLeaveType) {
-                              setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, color: e.target.value } : lt));
+                            if (editingLeaveTypeData) {
+                              setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
                             } else {
                               setNewLeaveType({...newLeaveType, color: e.target.value});
                             }
@@ -2963,10 +2970,10 @@ export default function Settings() {
                         />
                         <input
                           type="text"
-                          value={editingLeaveType ? leaveTypes.find(lt => lt.id === editingLeaveType)?.color || '#3B82F6' : newLeaveType.color}
+                          value={editingLeaveTypeData?.color ?? newLeaveType.color}
                           onChange={(e) => {
-                            if (editingLeaveType) {
-                              setLeaveTypes(leaveTypes.map(lt => lt.id === editingLeaveType ? { ...lt, color: e.target.value } : lt));
+                            if (editingLeaveTypeData) {
+                              setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
                             } else {
                               setNewLeaveType({...newLeaveType, color: e.target.value});
                             }
@@ -2991,6 +2998,7 @@ export default function Settings() {
                         type="button"
                         onClick={() => {
                           setEditingLeaveType(null);
+                          setEditingLeaveTypeData(null);
                           setLeaveTypeError('');
                         }}
                         className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
@@ -3045,7 +3053,11 @@ export default function Settings() {
                       {canManage && (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditingLeaveType(lt.id)}
+                            onClick={() => {
+                              const leaveType = leaveTypes.find(l => l.id === lt.id);
+                              setEditingLeaveTypeData(leaveType ? {...leaveType} : null);
+                              setEditingLeaveType(lt.id);
+                            }}
                             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                           >
                             {t('settings.leavePolicies.edit')}
@@ -3314,10 +3326,10 @@ export default function Settings() {
                       <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.name')} *</label>
                       <input
                         type="text"
-                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.name || '' : newJobTitle.name}
+                        value={editingJobTitleData?.name ?? newJobTitle.name}
                         onChange={(e) => {
-                          if (editingJobTitle) {
-                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, name: e.target.value } : jt));
+                          if (editingJobTitleData) {
+                            setEditingJobTitleData({...editingJobTitleData, name: e.target.value});
                           } else {
                             setNewJobTitle({...newJobTitle, name: e.target.value});
                           }
@@ -3330,11 +3342,11 @@ export default function Settings() {
                     <div>
                       <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.department')}</label>
                       <select
-                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.department_id || '' : newJobTitle.department_id || ''}
+                        value={editingJobTitleData?.department_id ?? newJobTitle.department_id ?? ''}
                         onChange={(e) => {
                           const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                          if (editingJobTitle) {
-                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, department_id: val } : jt));
+                          if (editingJobTitleData) {
+                            setEditingJobTitleData({...editingJobTitleData, department_id: val});
                           } else {
                             setNewJobTitle({...newJobTitle, department_id: val});
                           }
@@ -3351,10 +3363,10 @@ export default function Settings() {
                   <div>
                     <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.descriptionLabel')}</label>
                     <textarea
-                      value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.description || '' : newJobTitle.description}
+                      value={editingJobTitleData?.description ?? newJobTitle.description}
                       onChange={(e) => {
-                        if (editingJobTitle) {
-                          setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, description: e.target.value } : jt));
+                        if (editingJobTitleData) {
+                          setEditingJobTitleData({...editingJobTitleData, description: e.target.value});
                         } else {
                           setNewJobTitle({...newJobTitle, description: e.target.value});
                         }
@@ -3368,10 +3380,10 @@ export default function Settings() {
                       <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.levelGrade')}</label>
                       <input
                         type="text"
-                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.level_grade || '' : newJobTitle.level_grade}
+                        value={editingJobTitleData?.level_grade ?? newJobTitle.level_grade}
                         onChange={(e) => {
-                          if (editingJobTitle) {
-                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, level_grade: e.target.value } : jt));
+                          if (editingJobTitleData) {
+                            setEditingJobTitleData({...editingJobTitleData, level_grade: e.target.value});
                           } else {
                             setNewJobTitle({...newJobTitle, level_grade: e.target.value});
                           }
@@ -3382,11 +3394,11 @@ export default function Settings() {
                     <div>
                       <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.reportsTo')}</label>
                       <select
-                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.reports_to_id || '' : newJobTitle.reports_to_id || ''}
+                        value={editingJobTitleData?.reports_to_id ?? newJobTitle.reports_to_id ?? ''}
                         onChange={(e) => {
                           const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                          if (editingJobTitle) {
-                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, reports_to_id: val } : jt));
+                          if (editingJobTitleData) {
+                            setEditingJobTitleData({...editingJobTitleData, reports_to_id: val});
                           } else {
                             setNewJobTitle({...newJobTitle, reports_to_id: val});
                           }
@@ -3394,7 +3406,7 @@ export default function Settings() {
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                       >
                         <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
-                        {jobTitles.filter(jt => !editingJobTitle || jt.id !== editingJobTitle).map(jt => (
+                        {jobTitles.filter(jt => !editingJobTitleData || jt.id !== editingJobTitleData.id).map(jt => (
                           <option key={jt.id} value={jt.id}>{jt.name}</option>
                         ))}
                       </select>
@@ -3406,11 +3418,11 @@ export default function Settings() {
                       <input
                         type="number"
                         step="0.01"
-                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.min_salary || '' : newJobTitle.min_salary}
+                        value={editingJobTitleData?.min_salary ?? newJobTitle.min_salary}
                         onChange={(e) => {
                           const val = e.target.value ? parseFloat(e.target.value) : null;
-                          if (editingJobTitle) {
-                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, min_salary: val } : jt));
+                          if (editingJobTitleData) {
+                            setEditingJobTitleData({...editingJobTitleData, min_salary: val});
                           } else {
                             setNewJobTitle({...newJobTitle, min_salary: val});
                           }
@@ -3423,11 +3435,11 @@ export default function Settings() {
                       <input
                         type="number"
                         step="0.01"
-                        value={editingJobTitle ? jobTitles.find(jt => jt.id === editingJobTitle)?.max_salary || '' : newJobTitle.max_salary}
+                        value={editingJobTitleData?.max_salary ?? newJobTitle.max_salary}
                         onChange={(e) => {
                           const val = e.target.value ? parseFloat(e.target.value) : null;
-                          if (editingJobTitle) {
-                            setJobTitles(jobTitles.map(jt => jt.id === editingJobTitle ? { ...jt, max_salary: val } : jt));
+                          if (editingJobTitleData) {
+                            setEditingJobTitleData({...editingJobTitleData, max_salary: val});
                           } else {
                             setNewJobTitle({...newJobTitle, max_salary: val});
                           }
@@ -3449,6 +3461,7 @@ export default function Settings() {
                         type="button"
                         onClick={() => {
                           setEditingJobTitle(null);
+                          setEditingJobTitleData(null);
                           setJobTitleError('');
                         }}
                         className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
@@ -3497,7 +3510,11 @@ export default function Settings() {
                       {canManage && (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditingJobTitle(jt.id)}
+                            onClick={() => {
+                              const jobTitle = jobTitles.find(j => j.id === jt.id);
+                              setEditingJobTitleData(jobTitle ? {...jobTitle} : null);
+                              setEditingJobTitle(jt.id);
+                            }}
                             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                           >
                             {t('settings.jobTitles.edit')}
@@ -3570,10 +3587,10 @@ export default function Settings() {
                     <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.name')} *</label>
                     <input
                       type="text"
-                      value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.name || '' : newBenefitsPackage.name}
+                      value={editingBenefitsPackageData?.name ?? newBenefitsPackage.name}
                       onChange={(e) => {
-                        if (editingBenefitsPackage) {
-                          setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, name: e.target.value } : bp));
+                        if (editingBenefitsPackageData) {
+                          setEditingBenefitsPackageData({...editingBenefitsPackageData, name: e.target.value});
                         } else {
                           setNewBenefitsPackage({...newBenefitsPackage, name: e.target.value});
                         }
@@ -3586,10 +3603,10 @@ export default function Settings() {
                   <div>
                     <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.descriptionLabel')}</label>
                     <textarea
-                      value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.description || '' : newBenefitsPackage.description}
+                      value={editingBenefitsPackageData?.description ?? newBenefitsPackage.description}
                       onChange={(e) => {
-                        if (editingBenefitsPackage) {
-                          setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, description: e.target.value } : bp));
+                        if (editingBenefitsPackageData) {
+                          setEditingBenefitsPackageData({...editingBenefitsPackageData, description: e.target.value});
                         } else {
                           setNewBenefitsPackage({...newBenefitsPackage, description: e.target.value});
                         }
@@ -3602,7 +3619,7 @@ export default function Settings() {
                     <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.benefitTypes')}</label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {benefitTypesOptions.map(type => {
-                        const pkg = editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage) : newBenefitsPackage;
+                        const pkg = editingBenefitsPackageData ?? newBenefitsPackage;
                         const selected = (pkg?.benefit_types || []).includes(type);
                         return (
                           <label key={type} className="flex items-center">
@@ -3614,8 +3631,8 @@ export default function Settings() {
                                 const newTypes = e.target.checked
                                   ? [...currentTypes, type]
                                   : currentTypes.filter(t => t !== type);
-                                if (editingBenefitsPackage) {
-                                  setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, benefit_types: newTypes } : bp));
+                                if (editingBenefitsPackageData) {
+                                  setEditingBenefitsPackageData({...editingBenefitsPackageData, benefit_types: newTypes});
                                 } else {
                                   setNewBenefitsPackage({...newBenefitsPackage, benefit_types: newTypes});
                                 }
@@ -3633,10 +3650,10 @@ export default function Settings() {
                     <div>
                       <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.coverageLevel')}</label>
                       <select
-                        value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.coverage_level || 'Standard' : newBenefitsPackage.coverage_level}
+                        value={editingBenefitsPackageData?.coverage_level ?? newBenefitsPackage.coverage_level}
                         onChange={(e) => {
-                          if (editingBenefitsPackage) {
-                            setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, coverage_level: e.target.value } : bp));
+                          if (editingBenefitsPackageData) {
+                            setEditingBenefitsPackageData({...editingBenefitsPackageData, coverage_level: e.target.value});
                           } else {
                             setNewBenefitsPackage({...newBenefitsPackage, coverage_level: e.target.value});
                           }
@@ -3653,11 +3670,11 @@ export default function Settings() {
                       <input
                         type="number"
                         step="0.01"
-                        value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.employee_cost || 0 : newBenefitsPackage.employee_cost}
+                        value={editingBenefitsPackageData?.employee_cost ?? newBenefitsPackage.employee_cost}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value) || 0;
-                          if (editingBenefitsPackage) {
-                            setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, employee_cost: val } : bp));
+                          if (editingBenefitsPackageData) {
+                            setEditingBenefitsPackageData({...editingBenefitsPackageData, employee_cost: val});
                           } else {
                             setNewBenefitsPackage({...newBenefitsPackage, employee_cost: val});
                           }
@@ -3670,11 +3687,11 @@ export default function Settings() {
                       <input
                         type="number"
                         step="0.01"
-                        value={editingBenefitsPackage ? benefitsPackages.find(bp => bp.id === editingBenefitsPackage)?.employer_cost || 0 : newBenefitsPackage.employer_cost}
+                        value={editingBenefitsPackageData?.employer_cost ?? newBenefitsPackage.employer_cost}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value) || 0;
-                          if (editingBenefitsPackage) {
-                            setBenefitsPackages(benefitsPackages.map(bp => bp.id === editingBenefitsPackage ? { ...bp, employer_cost: val } : bp));
+                          if (editingBenefitsPackageData) {
+                            setEditingBenefitsPackageData({...editingBenefitsPackageData, employer_cost: val});
                           } else {
                             setNewBenefitsPackage({...newBenefitsPackage, employer_cost: val});
                           }
@@ -3696,6 +3713,7 @@ export default function Settings() {
                         type="button"
                         onClick={() => {
                           setEditingBenefitsPackage(null);
+                          setEditingBenefitsPackageData(null);
                           setBenefitsPackageError('');
                         }}
                         className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
@@ -3745,7 +3763,11 @@ export default function Settings() {
                       {canManage && (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setEditingBenefitsPackage(bp.id)}
+                            onClick={() => {
+                              const pkg = benefitsPackages.find(b => b.id === bp.id);
+                              setEditingBenefitsPackageData(pkg ? {...pkg} : null);
+                              setEditingBenefitsPackage(bp.id);
+                            }}
                             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                           >
                             {t('settings.benefitsPackages.edit')}
@@ -3778,7 +3800,7 @@ export default function Settings() {
   const WorkSchedulesModal = () => {
     if (!showWorkSchedulesModal) return null;
     const canManage = hasFullAccess(userRole);
-    const handleClose = () => { setShowWorkSchedulesModal(false); setEditingWorkSchedule(null); setWorkScheduleError(''); };
+    const handleClose = () => { setShowWorkSchedulesModal(false); setEditingWorkSchedule(null); setEditingWorkScheduleData(null); setWorkScheduleError(''); };
     const daysOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     return (
@@ -3800,39 +3822,39 @@ export default function Settings() {
                 <form onSubmit={editingWorkSchedule ? (e) => { e.preventDefault(); handleUpdateWorkSchedule(editingWorkSchedule); } : handleAddWorkSchedule} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.name')} *</label>
-                      <input type="text" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.name || '' : newWorkSchedule.name}
-                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, name: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, name: e.target.value}); } setWorkScheduleError(''); }}
+                      <input type="text" value={editingWorkScheduleData?.name ?? newWorkSchedule.name}
+                        onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, name: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, name: e.target.value}); } setWorkScheduleError(''); }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.descriptionLabel')}</label>
-                      <textarea value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.description || '' : newWorkSchedule.description}
-                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, description: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, description: e.target.value}); } }}
+                      <textarea value={editingWorkScheduleData?.description ?? newWorkSchedule.description}
+                        onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, description: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, description: e.target.value}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.startTime')} *</label>
-                      <input type="time" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.start_time || '09:00' : newWorkSchedule.start_time}
-                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, start_time: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, start_time: e.target.value}); } }}
+                      <input type="time" value={editingWorkScheduleData?.start_time ?? newWorkSchedule.start_time}
+                        onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, start_time: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, start_time: e.target.value}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.endTime')} *</label>
-                      <input type="time" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.end_time || '17:00' : newWorkSchedule.end_time}
-                        onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, end_time: e.target.value } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, end_time: e.target.value}); } }}
+                      <input type="time" value={editingWorkScheduleData?.end_time ?? newWorkSchedule.end_time}
+                        onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, end_time: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, end_time: e.target.value}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                     </div>
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.daysOfWeek')}</label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                       {daysOptions.map(day => {
-                        const schedule = editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule) : newWorkSchedule;
+                        const schedule = editingWorkScheduleData ?? newWorkSchedule;
                         const selected = (schedule?.days_of_week || []).includes(day);
                         return (
                           <label key={day} className="flex items-center">
                             <input type="checkbox" checked={selected} onChange={(e) => {
                               const currentDays = schedule?.days_of_week || [];
                               const newDays = e.target.checked ? [...currentDays, day] : currentDays.filter(d => d !== day);
-                              if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, days_of_week: newDays } : ws)); }
+                              if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, days_of_week: newDays}); }
                               else { setNewWorkSchedule({...newWorkSchedule, days_of_week: newDays}); }
                             }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                             <span className="text-sm">{day}</span>
@@ -3843,17 +3865,17 @@ export default function Settings() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.breakDuration')}</label>
-                      <input type="number" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.break_duration_minutes || 60 : newWorkSchedule.break_duration_minutes}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 0; if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, break_duration_minutes: val } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, break_duration_minutes: val}); } }}
+                      <input type="number" value={editingWorkScheduleData?.break_duration_minutes ?? newWorkSchedule.break_duration_minutes}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 0; if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, break_duration_minutes: val}); } else { setNewWorkSchedule({...newWorkSchedule, break_duration_minutes: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
-                    <div className="flex items-center mt-6"><input type="checkbox" checked={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.flexible_hours || false : newWorkSchedule.flexible_hours}
-                      onChange={(e) => { if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, flexible_hours: e.target.checked } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
+                    <div className="flex items-center mt-6"><input type="checkbox" checked={editingWorkScheduleData?.flexible_hours ?? newWorkSchedule.flexible_hours}
+                      onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, flexible_hours: e.target.checked}); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                       <label className="text-sm">{t('settings.workSchedules.flexibleHours')}</label>
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.maxHoursPerWeek')}</label>
-                      <input type="number" value={editingWorkSchedule ? workSchedules.find(ws => ws.id === editingWorkSchedule)?.max_hours_per_week || 40 : newWorkSchedule.max_hours_per_week}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 40; if (editingWorkSchedule) { setWorkSchedules(workSchedules.map(ws => ws.id === editingWorkSchedule ? { ...ws, max_hours_per_week: val } : ws)); } else { setNewWorkSchedule({...newWorkSchedule, max_hours_per_week: val}); } }}
+                      <input type="number" value={editingWorkScheduleData?.max_hours_per_week ?? newWorkSchedule.max_hours_per_week}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 40; if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, max_hours_per_week: val}); } else { setNewWorkSchedule({...newWorkSchedule, max_hours_per_week: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                   </div>
@@ -3861,7 +3883,7 @@ export default function Settings() {
                     <button type="submit" disabled={addingWorkSchedule} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingWorkSchedule ? t('settings.workSchedules.saving') : (editingWorkSchedule ? t('settings.workSchedules.update') : t('settings.workSchedules.add'))}
                     </button>
-                    {editingWorkSchedule && <button type="button" onClick={() => { setEditingWorkSchedule(null); setWorkScheduleError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.workSchedules.cancel')}</button>}
+                    {editingWorkSchedule && <button type="button" onClick={() => { setEditingWorkSchedule(null); setEditingWorkScheduleData(null); setWorkScheduleError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.workSchedules.cancel')}</button>}
                   </div>
                 </form>
                 {workScheduleError && <p className="mt-2 text-sm text-red-400">{workScheduleError}</p>}
@@ -3880,7 +3902,11 @@ export default function Settings() {
                         {ws.employee_count > 0 && <div className="text-xs text-yellow-400 mt-1">{t('settings.workSchedules.inUse', { count: ws.employee_count })}</div>}
                       </div>
                       {canManage && <div className="flex gap-2">
-                        <button onClick={() => setEditingWorkSchedule(ws.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.workSchedules.edit')}</button>
+                        <button onClick={() => {
+                          const schedule = workSchedules.find(w => w.id === ws.id);
+                          setEditingWorkScheduleData(schedule ? {...schedule} : null);
+                          setEditingWorkSchedule(ws.id);
+                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.workSchedules.edit')}</button>
                         <button onClick={() => handleDeleteWorkSchedule(ws.id)} disabled={deletingWorkSchedule === ws.id || (ws.employee_count || 0) > 0} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors" title={ws.employee_count > 0 ? t('settings.workSchedules.cannotDelete') : t('settings.workSchedules.delete')}>
                           {deletingWorkSchedule === ws.id ? t('settings.workSchedules.deleting') : t('settings.workSchedules.delete')}
                         </button>
@@ -3903,7 +3929,7 @@ export default function Settings() {
   const OvertimePoliciesModal = () => {
     if (!showOvertimePoliciesModal) return null;
     const canManage = hasFullAccess(userRole);
-    const handleClose = () => { setShowOvertimePoliciesModal(false); setEditingOvertimePolicy(null); setOvertimePolicyError(''); };
+    const handleClose = () => { setShowOvertimePoliciesModal(false); setEditingOvertimePolicy(null); setEditingOvertimePolicyData(null); setOvertimePolicyError(''); };
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
@@ -3923,55 +3949,55 @@ export default function Settings() {
                 <h4 className="text-lg font-medium mb-4">{editingOvertimePolicy ? t('settings.overtimePolicies.edit') : t('settings.overtimePolicies.addNew')}</h4>
                 <form onSubmit={editingOvertimePolicy ? (e) => { e.preventDefault(); handleUpdateOvertimePolicy(editingOvertimePolicy); } : handleAddOvertimePolicy} className="space-y-4">
                   <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.name')} *</label>
-                    <input type="text" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.name || '' : newOvertimePolicy.name}
-                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, name: e.target.value } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, name: e.target.value}); } setOvertimePolicyError(''); }}
+                    <input type="text" value={editingOvertimePolicyData?.name ?? newOvertimePolicy.name}
+                      onChange={(e) => { if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, name: e.target.value}); } else { setNewOvertimePolicy({...newOvertimePolicy, name: e.target.value}); } setOvertimePolicyError(''); }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.descriptionLabel')}</label>
-                    <textarea value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.description || '' : newOvertimePolicy.description}
-                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, description: e.target.value } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, description: e.target.value}); } }}
+                    <textarea value={editingOvertimePolicyData?.description ?? newOvertimePolicy.description}
+                      onChange={(e) => { if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, description: e.target.value}); } else { setNewOvertimePolicy({...newOvertimePolicy, description: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.weeklyThreshold')}</label>
-                      <input type="number" step="0.1" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.weekly_threshold_hours || 40 : newOvertimePolicy.weekly_threshold_hours}
-                        onChange={(e) => { const val = parseFloat(e.target.value) || 40; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, weekly_threshold_hours: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, weekly_threshold_hours: val}); } }}
+                      <input type="number" step="0.1" value={editingOvertimePolicyData?.weekly_threshold_hours ?? newOvertimePolicy.weekly_threshold_hours}
+                        onChange={(e) => { const val = parseFloat(e.target.value) || 40; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, weekly_threshold_hours: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, weekly_threshold_hours: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.dailyThreshold')}</label>
-                      <input type="number" step="0.1" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.daily_threshold_hours || 8 : newOvertimePolicy.daily_threshold_hours}
-                        onChange={(e) => { const val = parseFloat(e.target.value) || 8; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, daily_threshold_hours: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, daily_threshold_hours: val}); } }}
+                      <input type="number" step="0.1" value={editingOvertimePolicyData?.daily_threshold_hours ?? newOvertimePolicy.daily_threshold_hours}
+                        onChange={(e) => { const val = parseFloat(e.target.value) || 8; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, daily_threshold_hours: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, daily_threshold_hours: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.multiplier')}</label>
-                      <input type="number" step="0.1" value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.multiplier || 1.5 : newOvertimePolicy.multiplier}
-                        onChange={(e) => { const val = parseFloat(e.target.value) || 1.5; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, multiplier: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, multiplier: val}); } }}
+                      <input type="number" step="0.1" value={editingOvertimePolicyData?.multiplier ?? newOvertimePolicy.multiplier}
+                        onChange={(e) => { const val = parseFloat(e.target.value) || 1.5; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, multiplier: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, multiplier: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center"><input type="checkbox" checked={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.requires_approval !== false : newOvertimePolicy.requires_approval}
-                      onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, requires_approval: e.target.checked } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, requires_approval: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
+                    <div className="flex items-center"><input type="checkbox" checked={editingOvertimePolicyData?.requires_approval ?? newOvertimePolicy.requires_approval}
+                      onChange={(e) => { if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, requires_approval: e.target.checked}); } else { setNewOvertimePolicy({...newOvertimePolicy, requires_approval: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                       <label className="text-sm">{t('settings.overtimePolicies.requiresApproval')}</label>
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.appliesTo')}</label>
-                      <select value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type || 'All' : newOvertimePolicy.applies_to_type}
-                        onChange={(e) => { if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, applies_to_type: e.target.value, applies_to_id: null } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
+                      <select value={editingOvertimePolicyData?.applies_to_type ?? newOvertimePolicy.applies_to_type}
+                        onChange={(e) => { if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, applies_to_type: e.target.value, applies_to_id: null}); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                         <option value="All">{t('settings.overtimePolicies.all')}</option>
                         <option value="Department">{t('settings.overtimePolicies.department')}</option>
                         <option value="JobTitle">{t('settings.overtimePolicies.jobTitle')}</option>
                       </select>
                     </div>
-                    {(editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type : newOvertimePolicy.applies_to_type) !== 'All' && (
+                    {(editingOvertimePolicyData?.applies_to_type ?? newOvertimePolicy.applies_to_type) !== 'All' && (
                       <div><label className="block text-sm font-medium mb-2">
-                        {(editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type : newOvertimePolicy.applies_to_type) === 'Department' ? t('settings.overtimePolicies.selectDepartment') : t('settings.overtimePolicies.selectJobTitle')}
+                        {(editingOvertimePolicyData?.applies_to_type ?? newOvertimePolicy.applies_to_type) === 'Department' ? t('settings.overtimePolicies.selectDepartment') : t('settings.overtimePolicies.selectJobTitle')}
                       </label>
-                        <select value={editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_id || '' : newOvertimePolicy.applies_to_id || ''}
-                          onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingOvertimePolicy) { setOvertimePolicies(overtimePolicies.map(op => op.id === editingOvertimePolicy ? { ...op, applies_to_id: val } : op)); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_id: val}); } }}
+                        <select value={editingOvertimePolicyData?.applies_to_id ?? newOvertimePolicy.applies_to_id ?? ''}
+                          onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, applies_to_id: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_id: val}); } }}
                           className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                           <option value="">{t('settings.overtimePolicies.select')}</option>
-                          {(editingOvertimePolicy ? overtimePolicies.find(op => op.id === editingOvertimePolicy)?.applies_to_type : newOvertimePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
+                          {(editingOvertimePolicyData?.applies_to_type ?? newOvertimePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
                         </select>
                       </div>
                     )}
@@ -3980,7 +4006,7 @@ export default function Settings() {
                     <button type="submit" disabled={addingOvertimePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingOvertimePolicy ? t('settings.overtimePolicies.saving') : (editingOvertimePolicy ? t('settings.overtimePolicies.update') : t('settings.overtimePolicies.add'))}
                     </button>
-                    {editingOvertimePolicy && <button type="button" onClick={() => { setEditingOvertimePolicy(null); setOvertimePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.overtimePolicies.cancel')}</button>}
+                    {editingOvertimePolicy && <button type="button" onClick={() => { setEditingOvertimePolicy(null); setEditingOvertimePolicyData(null); setOvertimePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.overtimePolicies.cancel')}</button>}
                   </div>
                 </form>
                 {overtimePolicyError && <p className="mt-2 text-sm text-red-400">{overtimePolicyError}</p>}
@@ -3999,7 +4025,11 @@ export default function Settings() {
                         {op.applies_to_name && <div className="text-xs text-secondary mt-1">{t('settings.overtimePolicies.appliesTo')}: {op.applies_to_name}</div>}
                       </div>
                       {canManage && <div className="flex gap-2">
-                        <button onClick={() => setEditingOvertimePolicy(op.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.overtimePolicies.edit')}</button>
+                        <button onClick={() => {
+                          const policy = overtimePolicies.find(o => o.id === op.id);
+                          setEditingOvertimePolicyData(policy ? {...policy} : null);
+                          setEditingOvertimePolicy(op.id);
+                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.overtimePolicies.edit')}</button>
                         <button onClick={() => handleDeleteOvertimePolicy(op.id)} disabled={deletingOvertimePolicy === op.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
                           {deletingOvertimePolicy === op.id ? t('settings.overtimePolicies.deleting') : t('settings.overtimePolicies.delete')}
                         </button>
@@ -4022,7 +4052,7 @@ export default function Settings() {
   const AttendancePoliciesModal = () => {
     if (!showAttendancePoliciesModal) return null;
     const canManage = hasFullAccess(userRole);
-    const handleClose = () => { setShowAttendancePoliciesModal(false); setEditingAttendancePolicy(null); setAttendancePolicyError(''); };
+    const handleClose = () => { setShowAttendancePoliciesModal(false); setEditingAttendancePolicy(null); setEditingAttendancePolicyData(null); setAttendancePolicyError(''); };
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
@@ -4042,44 +4072,44 @@ export default function Settings() {
                 <h4 className="text-lg font-medium mb-4">{editingAttendancePolicy ? t('settings.attendancePolicies.edit') : t('settings.attendancePolicies.addNew')}</h4>
                 <form onSubmit={editingAttendancePolicy ? (e) => { e.preventDefault(); handleUpdateAttendancePolicy(editingAttendancePolicy); } : handleAddAttendancePolicy} className="space-y-4">
                   <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.name')} *</label>
-                    <input type="text" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.name || '' : newAttendancePolicy.name}
-                      onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, name: e.target.value } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, name: e.target.value}); } setAttendancePolicyError(''); }}
+                    <input type="text" value={editingAttendancePolicyData?.name ?? newAttendancePolicy.name}
+                      onChange={(e) => { if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, name: e.target.value}); } else { setNewAttendancePolicy({...newAttendancePolicy, name: e.target.value}); } setAttendancePolicyError(''); }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.descriptionLabel')}</label>
-                    <textarea value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.description || '' : newAttendancePolicy.description}
-                      onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, description: e.target.value } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, description: e.target.value}); } }}
+                    <textarea value={editingAttendancePolicyData?.description ?? newAttendancePolicy.description}
+                      onChange={(e) => { if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, description: e.target.value}); } else { setNewAttendancePolicy({...newAttendancePolicy, description: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.lateGracePeriod')}</label>
-                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.late_grace_period_minutes || 15 : newAttendancePolicy.late_grace_period_minutes}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 15; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, late_grace_period_minutes: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, late_grace_period_minutes: val}); } }}
+                      <input type="number" value={editingAttendancePolicyData?.late_grace_period_minutes ?? newAttendancePolicy.late_grace_period_minutes}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 15; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, late_grace_period_minutes: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, late_grace_period_minutes: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.absenceLimitPerMonth')}</label>
-                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.absence_limit_per_month || 3 : newAttendancePolicy.absence_limit_per_month}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, absence_limit_per_month: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_limit_per_month: val}); } }}
+                      <input type="number" value={editingAttendancePolicyData?.absence_limit_per_month ?? newAttendancePolicy.absence_limit_per_month}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, absence_limit_per_month: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_limit_per_month: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.tardinessPenalty')}</label>
-                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.tardiness_penalty_points || 1 : newAttendancePolicy.tardiness_penalty_points}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 1; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, tardiness_penalty_points: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, tardiness_penalty_points: val}); } }}
+                      <input type="number" value={editingAttendancePolicyData?.tardiness_penalty_points ?? newAttendancePolicy.tardiness_penalty_points}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 1; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, tardiness_penalty_points: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, tardiness_penalty_points: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.absencePenalty')}</label>
-                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.absence_penalty_points || 3 : newAttendancePolicy.absence_penalty_points}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, absence_penalty_points: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_penalty_points: val}); } }}
+                      <input type="number" value={editingAttendancePolicyData?.absence_penalty_points ?? newAttendancePolicy.absence_penalty_points}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, absence_penalty_points: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_penalty_points: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.pointThresholdTermination')}</label>
-                      <input type="number" value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.point_threshold_termination || 10 : newAttendancePolicy.point_threshold_termination}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 10; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, point_threshold_termination: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, point_threshold_termination: val}); } }}
+                      <input type="number" value={editingAttendancePolicyData?.point_threshold_termination ?? newAttendancePolicy.point_threshold_termination}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 10; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, point_threshold_termination: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, point_threshold_termination: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.appliesTo')}</label>
-                      <select value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type || 'All' : newAttendancePolicy.applies_to_type}
-                        onChange={(e) => { if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, applies_to_type: e.target.value, applies_to_id: null } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
+                      <select value={editingAttendancePolicyData?.applies_to_type ?? newAttendancePolicy.applies_to_type}
+                        onChange={(e) => { if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, applies_to_type: e.target.value, applies_to_id: null}); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                         <option value="All">{t('settings.attendancePolicies.all')}</option>
                         <option value="Department">{t('settings.attendancePolicies.department')}</option>
@@ -4087,15 +4117,15 @@ export default function Settings() {
                       </select>
                     </div>
                   </div>
-                  {(editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type : newAttendancePolicy.applies_to_type) !== 'All' && (
+                  {(editingAttendancePolicyData?.applies_to_type ?? newAttendancePolicy.applies_to_type) !== 'All' && (
                     <div><label className="block text-sm font-medium mb-2">
-                      {(editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type : newAttendancePolicy.applies_to_type) === 'Department' ? t('settings.attendancePolicies.selectDepartment') : t('settings.attendancePolicies.selectJobTitle')}
+                      {(editingAttendancePolicyData?.applies_to_type ?? newAttendancePolicy.applies_to_type) === 'Department' ? t('settings.attendancePolicies.selectDepartment') : t('settings.attendancePolicies.selectJobTitle')}
                     </label>
-                      <select value={editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_id || '' : newAttendancePolicy.applies_to_id || ''}
-                        onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingAttendancePolicy) { setAttendancePolicies(attendancePolicies.map(ap => ap.id === editingAttendancePolicy ? { ...ap, applies_to_id: val } : ap)); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_id: val}); } }}
+                      <select value={editingAttendancePolicyData?.applies_to_id ?? newAttendancePolicy.applies_to_id ?? ''}
+                        onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, applies_to_id: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_id: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                         <option value="">{t('settings.attendancePolicies.select')}</option>
-                        {(editingAttendancePolicy ? attendancePolicies.find(ap => ap.id === editingAttendancePolicy)?.applies_to_type : newAttendancePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
+                        {(editingAttendancePolicyData?.applies_to_type ?? newAttendancePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
                       </select>
                     </div>
                   )}
@@ -4103,7 +4133,7 @@ export default function Settings() {
                     <button type="submit" disabled={addingAttendancePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingAttendancePolicy ? t('settings.attendancePolicies.saving') : (editingAttendancePolicy ? t('settings.attendancePolicies.update') : t('settings.attendancePolicies.add'))}
                     </button>
-                    {editingAttendancePolicy && <button type="button" onClick={() => { setEditingAttendancePolicy(null); setAttendancePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.attendancePolicies.cancel')}</button>}
+                    {editingAttendancePolicy && <button type="button" onClick={() => { setEditingAttendancePolicy(null); setEditingAttendancePolicyData(null); setAttendancePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.attendancePolicies.cancel')}</button>}
                   </div>
                 </form>
                 {attendancePolicyError && <p className="mt-2 text-sm text-red-400">{attendancePolicyError}</p>}
@@ -4124,7 +4154,11 @@ export default function Settings() {
                         {ap.applies_to_name && <div className="text-xs text-secondary mt-1">{t('settings.attendancePolicies.appliesTo')}: {ap.applies_to_name}</div>}
                       </div>
                       {canManage && <div className="flex gap-2">
-                        <button onClick={() => setEditingAttendancePolicy(ap.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.attendancePolicies.edit')}</button>
+                        <button onClick={() => {
+                          const policy = attendancePolicies.find(a => a.id === ap.id);
+                          setEditingAttendancePolicyData(policy ? {...policy} : null);
+                          setEditingAttendancePolicy(ap.id);
+                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.attendancePolicies.edit')}</button>
                         <button onClick={() => handleDeleteAttendancePolicy(ap.id)} disabled={deletingAttendancePolicy === ap.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
                           {deletingAttendancePolicy === ap.id ? t('settings.attendancePolicies.deleting') : t('settings.attendancePolicies.delete')}
                         </button>
@@ -4409,7 +4443,7 @@ export default function Settings() {
   const RemoteWorkPoliciesModal = () => {
     if (!showRemoteWorkPoliciesModal) return null;
     const canManage = hasFullAccess(userRole);
-    const handleClose = () => { setShowRemoteWorkPoliciesModal(false); setEditingRemoteWorkPolicy(null); setRemoteWorkPolicyError(''); };
+    const handleClose = () => { setShowRemoteWorkPoliciesModal(false); setEditingRemoteWorkPolicy(null); setEditingRemoteWorkPolicyData(null); setRemoteWorkPolicyError(''); };
 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
@@ -4429,19 +4463,19 @@ export default function Settings() {
                 <h4 className="text-lg font-medium mb-4">{editingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.edit') : t('settings.remoteWorkPolicies.addNew')}</h4>
                 <form onSubmit={editingRemoteWorkPolicy ? (e) => { e.preventDefault(); handleUpdateRemoteWorkPolicy(editingRemoteWorkPolicy); } : handleAddRemoteWorkPolicy} className="space-y-4">
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.name')} *</label>
-                    <input type="text" value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.name || '' : newRemoteWorkPolicy.name}
-                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, name: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, name: e.target.value}); } setRemoteWorkPolicyError(''); }}
+                    <input type="text" value={editingRemoteWorkPolicyData?.name ?? newRemoteWorkPolicy.name}
+                      onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, name: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, name: e.target.value}); } setRemoteWorkPolicyError(''); }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.descriptionLabel')}</label>
-                    <textarea value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.description || '' : newRemoteWorkPolicy.description}
-                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, description: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, description: e.target.value}); } }}
+                    <textarea value={editingRemoteWorkPolicyData?.description ?? newRemoteWorkPolicy.description}
+                      onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, description: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, description: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.eligibilityCriteria')}</label>
-                      <select value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type || 'All' : newRemoteWorkPolicy.eligibility_type}
-                        onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, eligibility_type: e.target.value, eligibility_id: null } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_type: e.target.value, eligibility_id: null}); } }}
+                      <select value={editingRemoteWorkPolicyData?.eligibility_type ?? newRemoteWorkPolicy.eligibility_type}
+                        onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, eligibility_type: e.target.value, eligibility_id: null}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_type: e.target.value, eligibility_id: null}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                         <option value="All">{t('settings.remoteWorkPolicies.all')}</option>
                         <option value="Department">{t('settings.remoteWorkPolicies.department')}</option>
@@ -4449,42 +4483,42 @@ export default function Settings() {
                       </select>
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.daysPerWeekAllowed')}</label>
-                      <input type="number" min="0" max="5" value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.days_per_week_allowed || 5 : newRemoteWorkPolicy.days_per_week_allowed}
-                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 5; if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, days_per_week_allowed: val } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, days_per_week_allowed: val}); } }}
+                      <input type="number" min="0" max="5" value={editingRemoteWorkPolicyData?.days_per_week_allowed ?? newRemoteWorkPolicy.days_per_week_allowed}
+                        onChange={(e) => { const val = parseInt(e.target.value, 10) || 5; if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, days_per_week_allowed: val}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, days_per_week_allowed: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                     </div>
                   </div>
-                  {(editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type : newRemoteWorkPolicy.eligibility_type) !== 'All' && (
+                  {(editingRemoteWorkPolicyData?.eligibility_type ?? newRemoteWorkPolicy.eligibility_type) !== 'All' && (
                     <div><label className="block text-sm font-medium mb-2">
-                      {(editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type : newRemoteWorkPolicy.eligibility_type) === 'Department' ? t('settings.remoteWorkPolicies.selectDepartment') : t('settings.remoteWorkPolicies.selectJobTitle')}
+                      {(editingRemoteWorkPolicyData?.eligibility_type ?? newRemoteWorkPolicy.eligibility_type) === 'Department' ? t('settings.remoteWorkPolicies.selectDepartment') : t('settings.remoteWorkPolicies.selectJobTitle')}
                     </label>
-                      <select value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_id || '' : newRemoteWorkPolicy.eligibility_id || ''}
-                        onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, eligibility_id: val } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_id: val}); } }}
+                      <select value={editingRemoteWorkPolicyData?.eligibility_id ?? newRemoteWorkPolicy.eligibility_id ?? ''}
+                        onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, eligibility_id: val}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_id: val}); } }}
                         className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
                         <option value="">{t('settings.remoteWorkPolicies.select')}</option>
-                        {(editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.eligibility_type : newRemoteWorkPolicy.eligibility_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
+                        {(editingRemoteWorkPolicyData?.eligibility_type ?? newRemoteWorkPolicy.eligibility_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
                       </select>
                     </div>
                   )}
-                  <div className="flex items-center"><input type="checkbox" checked={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.requires_approval !== false : newRemoteWorkPolicy.requires_approval}
-                    onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, requires_approval: e.target.checked } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, requires_approval: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
+                  <div className="flex items-center"><input type="checkbox" checked={editingRemoteWorkPolicyData?.requires_approval ?? newRemoteWorkPolicy.requires_approval}
+                    onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, requires_approval: e.target.checked}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, requires_approval: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
                     <label className="text-sm">{t('settings.remoteWorkPolicies.requiresApproval')}</label>
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentProvided')}</label>
-                    <input type="text" value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.equipment_provided || '' : newRemoteWorkPolicy.equipment_provided}
-                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, equipment_provided: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_provided: e.target.value}); } }}
+                    <input type="text" value={editingRemoteWorkPolicyData?.equipment_provided ?? newRemoteWorkPolicy.equipment_provided}
+                      onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, equipment_provided: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_provided: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentPolicy')}</label>
-                    <textarea value={editingRemoteWorkPolicy ? remoteWorkPolicies.find(rwp => rwp.id === editingRemoteWorkPolicy)?.equipment_policy || '' : newRemoteWorkPolicy.equipment_policy}
-                      onChange={(e) => { if (editingRemoteWorkPolicy) { setRemoteWorkPolicies(remoteWorkPolicies.map(rwp => rwp.id === editingRemoteWorkPolicy ? { ...rwp, equipment_policy: e.target.value } : rwp)); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_policy: e.target.value}); } }}
+                    <textarea value={editingRemoteWorkPolicyData?.equipment_policy ?? newRemoteWorkPolicy.equipment_policy}
+                      onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, equipment_policy: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_policy: e.target.value}); } }}
                       className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="3" />
                   </div>
                   <div className="flex gap-3">
                     <button type="submit" disabled={addingRemoteWorkPolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.saving') : (editingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.update') : t('settings.remoteWorkPolicies.add'))}
                     </button>
-                    {editingRemoteWorkPolicy && <button type="button" onClick={() => { setEditingRemoteWorkPolicy(null); setRemoteWorkPolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.remoteWorkPolicies.cancel')}</button>}
+                    {editingRemoteWorkPolicy && <button type="button" onClick={() => { setEditingRemoteWorkPolicy(null); setEditingRemoteWorkPolicyData(null); setRemoteWorkPolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.remoteWorkPolicies.cancel')}</button>}
                   </div>
                 </form>
                 {remoteWorkPolicyError && <p className="mt-2 text-sm text-red-400">{remoteWorkPolicyError}</p>}
@@ -4506,7 +4540,11 @@ export default function Settings() {
                         {rwp.equipment_provided && <div className="text-xs text-secondary mt-1">{t('settings.remoteWorkPolicies.equipmentProvided')}: {rwp.equipment_provided}</div>}
                       </div>
                       {canManage && <div className="flex gap-2">
-                        <button onClick={() => setEditingRemoteWorkPolicy(rwp.id)} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.remoteWorkPolicies.edit')}</button>
+                        <button onClick={() => {
+                          const policy = remoteWorkPolicies.find(r => r.id === rwp.id);
+                          setEditingRemoteWorkPolicyData(policy ? {...policy} : null);
+                          setEditingRemoteWorkPolicy(rwp.id);
+                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.remoteWorkPolicies.edit')}</button>
                         <button onClick={() => handleDeleteRemoteWorkPolicy(rwp.id)} disabled={deletingRemoteWorkPolicy === rwp.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
                           {deletingRemoteWorkPolicy === rwp.id ? t('settings.remoteWorkPolicies.deleting') : t('settings.remoteWorkPolicies.delete')}
                         </button>
