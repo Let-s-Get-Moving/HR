@@ -20,7 +20,7 @@ export default function Settings() {
   const [security, setSecurity] = useState([]);
   const [maintenance, setMaintenance] = useState([]);
   const [saving, setSaving] = useState({});
-  const [systemSettingsEdits, setSystemSettingsEdits] = useState({}); // Track unsaved edits for system settings
+  const [settingsEdits, setSettingsEdits] = useState({}); // Track unsaved edits for ALL categories: { [category]: { [key]: value } }
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -1914,20 +1914,44 @@ export default function Settings() {
     }
   };
   
-  // Handle saving a single system setting from local edits
-  const handleSaveSystemSetting = async (category, key) => {
-    if (category !== 'system' || systemSettingsEdits[key] === undefined) {
+  // Helper functions for edit state management
+  const updateEditState = (category, key, value) => {
+    setSettingsEdits(prev => ({
+      ...prev,
+      [category]: {
+        ...(prev[category] || {}),
+        [key]: value
+      }
+    }));
+  };
+
+  const getEditValue = (category, key, originalValue) => {
+    return settingsEdits[category]?.[key] ?? originalValue;
+  };
+
+  const hasEdit = (category, key) => {
+    return settingsEdits[category]?.[key] !== undefined;
+  };
+
+  // Handle saving a setting from local edits (works for ALL categories)
+  const handleSaveSetting = async (category, key) => {
+    if (settingsEdits[category]?.[key] === undefined) {
       return;
     }
     
-    const value = systemSettingsEdits[key];
+    const value = settingsEdits[category][key];
     
     try {
       await handleSettingUpdate(category, key, value);
       // Remove from edits after successful save
-      setSystemSettingsEdits(prev => {
+      setSettingsEdits(prev => {
         const newEdits = { ...prev };
-        delete newEdits[key];
+        if (newEdits[category]) {
+          delete newEdits[category][key];
+          if (Object.keys(newEdits[category]).length === 0) {
+            delete newEdits[category];
+          }
+        }
         return newEdits;
       });
     } catch (error) {
@@ -2173,7 +2197,12 @@ export default function Settings() {
     
     switch (type) {
       case "boolean":
-        const boolValue = parseBoolean(value);
+        const originalBoolValue = parseBoolean(value);
+        const editBoolValue = settingsEdits[category]?.[key] !== undefined 
+          ? parseBoolean(settingsEdits[category][key])
+          : originalBoolValue;
+        const hasBoolEdit = hasEdit(category, key);
+        
         return (
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -2181,24 +2210,33 @@ export default function Settings() {
               {getSettingDescription(key) && <p className="text-xs text-secondary mt-1">{getSettingDescription(key)}</p>}
             </div>
             <div className="flex items-center space-x-3">
-              <span className={`text-xs font-medium ${boolValue ? 'text-green-600' : 'text-red-600'}`}>
-                {boolValue ? t('common.on') : t('common.off')}
+              <span className={`text-xs font-medium ${editBoolValue ? 'text-green-600' : 'text-red-600'}`}>
+                {editBoolValue ? t('common.on') : t('common.off')}
               </span>
               <button
-                onClick={() => handleSettingUpdate(category, key, !boolValue)}
+                onClick={() => updateEditState(category, key, !editBoolValue)}
                 disabled={saving[key]}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 ${
-                  boolValue 
+                  editBoolValue 
                     ? 'bg-green-500 hover:bg-green-600' 
                     : 'bg-red-500 hover:bg-red-600'
                 } ${saving[key] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
-                    boolValue ? 'translate-x-6' : 'translate-x-1'
+                    editBoolValue ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
+              {hasBoolEdit && (
+                <button
+                  onClick={() => handleSaveSetting(category, key)}
+                  disabled={saving[key]}
+                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                </button>
+              )}
             </div>
           </div>
         );
@@ -2240,36 +2278,50 @@ export default function Settings() {
           );
         }
         
+        const selectValue = getEditValue(category, key, value);
+        const hasSelectEdit = hasEdit(category, key);
+        
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
               {getSettingLabel(key)}
             </label>
             {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
-            <select
-              value={value || ''}
-              onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
-              disabled={saving[key]}
-              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {optionList.map(option => {
-                // Try to translate the option value
-                const translationKey = `settings.${option}`;
-                const translated = t(translationKey);
-                const displayValue = translated !== translationKey ? translated : option.charAt(0).toUpperCase() + option.slice(1);
-                return (
-                <option key={option} value={option}>
-                    {displayValue}
-                </option>
-                );
-              })}
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={selectValue || ''}
+                onChange={(e) => updateEditState(category, key, e.target.value)}
+                disabled={saving[key]}
+                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {optionList.map(option => {
+                  // Try to translate the option value
+                  const translationKey = `settings.${option}`;
+                  const translated = t(translationKey);
+                  const displayValue = translated !== translationKey ? translated : option.charAt(0).toUpperCase() + option.slice(1);
+                  return (
+                  <option key={option} value={option}>
+                      {displayValue}
+                  </option>
+                  );
+                })}
+              </select>
+              {hasSelectEdit && (
+                <button
+                  onClick={() => handleSaveSetting(category, key)}
+                  disabled={saving[key]}
+                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                </button>
+              )}
+            </div>
           </div>
         );
         
       case "textarea":
-        const textareaValue = category === 'system' ? (systemSettingsEdits[key] ?? value) : value;
-        const hasTextareaEdit = category === 'system' && systemSettingsEdits[key] !== undefined;
+        const textareaValue = getEditValue(category, key, value);
+        const hasTextareaEdit = hasEdit(category, key);
         
         return (
           <div>
@@ -2280,21 +2332,15 @@ export default function Settings() {
             <div className="flex gap-2">
               <textarea
                 value={textareaValue || ''}
-                onChange={(e) => {
-                  if (category === 'system') {
-                    setSystemSettingsEdits(prev => ({ ...prev, [key]: e.target.value }));
-                  } else {
-                    handleSettingUpdate(category, key, e.target.value);
-                  }
-                }}
+                onChange={(e) => updateEditState(category, key, e.target.value)}
                 disabled={saving[key]}
                 rows={4}
                 className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
               />
-              {category === 'system' && hasTextareaEdit && (
+              {hasTextareaEdit && (
                 <button
-                  onClick={() => handleSaveSystemSetting(category, key)}
+                  onClick={() => handleSaveSetting(category, key)}
                   disabled={saving[key]}
                   className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start"
                 >
@@ -2306,8 +2352,8 @@ export default function Settings() {
         );
         
       case "number":
-        const numberValue = category === 'system' ? (systemSettingsEdits[key] ?? value) : value;
-        const hasNumberEdit = category === 'system' && systemSettingsEdits[key] !== undefined;
+        const numberValue = getEditValue(category, key, value);
+        const hasNumberEdit = hasEdit(category, key);
         
         return (
           <div>
@@ -2319,19 +2365,13 @@ export default function Settings() {
               <input
                 type="text"
                 value={numberValue || ''}
-                onChange={(e) => {
-                  if (category === 'system') {
-                    setSystemSettingsEdits(prev => ({ ...prev, [key]: e.target.value }));
-                  } else {
-                    handleSettingUpdate(category, key, e.target.value);
-                  }
-                }}
+                onChange={(e) => updateEditState(category, key, e.target.value)}
                 disabled={saving[key]}
                 className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
               />
-              {category === 'system' && hasNumberEdit && (
+              {hasNumberEdit && (
                 <button
-                  onClick={() => handleSaveSystemSetting(category, key)}
+                  onClick={() => handleSaveSetting(category, key)}
                   disabled={saving[key]}
                   className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
@@ -2343,8 +2383,8 @@ export default function Settings() {
         );
         
       default:
-        const textValue = category === 'system' ? (systemSettingsEdits[key] ?? value) : value;
-        const hasTextEdit = category === 'system' && systemSettingsEdits[key] !== undefined;
+        const textValue = getEditValue(category, key, value);
+        const hasTextEdit = hasEdit(category, key);
         
         return (
           <div>
@@ -2356,19 +2396,13 @@ export default function Settings() {
               <input
                 type={type === "email" ? "email" : "text"}
                 value={textValue || ''}
-                onChange={(e) => {
-                  if (category === 'system') {
-                    setSystemSettingsEdits(prev => ({ ...prev, [key]: e.target.value }));
-                  } else {
-                    handleSettingUpdate(category, key, e.target.value);
-                  }
-                }}
+                onChange={(e) => updateEditState(category, key, e.target.value)}
                 disabled={saving[key]}
                 className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
               />
-              {category === 'system' && hasTextEdit && (
+              {hasTextEdit && (
                 <button
-                  onClick={() => handleSaveSystemSetting(category, key)}
+                  onClick={() => handleSaveSetting(category, key)}
                   disabled={saving[key]}
                   className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
