@@ -1268,7 +1268,15 @@ export default function Settings() {
 
   const handleAddJobTitle = async (e) => {
     e.preventDefault();
-    if (!newJobTitle.name.trim()) {
+    const name = jobTitleInputRefs.current.name?.value?.trim() || '';
+    const description = jobTitleInputRefs.current.description?.value?.trim() || '';
+    const department_id = jobTitleInputRefs.current.department_id?.value ? parseInt(jobTitleInputRefs.current.department_id.value, 10) : null;
+    const level_grade = jobTitleInputRefs.current.level_grade?.value?.trim() || '';
+    const reports_to_id = jobTitleInputRefs.current.reports_to_id?.value ? parseInt(jobTitleInputRefs.current.reports_to_id.value, 10) : null;
+    const min_salary = jobTitleInputRefs.current.min_salary?.value ? parseFloat(jobTitleInputRefs.current.min_salary.value) : null;
+    const max_salary = jobTitleInputRefs.current.max_salary?.value ? parseFloat(jobTitleInputRefs.current.max_salary.value) : null;
+    
+    if (!name) {
       setJobTitleError(t('settings.jobTitles.nameRequired'));
       return;
     }
@@ -1279,18 +1287,25 @@ export default function Settings() {
     try {
       await API("/api/settings/job-titles", {
         method: "POST",
-        body: JSON.stringify(newJobTitle)
+        body: JSON.stringify({
+          name,
+          description: description || null,
+          department_id,
+          level_grade: level_grade || null,
+          reports_to_id,
+          min_salary,
+          max_salary
+        })
       });
 
-      setNewJobTitle({
-        name: '',
-        description: '',
-        department_id: null,
-        level_grade: '',
-        reports_to_id: null,
-        min_salary: '',
-        max_salary: ''
-      });
+      // Clear inputs
+      if (jobTitleInputRefs.current.name) jobTitleInputRefs.current.name.value = '';
+      if (jobTitleInputRefs.current.description) jobTitleInputRefs.current.description.value = '';
+      if (jobTitleInputRefs.current.department_id) jobTitleInputRefs.current.department_id.value = '';
+      if (jobTitleInputRefs.current.level_grade) jobTitleInputRefs.current.level_grade.value = '';
+      if (jobTitleInputRefs.current.reports_to_id) jobTitleInputRefs.current.reports_to_id.value = '';
+      if (jobTitleInputRefs.current.min_salary) jobTitleInputRefs.current.min_salary.value = '';
+      if (jobTitleInputRefs.current.max_salary) jobTitleInputRefs.current.max_salary.value = '';
       await loadJobTitles();
     } catch (error) {
       console.error("Error adding job title:", error);
@@ -3686,133 +3701,194 @@ export default function Settings() {
                   {editingJobTitle ? t('settings.jobTitles.edit') : t('settings.jobTitles.addNew')}
                 </h4>
                 <form onSubmit={editingJobTitle ? (e) => { e.preventDefault(); handleUpdateJobTitle(editingJobTitle); } : handleAddJobTitle} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.name')} *</label>
-                      <input
-                        type="text"
-                        value={editingJobTitleData?.name ?? newJobTitle.name}
-                        onChange={(e) => {
-                          if (editingJobTitleData) {
-                            setEditingJobTitleData({...editingJobTitleData, name: e.target.value});
-                          } else {
-                            setNewJobTitle({...newJobTitle, name: e.target.value});
-                          }
-                          setJobTitleError('');
-                        }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.department')}</label>
-                      <select
-                        value={editingJobTitleData?.department_id ?? newJobTitle.department_id ?? ''}
-                        onChange={(e) => {
-                          const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                          if (editingJobTitleData) {
-                            setEditingJobTitleData({...editingJobTitleData, department_id: val});
-                          } else {
-                            setNewJobTitle({...newJobTitle, department_id: val});
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      >
-                        <option value="">{t('settings.jobTitles.selectDepartment')}</option>
-                        {departments.map(dept => (
-                          <option key={dept.id} value={dept.id}>{dept.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.descriptionLabel')}</label>
-                    <textarea
-                      value={editingJobTitleData?.description ?? newJobTitle.description}
-                      onChange={(e) => {
-                        if (editingJobTitleData) {
-                          setEditingJobTitleData({...editingJobTitleData, description: e.target.value});
-                        } else {
-                          setNewJobTitle({...newJobTitle, description: e.target.value});
-                        }
-                      }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      rows="2"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.levelGrade')}</label>
-                      <input
-                        type="text"
-                        value={editingJobTitleData?.level_grade ?? newJobTitle.level_grade}
-                        onChange={(e) => {
-                          if (editingJobTitleData) {
-                            setEditingJobTitleData({...editingJobTitleData, level_grade: e.target.value});
-                          } else {
-                            setNewJobTitle({...newJobTitle, level_grade: e.target.value});
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.reportsTo')}</label>
-                      <select
-                        value={editingJobTitleData?.reports_to_id ?? newJobTitle.reports_to_id ?? ''}
-                        onChange={(e) => {
-                          const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                          if (editingJobTitleData) {
-                            setEditingJobTitleData({...editingJobTitleData, reports_to_id: val});
-                          } else {
-                            setNewJobTitle({...newJobTitle, reports_to_id: val});
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      >
-                        <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
-                        {jobTitles.filter(jt => !editingJobTitleData || jt.id !== editingJobTitleData.id).map(jt => (
-                          <option key={jt.id} value={jt.id}>{jt.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.minSalary')}</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={editingJobTitleData?.min_salary ?? newJobTitle.min_salary}
-                        onChange={(e) => {
-                          const val = e.target.value ? parseFloat(e.target.value) : null;
-                          if (editingJobTitleData) {
-                            setEditingJobTitleData({...editingJobTitleData, min_salary: val});
-                          } else {
-                            setNewJobTitle({...newJobTitle, min_salary: val});
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.maxSalary')}</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={editingJobTitleData?.max_salary ?? newJobTitle.max_salary}
-                        onChange={(e) => {
-                          const val = e.target.value ? parseFloat(e.target.value) : null;
-                          if (editingJobTitleData) {
-                            setEditingJobTitleData({...editingJobTitleData, max_salary: val});
-                          } else {
-                            setNewJobTitle({...newJobTitle, max_salary: val});
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      />
-                    </div>
-                  </div>
+                  {editingJobTitle ? (
+                    // Editing mode - keep controlled inputs
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.name')} *</label>
+                          <input
+                            type="text"
+                            value={editingJobTitleData?.name ?? ''}
+                            onChange={(e) => {
+                              setEditingJobTitleData({...editingJobTitleData, name: e.target.value});
+                              setJobTitleError('');
+                            }}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.department')}</label>
+                          <select
+                            value={editingJobTitleData?.department_id ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                              setEditingJobTitleData({...editingJobTitleData, department_id: val});
+                            }}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          >
+                            <option value="">{t('settings.jobTitles.selectDepartment')}</option>
+                            {departments.map(dept => (
+                              <option key={dept.id} value={dept.id}>{dept.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.descriptionLabel')}</label>
+                        <textarea
+                          value={editingJobTitleData?.description ?? ''}
+                          onChange={(e) => {
+                            setEditingJobTitleData({...editingJobTitleData, description: e.target.value});
+                          }}
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          rows="2"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.levelGrade')}</label>
+                          <input
+                            type="text"
+                            value={editingJobTitleData?.level_grade ?? ''}
+                            onChange={(e) => {
+                              setEditingJobTitleData({...editingJobTitleData, level_grade: e.target.value});
+                            }}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.reportsTo')}</label>
+                          <select
+                            value={editingJobTitleData?.reports_to_id ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value ? parseInt(e.target.value, 10) : null;
+                              setEditingJobTitleData({...editingJobTitleData, reports_to_id: val});
+                            }}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          >
+                            <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
+                            {jobTitles.filter(jt => jt.id !== editingJobTitleData.id).map(jt => (
+                              <option key={jt.id} value={jt.id}>{jt.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.minSalary')}</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editingJobTitleData?.min_salary ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value ? parseFloat(e.target.value) : null;
+                              setEditingJobTitleData({...editingJobTitleData, min_salary: val});
+                            }}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.maxSalary')}</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editingJobTitleData?.max_salary ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value ? parseFloat(e.target.value) : null;
+                              setEditingJobTitleData({...editingJobTitleData, max_salary: val});
+                            }}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    // Add new mode - uncontrolled inputs
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.name')} *</label>
+                          <input
+                            ref={(el) => jobTitleInputRefs.current.name = el}
+                            type="text"
+                            defaultValue=""
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.department')}</label>
+                          <select
+                            ref={(el) => jobTitleInputRefs.current.department_id = el}
+                            defaultValue=""
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          >
+                            <option value="">{t('settings.jobTitles.selectDepartment')}</option>
+                            {departments.map(dept => (
+                              <option key={dept.id} value={dept.id}>{dept.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.descriptionLabel')}</label>
+                        <textarea
+                          ref={(el) => jobTitleInputRefs.current.description = el}
+                          defaultValue=""
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          rows="2"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.levelGrade')}</label>
+                          <input
+                            ref={(el) => jobTitleInputRefs.current.level_grade = el}
+                            type="text"
+                            defaultValue=""
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.reportsTo')}</label>
+                          <select
+                            ref={(el) => jobTitleInputRefs.current.reports_to_id = el}
+                            defaultValue=""
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          >
+                            <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
+                            {jobTitles.map(jt => (
+                              <option key={jt.id} value={jt.id}>{jt.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.minSalary')}</label>
+                          <input
+                            ref={(el) => jobTitleInputRefs.current.min_salary = el}
+                            type="number"
+                            step="0.01"
+                            defaultValue=""
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.maxSalary')}</label>
+                          <input
+                            ref={(el) => jobTitleInputRefs.current.max_salary = el}
+                            type="number"
+                            step="0.01"
+                            defaultValue=""
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <div className="flex gap-3">
                     <button
                       type="submit"
