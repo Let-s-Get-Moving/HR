@@ -20,6 +20,7 @@ export default function Settings() {
   const [security, setSecurity] = useState([]);
   const [maintenance, setMaintenance] = useState([]);
   const [saving, setSaving] = useState({});
+  const [systemSettingsEdits, setSystemSettingsEdits] = useState({}); // Track unsaved edits for system settings
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -1913,6 +1914,27 @@ export default function Settings() {
     }
   };
   
+  // Handle saving a single system setting from local edits
+  const handleSaveSystemSetting = async (category, key) => {
+    if (category !== 'system' || systemSettingsEdits[key] === undefined) {
+      return;
+    }
+    
+    const value = systemSettingsEdits[key];
+    
+    try {
+      await handleSettingUpdate(category, key, value);
+      // Remove from edits after successful save
+      setSystemSettingsEdits(prev => {
+        const newEdits = { ...prev };
+        delete newEdits[key];
+        return newEdits;
+      });
+    } catch (error) {
+      // Error already handled in handleSettingUpdate
+      // Keep the edit in state so user can try again
+    }
+  };
   
   // Initiate MFA Setup - Get QR Code
   const initiateMFASetup = async () => {
@@ -2246,54 +2268,114 @@ export default function Settings() {
         );
         
       case "textarea":
+        const textareaValue = category === 'system' ? (systemSettingsEdits[key] ?? value) : value;
+        const hasTextareaEdit = category === 'system' && systemSettingsEdits[key] !== undefined;
+        
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
               {getSettingLabel(key)}
             </label>
             {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
-            <textarea
-              value={value || ''}
-              onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
-              disabled={saving[key]}
-              rows={4}
-              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
-              style={{ minHeight: '44px', maxHeight: '120px' }}
-            />
+            <div className="flex gap-2">
+              <textarea
+                value={textareaValue || ''}
+                onChange={(e) => {
+                  if (category === 'system') {
+                    setSystemSettingsEdits(prev => ({ ...prev, [key]: e.target.value }));
+                  } else {
+                    handleSettingUpdate(category, key, e.target.value);
+                  }
+                }}
+                disabled={saving[key]}
+                rows={4}
+                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
+                style={{ minHeight: '44px', maxHeight: '120px' }}
+              />
+              {category === 'system' && hasTextareaEdit && (
+                <button
+                  onClick={() => handleSaveSystemSetting(category, key)}
+                  disabled={saving[key]}
+                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start"
+                >
+                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                </button>
+              )}
+            </div>
           </div>
         );
         
       case "number":
+        const numberValue = category === 'system' ? (systemSettingsEdits[key] ?? value) : value;
+        const hasNumberEdit = category === 'system' && systemSettingsEdits[key] !== undefined;
+        
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
               {getSettingLabel(key)}
             </label>
             {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
-            <input
-              type="text"
-              value={value || ''}
-              onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
-              disabled={saving[key]}
-              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={numberValue || ''}
+                onChange={(e) => {
+                  if (category === 'system') {
+                    setSystemSettingsEdits(prev => ({ ...prev, [key]: e.target.value }));
+                  } else {
+                    handleSettingUpdate(category, key, e.target.value);
+                  }
+                }}
+                disabled={saving[key]}
+                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+              />
+              {category === 'system' && hasNumberEdit && (
+                <button
+                  onClick={() => handleSaveSystemSetting(category, key)}
+                  disabled={saving[key]}
+                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                </button>
+              )}
+            </div>
           </div>
         );
         
       default:
+        const textValue = category === 'system' ? (systemSettingsEdits[key] ?? value) : value;
+        const hasTextEdit = category === 'system' && systemSettingsEdits[key] !== undefined;
+        
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
               {getSettingLabel(key)}
             </label>
             {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
-            <input
-              type={type === "email" ? "email" : "text"}
-              value={value || ''}
-              onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
-              disabled={saving[key]}
-              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
-            />
+            <div className="flex gap-2">
+              <input
+                type={type === "email" ? "email" : "text"}
+                value={textValue || ''}
+                onChange={(e) => {
+                  if (category === 'system') {
+                    setSystemSettingsEdits(prev => ({ ...prev, [key]: e.target.value }));
+                  } else {
+                    handleSettingUpdate(category, key, e.target.value);
+                  }
+                }}
+                disabled={saving[key]}
+                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+              />
+              {category === 'system' && hasTextEdit && (
+                <button
+                  onClick={() => handleSaveSystemSetting(category, key)}
+                  disabled={saving[key]}
+                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                >
+                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                </button>
+              )}
+            </div>
           </div>
         );
     }
