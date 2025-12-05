@@ -10,10 +10,12 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
   const loadThreads = async () => {
     setLoading(true);
     try {
+      console.log('[ChatSidebar] Loading threads...');
       const response = await API('/api/chat/threads');
+      console.log('[ChatSidebar] Loaded threads:', response.threads?.length || 0);
       setThreads(response.threads || []);
     } catch (error) {
-      console.error('Error loading threads:', error);
+      console.error('[ChatSidebar] Error loading threads:', error);
     } finally {
       setLoading(false);
     }

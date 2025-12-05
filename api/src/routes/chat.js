@@ -228,6 +228,7 @@ router.get('/threads', async (req, res) => {
     }
 
     const result = await q(query, params);
+    logger.info(`Fetched ${result.rows.length} threads for user ${userId} (role: ${userRole})`);
     res.json({ threads: result.rows });
   } catch (error) {
     logger.error('Error fetching chat threads:', error);
@@ -280,7 +281,7 @@ router.post('/threads', async (req, res) => {
 
     // Check if thread already exists
     const existingResult = await q(`
-      SELECT id FROM chat_threads
+      SELECT * FROM chat_threads
       WHERE participant1_id = $1 
         AND participant2_id = $2
         AND (related_type = $3 OR ($3 IS NULL AND related_type IS NULL))
@@ -288,8 +289,37 @@ router.post('/threads', async (req, res) => {
     `, [participant1_id, participant2_id, related_type || null, related_id || null]);
 
     if (existingResult.rows.length > 0) {
+      const existingThread = existingResult.rows[0];
+      
+      // Get other participant info with employee name
+      const otherParticipantId = existingThread.participant1_id === userId 
+        ? existingThread.participant2_id 
+        : existingThread.participant1_id;
+
+      const otherUserResult = await q(`
+        SELECT 
+          u.id,
+          u.username,
+          COALESCE(e.first_name || ' ' || e.last_name, u.username) as employee_name,
+          e.first_name,
+          e.last_name,
+          COALESCE(r.role_name, 'user') as role
+        FROM users u
+        LEFT JOIN employees e ON u.employee_id = e.id
+        LEFT JOIN hr_roles r ON u.role_id = r.id
+        WHERE u.id = $1
+      `, [otherParticipantId]);
+
+      const threadWithUser = {
+        ...existingThread,
+        other_user_id: otherParticipantId,
+        other_user_name: otherUserResult.rows[0]?.employee_name || otherUserResult.rows[0]?.username,
+        other_username: otherUserResult.rows[0]?.username,
+        other_user_role: otherUserResult.rows[0]?.role
+      };
+
       return res.json({ 
-        thread: existingResult.rows[0],
+        thread: threadWithUser,
         message: 'Thread already exists'
       });
     }
@@ -320,11 +350,20 @@ router.post('/threads', async (req, res) => {
       WHERE u.id = $1
     `, [otherParticipantId]);
 
+    // Get role for other participant
+    const otherRoleResult = await q(`
+      SELECT COALESCE(r.role_name, 'user') as role
+      FROM users u
+      LEFT JOIN hr_roles r ON u.role_id = r.id
+      WHERE u.id = $1
+    `, [otherParticipantId]);
+
     const threadWithUser = {
       ...thread,
       other_user_id: otherParticipantId,
       other_user_name: otherUserResult.rows[0]?.employee_name || otherUserResult.rows[0]?.username,
-      other_username: otherUserResult.rows[0]?.username
+      other_username: otherUserResult.rows[0]?.username,
+      other_user_role: otherRoleResult.rows[0]?.role
     };
 
     res.json({ thread: threadWithUser });
@@ -348,14 +387,15 @@ router.get('/threads/:id/messages', async (req, res) => {
       return res.status(403).json({ error: access.reason });
     }
 
-    // Get messages
+    // Get messages with employee names
     const result = await q(`
       SELECT 
         m.*,
-        COALESCE(u.first_name || ' ' || u.last_name, u.username) as sender_name,
+        COALESCE(e.first_name || ' ' || e.last_name, u.username) as sender_name,
         u.username as sender_username
       FROM chat_messages m
       JOIN users u ON m.sender_id = u.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       WHERE m.thread_id = $1
       ORDER BY m.created_at ASC
       LIMIT $2 OFFSET $3
@@ -448,13 +488,19 @@ router.post('/threads/:id/messages', async (req, res) => {
       attachments: []
     };
 
-    // Send via WebSocket to recipient
+    // Send via WebSocket to BOTH sender and recipient
     sendToUser(recipientId, 'chat:message', {
       thread_id: parseInt(id),
       message: messageWithSender
     });
+    
+    // Also send to sender so they see their own message in real-time
+    sendToUser(userId, 'chat:message', {
+      thread_id: parseInt(id),
+      message: messageWithSender
+    });
 
-    // Create notification for recipient
+    // Create notification for recipient (not sender)
     await createNotification(
       recipientId,
       'chat_message',

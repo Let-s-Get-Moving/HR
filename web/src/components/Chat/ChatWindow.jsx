@@ -19,12 +19,14 @@ export default function ChatWindow({ thread, currentUserId, onBack }) {
     if (!thread?.id) return;
     setLoading(true);
     try {
+      console.log('[ChatWindow] Loading messages for thread:', thread.id);
       const response = await API(`/api/chat/threads/${thread.id}/messages?limit=100`);
       const loadedMessages = response.messages || [];
+      console.log('[ChatWindow] Loaded messages:', loadedMessages.length);
       setMessages(loadedMessages);
       setRealTimeMessages(loadedMessages);
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('[ChatWindow] Error loading messages:', error);
     } finally {
       setLoading(false);
     }
@@ -60,19 +62,55 @@ export default function ChatWindow({ thread, currentUserId, onBack }) {
   const sendMessage = async () => {
     if (!message.trim() || !thread?.id || sending) return;
 
+    const messageText = message.trim();
     setSending(true);
     try {
+      console.log('[ChatWindow] Sending message:', { threadId: thread.id, message: messageText });
+      
       const response = await API(`/api/chat/threads/${thread.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: message.trim() })
+        body: JSON.stringify({ message: messageText })
       });
 
+      console.log('[ChatWindow] Message sent, response:', response);
+
+      // Immediately add the sent message to local state
+      if (response.message) {
+        const sentMessage = {
+          ...response.message,
+          sender_id: currentUserId,
+          sender_name: response.message.sender_name,
+          sender_username: response.message.sender_username,
+          attachments: response.message.attachments || []
+        };
+        
+        console.log('[ChatWindow] Adding message to local state:', sentMessage);
+        
+        setMessages(prev => {
+          // Check if message already exists (avoid duplicates)
+          const exists = prev.some(m => m.id === sentMessage.id);
+          if (exists) {
+            console.log('[ChatWindow] Message already exists, skipping');
+            return prev;
+          }
+          
+          const updated = [...prev, sentMessage].sort((a, b) => 
+            new Date(a.created_at) - new Date(b.created_at)
+          );
+          console.log('[ChatWindow] Updated messages count:', updated.length);
+          return updated;
+        });
+      } else {
+        console.warn('[ChatWindow] No message in response, reloading messages');
+        // Fallback: reload messages if response doesn't have message
+        setTimeout(() => loadMessages(), 500);
+      }
+
       setMessage('');
-      // Message will be added via WebSocket
     } catch (error) {
-      console.error('Error sending message:', error);
-      alert('Failed to send message');
+      console.error('[ChatWindow] Error sending message:', error);
+      alert(`Failed to send message: ${error.message || 'Unknown error'}`);
     } finally {
       setSending(false);
     }
