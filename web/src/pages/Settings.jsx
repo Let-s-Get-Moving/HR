@@ -3710,8 +3710,8 @@ export default function Settings() {
                 <h4 className="text-lg font-medium mb-4">
                   {editingJobTitle ? t('settings.jobTitles.edit') : t('settings.jobTitles.addNew')}
                 </h4>
-                <form onSubmit={editingJobTitle ? (e) => { e.preventDefault(); handleUpdateJobTitle(editingJobTitle); } : handleAddJobTitle} className="space-y-4">
-                  {editingJobTitle ? (
+                <form onSubmit={editingJobTitle && editingJobTitleData ? (e) => { e.preventDefault(); handleUpdateJobTitle(editingJobTitle); } : handleAddJobTitle} className="space-y-4">
+                  {editingJobTitle && editingJobTitleData ? (
                     // Editing mode - keep controlled inputs
                     <>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3779,7 +3779,7 @@ export default function Settings() {
                             className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                           >
                             <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
-                            {jobTitles.filter(jt => jt.id !== editingJobTitleData.id).map(jt => (
+                            {jobTitles.filter(jt => editingJobTitleData && jt.id !== editingJobTitleData.id).map(jt => (
                               <option key={jt.id} value={jt.id}>{jt.name}</option>
                             ))}
                           </select>
@@ -3914,6 +3914,14 @@ export default function Settings() {
                           setEditingJobTitle(null);
                           setEditingJobTitleData(null);
                           setJobTitleError('');
+                          // Clear uncontrolled inputs when switching back to add mode
+                          if (jobTitleInputRefs.current.name) jobTitleInputRefs.current.name.value = '';
+                          if (jobTitleInputRefs.current.description) jobTitleInputRefs.current.description.value = '';
+                          if (jobTitleInputRefs.current.department_id) jobTitleInputRefs.current.department_id.value = '';
+                          if (jobTitleInputRefs.current.level_grade) jobTitleInputRefs.current.level_grade.value = '';
+                          if (jobTitleInputRefs.current.reports_to_id) jobTitleInputRefs.current.reports_to_id.value = '';
+                          if (jobTitleInputRefs.current.min_salary) jobTitleInputRefs.current.min_salary.value = '';
+                          if (jobTitleInputRefs.current.max_salary) jobTitleInputRefs.current.max_salary.value = '';
                         }}
                         className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
                       >
@@ -3963,8 +3971,13 @@ export default function Settings() {
                           <button
                             onClick={() => {
                               const jobTitle = jobTitles.find(j => j.id === jt.id);
-                              setEditingJobTitleData(jobTitle ? {...jobTitle} : null);
-                              setEditingJobTitle(jt.id);
+                              if (jobTitle) {
+                                setEditingJobTitleData({...jobTitle});
+                                setEditingJobTitle(jt.id);
+                              } else {
+                                console.error('Job title not found for editing:', jt.id);
+                                setJobTitleError(t('settings.jobTitles.notFound') || 'Job title not found');
+                              }
                             }}
                             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
                           >
