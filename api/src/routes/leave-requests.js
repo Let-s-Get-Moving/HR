@@ -2,6 +2,7 @@ import express from 'express';
 import { requireAuth } from '../session.js';
 import { applyScopeFilter, requirePermission, PERMISSIONS } from '../middleware/rbac.js';
 import { q } from '../db.js';
+import { createNotification } from '../utils/notifications.js';
 
 const router = express.Router();
 
@@ -279,10 +280,41 @@ router.put('/:id/status', requirePermission(PERMISSIONS.LEAVE_APPROVE), async (r
       }
     }
 
+    const leaveRequest = result.rows[0];
+
+    // Get employee's user_id to send notification
+    const employeeUserResult = await q(`
+      SELECT u.id as user_id
+      FROM users u
+      WHERE u.employee_id = $1
+      LIMIT 1
+    `, [leaveRequest.employee_id]);
+
+    // Create notification for the employee
+    if (employeeUserResult.rows.length > 0) {
+      const employeeUserId = employeeUserResult.rows[0].user_id;
+      const notificationType = status === 'Approved' ? 'leave_approval' : 'leave_rejection';
+      const notificationTitle = status === 'Approved' 
+        ? 'Leave Request Approved' 
+        : 'Leave Request Rejected';
+      const notificationMessage = status === 'Approved'
+        ? `Your leave request for ${leaveRequest.leave_type} from ${leaveRequest.start_date} to ${leaveRequest.end_date} has been approved.`
+        : `Your leave request for ${leaveRequest.leave_type} from ${leaveRequest.start_date} to ${leaveRequest.end_date} has been rejected.${leaveRequest.notes ? ' Reason: ' + leaveRequest.notes : ''}`;
+
+      await createNotification(
+        employeeUserId,
+        notificationType,
+        notificationTitle,
+        notificationMessage,
+        leaveRequest.id,
+        'leave_request'
+      );
+    }
+
     res.json({
       success: true,
       message: `Leave request ${status.toLowerCase()} successfully`,
-      data: result.rows[0]
+      data: leaveRequest
     });
 
   } catch (error) {

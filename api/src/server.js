@@ -39,7 +39,10 @@ import timecardUploads from "./routes/timecardUploads.js";
 import employeeMatching from "./routes/employee-matching.js";
 import adminCleanup from "./routes/admin-cleanup.js";
 import diagnostic from "./routes/diagnostic.js";
+import notifications from "./routes/notifications.js";
+import chat from "./routes/chat.js";
 import logger from "./utils/logger.js";
+import { initializeWebSocketServer } from "./websocket/server.js";
 
 const app = express();
 
@@ -308,6 +311,8 @@ app.use("/api/timecard-uploads", requireAuth, timecardUploads);
 app.use("/api/employee-matching", requireAuth, employeeMatching);
 app.use("/api/admin-cleanup", requireAuth, adminCleanup);
 app.use("/api/diagnostic", requireAuth, diagnostic); // Protected - diagnostic endpoint
+app.use("/api/notifications", notifications); // Has own auth middleware
+app.use("/api/chat", chat); // Has own auth middleware
 
 // Emergency database migration endpoint
 app.post("/api/migrate-db", async (req, res) => {
@@ -388,7 +393,7 @@ process.on('SIGINT', () => {
 
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   logger.info(`API server started on port ${PORT}`);
   console.log(`API listening on ${PORT}`);
   console.log("Database connected successfully");
@@ -398,6 +403,13 @@ app.listen(PORT, async () => {
     await ensureAdminUser();
   } catch (error) {
     console.error('Failed to ensure admin user:', error);
+  }
+
+  // Initialize WebSocket server
+  try {
+    initializeWebSocketServer(server);
+  } catch (error) {
+    logger.error('Failed to initialize WebSocket server:', error);
   }
 });
 

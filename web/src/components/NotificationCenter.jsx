@@ -1,0 +1,356 @@
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { API } from '../config/api.js';
+import { useNotifications, useWebSocket } from '../hooks/useWebSocket.js';
+
+const NOTIFICATION_TYPES = {
+  leave_approval: { label: 'Leave Approval', color: 'bg-green-500' },
+  leave_rejection: { label: 'Leave Rejection', color: 'bg-red-500' },
+  payroll_processed: { label: 'Payroll', color: 'bg-blue-500' },
+  chat_message: { label: 'Message', color: 'bg-purple-500' },
+  system_alert: { label: 'System', color: 'bg-yellow-500' }
+};
+
+export default function NotificationCenter() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [filter, setFilter] = useState('all'); // 'all', 'unread', or type
+  const [loading, setLoading] = useState(false);
+  const dropdownRef = useRef(null);
+  const { unreadCount, connected } = useNotifications();
+  const { subscribe } = useWebSocket();
+
+  // Load notifications
+  const loadNotifications = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filter !== 'all') {
+        if (filter === 'unread') {
+          params.append('is_read', 'false');
+        } else {
+          params.append('type', filter);
+        }
+      }
+      params.append('limit', '50');
+
+      const response = await API(`/api/notifications?${params.toString()}`);
+      setNotifications(response.notifications || []);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load notifications when dropdown opens or filter changes
+  useEffect(() => {
+    if (isOpen) {
+      loadNotifications();
+    }
+  }, [isOpen, filter]);
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const unsubscribeNew = subscribe('notification:new', (data) => {
+      setNotifications(prev => [data, ...prev]);
+    });
+
+    const unsubscribeRead = subscribe('notification:read', (data) => {
+      setNotifications(prev => 
+        prev.map(n => n.id === data.id ? { ...n, is_read: data.is_read } : n)
+      );
+    });
+
+    const unsubscribeDeleted = subscribe('notification:deleted', (data) => {
+      setNotifications(prev => prev.filter(n => n.id !== data.id));
+    });
+
+    const unsubscribeAllRead = subscribe('notifications:all-read', () => {
+      loadNotifications();
+    });
+
+    // Refresh periodically when open
+    const interval = setInterval(() => {
+      if (isOpen) {
+        loadNotifications();
+      }
+    }, 10000); // Refresh every 10 seconds when open
+
+    return () => {
+      unsubscribeNew();
+      unsubscribeRead();
+      unsubscribeDeleted();
+      unsubscribeAllRead();
+      clearInterval(interval);
+    };
+  }, [isOpen, subscribe]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const markAsRead = async (id) => {
+    try {
+      await API(`/api/notifications/${id}/read`, { method: 'PUT' });
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, is_read: true, read_at: new Date().toISOString() } : n)
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
+  };
+
+  const markAsUnread = async (id) => {
+    try {
+      await API(`/api/notifications/${id}/unread`, { method: 'PUT' });
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, is_read: false, read_at: null } : n)
+      );
+    } catch (error) {
+      console.error('Error marking notification as unread:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await API('/api/notifications/mark-all-read', { method: 'PUT' });
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    } catch (error) {
+      console.error('Error marking all as read:', error);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      await API(`/api/notifications/${id}`, { method: 'DELETE' });
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === 'all') return true;
+    if (filter === 'unread') return !n.is_read;
+    return n.type === filter;
+  });
+
+  const unreadInFilter = filteredNotifications.filter(n => !n.is_read).length;
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      {/* Bell Icon Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="relative p-2 rounded-lg text-secondary hover:text-primary hover:bg-hover dark:hover:bg-slate-700/50 transition-colors"
+        aria-label="Notifications"
+      >
+        <svg 
+          className="w-6 h-6" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" 
+          />
+        </svg>
+        
+        {/* Unread Badge */}
+        {unreadCount > 0 && (
+          <motion.span
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </motion.span>
+        )}
+
+        {/* Connection Status Indicator */}
+        {!connected && (
+          <span className="absolute bottom-0 right-0 w-2 h-2 bg-yellow-500 rounded-full border-2 border-white dark:border-slate-900" />
+        )}
+      </button>
+
+      {/* Dropdown Panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Mobile: Full-screen overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+              onClick={() => setIsOpen(false)}
+            />
+
+            {/* Dropdown Content */}
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute right-0 mt-2 w-[90vw] sm:w-96 lg:w-[400px] max-h-[600px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-50 flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 className="text-lg font-semibold text-primary">Notifications</h3>
+                <div className="flex items-center space-x-2">
+                  {unreadInFilter > 0 && (
+                    <button
+                      onClick={markAllAsRead}
+                      className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div className="p-3 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex space-x-2 overflow-x-auto">
+                  {['all', 'unread', ...Object.keys(NOTIFICATION_TYPES)].map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setFilter(type)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                        filter === type
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 dark:bg-slate-700 text-secondary hover:bg-slate-200 dark:hover:bg-slate-600'
+                      }`}
+                    >
+                      {type === 'all' ? 'All' : type === 'unread' ? 'Unread' : NOTIFICATION_TYPES[type]?.label || type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notifications List */}
+              <div className="flex-1 overflow-y-auto">
+                {loading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : filteredNotifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    <p className="text-slate-500 dark:text-slate-400">No notifications</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {filteredNotifications.map((notification) => {
+                      const typeInfo = NOTIFICATION_TYPES[notification.type] || { label: notification.type, color: 'bg-gray-500' };
+                      return (
+                        <motion.div
+                          key={notification.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${
+                            !notification.is_read ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''
+                          }`}
+                          onClick={() => !notification.is_read && markAsRead(notification.id)}
+                        >
+                          <div className="flex items-start space-x-3">
+                            {/* Type Indicator */}
+                            <div className={`w-2 h-2 rounded-full mt-2 ${typeInfo.color} ${notification.is_read ? 'opacity-50' : ''}`} />
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between">
+                                <h4 className={`text-sm font-medium ${notification.is_read ? 'text-secondary' : 'text-primary font-semibold'}`}>
+                                  {notification.title}
+                                </h4>
+                                <div className="flex items-center space-x-1 ml-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      notification.is_read ? markAsUnread(notification.id) : markAsRead(notification.id);
+                                    }}
+                                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                    title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
+                                  >
+                                    {notification.is_read ? (
+                                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    ) : (
+                                      <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      deleteNotification(notification.id);
+                                    }}
+                                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                    title="Delete"
+                                  >
+                                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                              <p className="text-sm text-secondary mt-1 line-clamp-2">{notification.message}</p>
+                              <p className="text-xs text-slate-400 mt-2">{formatTime(notification.created_at)}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+

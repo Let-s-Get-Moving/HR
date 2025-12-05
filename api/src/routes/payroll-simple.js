@@ -1,6 +1,8 @@
 import express from "express";
 import { q } from "../db.js";
 import { applyScopeFilter } from "../middleware/rbac.js";
+// Note: Payroll notifications should be added when a process/finalize endpoint is implemented
+// import { createBulkNotifications } from "../utils/notifications.js";
 
 const r = express.Router();
 

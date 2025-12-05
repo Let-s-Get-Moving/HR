@@ -13,6 +13,8 @@ import LeaveManagement from "./pages/LeaveManagement.jsx";
 import Testing from "./pages/Testing.jsx";
 import Benefits from "./pages/Benefits.jsx";
 import BonusesCommissions from "./pages/BonusesCommissions.jsx";
+import Messages from "./pages/Messages.jsx";
+import NotificationCenter from "./components/NotificationCenter.jsx";
 
 import { API } from './config/api.js';
 import { sessionManager } from './utils/sessionManager.js';
@@ -71,6 +73,11 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
     </svg>
   ),
+  messages: () => (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </svg>
+  ),
   logout: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -88,6 +95,7 @@ const getPagesConfig = (t) => ({
   compliance: { name: t('nav.compliance'), component: Compliance, icon: Icons.compliance },
   benefits: { name: t('nav.benefits'), component: Benefits, icon: Icons.benefits },
   bonuses: { name: t('nav.bonuses'), component: BonusesCommissions, icon: Icons.bonuses },
+  messages: { name: t('nav.messages') || 'Messages', component: Messages, icon: Icons.messages },
   testing: { name: t('nav.testing'), component: Testing, icon: Icons.testing },
   settings: { name: t('nav.settings'), component: Settings, icon: Icons.settings }
 });
@@ -238,6 +246,7 @@ export default function App() {
                 <div className="text-primary font-medium">{t('app.welcome')}, {user.username}</div>
                 <div className="text-xs text-secondary">{t('app.lastLogin')}: {new Date().toLocaleDateString()}</div>
               </div>
+              <NotificationCenter />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
