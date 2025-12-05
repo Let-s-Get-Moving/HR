@@ -27,6 +27,11 @@ export default function Settings() {
   const leaveTypeInputRefs = useRef({ name: null, default_annual_entitlement: null, description: null, color: null }); // Refs for leave type inputs
   const holidayInputRefs = useRef({ date: null, description: null }); // Refs for holiday inputs
   const jobTitleInputRefs = useRef({ name: null, description: null, department_id: null, level_grade: null, reports_to_id: null, min_salary: null, max_salary: null }); // Refs for job title inputs
+  const benefitsPackageInputRefs = useRef({ name: null, description: null }); // Refs for benefits package inputs
+  const workScheduleInputRefs = useRef({ name: null, description: null, start_time: null, end_time: null, hours_per_week: null, break_duration: null }); // Refs for work schedule inputs
+  const overtimePolicyInputRefs = useRef({ name: null, description: null, threshold_hours: null, multiplier: null }); // Refs for overtime policy inputs
+  const attendancePolicyInputRefs = useRef({ name: null, description: null, grace_period: null, max_late_count: null, max_absent_count: null, warning_threshold: null, action_threshold: null }); // Refs for attendance policy inputs
+  const remoteWorkPolicyInputRefs = useRef({ name: null, description: null, min_days_office: null, max_days_remote: null, approval_required: null }); // Refs for remote work policy inputs
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -1384,7 +1389,10 @@ export default function Settings() {
 
   const handleAddBenefitsPackage = async (e) => {
     e.preventDefault();
-    if (!newBenefitsPackage.name.trim()) {
+    const name = benefitsPackageInputRefs.current.name?.value?.trim() || '';
+    const description = benefitsPackageInputRefs.current.description?.value?.trim() || '';
+    
+    if (!name) {
       setBenefitsPackageError(t('settings.benefitsPackages.nameRequired'));
       return;
     }
@@ -1395,17 +1403,19 @@ export default function Settings() {
     try {
       await API("/api/settings/benefits-packages", {
         method: "POST",
-        body: JSON.stringify(newBenefitsPackage)
+        body: JSON.stringify({
+          name,
+          description: description || null,
+          benefit_types: [],
+          coverage_level: 'Standard',
+          employee_cost: 0,
+          employer_cost: 0
+        })
       });
 
-      setNewBenefitsPackage({
-        name: '',
-        description: '',
-        benefit_types: [],
-        coverage_level: 'Standard',
-        employee_cost: 0,
-        employer_cost: 0
-      });
+      // Clear inputs
+      if (benefitsPackageInputRefs.current.name) benefitsPackageInputRefs.current.name.value = '';
+      if (benefitsPackageInputRefs.current.description) benefitsPackageInputRefs.current.description.value = '';
       await loadBenefitsPackages();
     } catch (error) {
       console.error("Error adding benefits package:", error);
@@ -4024,38 +4034,58 @@ export default function Settings() {
                   {editingBenefitsPackage ? t('settings.benefitsPackages.edit') : t('settings.benefitsPackages.addNew')}
                 </h4>
                 <form onSubmit={editingBenefitsPackage ? (e) => { e.preventDefault(); handleUpdateBenefitsPackage(editingBenefitsPackage); } : handleAddBenefitsPackage} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.name')} *</label>
-                    <input
-                      type="text"
-                      value={editingBenefitsPackageData?.name ?? newBenefitsPackage.name}
-                      onChange={(e) => {
-                        if (editingBenefitsPackageData) {
-                          setEditingBenefitsPackageData({...editingBenefitsPackageData, name: e.target.value});
-                        } else {
-                          setNewBenefitsPackage({...newBenefitsPackage, name: e.target.value});
-                        }
-                        setBenefitsPackageError('');
-                      }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.descriptionLabel')}</label>
-                    <textarea
-                      value={editingBenefitsPackageData?.description ?? newBenefitsPackage.description}
-                      onChange={(e) => {
-                        if (editingBenefitsPackageData) {
-                          setEditingBenefitsPackageData({...editingBenefitsPackageData, description: e.target.value});
-                        } else {
-                          setNewBenefitsPackage({...newBenefitsPackage, description: e.target.value});
-                        }
-                      }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      rows="2"
-                    />
-                  </div>
+                  {editingBenefitsPackage ? (
+                    // Editing mode - keep controlled inputs
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.name')} *</label>
+                        <input
+                          type="text"
+                          value={editingBenefitsPackageData?.name ?? ''}
+                          onChange={(e) => {
+                            setEditingBenefitsPackageData({...editingBenefitsPackageData, name: e.target.value});
+                            setBenefitsPackageError('');
+                          }}
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.descriptionLabel')}</label>
+                        <textarea
+                          value={editingBenefitsPackageData?.description ?? ''}
+                          onChange={(e) => {
+                            setEditingBenefitsPackageData({...editingBenefitsPackageData, description: e.target.value});
+                          }}
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          rows="2"
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // Add new mode - uncontrolled inputs
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.name')} *</label>
+                        <input
+                          ref={(el) => benefitsPackageInputRefs.current.name = el}
+                          type="text"
+                          defaultValue=""
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.descriptionLabel')}</label>
+                        <textarea
+                          ref={(el) => benefitsPackageInputRefs.current.description = el}
+                          defaultValue=""
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          rows="2"
+                        />
+                      </div>
+                    </>
+                  )}
                   <div>
                     <label className="block text-sm font-medium mb-2">{t('settings.benefitsPackages.benefitTypes')}</label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
