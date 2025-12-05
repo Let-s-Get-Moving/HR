@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, startTransition } from "react";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
@@ -1915,20 +1915,20 @@ export default function Settings() {
   };
   
   // Handle setting change for text/textarea inputs - only updates local state, no API call
-  const handleSettingChange = (category, key, value) => {
+  const handleSettingChange = useCallback((category, key, value) => {
     // Only track changes for system settings text/textarea inputs
     if (category === 'system') {
-      setPendingChanges(prev => ({
-        ...prev,
-        [key]: value
-      }));
-      
-      // Update local state immediately for UI responsiveness
-      setSystemSettings(prev => prev.map(setting => 
-        setting.key === key ? { ...setting, value } : setting
-      ));
+      // Use startTransition to mark as non-urgent update, preventing focus loss
+      // Only update pendingChanges - displayValue uses this, so systemSettings update is unnecessary during typing
+      startTransition(() => {
+        setPendingChanges(prev => ({ ...prev, [key]: value }));
+        // Also update systemSettings for consistency, but in same transition
+        setSystemSettings(prev => prev.map(setting => 
+          setting.key === key ? { ...setting, value } : setting
+        ));
+      });
     }
-  };
+  }, []);
   
   // Save all pending changes for system settings
   const handleSaveAllSettings = async () => {
@@ -4320,16 +4320,24 @@ export default function Settings() {
       salesManager: Array(6).fill(null).map(() => ({ min: '', max: '', commission: '' }))
     });
     const [localSaving, setLocalSaving] = useState(false);
+    const initialLoadRef = useRef(false);
     
     useEffect(() => {
       if (showCommissionStructuresModal && !commissionStructuresLoaded) {
         loadCommissionStructures().then(() => {
           setLocalCommissionStructures(commissionStructures);
+          initialLoadRef.current = true;
         });
-      } else if (showCommissionStructuresModal && commissionStructuresLoaded) {
+      } else if (showCommissionStructuresModal && commissionStructuresLoaded && !initialLoadRef.current) {
+        // Only set on first open after load, not on every render
         setLocalCommissionStructures(commissionStructures);
+        initialLoadRef.current = true;
       }
-    }, [showCommissionStructuresModal]);
+      
+      if (!showCommissionStructuresModal) {
+        initialLoadRef.current = false;
+      }
+    }, [showCommissionStructuresModal, commissionStructuresLoaded]);
     
     const handleSave = async () => {
       if (!canManage) return;
