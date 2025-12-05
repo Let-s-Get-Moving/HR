@@ -20,6 +20,7 @@ export default function Settings() {
   const [security, setSecurity] = useState([]);
   const [maintenance, setMaintenance] = useState([]);
   const [saving, setSaving] = useState({});
+  const [pendingChanges, setPendingChanges] = useState({}); // Track unsaved changes for system settings
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -1913,6 +1914,72 @@ export default function Settings() {
     }
   };
   
+  // Handle setting change for text/textarea inputs - only updates local state, no API call
+  const handleSettingChange = (category, key, value) => {
+    // Only track changes for system settings text/textarea inputs
+    if (category === 'system') {
+      setPendingChanges(prev => ({
+        ...prev,
+        [key]: value
+      }));
+      
+      // Update local state immediately for UI responsiveness
+      setSystemSettings(prev => prev.map(setting => 
+        setting.key === key ? { ...setting, value } : setting
+      ));
+    }
+  };
+  
+  // Save all pending changes for system settings
+  const handleSaveAllSettings = async () => {
+    const keys = Object.keys(pendingChanges);
+    if (keys.length === 0) return;
+    
+    const canManage = hasFullAccess(userRole);
+    if (!canManage) return;
+    
+    setSaving(prev => {
+      const newSaving = { ...prev };
+      keys.forEach(key => { newSaving[key] = true; });
+      return newSaving;
+    });
+    
+    try {
+      const sessionId = localStorage.getItem('sessionId');
+      if (!sessionId) {
+        throw new Error('No session found');
+      }
+      
+      // Save all pending changes
+      const savePromises = keys.map(key => {
+        const value = pendingChanges[key];
+        return API(`/api/settings/system/${key}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ value })
+        });
+      });
+      
+      await Promise.all(savePromises);
+      console.log(`✅ Saved ${keys.length} setting(s) successfully`);
+      
+      // Clear pending changes after successful save
+      setPendingChanges({});
+      
+      // Reload system settings to ensure sync
+      await loadSettingsForTab('system');
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      alert(t('settings.saveError') || 'Failed to save settings: ' + error.message);
+    } finally {
+      setSaving(prev => {
+        const newSaving = { ...prev };
+        keys.forEach(key => { newSaving[key] = false; });
+        return newSaving;
+      });
+    }
+  };
+  
   // Initiate MFA Setup - Get QR Code
   const initiateMFASetup = async () => {
     try {
@@ -2139,6 +2206,11 @@ export default function Settings() {
       return null;
     }
     
+    // For system settings text/textarea, use pending changes if available
+    const displayValue = (category === 'system' && pendingChanges[key] !== undefined) 
+      ? pendingChanges[key] 
+      : value;
+    
     // Helper function to safely parse boolean values
     const parseBoolean = (val) => {
       if (typeof val === 'boolean') return val;
@@ -2244,7 +2316,37 @@ export default function Settings() {
           </div>
         );
         
+      case "textarea":
+        // For system settings, use handleSettingChange (local state only)
+        // For other categories, use handleSettingUpdate (immediate save)
+        const textareaHandler = category === 'system' 
+          ? (e) => handleSettingChange(category, key, e.target.value)
+          : (e) => handleSettingUpdate(category, key, e.target.value);
+        
+        return (
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              {getSettingLabel(key)}
+            </label>
+            {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
+            <textarea
+              value={displayValue || ''}
+              onChange={textareaHandler}
+              disabled={category !== 'system' && saving[key]}
+              rows={4}
+              className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
+              style={{ minHeight: '44px', maxHeight: '120px' }}
+            />
+          </div>
+        );
+        
       case "number":
+        // For system settings, use handleSettingChange (local state only)
+        // For other categories, use handleSettingUpdate (immediate save)
+        const numberHandler = category === 'system' 
+          ? (e) => handleSettingChange(category, key, e.target.value)
+          : (e) => handleSettingUpdate(category, key, e.target.value);
+        
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -2253,15 +2355,21 @@ export default function Settings() {
             {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
             <input
               type="text"
-              value={value}
-              onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
-              disabled={saving[key]}
+              value={displayValue || ''}
+              onChange={numberHandler}
+              disabled={category !== 'system' && saving[key]}
               className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
             />
           </div>
         );
         
       default:
+        // For system settings, use handleSettingChange (local state only)
+        // For other categories, use handleSettingUpdate (immediate save)
+        const textHandler = category === 'system' 
+          ? (e) => handleSettingChange(category, key, e.target.value)
+          : (e) => handleSettingUpdate(category, key, e.target.value);
+        
         return (
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -2270,9 +2378,9 @@ export default function Settings() {
             {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
             <input
               type={type === "email" ? "email" : "text"}
-              value={value}
-              onChange={(e) => handleSettingUpdate(category, key, e.target.value)}
-              disabled={saving[key]}
+              value={displayValue || ''}
+              onChange={textHandler}
+              disabled={category !== 'system' && saving[key]}
               className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
             />
           </div>
@@ -2466,8 +2574,32 @@ export default function Settings() {
       categories[setting.category].push(setting);
     });
 
+    const hasPendingChanges = Object.keys(pendingChanges).length > 0;
+    const isSaving = Object.values(saving).some(v => v === true);
+    
     return (
       <div className="space-y-8">
+        {/* Save Button - only show if there are pending changes */}
+        {hasPendingChanges && canManage && (
+          <div className="flex items-center justify-between card p-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-secondary">
+                {t('settings.unsavedChanges') || 'You have unsaved changes'}
+              </span>
+              <span className="text-xs text-indigo-400">
+                ({Object.keys(pendingChanges).length} {t('settings.changes') || 'changes'})
+              </span>
+            </div>
+            <button
+              onClick={handleSaveAllSettings}
+              disabled={isSaving}
+              className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSaving ? (t('settings.saving') || 'Saving...') : (t('settings.saveChanges') || 'Save Changes')}
+            </button>
+          </div>
+        )}
+        
         {/* Regular System Settings */}
         {Object.entries(categories).map(([category, settings]) => (
           <div key={category}>
