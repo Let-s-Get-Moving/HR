@@ -23,6 +23,10 @@ export default function Settings() {
   const [settingsEdits, setSettingsEdits] = useState({}); // Track unsaved edits for ALL categories: { [category]: { [key]: value } }
   const systemSettingsRefs = useRef({}); // Store refs for system settings inputs: { [key]: ref }
   const departmentNameInputRef = useRef(null); // Ref for department name input in modal
+  const locationInputRefs = useRef({ name: null, region: null }); // Refs for location inputs
+  const leaveTypeInputRefs = useRef({ name: null, default_annual_entitlement: null, description: null, color: null }); // Refs for leave type inputs
+  const holidayInputRefs = useRef({ date: null, description: null }); // Refs for holiday inputs
+  const jobTitleInputRefs = useRef({ name: null, description: null, department_id: null, level_grade: null, reports_to_id: null, min_salary: null, max_salary: null }); // Refs for job title inputs
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -950,7 +954,11 @@ export default function Settings() {
   // Add new location
   const handleAddLocation = async (e) => {
     e.preventDefault();
-    if (!newLocation.name.trim()) {
+    const name = locationInputRefs.current.name?.value?.trim() || '';
+    const region = locationInputRefs.current.region?.value?.trim() || '';
+    const is_active = true; // Default to active
+    
+    if (!name) {
       setLocationError(t('settings.locations.nameRequired'));
       return;
     }
@@ -962,13 +970,15 @@ export default function Settings() {
       await API("/api/employees/locations", {
         method: "POST",
         body: JSON.stringify({
-          name: newLocation.name.trim(),
-          region: newLocation.region.trim() || null,
-          is_active: newLocation.is_active
+          name: name,
+          region: region || null,
+          is_active: is_active
         })
       });
 
-      setNewLocation({ name: '', region: '', is_active: true });
+      // Clear inputs
+      if (locationInputRefs.current.name) locationInputRefs.current.name.value = '';
+      if (locationInputRefs.current.region) locationInputRefs.current.region.value = '';
       await loadLocations();
     } catch (error) {
       console.error("Error adding location:", error);
@@ -1066,7 +1076,12 @@ export default function Settings() {
   // Add new leave type
   const handleAddLeaveType = async (e) => {
     e.preventDefault();
-    if (!newLeaveType.name.trim()) {
+    const name = leaveTypeInputRefs.current.name?.value?.trim() || '';
+    const description = leaveTypeInputRefs.current.description?.value?.trim() || '';
+    const default_annual_entitlement = parseInt(leaveTypeInputRefs.current.default_annual_entitlement?.value || '0', 10) || 0;
+    const color = leaveTypeInputRefs.current.color?.value || '#3B82F6';
+    
+    if (!name) {
       setLeaveTypeError(t('settings.leavePolicies.nameRequired'));
       return;
     }
@@ -1077,17 +1092,21 @@ export default function Settings() {
     try {
       await API("/api/leave/types", {
         method: "POST",
-        body: JSON.stringify(newLeaveType)
+        body: JSON.stringify({
+          name,
+          description: description || null,
+          default_annual_entitlement,
+          is_paid: true,
+          requires_approval: true,
+          color
+        })
       });
 
-      setNewLeaveType({
-        name: '',
-        description: '',
-        default_annual_entitlement: 0,
-        is_paid: true,
-        requires_approval: true,
-        color: '#3B82F6'
-      });
+      // Clear inputs
+      if (leaveTypeInputRefs.current.name) leaveTypeInputRefs.current.name.value = '';
+      if (leaveTypeInputRefs.current.description) leaveTypeInputRefs.current.description.value = '';
+      if (leaveTypeInputRefs.current.default_annual_entitlement) leaveTypeInputRefs.current.default_annual_entitlement.value = '0';
+      if (leaveTypeInputRefs.current.color) leaveTypeInputRefs.current.color.value = '#3B82F6';
       await loadLeaveTypes();
     } catch (error) {
       console.error("Error adding leave type:", error);
@@ -2900,7 +2919,9 @@ export default function Settings() {
       setShowLocationsModal(false);
       setEditingLocation(null);
       setLocationError('');
-      setNewLocation({ name: '', region: '', is_active: true });
+      // Clear inputs
+      if (locationInputRefs.current.name) locationInputRefs.current.name.value = '';
+      if (locationInputRefs.current.region) locationInputRefs.current.region.value = '';
     };
 
     return (
@@ -2936,23 +2957,17 @@ export default function Settings() {
                 <form onSubmit={handleAddLocation} className="space-y-4">
                   <div className="flex gap-3">
                     <input
+                      ref={(el) => locationInputRefs.current.name = el}
                       type="text"
-                      value={newLocation.name}
-                      onChange={(e) => {
-                        setNewLocation({...newLocation, name: e.target.value});
-                        setLocationError('');
-                      }}
+                      defaultValue=""
                       placeholder={t('settings.locations.namePlaceholder')}
                       className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                       maxLength={100}
                     />
                     <input
+                      ref={(el) => locationInputRefs.current.region = el}
                       type="text"
-                      value={newLocation.region}
-                      onChange={(e) => {
-                        setNewLocation({...newLocation, region: e.target.value});
-                        setLocationError('');
-                      }}
+                      defaultValue=""
                       placeholder={t('settings.locations.regionPlaceholder')}
                       className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                       maxLength={50}
@@ -2960,17 +2975,14 @@ export default function Settings() {
                     <label className="flex items-center gap-2 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={newLocation.is_active}
-                        onChange={(e) => {
-                          setNewLocation({...newLocation, is_active: e.target.checked});
-                        }}
+                        defaultChecked={true}
                         className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
                       />
                       <span className="text-sm text-white">{t('settings.locations.active')}</span>
                     </label>
                     <button
                       type="submit"
-                      disabled={addingLocation || !newLocation.name.trim()}
+                      disabled={addingLocation}
                       className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                       {addingLocation ? t('settings.locations.adding') : t('settings.locations.add')}
@@ -3151,113 +3163,92 @@ export default function Settings() {
                   {editingLeaveType ? t('settings.leavePolicies.edit') : t('settings.leavePolicies.addNew')}
                 </h4>
                 <form onSubmit={editingLeaveType ? (e) => { e.preventDefault(); handleUpdateLeaveType(editingLeaveType); } : handleAddLeaveType} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.name')} *</label>
-                      <input
-                        type="text"
-                        value={editingLeaveTypeData?.name ?? newLeaveType.name}
-                        onChange={(e) => {
-                          if (editingLeaveTypeData) {
-                            setEditingLeaveTypeData({...editingLeaveTypeData, name: e.target.value});
-                          } else {
-                            setNewLeaveType({...newLeaveType, name: e.target.value});
-                          }
-                          setLeaveTypeError('');
-                        }}
-                        placeholder={t('settings.leavePolicies.namePlaceholder')}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                        maxLength={100}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.annualEntitlement')} *</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={editingLeaveTypeData?.default_annual_entitlement ?? newLeaveType.default_annual_entitlement}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value, 10) || 0;
-                          if (editingLeaveTypeData) {
-                            setEditingLeaveTypeData({...editingLeaveTypeData, default_annual_entitlement: val});
-                          } else {
-                            setNewLeaveType({...newLeaveType, default_annual_entitlement: val});
-                          }
-                        }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.descriptionLabel')}</label>
-                    <textarea
-                      value={editingLeaveTypeData?.description ?? newLeaveType.description}
-                      onChange={(e) => {
-                        if (editingLeaveTypeData) {
-                          setEditingLeaveTypeData({...editingLeaveTypeData, description: e.target.value});
-                        } else {
-                          setNewLeaveType({...newLeaveType, description: e.target.value});
-                        }
-                      }}
-                      placeholder={t('settings.leavePolicies.descriptionPlaceholder')}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
-                      rows="2"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="modal_is_paid"
-                        checked={editingLeaveTypeData?.is_paid ?? newLeaveType.is_paid}
-                        onChange={(e) => {
-                          if (editingLeaveTypeData) {
-                            setEditingLeaveTypeData({...editingLeaveTypeData, is_paid: e.target.checked});
-                          } else {
-                            setNewLeaveType({...newLeaveType, is_paid: e.target.checked});
-                          }
-                        }}
-                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                        className="mr-2"
-                      />
-                      <label htmlFor="modal_is_paid" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
-                    </div>
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        id="modal_requires_approval"
-                        checked={editingLeaveTypeData?.requires_approval ?? newLeaveType.requires_approval}
-                        onChange={(e) => {
-                          if (editingLeaveTypeData) {
-                            setEditingLeaveTypeData({...editingLeaveTypeData, requires_approval: e.target.checked});
-                          } else {
-                            setNewLeaveType({...newLeaveType, requires_approval: e.target.checked});
-                          }
-                        }}
-                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                        className="mr-2"
-                      />
-                      <label htmlFor="modal_requires_approval" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.color')}</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={editingLeaveTypeData?.color ?? newLeaveType.color}
+                  {editingLeaveType ? (
+                    // Editing mode - keep controlled inputs for now
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.name')} *</label>
+                          <input
+                            type="text"
+                            value={editingLeaveTypeData?.name ?? ''}
+                            onChange={(e) => {
+                              setEditingLeaveTypeData({...editingLeaveTypeData, name: e.target.value});
+                              setLeaveTypeError('');
+                            }}
+                            placeholder={t('settings.leavePolicies.namePlaceholder')}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            maxLength={100}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.annualEntitlement')} *</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={editingLeaveTypeData?.default_annual_entitlement ?? 0}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10) || 0;
+                              setEditingLeaveTypeData({...editingLeaveTypeData, default_annual_entitlement: val});
+                            }}
+                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.descriptionLabel')}</label>
+                        <textarea
+                          value={editingLeaveTypeData?.description ?? ''}
                           onChange={(e) => {
-                            if (editingLeaveTypeData) {
-                              setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
-                            } else {
-                              setNewLeaveType({...newLeaveType, color: e.target.value});
-                            }
+                            setEditingLeaveTypeData({...editingLeaveTypeData, description: e.target.value});
                           }}
-                          className="h-10 w-20 rounded border border-neutral-700"
+                          placeholder={t('settings.leavePolicies.descriptionPlaceholder')}
+                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          rows="2"
                         />
-                        <input
-                          type="text"
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="modal_is_paid"
+                            checked={editingLeaveTypeData?.is_paid ?? true}
+                            onChange={(e) => {
+                              setEditingLeaveTypeData({...editingLeaveTypeData, is_paid: e.target.checked});
+                            }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="modal_is_paid" className="text-sm">{t('settings.leavePolicies.isPaid')}</label>
+                        </div>
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="modal_requires_approval"
+                            checked={editingLeaveTypeData?.requires_approval ?? true}
+                            onChange={(e) => {
+                              setEditingLeaveTypeData({...editingLeaveTypeData, requires_approval: e.target.checked});
+                            }}
+                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                            className="mr-2"
+                          />
+                          <label htmlFor="modal_requires_approval" className="text-sm">{t('settings.leavePolicies.requiresApproval')}</label>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">{t('settings.leavePolicies.color')}</label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              value={editingLeaveTypeData?.color ?? '#3B82F6'}
+                              onChange={(e) => {
+                                setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
+                              }}
+                              className="h-10 w-20 rounded border border-neutral-700"
+                            />
+                            <input
+                              type="text"
                           value={editingLeaveTypeData?.color ?? newLeaveType.color}
                           onChange={(e) => {
                             if (editingLeaveTypeData) {
