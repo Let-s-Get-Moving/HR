@@ -21,6 +21,7 @@ export default function Settings() {
   const [maintenance, setMaintenance] = useState([]);
   const [saving, setSaving] = useState({});
   const [settingsEdits, setSettingsEdits] = useState({}); // Track unsaved edits for ALL categories: { [category]: { [key]: value } }
+  const systemSettingsRefs = useRef({}); // Store refs for system settings inputs: { [key]: ref }
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -1960,6 +1961,57 @@ export default function Settings() {
     }
   };
   
+  // Handle saving all system settings from refs (uncontrolled inputs)
+  const handleSaveAllSystemSettings = async () => {
+    const canManage = hasFullAccess(userRole);
+    if (!canManage) return;
+    
+    const changes = [];
+    
+    // Read all values from refs and compare with original values
+    Object.keys(systemSettingsRefs.current).forEach(key => {
+      const ref = systemSettingsRefs.current[key];
+      if (ref && ref.current) {
+        const currentValue = ref.current.value;
+        // Find original value from systemSettings
+        const originalSetting = systemSettings.find(s => s.key === key);
+        if (originalSetting && currentValue !== originalSetting.value) {
+          changes.push({ key, value: currentValue });
+        }
+      }
+    });
+    
+    if (changes.length === 0) return;
+    
+    // Set saving state for all changed keys
+    setSaving(prev => {
+      const newSaving = { ...prev };
+      changes.forEach(({ key }) => { newSaving[key] = true; });
+      return newSaving;
+    });
+    
+    try {
+      // Save all changes
+      const savePromises = changes.map(({ key, value }) => 
+        handleSettingUpdate('system', key, value)
+      );
+      
+      await Promise.all(savePromises);
+      
+      // Reload system settings to sync
+      await loadSettingsForTab('system');
+    } catch (error) {
+      console.error('Failed to save system settings:', error);
+      alert(t('settings.saveError') || 'Failed to save settings: ' + error.message);
+    } finally {
+      setSaving(prev => {
+        const newSaving = { ...prev };
+        changes.forEach(({ key }) => { newSaving[key] = false; });
+        return newSaving;
+      });
+    }
+  };
+  
   // Initiate MFA Setup - Get QR Code
   const initiateMFASetup = async () => {
     try {
@@ -2320,98 +2372,183 @@ export default function Settings() {
         );
         
       case "textarea":
-        const textareaValue = getEditValue(category, key, value);
-        const hasTextareaEdit = hasEdit(category, key);
-        
-        return (
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              {getSettingLabel(key)}
-            </label>
-            {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
-            <div className="flex gap-2">
+        // For system settings: use uncontrolled input with ref (no state updates)
+        // For other categories: use controlled input with state
+        if (category === 'system') {
+          // Create/get ref for this input
+          if (!systemSettingsRefs.current[key]) {
+            systemSettingsRefs.current[key] = React.createRef();
+          }
+          const textareaRef = systemSettingsRefs.current[key];
+          
+          return (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {getSettingLabel(key)}
+              </label>
+              {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
               <textarea
-                value={textareaValue || ''}
-                onChange={(e) => updateEditState(category, key, e.target.value)}
+                ref={textareaRef}
+                key={`system-${key}-${value}`}
+                defaultValue={value || ''}
                 disabled={saving[key]}
                 rows={4}
-                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
+                className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
               />
-              {hasTextareaEdit && (
-                <button
-                  onClick={() => handleSaveSetting(category, key)}
-                  disabled={saving[key]}
-                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start"
-                >
-                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
-                </button>
-              )}
             </div>
-          </div>
-        );
+          );
+        } else {
+          // Other categories: use controlled input with Save button
+          const textareaValue = getEditValue(category, key, value);
+          const hasTextareaEdit = hasEdit(category, key);
+          
+          return (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {getSettingLabel(key)}
+              </label>
+              {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
+              <div className="flex gap-2">
+                <textarea
+                  value={textareaValue || ''}
+                  onChange={(e) => updateEditState(category, key, e.target.value)}
+                  disabled={saving[key]}
+                  rows={4}
+                  className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
+                  style={{ minHeight: '44px', maxHeight: '120px' }}
+                />
+                {hasTextareaEdit && (
+                  <button
+                    onClick={() => handleSaveSetting(category, key)}
+                    disabled={saving[key]}
+                    className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start"
+                  >
+                    {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
         
       case "number":
-        const numberValue = getEditValue(category, key, value);
-        const hasNumberEdit = hasEdit(category, key);
-        
-        return (
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              {getSettingLabel(key)}
-            </label>
-            {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
-            <div className="flex gap-2">
+        // For system settings: use uncontrolled input with ref (no state updates)
+        // For other categories: use controlled input with state
+        if (category === 'system') {
+          // Create/get ref for this input
+          if (!systemSettingsRefs.current[key]) {
+            systemSettingsRefs.current[key] = React.createRef();
+          }
+          const numberRef = systemSettingsRefs.current[key];
+          
+          return (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {getSettingLabel(key)}
+              </label>
+              {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
               <input
+                ref={numberRef}
+                key={`system-${key}-${value}`}
                 type="text"
-                value={numberValue || ''}
-                onChange={(e) => updateEditState(category, key, e.target.value)}
+                defaultValue={value || ''}
                 disabled={saving[key]}
-                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+                className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
               />
-              {hasNumberEdit && (
-                <button
-                  onClick={() => handleSaveSetting(category, key)}
-                  disabled={saving[key]}
-                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
-                </button>
-              )}
             </div>
-          </div>
-        );
+          );
+        } else {
+          // Other categories: use controlled input with Save button
+          const numberValue = getEditValue(category, key, value);
+          const hasNumberEdit = hasEdit(category, key);
+          
+          return (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {getSettingLabel(key)}
+              </label>
+              {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={numberValue || ''}
+                  onChange={(e) => updateEditState(category, key, e.target.value)}
+                  disabled={saving[key]}
+                  className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+                />
+                {hasNumberEdit && (
+                  <button
+                    onClick={() => handleSaveSetting(category, key)}
+                    disabled={saving[key]}
+                    className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
         
       default:
-        const textValue = getEditValue(category, key, value);
-        const hasTextEdit = hasEdit(category, key);
-        
-        return (
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              {getSettingLabel(key)}
-            </label>
-            {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
-            <div className="flex gap-2">
+        // For system settings: use uncontrolled input with ref (no state updates)
+        // For other categories: use controlled input with state
+        if (category === 'system') {
+          // Create/get ref for this input
+          if (!systemSettingsRefs.current[key]) {
+            systemSettingsRefs.current[key] = React.createRef();
+          }
+          const textRef = systemSettingsRefs.current[key];
+          
+          return (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {getSettingLabel(key)}
+              </label>
+              {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
               <input
+                ref={textRef}
+                key={`system-${key}-${value}`}
                 type={type === "email" ? "email" : "text"}
-                value={textValue || ''}
-                onChange={(e) => updateEditState(category, key, e.target.value)}
+                defaultValue={value || ''}
                 disabled={saving[key]}
-                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+                className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
               />
-              {hasTextEdit && (
-                <button
-                  onClick={() => handleSaveSetting(category, key)}
-                  disabled={saving[key]}
-                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
-                </button>
-              )}
             </div>
-          </div>
-        );
+          );
+        } else {
+          // Other categories: use controlled input with Save button
+          const textValue = getEditValue(category, key, value);
+          const hasTextEdit = hasEdit(category, key);
+          
+          return (
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                {getSettingLabel(key)}
+              </label>
+              {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
+              <div className="flex gap-2">
+                <input
+                  type={type === "email" ? "email" : "text"}
+                  value={textValue || ''}
+                  onChange={(e) => updateEditState(category, key, e.target.value)}
+                  disabled={saving[key]}
+                  className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+                />
+                {hasTextEdit && (
+                  <button
+                    onClick={() => handleSaveSetting(category, key)}
+                    disabled={saving[key]}
+                    className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
     }
   };
 
@@ -2603,6 +2740,21 @@ export default function Settings() {
 
     return (
       <div className="space-y-8">
+        {/* Save All Button for System Settings */}
+        {canManage && (
+          <div className="flex justify-end">
+            <button
+              onClick={handleSaveAllSystemSettings}
+              disabled={Object.values(saving).some(v => v === true)}
+              className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {Object.values(saving).some(v => v === true) 
+                ? (t('settings.saving') || 'Saving...') 
+                : (t('settings.saveAll') || 'Save All')}
+            </button>
+          </div>
+        )}
+        
         {/* Regular System Settings */}
         {Object.entries(categories).map(([category, settings]) => (
           <div key={category}>
