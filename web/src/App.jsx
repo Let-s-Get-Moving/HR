@@ -107,9 +107,16 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [currentPage, setCurrentPage] = useState("employees");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pageParams, setPageParams] = useState({});
   
   // Get user role directly from user state (updates immediately on login)
   const userRole = user?.role || null;
+  
+  // Navigation handler that supports params
+  const handleNavigate = (page, params = {}) => {
+    setCurrentPage(page);
+    setPageParams(params);
+  };
   
   // Get pages with translations
   const pages = getPagesConfig(t);
@@ -246,7 +253,7 @@ export default function App() {
                 <div className="text-primary font-medium">{t('app.welcome')}, {user.username}</div>
                 <div className="text-xs text-secondary">{t('app.lastLogin')}: {new Date().toLocaleDateString()}</div>
               </div>
-              <NotificationCenter />
+              <NotificationCenter onNavigate={handleNavigate} />
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -362,7 +369,7 @@ export default function App() {
             transition={{ duration: 0.3 }}
             className="h-full"
           >
-            <CurrentComponent onNavigate={setCurrentPage} user={user} />
+            <CurrentComponent onNavigate={handleNavigate} user={user} pageParams={pageParams} />
           </motion.div>
         </main>
       </div>

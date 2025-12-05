@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { API } from '../../config/api.js';
 
@@ -12,8 +12,27 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
     try {
       console.log('[ChatSidebar] Loading threads...');
       const response = await API('/api/chat/threads');
-      console.log('[ChatSidebar] Loaded threads:', response.threads?.length || 0);
-      setThreads(response.threads || []);
+      const newThreads = response.threads || [];
+      console.log('[ChatSidebar] Loaded threads:', newThreads.length);
+      
+      // Smart update: merge old and new threads to prevent blinking
+      setThreads(prev => {
+        // Create a map of existing threads by ID
+        const threadMap = new Map(prev.map(t => [t.id, t]));
+        
+        // Update or add new threads
+        newThreads.forEach(newThread => {
+          threadMap.set(newThread.id, newThread);
+        });
+        
+        // Only keep threads that still exist (remove deleted ones)
+        const existingIds = new Set(newThreads.map(t => t.id));
+        const updatedThreads = Array.from(threadMap.values())
+          .filter(t => existingIds.has(t.id))
+          .sort((a, b) => new Date(b.last_message_at) - new Date(a.last_message_at));
+        
+        return updatedThreads;
+      });
     } catch (error) {
       console.error('[ChatSidebar] Error loading threads:', error);
     } finally {
@@ -28,15 +47,16 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
     return () => clearInterval(interval);
   }, []);
 
-  const filteredThreads = threads.filter(thread => {
-    if (!searchQuery) return true;
+  // Memoize filtered threads to prevent unnecessary re-renders
+  const filteredThreads = useMemo(() => {
+    if (!searchQuery) return threads;
     const query = searchQuery.toLowerCase();
-    return (
+    return threads.filter(thread => 
       thread.subject?.toLowerCase().includes(query) ||
       thread.other_user_name?.toLowerCase().includes(query) ||
       thread.other_username?.toLowerCase().includes(query)
     );
-  });
+  }, [threads, searchQuery]);
 
   const formatTime = (dateString) => {
     if (!dateString) return '';

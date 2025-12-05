@@ -4,13 +4,14 @@ import { API } from '../../config/api.js';
 import { useChatMessages } from '../../hooks/useWebSocket.js';
 import ChatMessage from './ChatMessage.jsx';
 
-export default function ChatWindow({ thread, currentUserId, onBack }) {
+export default function ChatWindow({ thread, currentUserId, onBack, highlightMessageId }) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef(null);
+  const highlightMessageRef = useRef(null);
   const fileInputRef = useRef(null);
   const { messages: realTimeMessages, setMessages: setRealTimeMessages } = useChatMessages(thread?.id);
 
@@ -54,10 +55,18 @@ export default function ChatWindow({ thread, currentUserId, onBack }) {
     }
   }, [realTimeMessages]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change, or scroll to highlighted message
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (highlightMessageId && highlightMessageRef.current) {
+      // Scroll to highlighted message
+      highlightMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      // Clear highlight after scrolling
+      setTimeout(() => setHighlightMessageId(null), 3000);
+    } else {
+      // Scroll to bottom for new messages
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, highlightMessageId]);
 
   const sendMessage = async () => {
     if (!message.trim() || !thread?.id || sending) return;
@@ -232,6 +241,8 @@ export default function ChatWindow({ thread, currentUserId, onBack }) {
               message={msg}
               isOwn={msg.sender_id === currentUserId}
               senderName={msg.sender_name || msg.sender_username}
+              highlightMessageId={highlightMessageId}
+              messageRef={highlightMessageRef}
             />
           ))
         )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API } from '../config/api.js';
 import { useNotifications, useWebSocket } from '../hooks/useWebSocket.js';
@@ -11,7 +11,7 @@ const NOTIFICATION_TYPES = {
   system_alert: { label: 'System', color: 'bg-yellow-500' }
 };
 
-export default function NotificationCenter() {
+export default function NotificationCenter({ onNavigate }) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all'); // 'all', 'unread', or type
@@ -35,7 +35,26 @@ export default function NotificationCenter() {
       params.append('limit', '50');
 
       const response = await API(`/api/notifications?${params.toString()}`);
-      setNotifications(response.notifications || []);
+      const newNotifications = response.notifications || [];
+      
+      // Smart update: merge old and new notifications to prevent blinking
+      setNotifications(prev => {
+        // Create a map of existing notifications by ID
+        const notificationMap = new Map(prev.map(n => [n.id, n]));
+        
+        // Update or add new notifications
+        newNotifications.forEach(newNotif => {
+          notificationMap.set(newNotif.id, newNotif);
+        });
+        
+        // Only keep notifications that still exist (remove deleted ones)
+        const existingIds = new Set(newNotifications.map(n => n.id));
+        const updatedNotifications = Array.from(notificationMap.values())
+          .filter(n => existingIds.has(n.id))
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        return updatedNotifications;
+      });
     } catch (error) {
       console.error('Error loading notifications:', error);
     } finally {
@@ -157,13 +176,17 @@ export default function NotificationCenter() {
     return date.toLocaleDateString();
   };
 
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === 'all') return true;
-    if (filter === 'unread') return !n.is_read;
-    return n.type === filter;
-  });
-
-  const unreadInFilter = filteredNotifications.filter(n => !n.is_read).length;
+  // Memoize filtered notifications to prevent unnecessary re-renders
+  const filteredNotifications = useMemo(() => {
+    if (filter === 'all') return notifications;
+    if (filter === 'unread') return notifications.filter(n => !n.is_read);
+    return notifications.filter(n => n.type === filter);
+  }, [notifications, filter]);
+  
+  const unreadInFilter = useMemo(() => 
+    filteredNotifications.filter(n => !n.is_read).length,
+    [filteredNotifications]
+  );
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -291,7 +314,23 @@ export default function NotificationCenter() {
                           className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${
                             !notification.is_read ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''
                           }`}
-                          onClick={() => !notification.is_read && markAsRead(notification.id)}
+                          onClick={() => {
+                            // Mark as read
+                            if (!notification.is_read) {
+                              markAsRead(notification.id);
+                            }
+                            
+                            // Navigate if it's a chat notification
+                            if (notification.type === 'chat_message' && notification.related_type === 'chat_thread' && notification.related_id) {
+                              setIsOpen(false);
+                              if (onNavigate) {
+                                onNavigate('messages', { 
+                                  threadId: notification.related_id,
+                                  messageId: notification.related_id // Will use thread's last message or find by timestamp
+                                });
+                              }
+                            }
+                          }}
                         >
                           <div className="flex items-start space-x-3">
                             {/* Type Indicator */}

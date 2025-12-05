@@ -1,14 +1,19 @@
 import ChatAttachment from './ChatAttachment.jsx';
 
-export default function ChatMessage({ message, isOwn, senderName }) {
+export default function ChatMessage({ message, isOwn, senderName, highlightMessageId, messageRef }) {
   const formatTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
+  const isHighlighted = highlightMessageId && message.id === highlightMessageId;
+
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div 
+      ref={isHighlighted ? messageRef : null}
+      className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}
+    >
       <div className={`max-w-[70%] sm:max-w-[60%] ${isOwn ? 'order-2' : 'order-1'}`}>
         {!isOwn && (
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 px-2">
@@ -16,10 +21,14 @@ export default function ChatMessage({ message, isOwn, senderName }) {
           </p>
         )}
         <div
-          className={`rounded-2xl px-4 py-2 ${
+          className={`rounded-2xl px-4 py-2 transition-all duration-300 ${
             isOwn
               ? 'bg-indigo-600 text-white rounded-br-sm'
               : 'bg-slate-100 dark:bg-slate-700 text-primary rounded-bl-sm'
+          } ${
+            isHighlighted 
+              ? 'ring-4 ring-yellow-400 dark:ring-yellow-500 shadow-lg scale-105' 
+              : ''
           }`}
         >
           <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>

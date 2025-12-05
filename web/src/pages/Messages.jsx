@@ -5,8 +5,9 @@ import { sessionManager } from '../utils/sessionManager.js';
 import ChatSidebar from '../components/Chat/ChatSidebar.jsx';
 import ChatWindow from '../components/Chat/ChatWindow.jsx';
 
-export default function Messages() {
+export default function Messages({ pageParams = {} }) {
   const [selectedThread, setSelectedThread] = useState(null);
+  const [highlightMessageId, setHighlightMessageId] = useState(null);
   const [showNewThreadModal, setShowNewThreadModal] = useState(false);
   const [newThreadParticipant, setNewThreadParticipant] = useState('');
   const [newThreadSubject, setNewThreadSubject] = useState('');
@@ -76,6 +77,60 @@ export default function Messages() {
 
   // Mobile: show sidebar or chat, not both
   const [showSidebar, setShowSidebar] = useState(true);
+  const [threads, setThreads] = useState([]);
+
+  // Load threads and auto-select if threadId is provided in pageParams
+  const loadThreads = async () => {
+    try {
+      const response = await API('/api/chat/threads');
+      const loadedThreads = response.threads || [];
+      setThreads(loadedThreads);
+      
+      // Auto-select thread if threadId is provided
+      if (pageParams.threadId && !selectedThread) {
+        const threadToSelect = loadedThreads.find(t => t.id === parseInt(pageParams.threadId));
+        if (threadToSelect) {
+          setSelectedThread(threadToSelect);
+          if (isMobile) {
+            setShowSidebar(false);
+          }
+          // Set message to highlight if provided
+          if (pageParams.messageId) {
+            setHighlightMessageId(parseInt(pageParams.messageId));
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error loading threads:', error);
+    }
+  };
+
+  // Initial load - only if we need to auto-select a thread
+  useEffect(() => {
+    if (pageParams.threadId) {
+      loadThreads();
+    }
+  }, []);
+
+  // Handle pageParams changes (when navigating from notification)
+  useEffect(() => {
+    if (pageParams.threadId) {
+      const threadId = parseInt(pageParams.threadId);
+      const thread = threads.find(t => t.id === threadId);
+      if (thread) {
+        setSelectedThread(thread);
+        if (isMobile) {
+          setShowSidebar(false);
+        }
+        if (pageParams.messageId) {
+          setHighlightMessageId(parseInt(pageParams.messageId));
+        }
+      } else {
+        // Thread not loaded yet, reload threads
+        loadThreads();
+      }
+    }
+  }, [pageParams.threadId, pageParams.messageId, threads, isMobile]);
 
   useEffect(() => {
     if (selectedThread && isMobile) {
@@ -93,6 +148,7 @@ export default function Messages() {
               selectedThreadId={selectedThread?.id}
               onSelectThread={(thread) => {
                 setSelectedThread(thread);
+                setHighlightMessageId(null); // Clear highlight when selecting new thread
                 if (isMobile) {
                   setShowSidebar(false);
                 }
@@ -108,10 +164,12 @@ export default function Messages() {
             <ChatWindow
               thread={selectedThread}
               currentUserId={currentUserId}
+              highlightMessageId={highlightMessageId}
               onBack={() => {
                 if (isMobile) {
                   setShowSidebar(true);
                   setSelectedThread(null);
+                  setHighlightMessageId(null);
                 }
               }}
             />
