@@ -22,6 +22,7 @@ export default function Settings() {
   const [saving, setSaving] = useState({});
   const [settingsEdits, setSettingsEdits] = useState({}); // Track unsaved edits for ALL categories: { [category]: { [key]: value } }
   const systemSettingsRefs = useRef({}); // Store refs for system settings inputs: { [key]: ref }
+  const departmentNameInputRef = useRef(null); // Ref for department name input in modal
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -56,7 +57,6 @@ export default function Settings() {
   // Department Management State
   const { userRole } = useUserRole();
   const [departments, setDepartments] = useState([]);
-  const [newDepartmentName, setNewDepartmentName] = useState('');
   const [addingDepartment, setAddingDepartment] = useState(false);
   const [deletingDepartment, setDeletingDepartment] = useState(null);
   const [departmentError, setDepartmentError] = useState('');
@@ -859,7 +859,8 @@ export default function Settings() {
   // Add new department
   const handleAddDepartment = async (e) => {
     e.preventDefault();
-    if (!newDepartmentName.trim()) {
+    const departmentName = departmentNameInputRef.current?.value?.trim() || '';
+    if (!departmentName) {
       setDepartmentError(t('settings.departments.nameRequired'));
       return;
     }
@@ -870,10 +871,13 @@ export default function Settings() {
     try {
       const result = await API("/api/employees/departments", {
         method: "POST",
-        body: JSON.stringify({ name: newDepartmentName.trim() })
+        body: JSON.stringify({ name: departmentName })
       });
 
-      setNewDepartmentName('');
+      // Clear input by resetting ref value
+      if (departmentNameInputRef.current) {
+        departmentNameInputRef.current.value = '';
+      }
       await loadDepartments();
     } catch (error) {
       console.error("Error adding department:", error);
@@ -2389,7 +2393,7 @@ export default function Settings() {
               {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
               <textarea
                 ref={textareaRef}
-                key={`system-${key}-${value}`}
+                key={`system-${key}`}
                 defaultValue={value || ''}
                 disabled={saving[key]}
                 rows={4}
@@ -2450,7 +2454,7 @@ export default function Settings() {
               {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
               <input
                 ref={numberRef}
-                key={`system-${key}-${value}`}
+                key={`system-${key}`}
                 type="text"
                 defaultValue={value || ''}
                 disabled={saving[key]}
@@ -2509,7 +2513,7 @@ export default function Settings() {
               {getSettingDescription(key) && <p className="text-xs text-secondary mb-2">{getSettingDescription(key)}</p>}
               <input
                 ref={textRef}
-                key={`system-${key}-${value}`}
+                key={`system-${key}`}
                 type={type === "email" ? "email" : "text"}
                 defaultValue={value || ''}
                 disabled={saving[key]}
@@ -2820,19 +2824,16 @@ export default function Settings() {
                 <h4 className="text-lg font-medium mb-4">{t('settings.departments.addNew')}</h4>
                 <form onSubmit={handleAddDepartment} className="flex gap-3">
                   <input
+                    ref={departmentNameInputRef}
                     type="text"
-                    value={newDepartmentName}
-                    onChange={(e) => {
-                      setNewDepartmentName(e.target.value);
-                      setDepartmentError('');
-                    }}
+                    defaultValue=""
                     placeholder={t('settings.departments.namePlaceholder')}
                     className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                     maxLength={100}
                   />
                   <button
                     type="submit"
-                    disabled={addingDepartment || !newDepartmentName.trim()}
+                    disabled={addingDepartment}
                     className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {addingDepartment ? t('settings.departments.adding') : t('settings.departments.add')}
