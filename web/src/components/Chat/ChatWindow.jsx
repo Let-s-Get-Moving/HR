@@ -227,7 +227,7 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
       </div>
 
       {/* Messages - LIMITED HEIGHT, scrollable, shows only part of messages */}
-      <div className="absolute top-[73px] bottom-[89px] left-0 right-0 overflow-y-auto overflow-x-hidden">
+      <div className="absolute top-[73px] bottom-[89px] left-0 right-0 overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <div className="p-4 space-y-1">
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
