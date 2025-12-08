@@ -9,89 +9,158 @@ export default function Testing() {
   const [testResults, setTestResults] = useState({});
   const [runningTests, setRunningTests] = useState(false);
   const [systemInfo, setSystemInfo] = useState({});
-  const [testSession, setTestSession] = useState(null);
 
   const tests = [
     {
       id: "authentication",
-      name: t('testing.authentication.name'),
-      description: t('testing.authentication.description'),
-      tests: [
-        t('testing.authentication.tests.loginValid'),
-        t('testing.authentication.tests.sessionPersistence'),
-        t('testing.authentication.tests.mfaSetup'),
-        t('testing.authentication.tests.logout')
+      name: "Authentication & MFA",
+      description: "Login, sessions, MFA, trusted devices",
+      endpoints: [
+        { url: "/api/auth/session", name: "Session Check" },
+        { url: "/api/trusted-devices", name: "Trusted Devices" },
+        { url: "/api/users", name: "User Management" }
       ]
     },
     {
-      id: "api",
-      name: t('testing.api.name'),
-      description: t('testing.api.description'),
-      tests: [
-        t('testing.api.tests.employeeEndpoints'),
-        t('testing.api.tests.payrollCalc'),
-        t('testing.api.tests.timecards'),
-        t('testing.api.tests.leaveRequests'),
-        t('testing.api.tests.pendingLeave'),
-        t('testing.api.tests.leaveCalendar'),
-        t('testing.api.tests.dashboardAnalytics'),
-        t('testing.api.tests.recentActivity'),
-        t('testing.api.tests.performanceReviews'),
-        t('testing.api.tests.benefitsEnrollments'),
-        t('testing.api.tests.bonuses'),
-        t('testing.api.tests.commissions'),
-        t('testing.api.tests.systemSettings'),
-        t('testing.api.tests.trainingRecords'),
-        t('testing.api.tests.jobPostings'),
-        t('testing.api.tests.timecardUploads')
+      id: "chat",
+      name: "💬 Chat & Messaging",
+      description: "Real-time chat, threads, messages, attachments",
+      endpoints: [
+        { url: "/api/chat/available-users", name: "Available Users" },
+        { url: "/api/chat/threads", name: "Chat Threads" },
       ]
     },
     {
-      id: "database",
-      name: t('testing.database.name'),
-      description: t('testing.database.description'),
-      tests: [
-        t('testing.database.tests.connection'),
-        t('testing.database.tests.employeeSchema'),
-        t('testing.database.tests.payrollIntegrity'),
-        t('testing.database.tests.leaveValidation'),
-        t('testing.database.tests.foreignKeys')
+      id: "notifications",
+      name: "🔔 Notifications",
+      description: "Notification center, unread counts, real-time updates",
+      endpoints: [
+        { url: "/api/notifications", name: "Get Notifications" },
+        { url: "/api/notifications/unread-count", name: "Unread Count" },
       ]
     },
     {
-      id: "features",
-      name: t('testing.features.name'),
-      description: t('testing.features.description'),
-      tests: [
-        t('testing.features.tests.onboarding'),
-        t('testing.features.tests.offboarding'),
-        t('testing.features.tests.payrollCalc'),
-        t('testing.features.tests.leaveWorkflow'),
-        t('testing.features.tests.performanceReviews'),
-        t('testing.features.tests.benefitsAdmin'),
-        t('testing.features.tests.bonusesCommissions')
+      id: "settings",
+      name: "⚙️ Settings",
+      description: "Application settings, notification preferences",
+      endpoints: [
+        { url: "/api/settings/notifications", name: "Notification Settings" },
+        { url: "/api/settings/application", name: "Application Settings" },
       ]
     },
     {
-      id: "responsiveness",
-      name: t('testing.responsiveness.name'),
-      description: t('testing.responsiveness.description'),
-      tests: [
-        t('testing.responsiveness.tests.mobile'),
-        t('testing.responsiveness.tests.tablet'),
-        t('testing.responsiveness.tests.desktop'),
-        t('testing.responsiveness.tests.touchInteractions')
+      id: "employees",
+      name: "👥 Employee Management",
+      description: "Employee CRUD, departments, profiles",
+      endpoints: [
+        { url: "/api/employees", name: "Employee List" },
+        { url: "/api/employees/departments", name: "Departments" },
+      ]
+    },
+    {
+      id: "timecards",
+      name: "⏰ Time & Attendance",
+      description: "Timecards, uploads, tracking",
+      endpoints: [
+        { url: "/api/timecards", name: "Timecard List" },
+      ]
+    },
+    {
+      id: "leave",
+      name: "🏖️ Leave Management",
+      description: "Leave requests, approvals, analytics",
+      endpoints: [
+        { url: "/api/leave/requests", name: "Leave Requests" },
+        { url: "/api/leave/analytics", name: "Leave Analytics" },
+        { url: "/api/leave/types", name: "Leave Types" },
+      ]
+    },
+    {
+      id: "payroll",
+      name: "💰 Payroll & Compensation",
+      description: "Payroll calculations, periods, processing",
+      endpoints: [
+        { url: "/api/payroll/periods", name: "Payroll Periods" },
+        { url: "/api/payroll/calculations", name: "Calculations" },
+      ]
+    },
+    {
+      id: "bonuses",
+      name: "💵 Bonuses & Commissions",
+      description: "Bonuses, commissions, structures, approvals",
+      endpoints: [
+        { url: "/api/bonuses", name: "Bonuses List" },
+        { url: "/api/bonuses/structures", name: "Bonus Structures" },
+        { url: "/api/bonuses/commission-structures", name: "Commission Structures" },
+      ]
+    },
+    {
+      id: "benefits",
+      name: "💼 Benefits",
+      description: "Benefits plans, enrollments, retirement",
+      endpoints: [
+        { url: "/api/benefits/plans", name: "Benefits Plans" },
+        { url: "/api/benefits/enrollments", name: "Enrollments" },
+        { url: "/api/benefits/retirement-plans", name: "Retirement Plans" },
+        { url: "/api/benefits/insurance-plans", name: "Insurance Plans" },
       ]
     },
     {
       id: "performance",
-      name: t('testing.performance.name'),
-      description: t('testing.performance.description'),
-      tests: [
-        t('testing.performance.tests.employeeListLoad'),
-        t('testing.performance.tests.dashboardResponse'),
-        t('testing.performance.tests.analyticsResponse'),
-        t('testing.performance.tests.systemResponsiveness')
+      name: "📈 Performance Management",
+      description: "Reviews, goals, analytics",
+      endpoints: [
+        { url: "/api/performance/reviews", name: "Performance Reviews" },
+        { url: "/api/performance/goals", name: "Performance Goals" },
+        { url: "/api/performance/analytics", name: "Analytics" },
+      ]
+    },
+    {
+      id: "compliance",
+      name: "✅ Compliance",
+      description: "Compliance dashboard, alerts, training",
+      endpoints: [
+        { url: "/api/compliance/dashboard", name: "Dashboard" },
+        { url: "/api/compliance/alerts", name: "Alerts" },
+        { url: "/api/compliance/trainings", name: "Training Records" },
+      ]
+    },
+    {
+      id: "recruiting",
+      name: "📋 Recruiting",
+      description: "Job postings, candidates, interviews",
+      endpoints: [
+        { url: "/api/recruiting/job-postings", name: "Job Postings" },
+        { url: "/api/recruiting/candidates", name: "Candidates" },
+        { url: "/api/recruiting/interviews", name: "Interviews" },
+        { url: "/api/recruiting/analytics", name: "Analytics" },
+      ]
+    },
+    {
+      id: "termination",
+      name: "👋 Termination",
+      description: "Employee offboarding, checklist",
+      endpoints: [
+        { url: "/api/termination/checklist-template", name: "Checklist Template" },
+        { url: "/api/termination/list", name: "Termination List" },
+      ]
+    },
+    {
+      id: "analytics",
+      name: "📊 Analytics & Metrics",
+      description: "System analytics, metrics, dashboards",
+      endpoints: [
+        { url: "/api/analytics/dashboard", name: "Dashboard Analytics" },
+        { url: "/api/metrics", name: "System Metrics" },
+      ]
+    },
+    {
+      id: "system",
+      name: "🔧 System & Health",
+      description: "Health checks, diagnostics",
+      endpoints: [
+        { url: "/api/health/health", name: "Health Check" },
+        { url: "/api/diagnostic/database", name: "Database Health" },
       ]
     }
   ];
@@ -124,375 +193,120 @@ export default function Testing() {
       results[testGroup.id] = {
         name: testGroup.name,
         status: "pending",
-        tests: testGroup.tests.map(test => ({
-          name: test,
+        total: testGroup.endpoints.length,
+        passed: 0,
+        failed: 0,
+        warned: 0,
+        tests: testGroup.endpoints.map(endpoint => ({
+          name: endpoint.name,
+          url: endpoint.url,
           status: "pending",
           result: null,
-          error: null
+          error: null,
+          time: null
         }))
       };
     }
 
     setTestResults({ ...results });
 
-    try {
-      // Run tests in sequence
-      await runAuthenticationTests(results);
-      await runAPITests(results);
-      await runDatabaseTests(results);
-      await runFeatureTests(results);
-      await runResponsiveTests(results);
-      await runPerformanceTests(results);
-    } catch (error) {
-      console.error("Test suite error:", error);
+    // Run all test groups
+    for (const testGroup of tests) {
+      await runTestGroup(testGroup, results);
     }
 
     setRunningTests(false);
   };
 
-  const runAuthenticationTests = async (results) => {
-    const authResults = results.authentication;
-    authResults.status = "running";
+  const runTestGroup = async (testGroup, results) => {
+    const groupResults = results[testGroup.id];
+    groupResults.status = "running";
     setTestResults({ ...results });
-    
-    try {
-      // Test 1: Login
-      authResults.tests[0].status = "running";
-      setTestResults({ ...results });
-      
-      const loginResponse = await API("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({ username: "Avneet", password: "password123" })
-      });
-      
-      if (loginResponse.user && loginResponse.user.id) {
-        authResults.tests[0].status = "passed";
-        authResults.tests[0].result = `Login successful (User: ${loginResponse.user.full_name})`;
-        setTestSession(loginResponse);
-      } else {
-        authResults.tests[0].status = "failed";
-        authResults.tests[0].result = "Login failed - no user returned";
-      }
-      setTestResults({ ...results });
-      
-      // Test 2: Session persistence
-      authResults.tests[1].status = "running";
-      setTestResults({ ...results });
-      
-      const sessionResponse = await API("/api/auth/session");
-      authResults.tests[1].status = sessionResponse.user ? "passed" : "failed";
-      authResults.tests[1].result = sessionResponse.user ? `Session valid (Role: ${sessionResponse.user.role})` : "Session invalid";
-      setTestResults({ ...results });
-      
-      // Test 3: MFA availability
-      authResults.tests[2].status = "running";
-      setTestResults({ ...results });
-      authResults.tests[2].status = "passed";
-      authResults.tests[2].result = "MFA setup available via Settings";
-      setTestResults({ ...results });
-      
-      // Test 4: Logout (we'll skip this to keep session for other tests)
-      authResults.tests[3].status = "passed";
-      authResults.tests[3].result = "Logout functionality available (skipped to preserve session for tests)";
-      setTestResults({ ...results });
-      
-    } catch (error) {
-      console.error("Authentication tests error:", error);
-      authResults.tests.forEach((test, idx) => {
-        if (test.status === "running" || test.status === "pending") {
-          test.status = "failed";
-          test.error = error.message;
-        }
-      });
-    }
-    
-    authResults.status = authResults.tests.every(t => t.status === "passed") ? "passed" : "failed";
-    setTestResults({ ...results });
-  };
 
-  const runAPITests = async (results) => {
-    const apiResults = results.api;
-    apiResults.status = "running";
-    setTestResults({ ...results });
-    
-    const endpoints = [
-      { name: 0, url: "/api/employees", method: "GET", expectedType: "array", description: "Employees (GET)" },
-      { name: 1, url: "/api/payroll/calculations", method: "GET", expectedType: "array", description: "Payroll calculations" },
-      { name: 2, url: "/api/timecards", method: "GET", expectedType: "array", description: "Timecards" },
-      { name: 3, url: "/api/leave-requests", method: "GET", expectedType: "object", description: "Leave requests (GET)" },
-      { name: 4, url: "/api/leave-requests/pending", method: "GET", expectedType: "object", description: "Pending leave requests" },
-      { name: 5, url: "/api/leave/calendar", method: "GET", expectedType: "array", description: "Leave calendar" },
-      { name: 6, url: "/api/analytics/dashboard", method: "GET", expectedType: "object", description: "Dashboard analytics" },
-      { name: 7, url: "/api/analytics/recent-activity", method: "GET", expectedType: "array", description: "Recent activity" },
-      { name: 8, url: "/api/performance/reviews", method: "GET", expectedType: "array", description: "Performance reviews" },
-      { name: 9, url: "/api/benefits/enrollments", method: "GET", expectedType: "array", description: "Benefits enrollments" },
-      { name: 10, url: "/api/bonuses/", method: "GET", expectedType: "array", description: "Bonuses (all)" },
-      { name: 11, url: "/api/commissions/monthly", method: "GET", expectedType: "array", description: "Commissions (monthly)" },
-      { name: 12, url: "/api/settings/system", method: "GET", expectedType: "array", description: "System settings" },
-      { name: 13, url: "/api/compliance/training-records", method: "GET", expectedType: "array", description: "Training records" },
-      { name: 14, url: "/api/recruiting/job-postings", method: "GET", expectedType: "array", description: "Job postings" },
-      { name: 15, url: "/api/timecard-uploads/uploads", method: "GET", expectedType: "array", description: "Timecard uploads" }
-    ];
-    
-    for (const endpoint of endpoints) {
+    for (let i = 0; i < testGroup.endpoints.length; i++) {
+      const endpoint = testGroup.endpoints[i];
+      const test = groupResults.tests[i];
+
+      test.status = "running";
+      setTestResults({ ...results });
+
+      const startTime = performance.now();
+
       try {
-        apiResults.tests[endpoint.name].status = "running";
-        setTestResults({ ...results });
-        
-        const response = await API(endpoint.url, { method: endpoint.method });
-        
-        const isValid = endpoint.expectedType === "array" 
-          ? Array.isArray(response) || (response && Array.isArray(response.data))
-          : (response && typeof response === "object");
-        
-        if (isValid) {
-          const count = Array.isArray(response) ? response.length : (response.data ? response.data.length : "N/A");
-          apiResults.tests[endpoint.name].status = "passed";
-          apiResults.tests[endpoint.name].result = endpoint.expectedType === "array" 
-            ? `${endpoint.description}: ${count} records`
-            : `${endpoint.description}: Data loaded`;
+        const response = await API(endpoint.url);
+        const endTime = performance.now();
+        const responseTime = Math.round(endTime - startTime);
+
+        test.time = responseTime;
+
+        // Determine success
+        if (response) {
+          if (Array.isArray(response)) {
+            test.status = "passed";
+            test.result = `✓ ${response.length} records (${responseTime}ms)`;
+            groupResults.passed++;
+          } else if (response.data && Array.isArray(response.data)) {
+            test.status = "passed";
+            test.result = `✓ ${response.data.length} records (${responseTime}ms)`;
+            groupResults.passed++;
+          } else if (response.count !== undefined || response.total !== undefined) {
+            test.status = "passed";
+            test.result = `✓ Count: ${response.count || response.total} (${responseTime}ms)`;
+            groupResults.passed++;
+          } else if (typeof response === 'object') {
+            test.status = "passed";
+            test.result = `✓ Data loaded (${responseTime}ms)`;
+            groupResults.passed++;
+          } else {
+            test.status = "warning";
+            test.result = `⚠ Unexpected format (${responseTime}ms)`;
+            groupResults.warned++;
+          }
         } else {
-          apiResults.tests[endpoint.name].status = "warning";
-          apiResults.tests[endpoint.name].result = `${endpoint.description}: Unexpected response format`;
+          test.status = "warning";
+          test.result = `⚠ Empty response (${responseTime}ms)`;
+          groupResults.warned++;
         }
       } catch (error) {
-        if (error.message.includes("401") || error.message.includes("403")) {
-          apiResults.tests[endpoint.name].status = "warning";
-          apiResults.tests[endpoint.name].result = `${endpoint.description}: Requires authentication`;
-        } else if (error.message.includes("404")) {
-          apiResults.tests[endpoint.name].status = "warning";
-          apiResults.tests[endpoint.name].result = `${endpoint.description}: Endpoint not found`;
+        const endTime = performance.now();
+        const responseTime = Math.round(endTime - startTime);
+        test.time = responseTime;
+
+        if (error.message.includes("401") || error.message.includes("Unauthorized")) {
+          test.status = "warning";
+          test.result = `⚠ Authentication required`;
+          groupResults.warned++;
+        } else if (error.message.includes("403") || error.message.includes("Forbidden")) {
+          test.status = "warning";
+          test.result = `⚠ Access denied`;
+          groupResults.warned++;
+        } else if (error.message.includes("404") || error.message.includes("Not Found")) {
+          test.status = "warning";
+          test.result = `⚠ Endpoint not found`;
+          groupResults.warned++;
         } else {
-          apiResults.tests[endpoint.name].status = "failed";
-          apiResults.tests[endpoint.name].error = error.message;
-        }
-      }
-      setTestResults({ ...results });
-    }
-    
-    const passedOrWarning = apiResults.tests.every(t => t.status === "passed" || t.status === "warning");
-    apiResults.status = passedOrWarning ? "passed" : "failed";
-    setTestResults({ ...results });
-  };
-
-  const runDatabaseTests = async (results) => {
-    const dbResults = results.database;
-    dbResults.status = "running";
-    setTestResults({ ...results });
-    
-    try {
-      // Test 1: Database connection
-      dbResults.tests[0].status = "running";
-      setTestResults({ ...results });
-      
-      const employeesResponse = await API("/api/employees");
-      dbResults.tests[0].status = employeesResponse ? "passed" : "failed";
-      dbResults.tests[0].result = employeesResponse ? "Database connection successful" : "Connection failed";
-      setTestResults({ ...results });
-      
-      // Test 2: Employee schema validation
-      dbResults.tests[1].status = "running";
-      setTestResults({ ...results });
-      
-      if (Array.isArray(employeesResponse) && employeesResponse.length > 0) {
-        const sample = employeesResponse[0];
-        const requiredFields = ['id', 'first_name', 'last_name'];
-        const hasRequiredFields = requiredFields.every(field => field in sample);
-        dbResults.tests[1].status = hasRequiredFields ? "passed" : "failed";
-        dbResults.tests[1].result = hasRequiredFields 
-          ? `Schema valid (${Object.keys(sample).length} fields)` 
-          : "Missing required fields";
-      } else {
-        dbResults.tests[1].status = "warning";
-        dbResults.tests[1].result = "No employee data to validate";
-      }
-      setTestResults({ ...results });
-      
-      // Test 3: Payroll data integrity
-      dbResults.tests[2].status = "running";
-      setTestResults({ ...results });
-      
-      try {
-        const payrollResponse = await API("/api/payroll/calculations");
-        const payrollData = Array.isArray(payrollResponse) ? payrollResponse : (payrollResponse?.data || []);
-        dbResults.tests[2].status = "passed";
-        dbResults.tests[2].result = `Payroll data integrity validated (${payrollData.length} records)`;
-      } catch (error) {
-        dbResults.tests[2].status = "warning";
-        dbResults.tests[2].result = "Payroll data check skipped (no data)";
-      }
-      setTestResults({ ...results });
-      
-      // Test 4: Leave requests validation
-      dbResults.tests[3].status = "running";
-      setTestResults({ ...results });
-      
-      try {
-        const leaveResponse = await API("/api/leave-requests");
-        const leaveData = leaveResponse?.data || [];
-        dbResults.tests[3].status = "passed";
-        dbResults.tests[3].result = `Leave requests validated (${leaveData.length} records)`;
-      } catch (error) {
-        dbResults.tests[3].status = "warning";
-        dbResults.tests[3].result = "Leave requests check skipped";
-      }
-      setTestResults({ ...results });
-      
-      // Test 5: Foreign key relationships
-      dbResults.tests[4].status = "running";
-      setTestResults({ ...results });
-      
-      if (Array.isArray(employeesResponse) && employeesResponse.length > 0) {
-        const hasRelationships = employeesResponse.some(emp => emp.department_id || emp.role_id);
-        dbResults.tests[4].status = hasRelationships ? "passed" : "warning";
-        dbResults.tests[4].result = hasRelationships 
-          ? "Foreign key relationships intact" 
-          : "No relationships found";
-      } else {
-        dbResults.tests[4].status = "warning";
-        dbResults.tests[4].result = "No data to validate relationships";
-      }
-      setTestResults({ ...results });
-      
-    } catch (error) {
-      console.error("Database tests error:", error);
-      dbResults.tests.forEach((test, idx) => {
-        if (test.status === "running" || test.status === "pending") {
           test.status = "failed";
           test.error = error.message;
+          test.result = `✗ ${error.message.substring(0, 50)}`;
+          groupResults.failed++;
         }
-      });
+      }
+
+      setTestResults({ ...results });
+      
+      // Small delay between tests
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
-    
-    const passedOrWarning = dbResults.tests.every(t => t.status === "passed" || t.status === "warning");
-    dbResults.status = passedOrWarning ? "passed" : "failed";
-    setTestResults({ ...results });
-  };
 
-  const runFeatureTests = async (results) => {
-    const featureResults = results.features;
-    featureResults.status = "running";
-    setTestResults({ ...results });
-    
-    // These test feature availability (not actual execution)
-    const features = [
-      { name: "5-step employee onboarding process", available: true },
-      { name: "5-step employee offboarding process", available: true },
-      { name: "Automatic payroll calculations", available: true },
-      { name: "Employee leave request & approval workflow", available: true },
-      { name: "Performance reviews, goals & 360° feedback", available: true },
-      { name: "Benefits enrollment & management", available: true },
-      { name: "Bonuses, commissions & compensation", available: true }
-    ];
-    
-    features.forEach((feature, idx) => {
-      featureResults.tests[idx].status = feature.available ? "passed" : "failed";
-      featureResults.tests[idx].result = feature.available ? `✓ ${feature.name}` : `✗ ${feature.name}`;
-    });
-    
-    featureResults.status = "passed";
-    setTestResults({ ...results });
-  };
-
-  const runResponsiveTests = async (results) => {
-    const responsiveResults = results.responsiveness;
-    responsiveResults.status = "running";
-    setTestResults({ ...results });
-    
-    const width = window.innerWidth;
-    
-    // Test mobile
-    responsiveResults.tests[0].status = "passed";
-    responsiveResults.tests[0].result = width <= 768 
-      ? `Mobile layout active (${width}px)` 
-      : `Mobile ready (current: ${width}px)`;
-    
-    // Test tablet
-    responsiveResults.tests[1].status = "passed";
-    responsiveResults.tests[1].result = width > 768 && width <= 1024
-      ? `Tablet layout active (${width}px)` 
-      : `Tablet ready (current: ${width}px)`;
-    
-    // Test desktop
-    responsiveResults.tests[2].status = "passed";
-    responsiveResults.tests[2].result = width > 1024
-      ? `Desktop layout active (${width}px)` 
-      : `Desktop ready (current: ${width}px)`;
-    
-    // Test touch
-    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    responsiveResults.tests[3].status = "passed";
-    responsiveResults.tests[3].result = hasTouch 
-      ? "Touch interactions supported" 
-      : "Mouse/keyboard interactions";
-    
-    responsiveResults.status = "passed";
-    setTestResults({ ...results });
-  };
-
-  const runPerformanceTests = async (results) => {
-    const perfResults = results.performance;
-    perfResults.status = "running";
-    setTestResults({ ...results });
-    
-    try {
-      // Test 1: Employee list load time
-      perfResults.tests[0].status = "running";
-      setTestResults({ ...results });
-      
-      const start1 = performance.now();
-      await API("/api/employees");
-      const loadTime = performance.now() - start1;
-      
-      perfResults.tests[0].status = loadTime < 2000 ? "passed" : "warning";
-      perfResults.tests[0].result = `${loadTime.toFixed(0)}ms ${loadTime < 1000 ? '(Excellent)' : loadTime < 2000 ? '(Good)' : '(Slow)'}`;
-      setTestResults({ ...results });
-      
-      // Test 2: Dashboard API
-      perfResults.tests[1].status = "running";
-      setTestResults({ ...results });
-      
-      const start2 = performance.now();
-      await API("/api/analytics/dashboard");
-      const dashTime = performance.now() - start2;
-      
-      perfResults.tests[1].status = dashTime < 2000 ? "passed" : "warning";
-      perfResults.tests[1].result = `${dashTime.toFixed(0)}ms ${dashTime < 1000 ? '(Excellent)' : dashTime < 2000 ? '(Good)' : '(Slow)'}`;
-      setTestResults({ ...results });
-      
-      // Test 3: Analytics API
-      perfResults.tests[2].status = "running";
-      setTestResults({ ...results });
-      
-      const start3 = performance.now();
-      await API("/api/analytics/recent-activity");
-      const analyticsTime = performance.now() - start3;
-      
-      perfResults.tests[2].status = analyticsTime < 2000 ? "passed" : "warning";
-      perfResults.tests[2].result = `${analyticsTime.toFixed(0)}ms ${analyticsTime < 1000 ? '(Excellent)' : analyticsTime < 2000 ? '(Good)' : '(Slow)'}`;
-      setTestResults({ ...results });
-      
-      // Test 4: Overall responsiveness
-      perfResults.tests[3].status = "running";
-      setTestResults({ ...results });
-      
-      const avgTime = (loadTime + dashTime + analyticsTime) / 3;
-      perfResults.tests[3].status = avgTime < 2000 ? "passed" : "warning";
-      perfResults.tests[3].result = `Average: ${avgTime.toFixed(0)}ms ${avgTime < 1000 ? '(Excellent)' : avgTime < 2000 ? '(Good)' : '(Needs optimization)'}`;
-      setTestResults({ ...results });
-      
-    } catch (error) {
-      console.error("Performance tests error:", error);
-      perfResults.tests.forEach((test, idx) => {
-        if (test.status === "running" || test.status === "pending") {
-          test.status = "failed";
-          test.error = error.message;
-        }
-      });
+    // Determine overall group status
+    if (groupResults.failed === 0 && groupResults.warned === 0) {
+      groupResults.status = "passed";
+    } else if (groupResults.failed === 0) {
+      groupResults.status = "warning";
+    } else {
+      groupResults.status = "failed";
     }
-    
-    const passedOrWarning = perfResults.tests.every(t => t.status === "passed" || t.status === "warning");
-    perfResults.status = passedOrWarning ? "passed" : "failed";
+
     setTestResults({ ...results });
   };
 
@@ -516,37 +330,68 @@ export default function Testing() {
     }
   };
 
+  const getStatusBadge = (status) => {
+    switch (status) {
+      case "passed": return "bg-green-500/20 text-green-400 border-green-500/50";
+      case "failed": return "bg-red-500/20 text-red-400 border-red-500/50";
+      case "warning": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
+      case "running": return "bg-blue-500/20 text-blue-400 border-blue-500/50";
+      default: return "bg-neutral-500/20 text-neutral-400 border-neutral-500/50";
+    }
+  };
+
+  // Calculate overall statistics
+  const calculateStats = () => {
+    let totalTests = 0;
+    let passed = 0;
+    let failed = 0;
+    let warned = 0;
+
+    Object.values(testResults).forEach(group => {
+      totalTests += group.total;
+      passed += group.passed;
+      failed += group.failed;
+      warned += group.warned;
+    });
+
+    return { totalTests, passed, failed, warned };
+  };
+
+  const stats = calculateStats();
+  const hasResults = Object.keys(testResults).length > 0;
+
   return (
     <div className="max-w-7xl mx-auto p-6">
+      {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">{t('testing.title')}</h1>
-        <p className="text-neutral-400 mt-1">{t('testing.description')}</p>
+        <h1 className="text-3xl font-bold text-white">System Testing</h1>
+        <p className="text-neutral-400 mt-1">Comprehensive testing suite for C&C HR System</p>
       </div>
 
       {/* System Information */}
-      <div className="card p-6 mb-6">
-        <h3 className="text-lg font-semibold mb-4">{t('testing.systemInfo.title')}</h3>
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6">
+        <h3 className="text-lg font-semibold text-white mb-4">System Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
           <div>
-            <span className="font-medium text-neutral-400">{t('testing.systemInfo.screen')}:</span> 
-            <span className="ml-2">{systemInfo.screenSize}</span>
+            <span className="font-medium text-neutral-400">Screen:</span> 
+            <span className="ml-2 text-white">{systemInfo.screenSize}</span>
           </div>
           <div>
-            <span className="font-medium text-neutral-400">{t('testing.systemInfo.viewport')}:</span> 
-            <span className="ml-2">{systemInfo.viewport}</span>
+            <span className="font-medium text-neutral-400">Viewport:</span> 
+            <span className="ml-2 text-white">{systemInfo.viewport}</span>
           </div>
           <div>
-            <span className="font-medium text-neutral-400">{t('testing.systemInfo.timezone')}:</span> 
-            <span className="ml-2">{systemInfo.timezone}</span>
+            <span className="font-medium text-neutral-400">Timezone:</span> 
+            <span className="ml-2 text-white">{systemInfo.timezone}</span>
           </div>
         </div>
       </div>
 
-      {/* Test Controls */}
-      <div className="card p-6 mb-6">
-        <div className="flex justify-between items-center">
+      {/* Test Controls & Stats */}
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6">
+        <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h3 className="text-lg font-semibold">{t('testing.testSuite')}</h3>
+            <h3 className="text-lg font-semibold text-white">Test Suite</h3>
             <p className="text-sm text-neutral-400 mt-1">
               Run comprehensive tests across all system modules
             </p>
@@ -554,76 +399,119 @@ export default function Testing() {
           <button
             onClick={runAllTests}
             disabled={runningTests}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-medium transition-colors"
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-medium text-white transition-all shadow-lg hover:shadow-indigo-500/50"
           >
-            {runningTests ? t('testing.runningTests') : t('testing.runAllTests')}
+            {runningTests ? "🔄 Running Tests..." : "▶️ Run All Tests"}
           </button>
         </div>
+
+        {/* Stats */}
+        {hasResults && stats.totalTests > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="bg-neutral-800/50 rounded-xl p-4">
+              <div className="text-2xl font-bold text-white">{stats.totalTests}</div>
+              <div className="text-sm text-neutral-400">Total Tests</div>
+            </div>
+            <div className="bg-green-500/10 rounded-xl p-4">
+              <div className="text-2xl font-bold text-green-400">{stats.passed}</div>
+              <div className="text-sm text-neutral-400">Passed</div>
+            </div>
+            <div className="bg-yellow-500/10 rounded-xl p-4">
+              <div className="text-2xl font-bold text-yellow-400">{stats.warned}</div>
+              <div className="text-sm text-neutral-400">Warnings</div>
+            </div>
+            <div className="bg-red-500/10 rounded-xl p-4">
+              <div className="text-2xl font-bold text-red-400">{stats.failed}</div>
+              <div className="text-sm text-neutral-400">Failed</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Test Results */}
-      <div className="space-y-6">
-        {tests.map((testGroup) => (
-          <motion.div
-            key={testGroup.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h4 className="text-lg font-semibold">{testGroup.name}</h4>
-                <p className="text-sm text-neutral-400">{testGroup.description}</p>
-              </div>
-              {testResults[testGroup.id] && (
-                <div className={`text-lg font-bold ${getStatusColor(testResults[testGroup.id].status)}`}>
-                  {getStatusIcon(testResults[testGroup.id].status)} 
-                  <span className="ml-2 capitalize">{testResults[testGroup.id].status}</span>
-                </div>
-              )}
-            </div>
+      <div className="space-y-4">
+        {tests.map((testGroup) => {
+          const groupResult = testResults[testGroup.id];
+          const hasGroupResult = groupResult && groupResult.tests;
 
-            <div className="space-y-2">
-              {testGroup.tests.map((test, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-neutral-800/50 rounded-lg">
-                  <span className="text-sm font-medium">{test}</span>
-                  {testResults[testGroup.id]?.tests[index] && (
-                    <div className="flex items-center space-x-3">
-                      <span className={`text-sm ${getStatusColor(testResults[testGroup.id].tests[index].status)}`}>
-                        {getStatusIcon(testResults[testGroup.id].tests[index].status)}
-                      </span>
-                      <span className="text-xs text-neutral-400 max-w-md truncate">
-                        {testResults[testGroup.id].tests[index].result || 
-                         testResults[testGroup.id].tests[index].error}
-                      </span>
-                    </div>
-                  )}
+          return (
+            <motion.div
+              key={testGroup.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-white">{testGroup.name}</h4>
+                  <p className="text-sm text-neutral-400">{testGroup.description}</p>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        ))}
+                {hasGroupResult && (
+                  <div className="flex items-center gap-3">
+                    <div className={`px-3 py-1 rounded-full border text-sm font-medium ${getStatusBadge(groupResult.status)}`}>
+                      {getStatusIcon(groupResult.status)} {groupResult.status.toUpperCase()}
+                    </div>
+                    <div className="text-sm text-neutral-400">
+                      {groupResult.passed}/{groupResult.total}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                {testGroup.endpoints.map((endpoint, index) => {
+                  const testResult = hasGroupResult ? groupResult.tests[index] : null;
+
+                  return (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between p-3 bg-neutral-800/30 rounded-xl hover:bg-neutral-800/50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-white">{endpoint.name}</div>
+                        <div className="text-xs text-neutral-500 font-mono">{endpoint.url}</div>
+                      </div>
+                      {testResult && (
+                        <div className="flex items-center gap-3 ml-4">
+                          <span className={`text-lg ${getStatusColor(testResult.status)}`}>
+                            {getStatusIcon(testResult.status)}
+                          </span>
+                          <span className="text-sm text-neutral-400 max-w-md truncate">
+                            {testResult.result || testResult.error}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* System Modules Overview */}
-      <div className="card p-6 mt-6">
-        <h3 className="text-lg font-semibold mb-4">{t('testing.systemModules.title')}</h3>
+      {/* Module Overview */}
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mt-6">
+        <h3 className="text-lg font-semibold text-white mb-4">System Modules</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            { icon: "👥", name: t('testing.systemModules.employeeManagement'), desc: t('testing.systemModules.employeeManagementDesc') },
-            { icon: "💰", name: t('testing.systemModules.payrollCompensation'), desc: t('testing.systemModules.payrollCompensationDesc') },
-            { icon: "📊", name: t('testing.systemModules.performanceManagement'), desc: t('testing.systemModules.performanceManagementDesc') },
-            { icon: "🏥", name: t('testing.systemModules.benefitsAdministration'), desc: t('testing.systemModules.benefitsAdministrationDesc') },
-            { icon: "💸", name: t('testing.systemModules.bonusesCommissions'), desc: t('testing.systemModules.bonusesCommissionsDesc') },
-            { icon: "📝", name: t('testing.systemModules.recruitingHiring'), desc: t('testing.systemModules.recruitingHiringDesc') },
-            { icon: "⏰", name: t('testing.systemModules.timeAttendance'), desc: t('testing.systemModules.timeAttendanceDesc') },
-            { icon: "🏖️", name: t('testing.systemModules.leaveManagement'), desc: t('testing.systemModules.leaveManagementDesc') },
-            { icon: "✅", name: t('testing.systemModules.complianceDocs'), desc: t('testing.systemModules.complianceDocsDesc') }
+            { icon: "👥", name: "Employee Management", desc: "CRUD, profiles, departments" },
+            { icon: "💰", name: "Payroll & Compensation", desc: "Automated calculations" },
+            { icon: "💬", name: "Chat & Messaging", desc: "Real-time communication" },
+            { icon: "🔔", name: "Notifications", desc: "Real-time alerts" },
+            { icon: "⚙️", name: "Settings", desc: "System configuration" },
+            { icon: "💼", name: "Benefits", desc: "Plans & enrollments" },
+            { icon: "💵", name: "Bonuses & Commissions", desc: "Compensation management" },
+            { icon: "📋", name: "Recruiting", desc: "Hiring pipeline" },
+            { icon: "🏖️", name: "Leave Management", desc: "Request & approval workflow" },
+            { icon: "⏰", name: "Time & Attendance", desc: "Timecard tracking" },
+            { icon: "📈", name: "Performance", desc: "Reviews & goals" },
+            { icon: "✅", name: "Compliance", desc: "Regulatory compliance" },
           ].map((module, idx) => (
-            <div key={idx} className="p-4 bg-neutral-800/50 rounded-lg">
-              <div className="flex items-center space-x-3 mb-2">
+            <div key={idx} className="p-4 bg-neutral-800/30 rounded-xl hover:bg-neutral-800/50 transition-colors">
+              <div className="flex items-center gap-3 mb-2">
                 <div className="text-2xl">{module.icon}</div>
-                <div className="font-medium">{module.name}</div>
+                <div className="font-medium text-white">{module.name}</div>
               </div>
               <div className="text-sm text-neutral-400">{module.desc}</div>
             </div>
