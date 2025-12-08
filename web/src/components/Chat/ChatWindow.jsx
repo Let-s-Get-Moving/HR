@@ -196,9 +196,9 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
   }
 
   return (
-    <div className="flex flex-col h-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+    <div className="flex flex-col h-full max-h-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
         <div className="flex items-center space-x-3">
           {/* Mobile back button */}
           <button
@@ -227,7 +227,7 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-1 min-h-0">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
@@ -252,7 +252,7 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-700">
+      <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
         <div className="flex items-end space-x-2">
           {/* File Upload */}
           <button
