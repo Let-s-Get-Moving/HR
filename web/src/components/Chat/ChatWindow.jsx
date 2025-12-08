@@ -196,9 +196,9 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
   }
 
   return (
-    <div className="h-full w-full overflow-y-auto bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
-      {/* Header - Sticky at top */}
-      <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+    <div className="flex flex-col h-full w-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+      {/* Header - Always visible at top */}
+      <div className="flex-shrink-0 z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-center space-x-3">
           {/* Mobile back button */}
           <button
@@ -226,33 +226,35 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
         </div>
       </div>
 
-      {/* Messages - Not expandable, just flows naturally */}
-      <div className="p-4 space-y-1">
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <p className="text-slate-500 dark:text-slate-400">No messages yet. Start the conversation!</p>
-          </div>
-        ) : (
-          messages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              isOwn={msg.sender_id === currentUserId}
-              senderName={msg.sender_name || msg.sender_username}
-              highlightMessageId={highlightMessageId}
-              messageRef={highlightMessageRef}
-            />
-          ))
-        )}
-        <div ref={messagesEndRef} />
+      {/* Messages - Constrained, non-expandable, scrollable area */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+        <div className="p-4 space-y-1">
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <p className="text-slate-500 dark:text-slate-400">No messages yet. Start the conversation!</p>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                isOwn={msg.sender_id === currentUserId}
+                senderName={msg.sender_name || msg.sender_username}
+                highlightMessageId={highlightMessageId}
+                messageRef={highlightMessageRef}
+              />
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input - Sticky at bottom */}
-      <div className="sticky bottom-0 z-10 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+      {/* Input - Always visible at bottom */}
+      <div className="flex-shrink-0 z-10 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-end space-x-2">
           {/* File Upload */}
           <button
