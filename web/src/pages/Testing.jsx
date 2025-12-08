@@ -16,7 +16,7 @@ export default function Testing() {
       endpoints: [
         { url: "/api/auth/session", name: "Session Check" },
         { url: "/api/trusted-devices", name: "Trusted Devices" },
-        { url: "/api/users", name: "User Management" }
+        { url: "/api/users/me", name: "User Profile" }
       ]
     },
     {
@@ -43,7 +43,7 @@ export default function Testing() {
       description: "Application settings, notification preferences",
       endpoints: [
         { url: "/api/settings/notifications", name: "Notification Settings" },
-        { url: "/api/settings/application", name: "Application Settings" },
+        { url: "/api/settings/system", name: "System Settings" },
       ]
     },
     {
@@ -149,7 +149,8 @@ export default function Testing() {
       description: "System analytics, metrics, dashboards",
       endpoints: [
         { url: "/api/analytics/dashboard", name: "Dashboard Analytics" },
-        { url: "/api/metrics", name: "System Metrics" },
+        { url: "/api/metrics/workforce", name: "Workforce Metrics" },
+        { url: "/api/metrics/attendance", name: "Attendance Metrics" },
       ]
     },
     {
@@ -157,8 +158,8 @@ export default function Testing() {
       name: "🔧 System & Health",
       description: "Health checks, diagnostics",
       endpoints: [
-        { url: "/api/health/health", name: "Health Check" },
-        { url: "/api/diagnostic/database", name: "Database Health" },
+        { url: "/health/health", name: "Health Check" },
+        { url: "/api/diagnostic/user-status", name: "User Status Check" },
       ]
     }
   ];
