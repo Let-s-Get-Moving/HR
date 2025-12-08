@@ -196,9 +196,9 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
   }
 
   return (
-    <div className="relative h-full w-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
-      {/* Header - Sticky at top */}
-      <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+    <div className="relative h-full w-full overflow-hidden bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+      {/* Header - Absolute at top */}
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-center space-x-3">
           {/* Mobile back button */}
           <button
@@ -226,8 +226,8 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
         </div>
       </div>
 
-      {/* Messages - Scrollable section with bottom padding for sticky input */}
-      <div className="overflow-y-auto overflow-x-hidden pb-[89px]" style={{ height: 'calc(100% - 73px)' }}>
+      {/* Messages - Scrollable section positioned between header and input */}
+      <div className="absolute top-[73px] bottom-[89px] left-0 right-0 overflow-y-auto overflow-x-hidden">
         <div className="p-4 space-y-1">
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -253,8 +253,8 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
         </div>
       </div>
 
-      {/* Input - Sticky at bottom */}
-      <div className="sticky bottom-0 z-10 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+      {/* Input - Absolute at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-end space-x-2">
           {/* File Upload */}
           <button
