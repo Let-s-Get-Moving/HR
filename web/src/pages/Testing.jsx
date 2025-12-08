@@ -93,17 +93,6 @@ export default function Testing() {
       ]
     },
     {
-      id: "benefits",
-      name: "💼 Benefits",
-      description: "Benefits plans, enrollments, retirement",
-      endpoints: [
-        { url: "/api/benefits/plans", name: "Benefits Plans" },
-        { url: "/api/benefits/enrollments", name: "Enrollments" },
-        { url: "/api/benefits/retirement-plans", name: "Retirement Plans" },
-        { url: "/api/benefits/insurance-plans", name: "Insurance Plans" },
-      ]
-    },
-    {
       id: "compliance",
       name: "✅ Compliance",
       description: "Compliance dashboard, alerts, training",
@@ -478,12 +467,9 @@ export default function Testing() {
             { icon: "💬", name: "Chat & Messaging", desc: "Real-time communication" },
             { icon: "🔔", name: "Notifications", desc: "Real-time alerts" },
             { icon: "⚙️", name: "Settings", desc: "System configuration" },
-            { icon: "💼", name: "Benefits", desc: "Plans & enrollments" },
             { icon: "💵", name: "Bonuses & Commissions", desc: "Compensation management" },
-            { icon: "📋", name: "Recruiting", desc: "Hiring pipeline" },
             { icon: "🏖️", name: "Leave Management", desc: "Request & approval workflow" },
             { icon: "⏰", name: "Time & Attendance", desc: "Timecard tracking" },
-            { icon: "📈", name: "Performance", desc: "Reviews & goals" },
             { icon: "✅", name: "Compliance", desc: "Regulatory compliance" },
           ].map((module, idx) => (
             <div key={idx} className="p-4 bg-neutral-800/30 rounded-xl hover:bg-neutral-800/50 transition-colors">
