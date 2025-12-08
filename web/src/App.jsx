@@ -361,7 +361,7 @@ export default function App() {
         )}
 
         {/* Main Content */}
-        <main className="flex-1 bg-slate-50/50 dark:bg-slate-900/50 p-6 lg:p-8">
+        <main className="flex-1 bg-slate-50/50 dark:bg-slate-900/50 p-6 lg:p-8 overflow-hidden">
           <motion.div
             key={currentPage}
             initial={{ opacity: 0, y: 20 }}
