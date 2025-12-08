@@ -196,9 +196,9 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
   }
 
   return (
-    <div className="flex flex-col h-full max-h-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+    <div className="relative h-full w-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+      {/* Header - Sticky at top */}
+      <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-center space-x-3">
           {/* Mobile back button */}
           <button
@@ -226,33 +226,35 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-1 min-h-0">
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-slate-500 dark:text-slate-400">No messages yet. Start the conversation!</p>
-          </div>
-        ) : (
-          messages.map((msg) => (
-            <ChatMessage
-              key={msg.id}
-              message={msg}
-              isOwn={msg.sender_id === currentUserId}
-              senderName={msg.sender_name || msg.sender_username}
-              highlightMessageId={highlightMessageId}
-              messageRef={highlightMessageRef}
-            />
-          ))
-        )}
-        <div ref={messagesEndRef} />
+      {/* Messages - Scrollable section with bottom padding for sticky input */}
+      <div className="overflow-y-auto overflow-x-hidden pb-[89px]" style={{ height: 'calc(100% - 73px)' }}>
+        <div className="p-4 space-y-1">
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex items-center justify-center min-h-[400px]">
+              <p className="text-slate-500 dark:text-slate-400">No messages yet. Start the conversation!</p>
+            </div>
+          ) : (
+            messages.map((msg) => (
+              <ChatMessage
+                key={msg.id}
+                message={msg}
+                isOwn={msg.sender_id === currentUserId}
+                senderName={msg.sender_name || msg.sender_username}
+                highlightMessageId={highlightMessageId}
+                messageRef={highlightMessageRef}
+              />
+            ))
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex-shrink-0">
+      {/* Input - Sticky at bottom */}
+      <div className="sticky bottom-0 z-10 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-end space-x-2">
           {/* File Upload */}
           <button
