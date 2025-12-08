@@ -156,10 +156,10 @@ export default function Testing() {
     {
       id: "system",
       name: "🔧 System & Health",
-      description: "Health checks, diagnostics",
+      description: "Health checks, system status",
       endpoints: [
         { url: "/health/health", name: "Health Check" },
-        { url: "/api/diagnostic/user-status", name: "User Status Check" },
+        { url: "/health/metrics", name: "System Metrics" },
       ]
     }
   ];
