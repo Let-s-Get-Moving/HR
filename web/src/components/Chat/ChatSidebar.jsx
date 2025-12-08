@@ -92,7 +92,7 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
   return (
     <div className="flex flex-col h-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-r border-slate-200 dark:border-slate-700">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex-shrink-0 p-4 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-primary">Messages</h2>
           <button
@@ -127,7 +127,7 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
       </div>
 
       {/* Threads List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto min-h-0">
         {loading ? (
           <div className="flex items-center justify-center p-8">
             <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
