@@ -349,26 +349,20 @@ export default function Dashboard({ onNavigate, user }) {
 
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">{t('dashboard.complianceStatus')}</h3>
-            <div className="text-2xl">✅</div>
+            <h3 className="text-lg font-semibold text-white">Leave & Time Off</h3>
+            <div className="text-2xl">🏖️</div>
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">{t('dashboard.contractsSigned')}</span>
-              <span className={`text-2xl font-bold ${(cmp?.contracts_signed_pct || 0) >= 50 ? 'text-green-400' : 'text-yellow-400'}`}>
-                {cmp?.contracts_signed_pct ? `${cmp.contracts_signed_pct}%` : 'N/A'}
+              <span className="text-neutral-400">Pending Requests</span>
+              <span className="text-2xl font-bold text-yellow-400">
+                {analytics?.leaveStats?.pending_requests || 0}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">{t('dashboard.activeEmployees')}</span>
+              <span className="text-neutral-400">On Leave Today</span>
               <span className="text-lg text-white">
-                {analytics?.workforceOverview?.total_active_employees || 0}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-neutral-400">{t('dashboard.trainingEnrolled')}</span>
-              <span className="text-lg text-white">
-                {trainingCompletion > 0 ? `${trainingCompletion}%` : 'N/A'}
+                {analytics?.leaveStats?.employees_on_leave_today || 0}
               </span>
             </div>
           </div>

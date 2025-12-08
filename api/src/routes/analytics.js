@@ -193,6 +193,16 @@ r.get("/dashboard", async (req, res) => {
       WHERE tr.completed_on IS NOT NULL
     `);
 
+    // Get leave stats
+    const leaveStats = await q(`
+      SELECT 
+        COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending_requests,
+        COUNT(CASE WHEN status = 'Approved' 
+                    AND start_date <= CURRENT_DATE 
+                    AND end_date >= CURRENT_DATE THEN 1 END) as employees_on_leave_today
+      FROM leave_requests
+    `);
+
     // Parse results
     const workforce = workforceStats.rows[0];
     const employees = employeeStats.rows[0];
@@ -200,6 +210,7 @@ r.get("/dashboard", async (req, res) => {
     const attendance = attendanceStats.rows[0];
     const compliance = complianceStats.rows[0];
     const training = trainingStats.rows[0];
+    const leave = leaveStats.rows[0];
 
     const totalEmployees = parseInt(workforce.total_employees) || 0;
     const activeEmployees = parseInt(workforce.total_active_employees) || 0;
@@ -267,6 +278,12 @@ r.get("/dashboard", async (req, res) => {
         total_training_records: parseInt(training.total_training_records) || 0,
         training_completed_this_period: parseInt(training.training_completed_this_period) || 0,
         completion_rate: trainingCompletionRate
+      },
+      
+      // Leave stats (current state)
+      leaveStats: {
+        pending_requests: parseInt(leave.pending_requests) || 0,
+        employees_on_leave_today: parseInt(leave.employees_on_leave_today) || 0
       }
     };
     
