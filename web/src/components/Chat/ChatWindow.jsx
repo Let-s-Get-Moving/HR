@@ -196,9 +196,9 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
   }
 
   return (
-    <div className="flex flex-col h-full w-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
-      {/* Header - Always visible at top */}
-      <div className="flex-shrink-0 z-10 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+    <div className="relative h-full w-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md overflow-hidden">
+      {/* Header - FIXED at top, always visible */}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-center space-x-3">
           {/* Mobile back button */}
           <button
@@ -226,8 +226,8 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
         </div>
       </div>
 
-      {/* Messages - Constrained, non-expandable, scrollable area */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      {/* Messages - LIMITED HEIGHT, scrollable, shows only part of messages */}
+      <div className="absolute top-[73px] bottom-[89px] left-0 right-0 overflow-y-auto overflow-x-hidden">
         <div className="p-4 space-y-1">
           {loading ? (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -253,8 +253,8 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
         </div>
       </div>
 
-      {/* Input - Always visible at bottom */}
-      <div className="flex-shrink-0 z-10 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
+      {/* Input - FIXED at bottom, always visible */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 p-4 border-t border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md">
         <div className="flex items-end space-x-2">
           {/* File Upload */}
           <button
