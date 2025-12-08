@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 
 export default function Testing() {
-  const { t } = useTranslation();
   const [testResults, setTestResults] = useState({});
   const [runningTests, setRunningTests] = useState(false);
   const [systemInfo, setSystemInfo] = useState({});
