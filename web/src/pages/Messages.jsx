@@ -143,7 +143,7 @@ export default function Messages({ pageParams = {} }) {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar - Desktop: always visible, Mobile: conditional */}
         {(showSidebar || !isMobile) && (
-          <div className={`${isMobile ? 'absolute inset-0 z-10' : 'w-full lg:w-1/3'} flex-shrink-0`}>
+          <div className={`${isMobile ? 'absolute inset-0 z-10' : 'w-full lg:w-1/3 h-full'}`}>
             <ChatSidebar
               selectedThreadId={selectedThread?.id}
               onSelectThread={(thread) => {
@@ -160,7 +160,7 @@ export default function Messages({ pageParams = {} }) {
 
         {/* Chat Window - Desktop: always visible, Mobile: conditional */}
         {(!showSidebar || !isMobile) && (
-          <div className={`${isMobile ? 'w-full' : 'flex-1'} flex-shrink-0`}>
+          <div className={`${isMobile ? 'w-full h-full' : 'flex-1 min-h-0'}`}>
             <ChatWindow
               thread={selectedThread}
               currentUserId={currentUserId}
