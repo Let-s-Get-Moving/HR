@@ -3,6 +3,8 @@ import { requireAuth } from '../session.js';
 import { applyScopeFilter, requirePermission, PERMISSIONS } from '../middleware/rbac.js';
 import { q } from '../db.js';
 import { createNotification } from '../utils/notifications.js';
+import { createValidationMiddleware } from '../middleware/validation.js';
+import { enhancedLeaveRequestSchema } from '../schemas/enhancedSchemas.js';
 
 const router = express.Router();
 
@@ -11,45 +13,14 @@ router.use(requireAuth);
 router.use(applyScopeFilter);
 
 // Submit a new leave request (user role only)
-router.post('/', async (req, res) => {
+router.post('/', createValidationMiddleware(enhancedLeaveRequestSchema), async (req, res) => {
   try {
-    const { leave_type, start_date, end_date, reason } = req.body;
+    const { leave_type, start_date, end_date, reason } = req.validatedData || req.body;
     const employee_id = req.employeeId;
 
-    // Validate required fields
-    if (!leave_type || !start_date || !end_date) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Leave type, start date, and end date are required' 
-      });
-    }
-
-    // Validate leave type
-    const validLeaveTypes = ['Vacation', 'Sick Leave', 'Personal Leave', 'Bereavement', 'Parental Leave', 'Jury Duty', 'Military Leave'];
-    if (!validLeaveTypes.includes(leave_type)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid leave type' 
-      });
-    }
-
-    // Validate dates
+    // Validation now handled by middleware
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
-    
-    if (startDate > endDate) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'End date cannot be before start date' 
-      });
-    }
-
-    if (startDate < new Date(new Date().setHours(0, 0, 0, 0))) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Cannot request leave for past dates' 
-      });
-    }
 
     // Calculate total days (inclusive of both start and end date)
     const diffTime = Math.abs(endDate - startDate);

@@ -6,6 +6,8 @@ import { q } from '../db.js';
 import { sendToUser } from '../websocket/server.js';
 import { createNotification } from '../utils/notifications.js';
 import logger from '../utils/logger.js';
+import { createValidationMiddleware } from '../middleware/validation.js';
+import { messageSchema } from '../schemas/enhancedSchemas.js';
 
 const router = express.Router();
 

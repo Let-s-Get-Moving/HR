@@ -331,7 +331,7 @@ r.get("/security", requireAuth, async (req, res) => {
     if (error.message.includes('relation "application_settings" does not exist')) {
       console.log("📋 Settings table not found, returning default security settings");
       res.json([
-        { key: 'session_timeout_minutes', value: '30', type: 'number', description: 'Session timeout in minutes' },
+        { key: 'session_timeout_minutes', value: '60', type: 'number', description: 'Session timeout in minutes' },
         { key: 'password_min_length', value: '8', type: 'number', description: 'Minimum password length' },
         { key: 'two_factor_auth', value: 'false', type: 'boolean', description: 'Enable two-factor authentication' },
         { key: 'login_attempts_limit', value: '5', type: 'number', description: 'Maximum login attempts before lockout' },

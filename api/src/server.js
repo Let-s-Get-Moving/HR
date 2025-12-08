@@ -20,7 +20,6 @@ import compliance from "./routes/compliance.js";
 import leave from "./routes/leave.js";
 import leaveRequests from "./routes/leave-requests.js";
 import updateCredentials from "./routes/update-credentials.js";
-import performance from "./routes/performance.js";
 import analytics from "./routes/analytics.js";
 import metrics from "./routes/metrics.js";
 import settings from "./routes/settings.js";
@@ -30,8 +29,6 @@ import health from "./routes/health.js";
 import termination from "./routes/termination.js";
 import bonuses from "./routes/bonuses.js";
 import commissions from "./routes/commissions.js";
-import recruiting from "./routes/recruiting.js";
-import benefits from "./routes/benefits.js";
 import imports from "./routes/imports.js";
 import admin from "./routes/admin.js";
 import timecards from "./routes/timecards.js";
@@ -293,7 +290,6 @@ app.use("/api/compliance", requireAuth, compliance);
 app.use("/api/leave", requireAuth, leave);
 app.use("/api/leave-requests", requireAuth, leaveRequests); // Protected
 app.use("/api/admin/update-all-credentials", requireAuth, updateCredentials); // Protected - one-time credential update
-app.use("/api/performance", requireAuth, performance);
 app.use("/api/analytics", requireAuth, analytics);
 app.use("/api/metrics", requireAuth, metrics);
 app.use("/api/settings", requireAuth, settings); // Protected
@@ -302,8 +298,6 @@ app.use("/api/trusted-devices", trustedDevices); // Has own auth (login flow)
 app.use("/api/termination", requireAuth, termination);
 app.use("/api/bonuses", requireAuth, bonuses);
 app.use("/api/commissions", requireAuth, commissions);
-app.use("/api/recruiting", requireAuth, recruiting);
-app.use("/api/benefits", requireAuth, benefits);
 app.use("/api/imports", requireAuth, imports);
 app.use("/api/admin", requireAuth, admin);
 app.use("/api/timecards", requireAuth, timecards);

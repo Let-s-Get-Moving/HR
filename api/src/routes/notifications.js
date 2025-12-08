@@ -4,6 +4,8 @@ import { applyScopeFilter } from '../middleware/rbac.js';
 import { q } from '../db.js';
 import { sendToUser } from '../websocket/server.js';
 import logger from '../utils/logger.js';
+import { createValidationMiddleware } from '../middleware/validation.js';
+import { notificationSchema } from '../schemas/enhancedSchemas.js';
 
 const router = express.Router();
 

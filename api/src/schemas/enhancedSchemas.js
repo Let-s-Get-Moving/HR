@@ -10,6 +10,186 @@
 
 import { z } from 'zod';
 
+// Login schema
+export const loginSchema = z.object({
+  username: z.string()
+    .min(1, 'Username or email is required')
+    .max(100, 'Username must be 100 characters or less'),
+  
+  password: z.string()
+    .min(1, 'Password is required')
+    .max(100, 'Password must be 100 characters or less')
+});
+
+// User registration schema
+export const userRegistrationSchema = z.object({
+  username: z.string()
+    .min(3, 'Username must be at least 3 characters')
+    .max(50, 'Username must be 50 characters or less')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
+  
+  email: z.string()
+    .email('Please enter a valid email address')
+    .max(100, 'Email must be 100 characters or less')
+    .toLowerCase(),
+  
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(100, 'Password must be 100 characters or less')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  
+  role_id: z.number()
+    .int('Role ID must be a whole number')
+    .positive('Role ID must be positive')
+    .optional()
+});
+
+// Timecard schema
+export const timecardSchema = z.object({
+  employee_id: z.number()
+    .int('Employee ID must be a whole number')
+    .positive('Employee ID must be positive'),
+  
+  date: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .refine(
+      (date) => {
+        const workDate = new Date(date);
+        const today = new Date();
+        return workDate <= today;
+      },
+      'Date cannot be in the future'
+    ),
+  
+  hours: z.number()
+    .min(0, 'Hours cannot be negative')
+    .max(24, 'Hours cannot exceed 24 per day'),
+  
+  job_type: z.string()
+    .max(50, 'Job type must be 50 characters or less')
+    .optional(),
+  
+  notes: z.string()
+    .max(500, 'Notes must be 500 characters or less')
+    .optional()
+});
+
+// Commission schema
+export const commissionSchema = z.object({
+  employee_id: z.number()
+    .int('Employee ID must be a whole number')
+    .positive('Employee ID must be positive'),
+  
+  amount: z.number()
+    .min(0, 'Amount cannot be negative')
+    .max(1000000, 'Amount seems unreasonably high'),
+  
+  sales_amount: z.number()
+    .min(0, 'Sales amount cannot be negative')
+    .max(10000000, 'Sales amount seems unreasonably high')
+    .optional(),
+  
+  commission_rate: z.number()
+    .min(0, 'Commission rate cannot be negative')
+    .max(100, 'Commission rate cannot exceed 100%')
+    .optional(),
+  
+  period: z.string()
+    .regex(/^\d{4}-(Q[1-4]|\d{2})$/, 'Period must be in YYYY-MM or YYYY-QX format (e.g., 2024-03 or 2024-Q1)')
+    .max(10, 'Period must be 10 characters or less'),
+  
+  notes: z.string()
+    .max(500, 'Notes must be 500 characters or less')
+    .optional()
+});
+
+// Bonus schema
+export const bonusSchema = z.object({
+  employee_id: z.number()
+    .int('Employee ID must be a whole number')
+    .positive('Employee ID must be positive'),
+  
+  amount: z.number()
+    .min(0, 'Amount cannot be negative')
+    .max(100000, 'Amount seems unreasonably high'),
+  
+  type: z.string()
+    .max(50, 'Type must be 50 characters or less')
+    .optional(),
+  
+  period: z.string()
+    .max(10, 'Period must be 10 characters or less')
+    .optional(),
+  
+  notes: z.string()
+    .max(500, 'Notes must be 500 characters or less')
+    .optional()
+});
+
+// Chat message schema
+export const messageSchema = z.object({
+  thread_id: z.number()
+    .int('Thread ID must be a whole number')
+    .positive('Thread ID must be positive')
+    .optional(),
+  
+  message: z.string()
+    .min(1, 'Message cannot be empty')
+    .max(5000, 'Message must be 5000 characters or less'),
+  
+  participant_ids: z.array(z.number().int().positive())
+    .min(1, 'At least one participant is required')
+    .optional()
+});
+
+// Notification schema
+export const notificationSchema = z.object({
+  user_id: z.number()
+    .int('User ID must be a whole number')
+    .positive('User ID must be positive'),
+  
+  type: z.string()
+    .max(50, 'Type must be 50 characters or less'),
+  
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be 200 characters or less'),
+  
+  message: z.string()
+    .min(1, 'Message is required')
+    .max(1000, 'Message must be 1000 characters or less'),
+  
+  priority: z.enum(['low', 'medium', 'high'])
+    .default('medium'),
+  
+  link: z.string()
+    .max(500, 'Link must be 500 characters or less')
+    .optional()
+});
+
+// Compliance alert schema
+export const complianceAlertSchema = z.object({
+  employee_id: z.number()
+    .int('Employee ID must be a whole number')
+    .positive('Employee ID must be positive'),
+  
+  alert_type: z.string()
+    .max(50, 'Alert type must be 50 characters or less'),
+  
+  severity: z.enum(['low', 'medium', 'high', 'critical'])
+    .default('medium'),
+  
+  message: z.string()
+    .min(1, 'Message is required')
+    .max(500, 'Message must be 500 characters or less'),
+  
+  due_date: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be in YYYY-MM-DD format')
+    .optional()
+});
+
 // Enhanced employee schema with comprehensive validation
 export const enhancedEmployeeSchema = z.object({
   first_name: z.string()
@@ -292,10 +472,18 @@ export const coerceFormData = {
 };
 
 export default {
+  loginSchema,
+  userRegistrationSchema,
   enhancedEmployeeSchema,
   enhancedTimeEntrySchema,
+  timecardSchema,
   enhancedLeaveRequestSchema,
   enhancedPayrollSchema,
+  commissionSchema,
+  bonusSchema,
+  messageSchema,
+  notificationSchema,
+  complianceAlertSchema,
   fileUploadSchemas,
   settingsSchemas,
   coerceFormData

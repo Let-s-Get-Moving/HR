@@ -11,7 +11,6 @@ import PayrollV2 from "./pages/PayrollV2.jsx";
 import Settings from "./pages/Settings.jsx";
 import LeaveManagement from "./pages/LeaveManagement.jsx";
 import Testing from "./pages/Testing.jsx";
-import Benefits from "./pages/Benefits.jsx";
 import BonusesCommissions from "./pages/BonusesCommissions.jsx";
 import Messages from "./pages/Messages.jsx";
 import NotificationCenter from "./components/NotificationCenter.jsx";
@@ -63,11 +62,6 @@ const Icons = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
     </svg>
   ),
-  benefits: () => (
-    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-    </svg>
-  ),
   bonuses: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -93,7 +87,6 @@ const getPagesConfig = (t) => ({
   leave: { name: t('nav.leave'), component: LeaveManagement, icon: Icons.leave },
   payroll: { name: t('nav.payroll'), component: Payroll, icon: Icons.payroll },
   compliance: { name: t('nav.compliance'), component: Compliance, icon: Icons.compliance },
-  benefits: { name: t('nav.benefits'), component: Benefits, icon: Icons.benefits },
   bonuses: { name: t('nav.bonuses'), component: BonusesCommissions, icon: Icons.bonuses },
   messages: { name: t('nav.messages'), component: Messages, icon: Icons.messages },
   testing: { name: t('nav.testing'), component: Testing, icon: Icons.testing },

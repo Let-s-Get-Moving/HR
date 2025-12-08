@@ -4,7 +4,7 @@ import { q } from "./db.js";
 const sessions = new Map();
 
 // Session configuration
-const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2 hours in milliseconds
+const SESSION_TIMEOUT = 60 * 60 * 1000; // 60 minutes (1 hour) in milliseconds
 
 export class SessionManager {
   static createSession(userId, username, fingerprint = null) {

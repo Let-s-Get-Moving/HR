@@ -60,7 +60,7 @@ INSERT INTO application_settings (key, value, type, category, description, defau
   ('alert_types', 'all', 'select', 'notifications', 'Types of alerts to receive', 'all'),
   
   -- Security Settings
-  ('session_timeout_minutes', '30', 'number', 'security', 'Session timeout in minutes', '30'),
+  ('session_timeout_minutes', '60', 'number', 'security', 'Session timeout in minutes', '60'),
   ('password_expiry_days', '90', 'number', 'security', 'Password expiry in days', '90'),
   ('max_login_attempts', '5', 'number', 'security', 'Maximum login attempts before lockout', '5'),
   ('two_factor_auth', 'false', 'boolean', 'security', 'Enable two-factor authentication', 'false'),

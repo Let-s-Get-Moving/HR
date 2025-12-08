@@ -14,6 +14,8 @@ import { UserManagementService } from "../services/user-management.js";
 import { TrustedDeviceService } from "../services/trusted-devices.js";
 import { requireAuth, optionalAuth } from "../session.js";
 import bcrypt from "bcryptjs";
+import { createValidationMiddleware } from "../middleware/validation.js";
+import { loginSchema, userRegistrationSchema } from "../schemas/enhancedSchemas.js";
 
 const r = express.Router();
 
@@ -21,13 +23,9 @@ const r = express.Router();
  * Step 1: Login with username/password
  * Returns: requiresMFA flag if MFA is enabled
  */
-r.post("/login", checkAccountLockout, async (req, res) => {
+r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), async (req, res) => {
   try {
-    const { username, password, deviceFingerprint } = req.body;
-    
-    if (!username || !password) {
-      return res.status(400).json({ error: "Username and password required" });
-    }
+    const { username, password, deviceFingerprint } = req.validatedData || req.body;
     
     console.log('Login attempt:', username);
     

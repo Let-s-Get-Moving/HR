@@ -6,6 +6,8 @@ import { formatCurrency, formatNumber } from "../utils/formatting.js";
 import { importCommissionsFromExcel } from "../utils/commissionImporter.js";
 import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
+import { createValidationMiddleware } from "../middleware/validation.js";
+import { commissionSchema } from "../schemas/enhancedSchemas.js";
 
 const r = Router();
 
