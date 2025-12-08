@@ -3710,7 +3710,7 @@ export default function Settings() {
                 <h4 className="text-lg font-medium mb-4">
                   {editingJobTitle ? t('settings.jobTitles.edit') : t('settings.jobTitles.addNew')}
                 </h4>
-                <form onSubmit={editingJobTitle && editingJobTitleData ? (e) => { e.preventDefault(); handleUpdateJobTitle(editingJobTitle); } : handleAddJobTitle} className="space-y-4">
+                <form onSubmit={editingJobTitle && editingJobTitleData ? (e) => { e.preventDefault(); handleUpdateJobTitle(editingJobTitle); } : handleAddJobTitle} className="space-y-4" key={editingJobTitle || 'add-new'}>
                   {editingJobTitle && editingJobTitleData ? (
                     // Editing mode - keep controlled inputs
                     <>
@@ -3779,9 +3779,9 @@ export default function Settings() {
                             className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
                           >
                             <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
-                            {jobTitles.filter(jt => editingJobTitleData && jt.id !== editingJobTitleData.id).map(jt => (
+                            {editingJobTitleData?.id ? jobTitles.filter(jt => jt.id !== editingJobTitleData.id).map(jt => (
                               <option key={jt.id} value={jt.id}>{jt.name}</option>
-                            ))}
+                            )) : null}
                           </select>
                         </div>
                       </div>
@@ -3976,6 +3976,8 @@ export default function Settings() {
                                 setEditingJobTitle(jt.id);
                               } else {
                                 console.error('Job title not found for editing:', jt.id);
+                                setEditingJobTitle(null);
+                                setEditingJobTitleData(null);
                                 setJobTitleError(t('settings.jobTitles.notFound') || 'Job title not found');
                               }
                             }}
