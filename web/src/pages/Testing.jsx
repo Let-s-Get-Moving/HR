@@ -104,16 +104,6 @@ export default function Testing() {
       ]
     },
     {
-      id: "performance",
-      name: "📈 Performance Management",
-      description: "Reviews, goals, analytics",
-      endpoints: [
-        { url: "/api/performance/reviews", name: "Performance Reviews" },
-        { url: "/api/performance/goals", name: "Performance Goals" },
-        { url: "/api/performance/analytics", name: "Analytics" },
-      ]
-    },
-    {
       id: "compliance",
       name: "✅ Compliance",
       description: "Compliance dashboard, alerts, training",
@@ -121,17 +111,6 @@ export default function Testing() {
         { url: "/api/compliance/dashboard", name: "Dashboard" },
         { url: "/api/compliance/alerts", name: "Alerts" },
         { url: "/api/compliance/trainings", name: "Training Records" },
-      ]
-    },
-    {
-      id: "recruiting",
-      name: "📋 Recruiting",
-      description: "Job postings, candidates, interviews",
-      endpoints: [
-        { url: "/api/recruiting/job-postings", name: "Job Postings" },
-        { url: "/api/recruiting/candidates", name: "Candidates" },
-        { url: "/api/recruiting/interviews", name: "Interviews" },
-        { url: "/api/recruiting/analytics", name: "Analytics" },
       ]
     },
     {
