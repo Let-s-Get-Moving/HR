@@ -305,6 +305,7 @@ export default function LeaveManagement() {
   const tabs = userRole === 'user' ? [
     { id: "request", name: t('leave.submitRequest'), icon: "📝" },
     { id: "my-requests", name: t('leave.myRequests'), icon: "📋" },
+    { id: "balances", name: t('leave.myBalances'), icon: "💰" },
     { id: "calendar", name: t('leave.leaveCalendar'), icon: "📅" }
   ] : [
     { id: "approvals", name: t('leave.leaveRequests'), icon: "📋" },
@@ -760,8 +761,8 @@ export default function LeaveManagement() {
         </motion.div>
       )}
 
-      {/* Leave Balances Tab - Hidden for user role */}
-      {userRole !== 'user' && activeTab === "balances" && (
+      {/* Leave Balances Tab */}
+      {activeTab === "balances" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="space-y-6">
             {/* Summary Cards */}
@@ -827,36 +828,38 @@ export default function LeaveManagement() {
               </div>
             </div>
 
-            {/* HR Management Actions */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.title')}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button 
-                  onClick={() => setActiveTab("requests")}
-                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
-                >
-                  <div className="text-2xl mb-2">📋</div>
-                  <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
-                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.reviewRequestsDesc')}</p>
-                </button>
-                <button 
-                  onClick={() => setActiveTab("analytics")}
-                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
-                >
-                  <div className="text-2xl mb-2">📊</div>
-                  <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
-                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
-                </button>
-                <button 
-                  onClick={() => setShowManagePolicies(true)}
-                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left hover:border-tahoe-accent hover:shadow-lg hover:shadow-tahoe-accent/20"
-                >
-                  <div className="text-2xl mb-2">⚙️</div>
-                  <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
-                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.managePoliciesDesc')}</p>
-                </button>
+            {/* HR Management Actions - Only visible to managers/admins */}
+            {userRole !== 'user' && (
+              <div className="card p-6">
+                <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.title')}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <button 
+                    onClick={() => setActiveTab("requests")}
+                    className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
+                  >
+                    <div className="text-2xl mb-2">📋</div>
+                    <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
+                    <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.reviewRequestsDesc')}</p>
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab("analytics")}
+                    className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
+                  >
+                    <div className="text-2xl mb-2">📊</div>
+                    <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
+                    <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
+                  </button>
+                  <button 
+                    onClick={() => setShowManagePolicies(true)}
+                    className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left hover:border-tahoe-accent hover:shadow-lg hover:shadow-tahoe-accent/20"
+                  >
+                    <div className="text-2xl mb-2">⚙️</div>
+                    <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
+                    <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.managePoliciesDesc')}</p>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Leave Types Breakdown */}
             <div className="card p-6">
