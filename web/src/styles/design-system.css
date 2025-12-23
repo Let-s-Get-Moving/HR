@@ -132,6 +132,9 @@
 .btn-base {
   @apply inline-flex items-center justify-center font-medium rounded-tahoe-pill transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .btn-primary {
@@ -152,7 +155,6 @@
 
 .btn-danger {
   @apply btn-base bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-tahoe-sm hover:shadow-tahoe-md;
-  border-radius: 14px; /* Less rounded than pill shape for Delete buttons */
 }
 
 .btn-success {
