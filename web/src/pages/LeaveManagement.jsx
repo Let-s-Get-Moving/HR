@@ -827,6 +827,37 @@ export default function LeaveManagement() {
               </div>
             </div>
 
+            {/* HR Management Actions */}
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.title')}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button 
+                  onClick={() => setActiveTab("requests")}
+                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
+                >
+                  <div className="text-2xl mb-2">📋</div>
+                  <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
+                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.reviewRequestsDesc')}</p>
+                </button>
+                <button 
+                  onClick={() => setActiveTab("analytics")}
+                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
+                >
+                  <div className="text-2xl mb-2">📊</div>
+                  <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
+                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
+                </button>
+                <button 
+                  onClick={() => setShowManagePolicies(true)}
+                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left hover:border-tahoe-accent hover:shadow-lg hover:shadow-tahoe-accent/20"
+                >
+                  <div className="text-2xl mb-2">⚙️</div>
+                  <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
+                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.managePoliciesDesc')}</p>
+                </button>
+              </div>
+            </div>
+
             {/* Leave Types Breakdown */}
             <div className="card p-6">
               <div className="flex items-center justify-between mb-6">
@@ -920,37 +951,6 @@ export default function LeaveManagement() {
                   })}
                 </div>
               )}
-            </div>
-
-            {/* HR Management Actions */}
-            <div className="card p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.title')}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <button 
-                  onClick={() => setActiveTab("requests")}
-                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
-                >
-                  <div className="text-2xl mb-2">📋</div>
-                  <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
-                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.reviewRequestsDesc')}</p>
-                </button>
-                <button 
-                  onClick={() => setActiveTab("analytics")}
-                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
-                >
-                  <div className="text-2xl mb-2">📊</div>
-                  <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
-                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
-                </button>
-                <button 
-                  onClick={() => setShowManagePolicies(true)}
-                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left hover:border-tahoe-accent hover:shadow-lg hover:shadow-tahoe-accent/20"
-                >
-                  <div className="text-2xl mb-2">⚙️</div>
-                  <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
-                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.managePoliciesDesc')}</p>
-                </button>
-              </div>
             </div>
           </div>
         </motion.div>
