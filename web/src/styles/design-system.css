@@ -152,6 +152,7 @@
 
 .btn-danger {
   @apply btn-base bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-tahoe-sm hover:shadow-tahoe-md;
+  border-radius: 14px; /* Less rounded than pill shape for Delete buttons */
 }
 
 .btn-success {
