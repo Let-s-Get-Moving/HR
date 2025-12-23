@@ -5,6 +5,7 @@ import { useUserRole } from '../hooks/useUserRole.js';
 import LeaveRequestForm from '../components/LeaveRequestForm.jsx';
 import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
 import LeaveRequestApproval from '../components/LeaveRequestApproval.jsx';
+import LeaveConfigModal from '../components/LeaveConfigModal.jsx';
 
 import { API } from '../config/api.js';
 import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
@@ -1205,159 +1206,11 @@ export default function LeaveManagement() {
       )}
 
       {/* Manage Policies Modal */}
-      {showManagePolicies && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="card w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto"
-          >
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-white">{t('leave.policyManagement.title')}</h3>
-                <button
-                  onClick={() => setShowManagePolicies(false)}
-                  className="text-tahoe-text-muted hover:text-white transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Policy Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="p-2 bg-blue-400 rounded-tahoe-input">
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <h4 className="text-lg font-semibold text-white">{t('leave.policyManagement.vacationPolicy')}</h4>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-blue-100">{t('leave.policyManagement.annualAllocation')}</span>
-                        <span className="text-white font-medium">20 days</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-100">{t('leave.policyManagement.accrualRate')}</span>
-                        <span className="text-white font-medium">1.67 days/month</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-100">{t('leave.policyManagement.carryOver')}</span>
-                        <span className="text-white font-medium">5 days max</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="p-2 bg-emerald-400 rounded-tahoe-input">
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <h4 className="text-lg font-semibold text-white">{t('leave.policyManagement.sickLeavePolicy')}</h4>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-emerald-100">{t('leave.policyManagement.annualAllocation')}</span>
-                        <span className="text-white font-medium">10 days</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-emerald-100">{t('leave.policyManagement.accrualRate')}</span>
-                        <span className="text-white font-medium">0.83 days/month</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-emerald-100">{t('leave.policyManagement.carryOver')}</span>
-                        <span className="text-white font-medium">{t('leave.policyManagement.unlimited')}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <div className="p-2 bg-violet-400 rounded-tahoe-input">
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <h4 className="text-lg font-semibold text-white">{t('leave.policyManagement.personalLeavePolicy')}</h4>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between">
-                        <span className="text-violet-100">{t('leave.policyManagement.annualAllocation')}</span>
-                        <span className="text-white font-medium">5 days</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-violet-100">{t('leave.policyManagement.accrualRate')}</span>
-                        <span className="text-white font-medium">0.42 days/month</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-violet-100">{t('leave.policyManagement.carryOver')}</span>
-                        <span className="text-white font-medium">{t('leave.policyManagement.noCarryOver')}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Policy Settings */}
-                <div className="card p-6">
-                  <h4 className="text-lg font-semibold mb-4 text-white">{t('leave.policyManagement.configuration')}</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.accrualFrequency')}</label>
-                      <select className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
-                        <option>{t('leave.policyManagement.monthly')}</option>
-                        <option>{t('leave.policyManagement.biweekly')}</option>
-                        <option>{t('leave.policyManagement.quarterly')}</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.fiscalYearStart')}</label>
-                      <select className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
-                        <option>{t('leave.policyManagement.january1')}</option>
-                        <option>{t('leave.policyManagement.april1')}</option>
-                        <option>{t('leave.policyManagement.july1')}</option>
-                        <option>{t('leave.policyManagement.october1')}</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.minimumNoticePeriod')}</label>
-                      <select className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
-                        <option>24 hours</option>
-                        <option>48 hours</option>
-                        <option>1 week</option>
-                        <option>2 weeks</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.maxConsecutiveDays')}</label>
-                      <input type="number" className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" placeholder="30" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowManagePolicies(false)}
-                    className="px-6 py-2 border rounded-tahoe-pill font-medium transition-colors hover:bg-tahoe-bg-hover text-white"
-                  >
-                    Cancel
-                  </button>
-                  <button className="btn-primary">
-                    Save Changes
-                  </button>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      <LeaveConfigModal 
+        isOpen={showManagePolicies}
+        onClose={() => setShowManagePolicies(false)}
+        initialTab="policies"
+      />
     </div>
   );
 }
