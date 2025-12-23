@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
+import { requireRole, ROLES } from "../middleware/rbac.js";
 
 const r = Router();
 
@@ -29,8 +30,8 @@ const terminationSchema = z.object({
   initiated_by: z.string().min(1)
 });
 
-// Create termination details
-r.post("/details", async (req, res) => {
+// Create termination details - Manager/Admin only
+r.post("/details", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     console.log("Received termination request:", req.body);
     

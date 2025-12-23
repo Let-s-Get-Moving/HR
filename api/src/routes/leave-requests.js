@@ -18,6 +18,16 @@ router.post('/', createValidationMiddleware(enhancedLeaveRequestSchema), async (
     const { leave_type, start_date, end_date, reason } = req.validatedData || req.body;
     const employee_id = req.employeeId;
 
+    // Ensure employee_id is set (required for leave requests)
+    if (!employee_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        message: 'Unable to determine employee ID. Please ensure you are logged in.',
+        details: [{ field: 'employee_id', message: 'Employee ID is required' }]
+      });
+    }
+
     // Validation now handled by middleware
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
@@ -63,6 +73,24 @@ router.post('/', createValidationMiddleware(enhancedLeaveRequestSchema), async (
 
   } catch (error) {
     console.error('Error submitting leave request:', error);
+    
+    // Handle validation errors from middleware
+    if (error.name === 'ZodError' || error.details) {
+      const details = error.details || (error.errors || []).map(err => ({
+        field: err.path?.join('.') || 'unknown',
+        message: err.message || 'Validation error'
+      }));
+      
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        message: details.length > 0 
+          ? details.map(d => d.message).join('; ')
+          : 'Please check your input and try again',
+        details: details
+      });
+    }
+    
     res.status(500).json({ 
       success: false, 
       message: 'Failed to submit leave request',

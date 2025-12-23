@@ -82,11 +82,27 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
           onRequestSubmitted();
         }
       } else {
-        setMessage({ type: 'error', text: response.message || 'Failed to submit leave request' });
+        // Parse error details for clearer messages
+        let errorMessage = response.message || 'Failed to submit leave request';
+        if (response.details && Array.isArray(response.details)) {
+          const fieldErrors = response.details.map(d => d.message || `${d.field}: ${d.message || 'Invalid value'}`).join('; ');
+          errorMessage = fieldErrors || errorMessage;
+        }
+        setMessage({ type: 'error', text: errorMessage });
       }
     } catch (error) {
       console.error('Error submitting leave request:', error);
-      setMessage({ type: 'error', text: 'Failed to submit leave request. Please try again.' });
+      
+      // Try to parse error response for better messages
+      let errorMessage = 'Failed to submit leave request. Please try again.';
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.details && Array.isArray(error.details)) {
+        const fieldErrors = error.details.map(d => d.message || `${d.field}: ${d.message || 'Invalid value'}`).join('; ');
+        errorMessage = fieldErrors || errorMessage;
+      }
+      
+      setMessage({ type: 'error', text: errorMessage });
     } finally {
       setLoading(false);
     }
@@ -175,7 +191,7 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
             <div className={`p-4 rounded-tahoe-input border ${
               message.type === 'success' 
                 ? 'bg-tahoe-success-bg text-tahoe-success-text border-tahoe-success-border' 
-                : 'bg-tahoe-error-bg text-tahoe-error-text border-tahoe-error-border'
+                : 'bg-tahoe-bg-secondary text-tahoe-text-primary border-tahoe-border'
             }`}>
               {message.text}
             </div>

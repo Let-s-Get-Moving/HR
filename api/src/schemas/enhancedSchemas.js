@@ -312,11 +312,8 @@ export const enhancedTimeEntrySchema = z.object({
 });
 
 // Enhanced leave request schema
+// Note: employee_id is set server-side from req.employeeId, not required in request body
 export const enhancedLeaveRequestSchema = z.object({
-  employee_id: z.number()
-    .int('Employee ID must be a whole number')
-    .positive('Employee ID must be positive'),
-  
   leave_type: z.enum(['Vacation', 'Sick', 'Personal', 'Maternity', 'Paternity', 'Bereavement', 'Other'], {
     errorMap: () => ({ message: 'Leave type must be one of: Vacation, Sick, Personal, Maternity, Paternity, Bereavement, Other' })
   }),
@@ -336,8 +333,8 @@ export const enhancedLeaveRequestSchema = z.object({
     ),
   
   reason: z.string()
-    .min(10, 'Reason must be at least 10 characters')
-    .max(500, 'Reason must be 500 characters or less'),
+    .max(500, 'Reason must be 500 characters or less')
+    .optional(),
   
   emergency_contact: z.string()
     .max(100, 'Emergency contact must be 100 characters or less')

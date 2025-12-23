@@ -669,8 +669,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   min="0"
                   value={editData.hourly_rate || ''}
                   onChange={(e) => setEditData({...editData, hourly_rate: parseFloat(e.target.value) || 0})}
-                  className="rounded-tahoe-input px-2 py-1 w-20 text-center transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                  disabled={userRole === 'user'}
+                  className={`rounded-tahoe-input px-2 py-1 w-20 text-center transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent ${userRole === 'user' ? 'opacity-50 cursor-not-allowed' : ''}`}
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                  title={userRole === 'user' ? 'You do not have permission to update hourly rate' : ''}
                 />
                 <span className="ml-1">/hr</span>
               </div>
@@ -891,7 +893,9 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         console.log('Department changed to:', newValue);
                         setEditData({...editData, department_id: newValue});
                       }}
-                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
+                      disabled={userRole === 'user'}
+                      className={`rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px] ${userRole === 'user' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      title={userRole === 'user' ? 'You do not have permission to update department' : ''}
                     >
                       <option value="">{t('employeeProfile.noneToBeAssigned')}</option>
                       {departments.map(dept => (

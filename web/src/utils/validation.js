@@ -380,8 +380,6 @@ export const commonRules = {
       (value) => fieldValidators.futureDate(value, 'End date')
     ],
     reason: [
-      (value) => fieldValidators.required(value, 'Reason'),
-      (value) => fieldValidators.minLength(value, 10, 'Reason'),
       (value) => fieldValidators.maxLength(value, 500, 'Reason')
     ]
   }

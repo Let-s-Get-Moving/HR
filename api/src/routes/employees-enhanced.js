@@ -13,6 +13,7 @@
 import { Router } from "express";
 import { q } from "../db.js";
 import { createValidationMiddleware, createFileValidationMiddleware, businessRules, dbConstraints } from "../middleware/validation.js";
+import { requireRole, ROLES } from "../middleware/rbac.js";
 import { enhancedEmployeeSchema } from "../schemas/enhancedSchemas.js";
 import multer from "multer";
 
@@ -165,10 +166,23 @@ r.put("/:id",
         });
       }
       
+      // Restrict hourly_rate and department_id updates for user role
+      let updateData = { ...data };
+      if (req.userRole === 'user') {
+        // Get existing values to preserve them
+        const { rows: existing } = await q('SELECT hourly_rate, department_id FROM employees WHERE id = $1', [id]);
+        if (existing.length > 0) {
+          updateData.hourly_rate = existing[0].hourly_rate;
+          updateData.department_id = existing[0].department_id;
+          console.log('🔒 [EMPLOYEES] User role cannot update hourly_rate or department_id - preserving existing values');
+        }
+      }
+      
       console.log('✅ [EMPLOYEES] Updating employee with validated data:', {
         id,
-        name: `${data.first_name} ${data.last_name}`,
-        email: data.email
+        name: `${updateData.first_name} ${updateData.last_name}`,
+        email: updateData.email,
+        userRole: req.userRole
       });
       
       const { rows } = await q(`
@@ -181,11 +195,11 @@ r.put("/:id",
         WHERE id = $15
         RETURNING *
       `, [
-        data.first_name, data.last_name, data.email, data.phone || null,
-        data.role_title || null, data.hourly_rate || 25, data.employment_type,
-        data.department_id || null, data.location_id || null, data.hire_date,
-        data.gender || null, data.birth_date || null, data.status, 
-        data.probation_end || null, id
+        updateData.first_name, updateData.last_name, updateData.email, updateData.phone || null,
+        updateData.role_title || null, updateData.hourly_rate || 25, updateData.employment_type,
+        updateData.department_id || null, updateData.location_id || null, updateData.hire_date,
+        updateData.gender || null, updateData.birth_date || null, updateData.status, 
+        updateData.probation_end || null, id
       ]);
       
       res.json({
@@ -204,8 +218,8 @@ r.put("/:id",
   }
 );
 
-// Delete employee (soft delete)
-r.delete("/:id", async (req, res) => {
+// Delete employee (soft delete) - Manager/Admin only
+r.delete("/:id", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const { id } = req.params;
     

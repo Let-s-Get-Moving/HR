@@ -320,7 +320,7 @@ export default function Employees() {
                       {employee.termination_date ? formatShortDate(employee.termination_date) : '-'}
                     </td>
                   )}
-                  {filterStatus === "active" && (
+                  {filterStatus === "active" && (userRole === 'manager' || userRole === 'admin') && (
                     <td className="px-3 sm:px-6 py-4">
                       <button
                         onClick={(e) => {

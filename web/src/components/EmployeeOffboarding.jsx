@@ -4,8 +4,10 @@ import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
+import { useUserRole } from '../hooks/useUserRole.js';
 
 export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
+  const { userRole } = useUserRole();
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -112,6 +114,12 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
   };
 
   const handleSubmit = async () => {
+    // Check if user has permission
+    if (userRole !== 'manager' && userRole !== 'admin') {
+      alert('You do not have permission to terminate employees. Only managers and administrators can perform this action.');
+      return;
+    }
+    
     setLoading(true);
     try {
       console.log('📤 [Offboarding] Processing termination for employee', employee.id);

@@ -217,8 +217,7 @@ export const leaveRequestValidationRules = {
     (v) => validateDate(v, { notPast: true })
   ],
   reason: [
-    (v) => validateRequired(v, 'Reason'),
-    (v) => validateLength(v, { min: 10, max: 500 })
+    (v) => validateLength(v, { max: 500 })
   ]
 };
 

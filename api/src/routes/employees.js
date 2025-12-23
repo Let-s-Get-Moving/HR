@@ -459,7 +459,7 @@ r.post("/", async (req, res) => {
   }
 });
 
-r.delete("/:id", async (req, res) => {
+r.delete("/:id", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   await q(`UPDATE employees SET status='Terminated', termination_date=CURRENT_DATE, termination_reason='Terminated via HR system' WHERE id=$1`, [req.params.id]);
   res.sendStatus(204);
 });
@@ -518,6 +518,11 @@ r.put("/:id", async (req, res) => {
       }
     }
     
+    // Restrict hourly_rate and department_id updates for user role
+    if (req.userRole === 'user') {
+      console.log('🔒 [EMPLOYEES] User role cannot update hourly_rate or department_id - preserving existing values');
+    }
+    
     // Merge with existing data, preferring new data when provided
     const mergedData = {
       first_name: data.first_name || existing.first_name,
@@ -526,9 +531,9 @@ r.put("/:id", async (req, res) => {
       email: data.email !== undefined ? (data.email || null) : existing.email,
       phone: data.phone !== undefined ? (data.phone || null) : existing.phone,
       role_title: data.role_title !== undefined ? (data.role_title || null) : existing.role_title,
-      hourly_rate: data.hourly_rate !== undefined ? (data.hourly_rate || 25) : (existing.hourly_rate || 25),
+      hourly_rate: req.userRole === 'user' ? existing.hourly_rate : (data.hourly_rate !== undefined ? (data.hourly_rate || 25) : (existing.hourly_rate || 25)),
       employment_type: data.employment_type || existing.employment_type,
-      department_id: data.department_id !== undefined ? (data.department_id || null) : existing.department_id,
+      department_id: req.userRole === 'user' ? existing.department_id : (data.department_id !== undefined ? (data.department_id || null) : existing.department_id),
       location_id: data.location_id !== undefined ? (data.location_id || null) : existing.location_id,
       hire_date: data.hire_date || existing.hire_date,
       gender: data.gender !== undefined ? (data.gender || null) : existing.gender,
