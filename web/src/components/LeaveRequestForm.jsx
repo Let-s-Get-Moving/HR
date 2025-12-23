@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
+import { parseLocalDate } from '../utils/timezone.js';
 
 const LEAVE_TYPES = [
   'Vacation',
@@ -41,15 +42,24 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
       return;
     }
 
-    const startDate = new Date(formData.start_date);
-    const endDate = new Date(formData.end_date);
+    const startDate = parseLocalDate(formData.start_date);
+    const endDate = parseLocalDate(formData.end_date);
+    
+    if (!startDate || !endDate) {
+      setMessage({ type: 'error', text: 'Invalid date format' });
+      return;
+    }
     
     if (startDate > endDate) {
       setMessage({ type: 'error', text: 'End date cannot be before start date' });
       return;
     }
 
-    if (startDate < new Date()) {
+    // Compare with today's date (local, midnight)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (startDate < today) {
       setMessage({ type: 'error', text: 'Cannot request leave for past dates' });
       return;
     }
@@ -188,11 +198,14 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
 
           {/* Message */}
           {message.text && (
-            <div className={`p-4 rounded-tahoe-input border ${
-              message.type === 'success' 
-                ? 'bg-tahoe-success-bg text-tahoe-success-text border-tahoe-success-border' 
-                : 'bg-tahoe-bg-secondary text-tahoe-text-primary border-tahoe-border'
-            }`}>
+            <div 
+              className={`p-4 rounded-tahoe-input border ${
+                message.type === 'success' 
+                  ? 'bg-tahoe-success-bg text-tahoe-success-text border-tahoe-success-border' 
+                  : 'bg-tahoe-bg-secondary text-tahoe-text-primary border-tahoe-border'
+              }`}
+              style={message.type === 'success' ? { color: 'rgba(0, 0, 0, 1)' } : undefined}
+            >
               {message.text}
             </div>
           )}

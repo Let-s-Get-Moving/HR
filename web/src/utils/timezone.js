@@ -77,3 +77,16 @@ export function formatTime(date) {
   return formatInTimezone(date, 'HH:mm');
 }
 
+/**
+ * Parse YYYY-MM-DD date string as local date (not UTC)
+ * Prevents timezone shift when parsing date-only strings
+ * @param {string} dateString - Date string in YYYY-MM-DD format
+ * @returns {Date|null} Date object in local timezone, or null if invalid
+ */
+export function parseLocalDate(dateString) {
+  if (!dateString || typeof dateString !== 'string') return null;
+  const [year, month, day] = dateString.split('-').map(Number);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+  return new Date(year, month - 1, day);
+}
+

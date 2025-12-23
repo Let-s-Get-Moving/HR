@@ -7,7 +7,7 @@ import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
 import LeaveRequestApproval from '../components/LeaveRequestApproval.jsx';
 
 import { API } from '../config/api.js';
-import { formatShortDate } from '../utils/timezone.js';
+import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
 
 export default function LeaveManagement() {
   const { t } = useTranslation();
@@ -255,7 +255,8 @@ export default function LeaveManagement() {
       
       // Handle holidays
       if (item.type === 'holiday') {
-        const holidayDate = new Date(item.date);
+        const holidayDate = parseLocalDate(item.date);
+        if (!holidayDate) return false;
         holidayDate.setHours(0, 0, 0, 0);
         const checkDateOnly = new Date(checkDate);
         checkDateOnly.setHours(0, 0, 0, 0);
@@ -264,13 +265,15 @@ export default function LeaveManagement() {
       
       // Handle leave requests
       if (item.type === 'leave_request' || !item.type) {
-        const startDate = new Date(item.start_date);
-      startDate.setHours(0, 0, 0, 0);
+        const startDate = parseLocalDate(item.start_date);
+        if (!startDate) return false;
+        startDate.setHours(0, 0, 0, 0);
       
-        const endDate = new Date(item.end_date);
-      endDate.setHours(23, 59, 59, 999);
+        const endDate = parseLocalDate(item.end_date);
+        if (!endDate) return false;
+        endDate.setHours(23, 59, 59, 999);
       
-      return checkDate >= startDate && checkDate <= endDate;
+        return checkDate >= startDate && checkDate <= endDate;
       }
       
       return false;

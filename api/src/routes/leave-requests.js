@@ -8,6 +8,17 @@ import { enhancedLeaveRequestSchema } from '../schemas/enhancedSchemas.js';
 
 const router = express.Router();
 
+/**
+ * Parse YYYY-MM-DD date string as local date (not UTC)
+ * Prevents timezone shift when parsing date-only strings
+ */
+function parseLocalDate(dateString) {
+  if (!dateString || typeof dateString !== 'string') return null;
+  const [year, month, day] = dateString.split('-').map(Number);
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
+  return new Date(year, month - 1, day);
+}
+
 // Apply authentication and RBAC to all routes
 router.use(requireAuth);
 router.use(applyScopeFilter);
@@ -29,8 +40,18 @@ router.post('/', createValidationMiddleware(enhancedLeaveRequestSchema), async (
     }
 
     // Validation now handled by middleware
-    const startDate = new Date(start_date);
-    const endDate = new Date(end_date);
+    // Parse dates as local dates to avoid timezone shift
+    const startDate = parseLocalDate(start_date);
+    const endDate = parseLocalDate(end_date);
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        message: 'Invalid date format',
+        details: [{ field: 'dates', message: 'Start and end dates must be in YYYY-MM-DD format' }]
+      });
+    }
 
     // Calculate total days (inclusive of both start and end date)
     const diffTime = Math.abs(endDate - startDate);
