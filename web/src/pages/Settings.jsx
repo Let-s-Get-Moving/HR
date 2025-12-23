@@ -2480,7 +2480,7 @@ export default function Settings() {
                   <button
                     onClick={() => handleSaveSetting(category, key)}
                     disabled={saving[key]}
-                    className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start"
                   >
                     {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
                   </button>
@@ -3018,7 +3018,7 @@ export default function Settings() {
                     <button
                       type="submit"
                       disabled={addingLocation}
-                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                       {addingLocation ? t('settings.locations.adding') : t('settings.locations.add')}
                     </button>
@@ -3130,7 +3130,7 @@ export default function Settings() {
                                 <button
                                   onClick={() => handleDeleteLocation(loc.id)}
                                   disabled={deletingLocation === loc.id || (locationEmployeeCounts[loc.id] || 0) > 0}
-                                  className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                                  className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                                   title={
                                     (locationEmployeeCounts[loc.id] || 0) > 0
                                       ? t('settings.locations.cannotDelete', { count: locationEmployeeCounts[loc.id] })
@@ -3454,14 +3454,14 @@ export default function Settings() {
                               setEditingLeaveTypeData(leaveType ? {...leaveType} : null);
                               setEditingLeaveType(lt.id);
                             }}
-                            className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
+                            className="btn-primary"
                           >
                             {t('settings.leavePolicies.edit')}
                           </button>
                           <button
                             onClick={() => handleDeleteLeaveType(lt.id)}
                             disabled={deletingLeaveType === lt.id || (leaveTypeUsageCounts[lt.id] || 0) > 0}
-                            className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                             title={
                               (leaveTypeUsageCounts[lt.id] || 0) > 0
                                 ? t('settings.leavePolicies.cannotDelete')
@@ -3981,14 +3981,14 @@ export default function Settings() {
                                 setJobTitleError(t('settings.jobTitles.notFound') || 'Job title not found');
                               }
                             }}
-                            className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
+                            className="btn-primary"
                           >
                             {t('settings.jobTitles.edit')}
                           </button>
                           <button
                             onClick={() => handleDeleteJobTitle(jt.id)}
                             disabled={deletingJobTitle === jt.id || (jt.employee_count || 0) > 0}
-                            className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                             title={jt.employee_count > 0 ? t('settings.jobTitles.cannotDelete') : t('settings.jobTitles.delete')}
                           >
                             {deletingJobTitle === jt.id ? t('settings.jobTitles.deleting') : t('settings.jobTitles.delete')}
@@ -4254,14 +4254,14 @@ export default function Settings() {
                               setEditingBenefitsPackageData(pkg ? {...pkg} : null);
                               setEditingBenefitsPackage(bp.id);
                             }}
-                            className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
+                            className="btn-primary"
                           >
                             {t('settings.benefitsPackages.edit')}
                           </button>
                           <button
                             onClick={() => handleDeleteBenefitsPackage(bp.id)}
                             disabled={deletingBenefitsPackage === bp.id || (bp.employee_count || 0) > 0}
-                            className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                             title={bp.employee_count > 0 ? t('settings.benefitsPackages.cannotDelete') : t('settings.benefitsPackages.delete')}
                           >
                             {deletingBenefitsPackage === bp.id ? t('settings.benefitsPackages.deleting') : t('settings.benefitsPackages.delete')}
@@ -4366,7 +4366,7 @@ export default function Settings() {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <button type="submit" disabled={addingWorkSchedule} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="submit" disabled={addingWorkSchedule} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingWorkSchedule ? t('settings.workSchedules.saving') : (editingWorkSchedule ? t('settings.workSchedules.update') : t('settings.workSchedules.add'))}
                     </button>
                     {editingWorkSchedule && <button type="button" onClick={() => { setEditingWorkSchedule(null); setEditingWorkScheduleData(null); setWorkScheduleError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.workSchedules.cancel')}</button>}
@@ -4392,8 +4392,8 @@ export default function Settings() {
                           const schedule = workSchedules.find(w => w.id === ws.id);
                           setEditingWorkScheduleData(schedule ? {...schedule} : null);
                           setEditingWorkSchedule(ws.id);
-                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.workSchedules.edit')}</button>
-                        <button onClick={() => handleDeleteWorkSchedule(ws.id)} disabled={deletingWorkSchedule === ws.id || (ws.employee_count || 0) > 0} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors" title={ws.employee_count > 0 ? t('settings.workSchedules.cannotDelete') : t('settings.workSchedules.delete')}>
+                        }} className="btn-primary">{t('settings.workSchedules.edit')}</button>
+                        <button onClick={() => handleDeleteWorkSchedule(ws.id)} disabled={deletingWorkSchedule === ws.id || (ws.employee_count || 0) > 0} className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed" title={ws.employee_count > 0 ? t('settings.workSchedules.cannotDelete') : t('settings.workSchedules.delete')}>
                           {deletingWorkSchedule === ws.id ? t('settings.workSchedules.deleting') : t('settings.workSchedules.delete')}
                         </button>
                       </div>}
@@ -4489,7 +4489,7 @@ export default function Settings() {
                     )}
                   </div>
                   <div className="flex gap-3">
-                    <button type="submit" disabled={addingOvertimePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="submit" disabled={addingOvertimePolicy} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingOvertimePolicy ? t('settings.overtimePolicies.saving') : (editingOvertimePolicy ? t('settings.overtimePolicies.update') : t('settings.overtimePolicies.add'))}
                     </button>
                     {editingOvertimePolicy && <button type="button" onClick={() => { setEditingOvertimePolicy(null); setEditingOvertimePolicyData(null); setOvertimePolicyError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.overtimePolicies.cancel')}</button>}
@@ -4515,8 +4515,8 @@ export default function Settings() {
                           const policy = overtimePolicies.find(o => o.id === op.id);
                           setEditingOvertimePolicyData(policy ? {...policy} : null);
                           setEditingOvertimePolicy(op.id);
-                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.overtimePolicies.edit')}</button>
-                        <button onClick={() => handleDeleteOvertimePolicy(op.id)} disabled={deletingOvertimePolicy === op.id} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                        }} className="btn-primary">{t('settings.overtimePolicies.edit')}</button>
+                        <button onClick={() => handleDeleteOvertimePolicy(op.id)} disabled={deletingOvertimePolicy === op.id} className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed">
                           {deletingOvertimePolicy === op.id ? t('settings.overtimePolicies.deleting') : t('settings.overtimePolicies.delete')}
                         </button>
                       </div>}
@@ -4616,7 +4616,7 @@ export default function Settings() {
                     </div>
                   )}
                   <div className="flex gap-3">
-                    <button type="submit" disabled={addingAttendancePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="submit" disabled={addingAttendancePolicy} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingAttendancePolicy ? t('settings.attendancePolicies.saving') : (editingAttendancePolicy ? t('settings.attendancePolicies.update') : t('settings.attendancePolicies.add'))}
                     </button>
                     {editingAttendancePolicy && <button type="button" onClick={() => { setEditingAttendancePolicy(null); setEditingAttendancePolicyData(null); setAttendancePolicyError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.attendancePolicies.cancel')}</button>}
@@ -4644,8 +4644,8 @@ export default function Settings() {
                           const policy = attendancePolicies.find(a => a.id === ap.id);
                           setEditingAttendancePolicyData(policy ? {...policy} : null);
                           setEditingAttendancePolicy(ap.id);
-                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.attendancePolicies.edit')}</button>
-                        <button onClick={() => handleDeleteAttendancePolicy(ap.id)} disabled={deletingAttendancePolicy === ap.id} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                        }} className="btn-primary">{t('settings.attendancePolicies.edit')}</button>
+                        <button onClick={() => handleDeleteAttendancePolicy(ap.id)} disabled={deletingAttendancePolicy === ap.id} className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed">
                           {deletingAttendancePolicy === ap.id ? t('settings.attendancePolicies.deleting') : t('settings.attendancePolicies.delete')}
                         </button>
                       </div>}
@@ -4905,7 +4905,7 @@ export default function Settings() {
                   <button
                     onClick={handleSave}
                     disabled={localSaving}
-                    className="px-6 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {localSaving ? 'Saving...' : 'Save All Changes'}
                   </button>
@@ -5009,7 +5009,7 @@ export default function Settings() {
                       className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" rows="3" />
                   </div>
                   <div className="flex gap-3">
-                    <button type="submit" disabled={addingRemoteWorkPolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button type="submit" disabled={addingRemoteWorkPolicy} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.saving') : (editingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.update') : t('settings.remoteWorkPolicies.add'))}
                     </button>
                     {editingRemoteWorkPolicy && <button type="button" onClick={() => { setEditingRemoteWorkPolicy(null); setEditingRemoteWorkPolicyData(null); setRemoteWorkPolicyError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.remoteWorkPolicies.cancel')}</button>}
@@ -5038,8 +5038,8 @@ export default function Settings() {
                           const policy = remoteWorkPolicies.find(r => r.id === rwp.id);
                           setEditingRemoteWorkPolicyData(policy ? {...policy} : null);
                           setEditingRemoteWorkPolicy(rwp.id);
-                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.remoteWorkPolicies.edit')}</button>
-                        <button onClick={() => handleDeleteRemoteWorkPolicy(rwp.id)} disabled={deletingRemoteWorkPolicy === rwp.id} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                        }} className="btn-primary">{t('settings.remoteWorkPolicies.edit')}</button>
+                        <button onClick={() => handleDeleteRemoteWorkPolicy(rwp.id)} disabled={deletingRemoteWorkPolicy === rwp.id} className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed">
                           {deletingRemoteWorkPolicy === rwp.id ? t('settings.remoteWorkPolicies.deleting') : t('settings.remoteWorkPolicies.delete')}
                         </button>
                       </div>}
@@ -5109,7 +5109,7 @@ export default function Settings() {
             <div className="card-content">
               <button
                 onClick={openPasswordModal}
-                className="btn-primary px-6 py-2 rounded-lg hover:opacity-90 transition-all"
+                className="btn-primary hover:opacity-90"
               >
                 {t('settings.changePassword')}
               </button>
@@ -5291,7 +5291,7 @@ export default function Settings() {
                 <button
                   onClick={verifyMFACode}
                   disabled={mfaVerifying || mfaVerificationCode.length !== 6}
-                  className="flex-1 px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {mfaVerifying ? t('settings.mfaSetup.verifying') : t('settings.mfaSetup.enableMFA')}
                 </button>
@@ -5379,7 +5379,7 @@ export default function Settings() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={passwordSuccess}
                 >
                   {t('settings.changePassword')}

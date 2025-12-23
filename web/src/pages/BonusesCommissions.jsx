@@ -1230,14 +1230,14 @@ export default function BonusesCommissions() {
             <button
               onClick={() => handleCellSave(record.id, fieldName)}
               disabled={isSaving}
-              className="px-2 py-1 bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 rounded text-xs disabled:opacity-50"
+              className="btn-success btn-sm disabled:opacity-50"
               title="Save (Enter)"
             >
               ✓
             </button>
             <button
               onClick={handleCellCancel}
-              className="px-2 py-1 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 rounded text-xs"
+              className="btn-danger btn-sm"
               title="Cancel (Esc)"
             >
               ✕
@@ -1294,7 +1294,7 @@ export default function BonusesCommissions() {
             <h3 className="text-lg font-semibold">{t('bonuses.commissionAnalytics')}</h3>
             <button
               onClick={loadAnalyticsData}
-              className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-3 py-1.5 rounded text-sm transition-colors"
+              className="btn-primary btn-sm"
             >
               🔄 {t('common.refresh')}
             </button>

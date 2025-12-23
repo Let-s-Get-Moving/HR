@@ -25,6 +25,20 @@ export default {
             DEFAULT: '#0A84FF',
             hover: '#0071e3',
           },
+          primary: {
+            bg: '#0A84FF',
+            hover: '#0071e3',
+          },
+          success: {
+            bg: '#30d158',
+            hover: '#28c04a',
+            text: '#30d158',
+          },
+          error: {
+            bg: '#ff453a',
+            hover: '#d32f2f',
+            text: '#ff453a',
+          },
           border: {
             primary: 'rgba(255, 255, 255, 0.12)',
             secondary: 'rgba(255, 255, 255, 0.18)',

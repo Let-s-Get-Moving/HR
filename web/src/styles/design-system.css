@@ -154,6 +154,10 @@
   @apply btn-base bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-tahoe-sm hover:shadow-tahoe-md;
 }
 
+.btn-success {
+  @apply btn-base bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 shadow-tahoe-sm hover:shadow-tahoe-md;
+}
+
 /* Button Sizes */
 .btn-sm {
   @apply px-3 py-1.5 text-sm;

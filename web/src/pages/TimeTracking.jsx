@@ -1072,7 +1072,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                   <button
                 onClick={onUpload}
                 disabled={!uploadFile || uploadStatus.status === 'processing'}
-                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-medium transition-colors"
+                className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                 {uploadStatus.status === 'processing' ? t('timeTracking.uploadModal.processing2') : t('timeTracking.uploadModal.upload')}
                   </button>
@@ -1374,14 +1374,14 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 <button
                                   onClick={() => handleSave(entry.entry_id)}
                                   disabled={saving}
-                                  className="px-3 py-1 bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 text-white rounded text-xs font-medium disabled:opacity-50"
+                                  className="btn-success btn-sm disabled:opacity-50"
                                 >
                                   {saving ? t('timeTracking.dayViewTable.saving') : t('timeTracking.dayViewTable.save')}
                                 </button>
                                 <button
                                   onClick={handleCancel}
                                   disabled={saving}
-                                  className="px-3 py-1 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover text-white rounded text-xs font-medium disabled:opacity-50"
+                                  className="btn-secondary btn-sm disabled:opacity-50"
                                 >
                                   {t('timeTracking.dayViewTable.cancel')}
                                 </button>
@@ -1389,7 +1389,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                             ) : (
                               <button
                                 onClick={() => handleEdit(entry)}
-                                className="px-3 py-1 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded text-xs font-medium"
+                                className="btn-primary btn-sm"
                               >
                                 {t('timeTracking.dayViewTable.edit')}
                               </button>

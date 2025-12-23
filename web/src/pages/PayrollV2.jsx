@@ -369,10 +369,10 @@ export default function PayrollV2() {
                                 setVacationPayoutDialog(true);
                               }}
                               disabled={parseFloat(emp.vacation_hours_balance || 0) <= 0}
-                              className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                                parseFloat(emp.vacation_hours_balance || 0) > 0
-                                  ? "bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white"
-                                  : "bg-tahoe-bg-quaternary text-tahoe-text-muted cursor-not-allowed"
+                              className={`btn-primary btn-sm ${
+                                parseFloat(emp.vacation_hours_balance || 0) <= 0
+                                  ? "bg-tahoe-bg-quaternary text-tahoe-text-muted cursor-not-allowed opacity-50"
+                                  : ""
                               }`}
                             >
                               Pay Out
@@ -414,7 +414,7 @@ export default function PayrollV2() {
                 </div>
                 <button
                   onClick={applyDateFilter}
-                  className="px-6 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium"
+                  className="btn-primary"
                 >
                   Apply Filter
                 </button>
@@ -572,10 +572,10 @@ export default function PayrollV2() {
                 <button
                   onClick={handleVacationPayout}
                   disabled={!vacationHoursToPay || parseFloat(vacationHoursToPay) <= 0}
-                  className={`flex-1 px-4 py-2 rounded-lg font-medium ${
-                    vacationHoursToPay && parseFloat(vacationHoursToPay) > 0
-                      ? "bg-tahoe-primary-bg hover:bg-tahoe-primary-hover"
-                      : "bg-tahoe-bg-secondary text-tahoe-text-muted cursor-not-allowed"
+                  className={`flex-1 btn-primary ${
+                    !vacationHoursToPay || parseFloat(vacationHoursToPay) <= 0
+                      ? "bg-tahoe-bg-secondary text-tahoe-text-muted cursor-not-allowed opacity-50"
+                      : ""
                   }`}
                 >
                   Process Payout

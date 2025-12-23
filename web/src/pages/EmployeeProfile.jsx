@@ -1398,7 +1398,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <h3 className="text-lg font-semibold">{t('employeeProfile.employeeDocuments')}</h3>
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg flex items-center space-x-2 transition"
+                className="btn-primary flex items-center space-x-2"
               >
                 <span>📤</span>
                 <span>{t('employeeProfile.uploadDocument')}</span>
@@ -1449,7 +1449,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
+                                className="btn-primary"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
@@ -1494,7 +1494,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
+                                className="btn-primary"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
@@ -1539,7 +1539,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
+                                className="btn-primary"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
@@ -1587,7 +1587,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
+                                className="btn-primary"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
@@ -1695,7 +1695,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   <div className="flex space-x-3 mt-6">
                     <button
                       onClick={handleUploadDocument}
-                      className="flex-1 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
+                      className="flex-1 btn-primary"
                     >
                       {t('common.upload')}
                     </button>
