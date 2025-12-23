@@ -205,7 +205,7 @@ export default function NotificationCenter({ onNavigate }) {
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+        className="relative p-2 rounded-tahoe-input text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe"
         aria-label="Notifications"
       >
         <svg 
@@ -274,7 +274,7 @@ export default function NotificationCenter({ onNavigate }) {
                   )}
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-1 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
+                    className="p-1 rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -361,7 +361,7 @@ export default function NotificationCenter({ onNavigate }) {
                                       e.stopPropagation();
                                       notification.is_read ? markAsUnread(notification.id) : markAsRead(notification.id);
                                     }}
-                                    className="p-1 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+                                    className="p-1 rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe"
                                     title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
                                   >
                                     {notification.is_read ? (
@@ -379,7 +379,7 @@ export default function NotificationCenter({ onNavigate }) {
                                       e.stopPropagation();
                                       deleteNotification(notification.id);
                                     }}
-                                    className="p-1 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+                                    className="p-1 rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe"
                                     title="Delete"
                                   >
                                     <svg className="w-4 h-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">

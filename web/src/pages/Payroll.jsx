@@ -191,7 +191,7 @@ export default function Payroll() {
   if (loading && payrollData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-400">{t('payroll.loading')}</div>
+        <div className="text-lg text-tahoe-text-muted">{t('payroll.loading')}</div>
       </div>
     );
   }
@@ -344,7 +344,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
   if (payrollData.length === 0 && searchQuery) {
     return (
       <div className="card p-12 text-center">
-        <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-16 h-16 mx-auto mb-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <h3 className="text-lg font-medium text-primary mb-2">{t('payroll.noEmployeesFound')}</h3>
@@ -356,7 +356,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
   if (payrollData.length === 0) {
     return (
       <div className="card p-12 text-center">
-        <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-16 h-16 mx-auto mb-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <h3 className="text-lg font-medium text-primary mb-2">{t('payroll.noData')}</h3>
@@ -624,7 +624,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
                     {formatCurrency(employee.deductions)}
                   </div>
                 </div>
-                <div className="flex justify-between items-center py-3 bg-green-100 dark:bg-green-900/30 rounded-lg px-4">
+                <div className="flex justify-between items-center py-3 bg-green-100 dark:bg-green-900/30 rounded-tahoe-input px-4">
                   <div>
                     <div className="font-bold text-green-900 dark:text-green-300 text-lg">{t('payroll.netPayLabel')}</div>
                     <div className="text-xs text-green-700 dark:text-green-400">{t('payroll.takeHomeAmount')}</div>
@@ -637,7 +637,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
           </div>
 
             {/* Vacation Accrual */}
-            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-tahoe-input border border-green-200 dark:border-green-800">
               <h3 className="text-lg font-semibold text-primary mb-3">{t('payroll.vacationAccrual')}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -659,7 +659,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
             </div>
 
             {/* Additional Info */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-tahoe-input border border-blue-200 dark:border-blue-800">
               <h3 className="text-sm font-semibold text-primary mb-2">💡 Calculation Notes</h3>
               <ul className="text-xs text-secondary space-y-1">
                 <li>• Regular hours: All hours up to 8 per day</li>

@@ -1385,7 +1385,7 @@ export default function BonusesCommissions() {
               placeholder="Search by employee name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-10 py-3 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2 text-sm text-tahoe-text-primary"
+              className="form-input pl-10 pr-10"
             />
             {searchQuery && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -1593,7 +1593,7 @@ export default function BonusesCommissions() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveTab("import")}
-            className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="btn-primary flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -1604,15 +1604,15 @@ export default function BonusesCommissions() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex flex-wrap gap-1 mb-6 bg-tahoe-card-bg p-1 rounded-lg">
+      <div className="flex flex-wrap gap-1 mb-6 bg-tahoe-card-bg p-1 rounded-tahoe-input">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
-                ? "bg-indigo-600 text-white"
-                : "text-gray-300 hover:text-white hover:bg-neutral-700"
+                ? "bg-tahoe-accent text-white"
+                : "text-tahoe-text-secondary hover:text-white hover:bg-neutral-700"
             }`}
           >
             <span>{tab.icon}</span>
@@ -1641,7 +1641,7 @@ export default function BonusesCommissions() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Employee</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option>Select Employee</option>
                       {employees.map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -1650,7 +1650,7 @@ export default function BonusesCommissions() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Bonus Type</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option value="Performance Bonus">Performance Bonus</option>
                       <option value="Project Completion">Project Completion</option>
                       <option value="Customer Satisfaction">Customer Satisfaction</option>
@@ -1664,13 +1664,13 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Amount</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="5000"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Period</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option value="Q1 2025">Q1 2025</option>
                       <option value="Q2 2025">Q2 2025</option>
                       <option value="Q3 2025">Q3 2025</option>
@@ -1683,7 +1683,7 @@ export default function BonusesCommissions() {
                   <label className="block text-sm font-medium mb-2">Criteria</label>
                   <textarea
                     rows={3}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Describe the criteria for this bonus..."
                   />
                 </div>
@@ -1697,7 +1697,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary"
                   >
                     Add Bonus
                   </button>
@@ -1722,7 +1722,7 @@ export default function BonusesCommissions() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Employee</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option>Select Employee</option>
                       {employees.filter(emp => emp.commission_rate > 0).map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -1731,7 +1731,7 @@ export default function BonusesCommissions() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Commission Type</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option value="Sales Commission">Sales Commission</option>
                       <option value="Referral Commission">Referral Commission</option>
                       <option value="Upsell Commission">Upsell Commission</option>
@@ -1743,13 +1743,13 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Base Amount</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="150000"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Period</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option value="Q1 2025">Q1 2025</option>
                       <option value="Q2 2025">Q2 2025</option>
                       <option value="Q3 2025">Q3 2025</option>
@@ -1762,7 +1762,7 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Sales Target</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="120000"
                     />
                   </div>
@@ -1770,7 +1770,7 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Target Achievement</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="125"
                       step="0.1"
                     />
@@ -1786,7 +1786,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary"
                   >
                     Add Commission
                   </button>
@@ -1813,13 +1813,13 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Structure Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="e.g., Sales Performance Bonus"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Department</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option value="All">All Departments</option>
                       {departments.map(dept => (
                         <option key={dept.id} value={dept.name}>{dept.name}</option>
@@ -1830,7 +1830,7 @@ export default function BonusesCommissions() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Structure Type</label>
-                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
+                    <select className="form-select">
                       <option value="Bonus">Bonus</option>
                       <option value="Commission">Commission</option>
                       <option value="Hybrid">Hybrid</option>
@@ -1840,7 +1840,7 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Max Amount</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="15000"
                     />
                   </div>
@@ -1849,7 +1849,7 @@ export default function BonusesCommissions() {
                   <label className="block text-sm font-medium mb-2">Calculation Method</label>
                   <textarea
                     rows={2}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Describe how the compensation is calculated..."
                   />
                 </div>
@@ -1857,7 +1857,7 @@ export default function BonusesCommissions() {
                   <label className="block text-sm font-medium mb-2">Eligibility Criteria</label>
                   <textarea
                     rows={2}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Describe eligibility requirements..."
                   />
                 </div>
@@ -1871,7 +1871,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary"
                   >
                     Add Structure
                   </button>
@@ -1899,7 +1899,7 @@ export default function BonusesCommissions() {
                     <select
                       value={editingBonus.employee_id}
                       onChange={(e) => setEditingBonus({...editingBonus, employee_id: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                     >
                       {employees.map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -1911,7 +1911,7 @@ export default function BonusesCommissions() {
                     <select
                       value={editingBonus.bonus_type}
                       onChange={(e) => setEditingBonus({...editingBonus, bonus_type: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                     >
                       <option value="Performance">Performance</option>
                       <option value="Project">Project</option>
@@ -1928,7 +1928,7 @@ export default function BonusesCommissions() {
                       type="number"
                       value={editingBonus.amount}
                       onChange={(e) => setEditingBonus({...editingBonus, amount: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="5000"
                     />
                   </div>
@@ -1938,7 +1938,7 @@ export default function BonusesCommissions() {
                       type="text"
                       value={editingBonus.period}
                       onChange={(e) => setEditingBonus({...editingBonus, period: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="Q4 2024"
                     />
                   </div>
@@ -1949,7 +1949,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={editingBonus.criteria}
                     onChange={(e) => setEditingBonus({...editingBonus, criteria: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Describe the criteria for this bonus..."
                   />
                 </div>
@@ -1958,7 +1958,7 @@ export default function BonusesCommissions() {
                   <select
                     value={editingBonus.status}
                     onChange={(e) => setEditingBonus({...editingBonus, status: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                   >
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
@@ -1979,7 +1979,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary"
                   >
                     Update Bonus
                   </button>
@@ -2008,7 +2008,7 @@ export default function BonusesCommissions() {
                       type="text"
                       value={editingStructure.name}
                       onChange={(e) => setEditingStructure({...editingStructure, name: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="e.g., Sales Performance Bonus"
                     />
                   </div>
@@ -2018,7 +2018,7 @@ export default function BonusesCommissions() {
                       type="number"
                       value={editingStructure.base_amount}
                       onChange={(e) => setEditingStructure({...editingStructure, base_amount: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                       placeholder="5000"
                     />
                   </div>
@@ -2029,7 +2029,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={editingStructure.criteria}
                     onChange={(e) => setEditingStructure({...editingStructure, criteria: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Describe the criteria for this structure..."
                   />
                 </div>
@@ -2039,7 +2039,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={editingStructure.calculation_method}
                     onChange={(e) => setEditingStructure({...editingStructure, calculation_method: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Describe how this structure is calculated..."
                   />
                 </div>
@@ -2049,7 +2049,7 @@ export default function BonusesCommissions() {
                     type="date"
                     value={editingStructure.effective_date}
                     onChange={(e) => setEditingStructure({...editingStructure, effective_date: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
@@ -2065,7 +2065,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary"
                   >
                     Update Structure
                   </button>
@@ -2086,7 +2086,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Approve Bonus</h3>
-              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-lg">
+              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-tahoe-input">
                 <h4 className="font-medium mb-2">Bonus Details</h4>
                 <p><strong>Employee:</strong> {actionBonus.employee_name}</p>
                 <p><strong>Amount:</strong> ${actionBonus.amount}</p>
@@ -2100,7 +2100,7 @@ export default function BonusesCommissions() {
                     type="text"
                     value={approveData.approved_by}
                     onChange={(e) => setApproveData({...approveData, approved_by: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Enter approver name"
                     required
                   />
@@ -2111,7 +2111,7 @@ export default function BonusesCommissions() {
                     type="date"
                     value={approveData.payment_date}
                     onChange={(e) => setApproveData({...approveData, payment_date: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     required
                   />
                 </div>
@@ -2121,7 +2121,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={approveData.approval_notes}
                     onChange={(e) => setApproveData({...approveData, approval_notes: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Add any notes about this approval..."
                   />
                 </div>
@@ -2138,7 +2138,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary bg-green-600 hover:bg-green-700"
                   >
                     Approve Bonus
                   </button>
@@ -2159,7 +2159,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Reject Bonus</h3>
-              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-lg">
+              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-tahoe-input">
                 <h4 className="font-medium mb-2">Bonus Details</h4>
                 <p><strong>Employee:</strong> {actionBonus.employee_name}</p>
                 <p><strong>Amount:</strong> ${actionBonus.amount}</p>
@@ -2173,7 +2173,7 @@ export default function BonusesCommissions() {
                     type="text"
                     value={rejectData.rejected_by}
                     onChange={(e) => setRejectData({...rejectData, rejected_by: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Enter rejector name"
                     required
                   />
@@ -2183,7 +2183,7 @@ export default function BonusesCommissions() {
                   <select
                     value={rejectData.rejection_reason}
                     onChange={(e) => setRejectData({...rejectData, rejection_reason: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     required
                   >
                     <option value="">Select reason</option>
@@ -2200,7 +2200,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={rejectData.rejection_notes}
                     onChange={(e) => setRejectData({...rejectData, rejection_notes: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     placeholder="Explain why this bonus is being rejected..."
                     required
                   />
@@ -2218,7 +2218,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-danger"
                   >
                     Reject Bonus
                   </button>
@@ -2241,21 +2241,21 @@ export default function BonusesCommissions() {
               <h3 className="text-xl font-bold mb-4">Bonus Details</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-tahoe-card-bg rounded-lg">
-                    <h4 className="font-medium mb-2 text-indigo-400">Employee Information</h4>
+                  <div className="p-4 bg-tahoe-card-bg rounded-tahoe-input">
+                    <h4 className="font-medium mb-2 text-tahoe-accent">Employee Information</h4>
                     <p><strong>Name:</strong> {actionBonus.employee_name}</p>
                     <p><strong>Department:</strong> {actionBonus.department || 'N/A'}</p>
                     <p><strong>Role:</strong> {actionBonus.role_title || 'N/A'}</p>
                   </div>
-                  <div className="p-4 bg-tahoe-card-bg rounded-lg">
-                    <h4 className="font-medium mb-2 text-indigo-400">Bonus Information</h4>
+                  <div className="p-4 bg-tahoe-card-bg rounded-tahoe-input">
+                    <h4 className="font-medium mb-2 text-tahoe-accent">Bonus Information</h4>
                     <p><strong>Amount:</strong> ${actionBonus.amount}</p>
                     <p><strong>Type:</strong> {actionBonus.bonus_type}</p>
                     <p><strong>Period:</strong> {actionBonus.period}</p>
                   </div>
                 </div>
-                <div className="p-4 bg-tahoe-card-bg rounded-lg">
-                  <h4 className="font-medium mb-2 text-indigo-400">Status & Approval</h4>
+                <div className="p-4 bg-tahoe-card-bg rounded-tahoe-input">
+                  <h4 className="font-medium mb-2 text-tahoe-accent">Status & Approval</h4>
                   <p><strong>Status:</strong> <span className={`px-2 py-1 rounded text-sm ${
                     actionBonus.status === 'Approved' ? 'bg-green-900 text-green-300' :
                     actionBonus.status === 'Rejected' ? 'bg-red-900 text-red-300' :
@@ -2264,8 +2264,8 @@ export default function BonusesCommissions() {
                   <p><strong>Approved by:</strong> {actionBonus.approved_by || 'Pending'}</p>
                   <p><strong>Created:</strong> {formatShortDate(actionBonus.created_at)}</p>
                 </div>
-                <div className="p-4 bg-tahoe-card-bg rounded-lg">
-                  <h4 className="font-medium mb-2 text-indigo-400">Criteria & Notes</h4>
+                <div className="p-4 bg-tahoe-card-bg rounded-tahoe-input">
+                  <h4 className="font-medium mb-2 text-tahoe-accent">Criteria & Notes</h4>
                   <p><strong>Criteria:</strong> {actionBonus.criteria || 'No criteria specified'}</p>
                   {actionBonus.approval_notes && (
                     <p><strong>Approval Notes:</strong> {actionBonus.approval_notes}</p>
@@ -2278,7 +2278,7 @@ export default function BonusesCommissions() {
                     setShowViewDetails(false);
                     setActionBonus(null);
                   }}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors"
+                  className="btn-primary"
                 >
                   Close
                 </button>
@@ -2305,7 +2305,7 @@ export default function BonusesCommissions() {
                     <select
                       value={exportData.format}
                       onChange={(e) => setExportData({...exportData, format: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                     >
                       <option value="CSV">CSV</option>
                       <option value="Excel">Excel</option>
@@ -2317,7 +2317,7 @@ export default function BonusesCommissions() {
                     <select
                       value={exportData.date_range}
                       onChange={(e) => setExportData({...exportData, date_range: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                     >
                       <option value="All">All Time</option>
                       <option value="This Year">This Year</option>
@@ -2333,7 +2333,7 @@ export default function BonusesCommissions() {
                     <select
                       value={exportData.status_filter}
                       onChange={(e) => setExportData({...exportData, status_filter: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                     >
                       <option value="All">All Statuses</option>
                       <option value="Pending">Pending Only</option>
@@ -2363,7 +2363,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary bg-green-600 hover:bg-green-700"
                   >
                     Export Bonuses
                   </button>
@@ -2384,7 +2384,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Apply Bonus Structure</h3>
-              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-lg">
+              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-tahoe-input">
                 <h4 className="font-medium mb-2">Structure Details</h4>
                 <p><strong>Name:</strong> {actionStructure.name}</p>
                 <p><strong>Base Amount:</strong> ${actionStructure.base_amount}</p>
@@ -2396,7 +2396,7 @@ export default function BonusesCommissions() {
                   <select
                     value={applyData.apply_to}
                     onChange={(e) => setApplyData({...applyData, apply_to: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                   >
                     <option value="All Employees">All Employees</option>
                     <option value="Department">Specific Department</option>
@@ -2409,7 +2409,7 @@ export default function BonusesCommissions() {
                     <select
                       value={applyData.department_id}
                       onChange={(e) => setApplyData({...applyData, department_id: e.target.value})}
-                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                      className="form-input"
                     >
                       <option value="">Select Department</option>
                       {employees.map(emp => emp.department).filter((dept, index, self) => self.indexOf(dept) === index).map(dept => (
@@ -2424,7 +2424,7 @@ export default function BonusesCommissions() {
                     type="date"
                     value={applyData.effective_date}
                     onChange={(e) => setApplyData({...applyData, effective_date: e.target.value})}
-                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
+                    className="form-input"
                     required
                   />
                 </div>
@@ -2441,7 +2441,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="btn-primary"
                   >
                     Apply Structure
                   </button>
@@ -2475,7 +2475,7 @@ export default function BonusesCommissions() {
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowSuccessMessage(false)}
-                  className="bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="btn-primary bg-green-600 hover:bg-green-700"
                 >
                   OK
                 </button>
@@ -2508,7 +2508,7 @@ export default function BonusesCommissions() {
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowErrorMessage(false)}
-                  className="bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="btn-danger"
                 >
                   OK
                 </button>

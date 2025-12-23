@@ -203,7 +203,7 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
           {/* Mobile back button */}
           <button
             onClick={onBack}
-            className="lg:hidden p-2 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
+            className="lg:hidden p-2 rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -260,7 +260,7 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="p-2 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe disabled:opacity-50 text-tahoe-text-secondary hover:text-tahoe-text-primary"
+            className="p-2 rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe disabled:opacity-50 text-tahoe-text-secondary hover:text-tahoe-text-primary"
             title="Attach file"
           >
             {uploading ? (
@@ -293,7 +293,7 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
           <button
             onClick={sendMessage}
             disabled={!message.trim() || sending}
-            className="p-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-tahoe"
+            className="p-2 rounded-tahoe-input disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-tahoe"
             style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
             title="Send message"
           >

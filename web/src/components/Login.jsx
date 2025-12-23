@@ -260,17 +260,18 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: '#0B0B0C' }}>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md rounded-2xl"
+        transition={{ duration: 0.2, ease: [0.25, 0.8, 0.25, 1] }}
+        className="w-full max-w-md"
       >
-        <div className="card-lg backdrop-blur-md border border-primary/20 shadow-2xl">
+        <div className="card-lg" style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold mb-2 text-primary">{t('login.title')}</h1>
-            <p className="text-secondary">{t('login.subtitle')}</p>
-            <p className="text-sm text-tertiary mt-2">{t('login.developer')}</p>
+            <h1 className="text-2xl font-semibold mb-2 text-tahoe-text-primary">{t('login.title')}</h1>
+            <p className="text-tahoe-text-secondary">{t('login.subtitle')}</p>
+            <p className="text-xs text-tahoe-text-tertiary mt-2">{t('login.developer')}</p>
           </div>
 
           {/* Password Change Screen */}
@@ -278,41 +279,41 @@ export default function Login({ onLogin }) {
             <form onSubmit={handlePasswordChangeSubmit} className="space-y-6">
               <div className="text-center mb-6">
                 <div className="text-5xl mb-4">🔒</div>
-                <h2 className="text-xl font-bold mb-2">{t('login.passwordChangeRequired')}</h2>
-                <p className="text-sm text-secondary">{passwordChangeReason}</p>
+                <h2 className="text-lg font-semibold mb-2 text-tahoe-text-primary">{t('login.passwordChangeRequired')}</h2>
+                <p className="text-sm text-tahoe-text-secondary">{passwordChangeReason}</p>
               </div>
 
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">{t('login.newPassword')}</label>
+                <label className="block text-xs font-medium mb-1.5 text-tahoe-text-primary tracking-wide">{t('login.newPassword')}</label>
                 <input
                   type="password"
                   value={passwordChangeData.newPassword}
                   onChange={(e) => setPasswordChangeData({...passwordChangeData, newPassword: e.target.value})}
-                  className="w-full px-3 py-2 input-md"
+                  className="form-input"
                   placeholder={t('login.newPasswordPlaceholder')}
                   required
                   minLength="8"
                   autoFocus
                 />
-                <p className="text-xs text-tertiary mt-1">
+                <p className="text-xs text-tahoe-text-tertiary mt-1">
                   Must be at least 8 characters. Cannot reuse your last 5 passwords.
                 </p>
               </div>
 
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">{t('login.confirmPassword')}</label>
+                <label className="block text-xs font-medium mb-1.5 text-tahoe-text-primary tracking-wide">{t('login.confirmPassword')}</label>
                 <input
                   type="password"
                   value={passwordChangeData.confirmPassword}
                   onChange={(e) => setPasswordChangeData({...passwordChangeData, confirmPassword: e.target.value})}
-                  className="w-full px-3 py-2 input-md"
+                  className="form-input"
                   placeholder={t('login.reenterPasswordPlaceholder')}
                   required
                 />
               </div>
 
               {passwordError && (
-                <div className="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 p-3 rounded-lg text-sm">
+                <div className="status-error p-3 rounded-tahoe-input text-sm">
                   {passwordError}
                 </div>
               )}
@@ -320,12 +321,12 @@ export default function Login({ onLogin }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                className="w-full btn-primary"
               >
                 {loading ? t('login.changingPassword') : t('login.changePassword')}
               </button>
 
-              <div className="mt-4 text-center text-xs text-tertiary">
+              <div className="mt-4 text-center text-xs text-tahoe-text-tertiary">
                 <p>💡 After changing, you'll need to log in with your new password</p>
               </div>
             </form>
@@ -334,8 +335,8 @@ export default function Login({ onLogin }) {
             <form onSubmit={handleMFAVerify} className="space-y-6">
               <div className="text-center mb-6">
                 <div className="text-5xl mb-4">🔐</div>
-                <h2 className="text-xl font-bold mb-2">{t('login.mfaTitle')}</h2>
-                <p className="text-sm text-secondary">
+                <h2 className="text-lg font-semibold mb-2 text-tahoe-text-primary">{t('login.mfaTitle')}</h2>
+                <p className="text-sm text-tahoe-text-secondary">
                   {t('login.mfaDescription')}
                 </p>
               </div>
@@ -346,7 +347,7 @@ export default function Login({ onLogin }) {
                   maxLength="6"
                   value={mfaCode}
                   onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-4 py-4 text-center text-3xl tracking-widest font-mono input-md"
+                  className="w-full px-4 py-4 text-center text-3xl tracking-widest font-mono form-input"
                   placeholder="000000"
                   required
                   autoFocus
@@ -357,24 +358,24 @@ export default function Login({ onLogin }) {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-error text-sm text-center"
+                  className="status-error text-sm text-center p-3 rounded-tahoe-input"
                 >
                   {mfaError}
                 </motion.div>
               )}
 
               {/* Trust This Device Checkbox */}
-              <div className="flex items-start space-x-3 p-3 rounded-tahoe-input border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+              <div className="flex items-start space-x-3 p-3 rounded-tahoe-input border border-tahoe-border-primary" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}>
                 <input
                   type="checkbox"
                   id="trustDevice"
                   checked={trustDevice}
                   onChange={(e) => setTrustDevice(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-tahoe-border-primary text-tahoe-accent focus:ring-tahoe-accent focus:ring-offset-tahoe-bg-primary transition-all duration-tahoe"
+                  className="form-checkbox mt-1"
                 />
                 <label htmlFor="trustDevice" className="flex-1 text-sm">
-                  <div className="font-medium text-primary">{t('login.trustDevice')}</div>
-                  <div className="text-xs text-tertiary mt-1">
+                  <div className="font-medium text-tahoe-text-primary">{t('login.trustDevice')}</div>
+                  <div className="text-xs text-tahoe-text-tertiary mt-1">
                     ⚠️ Only enable on devices you personally own and control. Never use on public or shared computers.
                   </div>
                 </label>
@@ -383,7 +384,7 @@ export default function Login({ onLogin }) {
               <button
                 type="submit"
                 disabled={loading || mfaCode.length !== 6}
-                className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                className="w-full btn-primary"
               >
                 {loading ? t('login.verifying') : t('login.verifyCode')}
               </button>
@@ -396,12 +397,12 @@ export default function Login({ onLogin }) {
                   setTempToken("");
                   setMfaError("");
                 }}
-                className="w-full text-secondary hover:text-primary text-sm"
+                className="w-full text-tahoe-text-secondary hover:text-tahoe-text-primary text-sm transition-colors duration-tahoe"
               >
                 {t('login.backToLogin')}
               </button>
 
-              <div className="mt-4 text-center text-xs text-tertiary">
+              <div className="mt-4 text-center text-xs text-tahoe-text-tertiary">
                 <p>💡 Tip: The code changes every 30 seconds</p>
               </div>
             </form>
@@ -409,24 +410,24 @@ export default function Login({ onLogin }) {
             /* Regular Login Form */
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">{t('login.username')}</label>
+                <label className="block text-xs font-medium mb-1.5 text-tahoe-text-primary tracking-wide">{t('login.username')}</label>
                 <input
                   type="text"
                   value={credentials.username}
                   onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-                  className="w-full px-3 py-2 input-md"
+                  className="form-input"
                   placeholder={t('login.usernamePlaceholder')}
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label className="block text-sm font-medium mb-2 text-primary">{t('login.password')}</label>
+                <label className="block text-xs font-medium mb-1.5 text-tahoe-text-primary tracking-wide">{t('login.password')}</label>
                 <input
                   type="password"
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                  className="w-full px-3 py-2 input-md"
+                  className="form-input"
                   placeholder={t('login.passwordPlaceholder')}
                   required
                 />
@@ -436,7 +437,7 @@ export default function Login({ onLogin }) {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-error text-sm text-center"
+                  className="status-error text-sm text-center p-3 rounded-tahoe-input"
                 >
                   {error}
                 </motion.div>
@@ -445,7 +446,7 @@ export default function Login({ onLogin }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary py-3 px-4 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
+                className="w-full btn-primary"
               >
                 {loading ? t('login.signingIn') : t('login.signIn')}
               </button>
@@ -454,13 +455,13 @@ export default function Login({ onLogin }) {
 
           {!showMFAInput && (
             <>
-              <div className="mt-6 text-center text-sm text-secondary">
+              <div className="mt-6 text-center text-sm text-tahoe-text-secondary">
                 <p>{t('login.demoCredentials')}:</p>
-                <p>{t('login.demoUsername')}: <span className="text-primary font-medium">Avneet</span></p>
-                <p>{t('login.demoPassword')}: <span className="text-primary font-medium">password123</span></p>
+                <p>{t('login.demoUsername')}: <span className="text-tahoe-accent font-medium">Avneet</span></p>
+                <p>{t('login.demoPassword')}: <span className="text-tahoe-accent font-medium">password123</span></p>
               </div>
 
-              <div className="mt-4 text-center text-xs text-tertiary">
+              <div className="mt-4 text-center text-xs text-tahoe-text-tertiary">
                 <p>{t('login.sessionTimeout')}</p>
                 <p>{t('login.autoLogout')}</p>
               </div>

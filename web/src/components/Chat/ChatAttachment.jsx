@@ -75,7 +75,7 @@ export default function ChatAttachment({ attachment, isOwn }) {
         {/* Download Button */}
         <button
           onClick={handleDownload}
-          className="flex-shrink-0 p-2 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
+          className="flex-shrink-0 p-2 rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
           title="Download"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

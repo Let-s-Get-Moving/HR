@@ -141,7 +141,7 @@ const Toast: React.FC<ToastProps> = ({
           <div className="ml-4 flex-shrink-0 flex">
             <button
               onClick={handleClose}
-              className="inline-flex hover:opacity-75 focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 rounded-lg transition-all duration-tahoe"
+              className="inline-flex hover:opacity-75 focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 rounded-tahoe-input transition-all duration-tahoe"
               style={{ color: config.titleColor }}
             >
               <span className="sr-only">Close</span>

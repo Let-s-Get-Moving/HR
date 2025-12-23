@@ -23,7 +23,7 @@ export function UploadsListView({ uploads, onViewUpload, loading, t }) {
         animate={{ opacity: 1 }}
         className="card p-8 text-center"
       >
-        <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-16 h-16 mx-auto mb-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
         <h3 className="text-lg font-medium text-tahoe-text-primary mb-2">{t('timeTracking.noUploadsYet')}</h3>
@@ -353,7 +353,7 @@ export function UploadDashboardView({ stats, onBack, loading, t }) {
               {(stats?.topEmployees || []).map((emp, idx) => (
                 <tr key={emp.id} className="hover:bg-tahoe-bg-hover transition-all duration-tahoe">
                   <td className="px-6 py-4 text-sm">
-                    <span className={`font-bold ${idx === 0 ? 'text-yellow-500' : idx === 1 ? 'text-gray-400' : idx === 2 ? 'text-amber-600' : 'text-tahoe-text-primary'}`}>
+                    <span className={`font-bold ${idx === 0 ? 'text-yellow-500' : idx === 1 ? 'text-tahoe-text-muted' : idx === 2 ? 'text-amber-600' : 'text-tahoe-text-primary'}`}>
                       #{idx + 1}
                     </span>
                   </td>

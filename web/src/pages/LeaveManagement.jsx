@@ -291,11 +291,11 @@ export default function LeaveManagement() {
       'Personal': 'bg-green-500 text-white',
       'Personal Leave': 'bg-green-500 text-white',
       'Parental': 'bg-purple-500 text-white',
-      'Bereavement': 'bg-gray-500 text-white',
-      'Other': 'bg-gray-500 text-white'
+      'Bereavement': 'bg-tahoe-text-muted text-white',
+      'Other': 'bg-tahoe-text-muted text-white'
     };
     
-    return colors[leaveTypeName] || 'bg-gray-500 text-white';
+    return colors[leaveTypeName] || 'bg-tahoe-text-muted text-white';
   };
 
   const tabs = userRole === 'user' ? [
@@ -566,7 +566,7 @@ export default function LeaveManagement() {
                   <button
                     type="button"
                     onClick={(e) => handleSubmitRequest(e, true)}
-                    className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
+                    className="btn-primary flex items-center justify-center"
                   >
                     <span className="mr-2">✅</span>
                     Save & Approve
@@ -700,7 +700,7 @@ export default function LeaveManagement() {
                             <button
                               onClick={() => setHistoryCurrentPage(Math.max(1, historyCurrentPage - 1))}
                               disabled={historyCurrentPage === 1}
-                              className="px-3 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover disabled:bg-tahoe-bg-quaternary disabled:text-tahoe-text-muted rounded-lg transition-colors text-sm"
+                              className="btn-secondary disabled:bg-tahoe-bg-quaternary disabled:text-tahoe-text-muted text-sm"
                             >
                               Previous
                             </button>
@@ -725,7 +725,7 @@ export default function LeaveManagement() {
                                   <button
                                     key={pageNum}
                                     onClick={() => setHistoryCurrentPage(pageNum)}
-                                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                                    className={`btn-secondary text-sm ${
                                       isCurrentPage 
                                         ? 'bg-tahoe-primary-bg text-tahoe-primary-text' 
                                         : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover text-tahoe-text-primary'
@@ -740,7 +740,7 @@ export default function LeaveManagement() {
                             <button
                               onClick={() => setHistoryCurrentPage(Math.min(totalPages, historyCurrentPage + 1))}
                               disabled={historyCurrentPage === totalPages}
-                              className="px-3 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover disabled:bg-tahoe-bg-quaternary disabled:text-tahoe-text-muted rounded-lg transition-colors text-sm"
+                              className="btn-secondary disabled:bg-tahoe-bg-quaternary disabled:text-tahoe-text-muted text-sm"
                             >
                               Next
                             </button>
@@ -866,7 +866,7 @@ export default function LeaveManagement() {
                     const availablePercentage = 100 - usedPercentage;
                     
                     return (
-                      <div key={balance.id} className="p-4 border border-tahoe-border-primary rounded-lg hover:shadow-md transition-shadow bg-tahoe-card-bg">
+                      <div key={balance.id} className="p-4 border border-tahoe-border-primary rounded-tahoe-input hover:shadow-md transition-shadow bg-tahoe-card-bg">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <div className="text-2xl">
@@ -965,7 +965,7 @@ export default function LeaveManagement() {
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                      className="p-2 hover:bg-tahoe-bg-hover rounded-lg transition-colors"
+                      className="p-2 hover:bg-tahoe-bg-hover rounded-tahoe-input transition-colors"
                     >
                       ←
                     </button>
@@ -974,7 +974,7 @@ export default function LeaveManagement() {
                     </span>
                     <button
                       onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                      className="p-2 hover:bg-tahoe-bg-hover rounded-lg transition-colors"
+                      className="p-2 hover:bg-tahoe-bg-hover rounded-tahoe-input transition-colors"
                     >
                       →
                     </button>
@@ -1085,7 +1085,7 @@ export default function LeaveManagement() {
                     <span>{t('leave.calendar.legend.parental')}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gray-500 rounded"></div>
+                    <div className="w-3 h-3 bg-tahoe-text-muted rounded-full"></div>
                     <span>{t('leave.calendar.legend.other')}</span>
                   </div>
                 </div>
@@ -1227,7 +1227,7 @@ export default function LeaveManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="p-2 bg-blue-400 rounded-lg">
+                      <div className="p-2 bg-blue-400 rounded-tahoe-input">
                         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
                         </svg>
@@ -1252,7 +1252,7 @@ export default function LeaveManagement() {
 
                   <div className="p-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="p-2 bg-emerald-400 rounded-lg">
+                      <div className="p-2 bg-emerald-400 rounded-tahoe-input">
                         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
                         </svg>
@@ -1277,7 +1277,7 @@ export default function LeaveManagement() {
 
                   <div className="p-6 bg-gradient-to-br from-violet-500 to-violet-600 rounded-xl">
                     <div className="flex items-center space-x-3 mb-3">
-                      <div className="p-2 bg-violet-400 rounded-lg">
+                      <div className="p-2 bg-violet-400 rounded-tahoe-input">
                         <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
@@ -1346,7 +1346,7 @@ export default function LeaveManagement() {
                   >
                     Cancel
                   </button>
-                  <button className="px-6 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium transition-colors text-white">
+                  <button className="btn-primary">
                     Save Changes
                   </button>
                 </div>

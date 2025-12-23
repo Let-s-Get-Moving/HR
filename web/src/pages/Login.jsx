@@ -42,8 +42,8 @@ export default function Login({ onLogin }) {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2 }}
-        className="w-full max-w-md rounded-tahoe shadow-tahoe border"
+        transition={{ duration: 0.2, ease: [0.25, 0.8, 0.25, 1] }}
+        className="w-full max-w-md card-lg"
         style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255, 255, 255, 0.12)' }}
       >
         <div className="p-8">
@@ -63,8 +63,7 @@ export default function Login({ onLogin }) {
                 required
                 value={credentials.username}
                 onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-                className="w-full px-4 py-3 rounded-tahoe-input border transition-all duration-tahoe"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                className="form-input"
                 placeholder="Enter username"
                 disabled={loading}
               />
@@ -77,8 +76,7 @@ export default function Login({ onLogin }) {
                 required
                 value={credentials.password}
                 onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                className="w-full px-4 py-3 rounded-tahoe-input border transition-all duration-tahoe"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                className="form-input"
                 placeholder="Enter password"
                 disabled={loading}
               />
@@ -88,7 +86,7 @@ export default function Login({ onLogin }) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-sm text-center text-red-500"
+                className="status-error text-sm text-center p-3 rounded-tahoe-input"
               >
                 {error}
               </motion.div>
@@ -99,15 +97,14 @@ export default function Login({ onLogin }) {
               whileTap={{ scale: 0.99 }}
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe disabled:opacity-50"
-              style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
+              className="w-full btn-primary"
             >
               {loading ? "Signing In..." : "Sign In"}
             </motion.button>
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 rounded-tahoe border" style={{ backgroundColor: 'rgba(22, 22, 24, 0.6)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+          <div className="mt-6 p-4 rounded-tahoe border border-tahoe-border-primary" style={{ backgroundColor: 'rgba(22, 22, 24, 0.6)' }}>
             <p className="text-xs text-tahoe-text-secondary text-center">
               <strong className="text-tahoe-text-primary">Demo Credentials:</strong><br />
               Username: <code className="text-tahoe-accent font-medium">Avneet</code><br />

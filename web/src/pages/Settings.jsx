@@ -476,9 +476,9 @@ export default function Settings() {
     const buttons = document.querySelectorAll('[data-tab-button]');
     buttons.forEach(btn => {
       if (btn.dataset.tabId === tabId) {
-        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors bg-primary text-white";
+        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors bg-primary text-white";
       } else {
-        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors text-secondary hover:text-white hover:bg-tertiary";
+        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors text-secondary hover:text-white hover:bg-tertiary";
       }
     });
     // Update content visibility with CSS
@@ -2342,7 +2342,7 @@ export default function Settings() {
                 <button
                   onClick={() => handleSaveSetting(category, key)}
                   disabled={saving[key]}
-                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
                 </button>
@@ -2379,7 +2379,7 @@ export default function Settings() {
               <select
                 value={value || ''}
                 disabled={true}
-                className="w-full px-3 py-2 card border border-red-500 rounded-lg opacity-50 cursor-not-allowed"
+                className="form-select opacity-50 cursor-not-allowed border-red-500"
               >
                 <option value="">{t('settings.noOptionsAvailable')}</option>
               </select>
@@ -2402,7 +2402,7 @@ export default function Settings() {
                 value={selectValue || ''}
                 onChange={(e) => updateEditState(category, key, e.target.value)}
                 disabled={saving[key]}
-                className="flex-1 px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 form-select disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {optionList.map(option => {
                   // Try to translate the option value
@@ -2420,7 +2420,7 @@ export default function Settings() {
                 <button
                   onClick={() => handleSaveSetting(category, key)}
                   disabled={saving[key]}
-                  className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
                 </button>
@@ -2451,7 +2451,7 @@ export default function Settings() {
                 defaultValue={value || ''}
                 disabled={saving[key]}
                 rows={4}
-                className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus resize-none"
+                className="form-textarea resize-none"
                 style={{ minHeight: '44px', maxHeight: '120px' }}
               />
             </div>
@@ -2512,7 +2512,7 @@ export default function Settings() {
                 type="text"
                 defaultValue={value || ''}
                 disabled={saving[key]}
-                className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+                className="form-input"
               />
             </div>
           );
@@ -2539,7 +2539,7 @@ export default function Settings() {
                   <button
                     onClick={() => handleSaveSetting(category, key)}
                     disabled={saving[key]}
-                    className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
                   </button>
@@ -2571,7 +2571,7 @@ export default function Settings() {
                 type={type === "email" ? "email" : "text"}
                 defaultValue={value || ''}
                 disabled={saving[key]}
-                className="w-full px-3 py-2 card border border-primary rounded-lg focus:outline-none focus:border-focus"
+                className="form-input"
               />
             </div>
           );
@@ -2598,7 +2598,7 @@ export default function Settings() {
                   <button
                     onClick={() => handleSaveSetting(category, key)}
                     disabled={saving[key]}
-                    className="btn-primary px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
                     {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
                   </button>
@@ -2804,7 +2804,7 @@ export default function Settings() {
             <button
               onClick={handleSaveAllSystemSettings}
               disabled={Object.values(saving).some(v => v === true)}
-              className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {Object.values(saving).some(v => v === true) 
                 ? (t('settings.saving') || 'Saving...') 
@@ -2888,7 +2888,7 @@ export default function Settings() {
                   <button
                     type="submit"
                     disabled={addingDepartment}
-                    className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {addingDepartment ? t('settings.departments.adding') : t('settings.departments.add')}
                   </button>
@@ -2925,7 +2925,7 @@ export default function Settings() {
                         <button
                           onClick={() => handleDeleteDepartment(dept.id)}
                           disabled={deletingDepartment === dept.id || (departmentEmployeeCounts[dept.id] || 0) > 0}
-                          className="ml-4 px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                          className="ml-4 btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                           title={
                             (departmentEmployeeCounts[dept.id] || 0) > 0
                               ? t('settings.departments.cannotDelete')
@@ -3078,7 +3078,7 @@ export default function Settings() {
                                   region: editingLocation.region.trim() || null,
                                   is_active: editingLocation.is_active
                                 })}
-                                className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
+                                className="btn-primary"
                               >
                                 {t('settings.locations.save')}
                               </button>
@@ -3087,7 +3087,7 @@ export default function Settings() {
                                   setEditingLocation(null);
                                   setLocationError('');
                                 }}
-                                className="px-4 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover text-white rounded-lg transition-colors"
+                                className="btn-secondary"
                               >
                                 {t('settings.locations.cancel')}
                               </button>
@@ -3123,7 +3123,7 @@ export default function Settings() {
                               <div className="flex gap-2 ml-4">
                                 <button
                                   onClick={() => setEditingLocation({...loc})}
-                                  className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
+                                  className="btn-primary"
                                 >
                                   {t('settings.locations.edit')}
                                 </button>
@@ -3299,7 +3299,7 @@ export default function Settings() {
                         <button
                           type="submit"
                           disabled={addingLeaveType}
-                          className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {addingLeaveType ? t('settings.leavePolicies.saving') : t('settings.leavePolicies.update')}
                         </button>
@@ -3310,7 +3310,7 @@ export default function Settings() {
                             setEditingLeaveTypeData(null);
                             setLeaveTypeError('');
                           }}
-                          className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white"
+                          className="btn-secondary"
                         >
                           {t('settings.leavePolicies.cancel')}
                         </button>
@@ -3396,7 +3396,7 @@ export default function Settings() {
                         <button
                           type="submit"
                           disabled={addingLeaveType}
-                          className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {addingLeaveType ? t('settings.leavePolicies.saving') : t('settings.leavePolicies.add')}
                         </button>
@@ -3608,7 +3608,7 @@ export default function Settings() {
                   <button
                     type="submit"
                     disabled={addingHoliday || !newHoliday.date || !newHoliday.description.trim() || (newHoliday.applies_to_type !== 'All' && !newHoliday.applies_to_id)}
-                    className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {addingHoliday ? t('settings.holidays.adding') : t('settings.holidays.add')}
                   </button>
@@ -3653,7 +3653,7 @@ export default function Settings() {
                           <button
                             onClick={() => handleDeleteHoliday(holiday.id)}
                             disabled={deletingHoliday === holiday.id}
-                            className="ml-4 px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="ml-4 btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {deletingHoliday === holiday.id ? t('settings.holidays.deleting') : t('settings.holidays.delete')}
                           </button>
@@ -3903,7 +3903,7 @@ export default function Settings() {
                     <button
                       type="submit"
                       disabled={addingJobTitle}
-                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {addingJobTitle ? t('settings.jobTitles.saving') : (editingJobTitle ? t('settings.jobTitles.update') : t('settings.jobTitles.add'))}
                     </button>
@@ -4190,7 +4190,7 @@ export default function Settings() {
                     <button
                       type="submit"
                       disabled={addingBenefitsPackage}
-                      className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {addingBenefitsPackage ? t('settings.benefitsPackages.saving') : (editingBenefitsPackage ? t('settings.benefitsPackages.update') : t('settings.benefitsPackages.add'))}
                     </button>
@@ -4773,7 +4773,7 @@ export default function Settings() {
                   <h4 className="text-md font-medium text-primary mb-4">Sales Agents Commission Structure</h4>
                   <div className="space-y-3">
                     {localCommissionStructures.salesAgent.map((threshold, index) => (
-                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-tahoe-bg-secondary/50 rounded-lg">
+                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-tahoe-bg-secondary/50 rounded-tahoe-input">
                         <div>
                           <label className="block text-xs text-secondary mb-1">Lead Conversion %</label>
                           <input
@@ -4849,7 +4849,7 @@ export default function Settings() {
                   <h4 className="text-md font-medium text-primary mb-4">Sales Managers Commission Structure</h4>
                   <div className="space-y-3">
                     {localCommissionStructures.salesManager.map((threshold, index) => (
-                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-tahoe-bg-secondary/50 rounded-lg">
+                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-tahoe-bg-secondary/50 rounded-tahoe-input">
                         <div>
                           <label className="block text-xs text-secondary mb-1">Min Booking %</label>
                           <input
@@ -5069,7 +5069,7 @@ export default function Settings() {
             data-tab-button
             data-tab-id={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors ${
               activeTabRef.current === tab.id
                 ? "bg-primary text-white"
                 : "text-secondary hover:text-white hover:bg-tertiary"

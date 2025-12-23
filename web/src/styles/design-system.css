@@ -121,36 +121,37 @@
 
 /* Focus States */
 .focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+  @apply focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2;
 }
 
 .focus-ring-inset {
-  @apply focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset;
+  @apply focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-inset;
 }
 
-/* Consistent Button Styles */
+/* Consistent Button Styles - macOS Tahoe */
 .btn-base {
-  @apply inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center font-medium rounded-tahoe-pill transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .btn-primary {
-  @apply btn-base bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-indigo-500 shadow-sm hover:shadow-md;
+  @apply btn-base bg-tahoe-accent hover:bg-tahoe-accent-hover text-white focus:ring-tahoe-accent shadow-tahoe-sm hover:shadow-tahoe-md;
 }
 
 .btn-secondary {
-  @apply btn-base bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white focus:ring-slate-500;
+  @apply btn-base bg-tahoe-border-primary hover:bg-tahoe-border-secondary border border-tahoe-border-primary text-tahoe-text-primary focus:ring-tahoe-border-secondary;
 }
 
 .btn-outline {
-  @apply btn-base border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/20 focus:ring-indigo-500;
+  @apply btn-base border border-tahoe-accent text-tahoe-accent hover:bg-tahoe-accent hover:text-white focus:ring-tahoe-accent;
 }
 
 .btn-ghost {
-  @apply btn-base text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-slate-500;
+  @apply btn-base text-tahoe-text-secondary hover:bg-tahoe-bg-hover focus:ring-tahoe-border-primary;
 }
 
 .btn-danger {
-  @apply btn-base bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-sm hover:shadow-md;
+  @apply btn-base bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-tahoe-sm hover:shadow-tahoe-md;
 }
 
 /* Button Sizes */
@@ -166,16 +167,28 @@
   @apply px-6 py-3 text-base;
 }
 
-/* Form Styles */
+/* Form Styles - macOS Tahoe */
 .form-input {
-  @apply w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply w-full px-4 py-3 border border-tahoe-border-primary rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:border-tahoe-accent bg-tahoe-input-bg text-tahoe-text-primary placeholder-tahoe-text-muted disabled:opacity-50 disabled:cursor-not-allowed;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-size: 14px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-input:focus {
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: scale(1.01);
 }
 
 .form-select {
   @apply form-input appearance-none bg-no-repeat bg-right pr-10;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2398989a' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
   background-position: right 0.75rem center;
   background-size: 1.5em 1.5em;
+}
+
+.form-select:focus {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%230A84FF' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
 }
 
 .form-textarea {
@@ -183,16 +196,24 @@
 }
 
 .form-checkbox {
-  @apply h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600 rounded;
+  @apply h-4 w-4 text-tahoe-accent focus:ring-tahoe-accent border-tahoe-border-primary rounded;
+  accent-color: #0A84FF;
 }
 
 .form-radio {
-  @apply h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300 dark:border-slate-600;
+  @apply h-4 w-4 text-tahoe-accent focus:ring-tahoe-accent border-tahoe-border-primary;
+  accent-color: #0A84FF;
 }
 
-/* Card Styles */
+/* Card Styles - macOS Tahoe */
 .card-base {
-  @apply bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700;
+  @apply bg-tahoe-card-bg backdrop-blur-tahoe rounded-tahoe shadow-tahoe border border-tahoe-border-primary;
+  transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card-base:hover {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 .card {
@@ -201,51 +222,72 @@
 
 .card-sm {
   @apply card-base p-4;
+  border-radius: 18px;
 }
 
 .card-lg {
   @apply card-base p-8;
+  border-radius: 24px;
 }
 
-/* Typography Styles */
+/* Typography Styles - macOS Tahoe */
 .heading-1 {
-  @apply text-4xl font-bold text-slate-900 dark:text-white;
+  @apply text-2xl font-semibold text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
 }
 
 .heading-2 {
-  @apply text-3xl font-semibold text-slate-900 dark:text-white;
+  @apply text-xl font-semibold text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
 }
 
 .heading-3 {
-  @apply text-2xl font-semibold text-slate-900 dark:text-white;
+  @apply text-lg font-semibold text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  line-height: 1.4;
 }
 
 .heading-4 {
-  @apply text-xl font-semibold text-slate-900 dark:text-white;
+  @apply text-base font-semibold text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .heading-5 {
-  @apply text-lg font-medium text-slate-900 dark:text-white;
+  @apply text-sm font-medium text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .heading-6 {
-  @apply text-base font-medium text-slate-900 dark:text-white;
+  @apply text-xs font-medium text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .body-large {
-  @apply text-lg text-slate-700 dark:text-slate-300;
+  @apply text-base text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  line-height: 1.5;
 }
 
 .body-base {
-  @apply text-base text-slate-700 dark:text-slate-300;
+  @apply text-sm text-tahoe-text-primary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  line-height: 1.5;
 }
 
 .body-small {
-  @apply text-sm text-slate-600 dark:text-slate-400;
+  @apply text-xs text-tahoe-text-secondary;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .caption {
-  @apply text-xs text-slate-500 dark:text-slate-500;
+  @apply text-xs text-tahoe-text-muted;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 /* Utility Classes */
@@ -319,47 +361,64 @@
 
 /* Loading States */
 .loading-pulse {
-  @apply animate-pulse bg-slate-200 dark:bg-slate-700 rounded;
+  @apply animate-pulse bg-tahoe-bg-hover rounded-tahoe-input;
 }
 
 .loading-spin {
   @apply animate-spin;
 }
 
-/* Empty States */
+/* Empty States - macOS Tahoe */
 .empty-state {
   @apply flex flex-col items-center justify-center py-12 text-center;
 }
 
 .empty-state-icon {
-  @apply w-16 h-16 mx-auto mb-4 text-slate-400 dark:text-slate-600;
+  @apply w-16 h-16 mx-auto mb-4 text-tahoe-text-muted;
 }
 
 .empty-state-title {
-  @apply text-lg font-medium text-slate-900 dark:text-white mb-2;
+  @apply text-lg font-medium text-tahoe-text-primary mb-2;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .empty-state-description {
-  @apply text-sm text-slate-600 dark:text-slate-400 mb-4;
+  @apply text-sm text-tahoe-text-secondary mb-4;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
-/* Status Indicators */
+/* Status Indicators - macOS Tahoe */
 .status-success {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  background: rgba(48, 209, 88, 0.15);
+  color: #30d158;
+  border: 1px solid rgba(48, 209, 88, 0.3);
 }
 
 .status-warning {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  background: rgba(255, 159, 10, 0.15);
+  color: #ff9f0a;
+  border: 1px solid rgba(255, 159, 10, 0.3);
 }
 
 .status-error {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  background: rgba(255, 69, 58, 0.15);
+  color: #ff453a;
+  border: 1px solid rgba(255, 69, 58, 0.3);
 }
 
 .status-info {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  background: rgba(10, 132, 255, 0.15);
+  color: #0A84FF;
+  border: 1px solid rgba(10, 132, 255, 0.3);
 }
 
 .status-neutral {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300;
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e5e5e7;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }

@@ -133,7 +133,7 @@ const Modal: React.FC<ModalProps> = ({
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="ml-4 p-2 text-tahoe-text-muted hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe"
+                  className="ml-4 p-2 text-tahoe-text-muted hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover rounded-tahoe-input transition-all duration-tahoe"
                   aria-label="Close modal"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

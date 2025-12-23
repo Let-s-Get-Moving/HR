@@ -97,7 +97,7 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
           <h2 className="text-lg font-semibold text-tahoe-text-primary">Messages</h2>
           <button
             onClick={onNewThread}
-            className="p-2 rounded-lg transition-all duration-tahoe"
+            className="p-2 rounded-tahoe-input transition-all duration-tahoe"
             style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
             title="New message"
           >
