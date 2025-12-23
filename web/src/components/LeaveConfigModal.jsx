@@ -20,22 +20,15 @@ export default function LeaveConfigModal({ isOpen, onClose, initialTab = 'leave-
   const [leaveTypeError, setLeaveTypeError] = useState('');
   const leaveTypeInputRefs = useRef({});
   
-  // Allocations state
+  // Leave Allocations state (formerly Bulk Operations)
   const [employees, setEmployees] = useState([]);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [balances, setBalances] = useState([]);
-  const [editingBalances, setEditingBalances] = useState({});
-  const [savingBalances, setSavingBalances] = useState(false);
-  
-  // Bulk operations state
-  const [bulkSelectedEmployees, setBulkSelectedEmployees] = useState([]);
-  const [bulkYear, setBulkYear] = useState(new Date().getFullYear());
-  const [bulkLeaveType, setBulkLeaveType] = useState('all');
-  const [bulkOperation, setBulkOperation] = useState('set');
-  const [bulkValue, setBulkValue] = useState('');
-  const [bulkPreview, setBulkPreview] = useState([]);
-  const [executingBulk, setExecutingBulk] = useState(false);
+  const [selectedEmployees, setSelectedEmployees] = useState([]);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [leaveType, setLeaveType] = useState('all');
+  const [operation, setOperation] = useState('set');
+  const [value, setValue] = useState('');
+  const [preview, setPreview] = useState([]);
+  const [executing, setExecuting] = useState(false);
   
   // Policies state
   const [policies, setPolicies] = useState([]);
@@ -54,14 +47,11 @@ export default function LeaveConfigModal({ isOpen, onClose, initialTab = 'leave-
       loadEmployees();
       loadDepartments();
       loadJobTitles();
-      if (activeTab === 'allocations' && selectedEmployee) {
-        loadBalances(selectedEmployee, selectedYear);
-      }
       if (activeTab === 'policies') {
         loadPolicies();
       }
     }
-  }, [isOpen, activeTab, selectedEmployee, selectedYear]);
+  }, [isOpen, activeTab]);
   
   // Load functions
   const loadLeaveTypes = async () => {
@@ -101,27 +91,6 @@ export default function LeaveConfigModal({ isOpen, onClose, initialTab = 'leave-
     } catch (error) {
       console.error('Error loading job titles:', error);
       setJobTitles([]);
-    }
-  };
-  
-  const loadBalances = async (employeeId, year) => {
-    if (!employeeId) return;
-    try {
-      setLoading(true);
-      const balancesData = await API(`/api/leave/balances?employee_id=${employeeId}&year=${year}`);
-      setBalances(balancesData || []);
-      
-      // Initialize editing state
-      const editingState = {};
-      (balancesData || []).forEach(b => {
-        editingState[b.id] = parseFloat(b.entitled_days);
-      });
-      setEditingBalances(editingState);
-    } catch (error) {
-      console.error('Error loading balances:', error);
-      setBalances([]);
-    } finally {
-      setLoading(false);
     }
   };
   
@@ -236,112 +205,49 @@ export default function LeaveConfigModal({ isOpen, onClose, initialTab = 'leave-
     }
   };
   
-  // Allocation handlers
-  const handleBalanceChange = (balanceId, value) => {
-    setEditingBalances(prev => ({
-      ...prev,
-      [balanceId]: parseFloat(value) || 0
-    }));
-  };
-  
-  const handleSaveBalances = async () => {
-    if (!selectedEmployee) return;
-    
-    setSavingBalances(true);
-    try {
-      const updates = Object.entries(editingBalances).map(([balanceId, entitledDays]) => {
-        const balance = balances.find(b => b.id === parseInt(balanceId));
-        return {
-          employee_id: selectedEmployee,
-          leave_type_id: balance.leave_type_id,
-          year: selectedYear,
-          entitled_days: entitledDays
-        };
-      });
-      
-      await API('/api/leave/balances/bulk', {
-        method: 'POST',
-        body: JSON.stringify({ updates })
-      });
-      
-      await loadBalances(selectedEmployee, selectedYear);
-      alert('Balances updated successfully');
-    } catch (error) {
-      console.error('Error saving balances:', error);
-      alert(error.message || 'Failed to save balances');
-    } finally {
-      setSavingBalances(false);
-    }
-  };
-  
-  const handleInitializeBalances = async () => {
-    if (!selectedEmployee) return;
-    
-    if (!window.confirm(`Initialize balances for this employee from default entitlements?`)) {
-      return;
-    }
-    
-    try {
-      await API('/api/leave/balances/initialize', {
-        method: 'POST',
-        body: JSON.stringify({
-          employee_ids: [selectedEmployee],
-          year: selectedYear,
-          leave_type_ids: null // All types
-        })
-      });
-      
-      await loadBalances(selectedEmployee, selectedYear);
-      alert('Balances initialized successfully');
-    } catch (error) {
-      console.error('Error initializing balances:', error);
-      alert(error.message || 'Failed to initialize balances');
-    }
-  };
-  
-  // Bulk operations handlers
-  const handleBulkPreview = () => {
-    if (bulkSelectedEmployees.length === 0) {
+  // Leave Allocations handlers (formerly Bulk Operations)
+  const handlePreview = () => {
+    if (selectedEmployees.length === 0) {
       alert('Please select at least one employee');
       return;
     }
     
-    if (!bulkValue || isNaN(parseFloat(bulkValue))) {
+    if (!value || isNaN(parseFloat(value))) {
       alert('Please enter a valid number');
       return;
     }
     
-    const preview = [];
-    bulkSelectedEmployees.forEach(empId => {
+    const previewData = [];
+    selectedEmployees.forEach(empId => {
       leaveTypes.forEach(lt => {
-        if (bulkLeaveType !== 'all' && lt.id !== parseInt(bulkLeaveType)) return;
+        if (leaveType !== 'all' && lt.id !== parseInt(leaveType)) return;
         
-        preview.push({
+        previewData.push({
           employee_id: empId,
           employee_name: employees.find(e => e.id === empId)?.first_name + ' ' + employees.find(e => e.id === empId)?.last_name,
           leave_type_id: lt.id,
           leave_type_name: lt.name,
           current_value: 0, // Would need to fetch current balances
-          new_value: parseFloat(bulkValue)
+          new_value: parseFloat(value)
         });
       });
     });
     
-    setBulkPreview(preview);
+    setPreview(previewData);
   };
   
-  const handleExecuteBulk = async () => {
-    if (bulkPreview.length === 0) {
+  const handleExecute = async () => {
+    if (preview.length === 0) {
       alert('Please generate preview first');
       return;
     }
     
-    setExecutingBulk(true);
+    setExecuting(true);
     try {
-      const updates = bulkPreview.map(p => ({
+      const updates = preview.map(p => ({
         employee_id: p.employee_id,
         leave_type_id: p.leave_type_id,
-        year: bulkYear,
+        year: year,
         entitled_days: p.new_value
       }));
       
@@ -350,15 +256,15 @@ export default function LeaveConfigModal({ isOpen, onClose, initialTab = 'leave-
         body: JSON.stringify({ updates })
       });
       
-      setBulkPreview([]);
-      setBulkSelectedEmployees([]);
-      setBulkValue('');
-      alert('Bulk update completed successfully');
+      setPreview([]);
+      setSelectedEmployees([]);
+      setValue('');
+      alert('Allocations updated successfully');
     } catch (error) {
-      console.error('Error executing bulk update:', error);
-      alert(error.message || 'Failed to execute bulk update');
+      console.error('Error executing allocations update:', error);
+      alert(error.message || 'Failed to update allocations');
     } finally {
-      setExecutingBulk(false);
+      setExecuting(false);
     }
   };
   
@@ -436,17 +342,7 @@ export default function LeaveConfigModal({ isOpen, onClose, initialTab = 'leave-
                 : 'text-secondary hover:text-white'
             }`}
           >
-            Allocations
-          </button>
-          <button
-            onClick={() => setActiveTab('bulk')}
-            className={`px-6 py-3 font-medium transition-colors ${
-              activeTab === 'bulk'
-                ? 'border-b-2 border-tahoe-accent text-tahoe-accent'
-                : 'text-secondary hover:text-white'
-            }`}
-          >
-            Bulk Operations
+            Leave Allocations
           </button>
           <button
             onClick={() => setActiveTab('policies')}
@@ -482,43 +378,23 @@ export default function LeaveConfigModal({ isOpen, onClose, initialTab = 'leave-
           )}
           
           {activeTab === 'allocations' && (
-            <AllocationsTab
+            <LeaveAllocationsTab
               employees={employees}
               leaveTypes={leaveTypes}
-              selectedEmployee={selectedEmployee}
-              setSelectedEmployee={setSelectedEmployee}
-              selectedYear={selectedYear}
-              setSelectedYear={setSelectedYear}
-              balances={balances}
-              editingBalances={editingBalances}
-              handleBalanceChange={handleBalanceChange}
-              handleSaveBalances={handleSaveBalances}
-              handleInitializeBalances={handleInitializeBalances}
-              savingBalances={savingBalances}
-              loading={loading}
-              canManage={canManage}
-              t={t}
-            />
-          )}
-          
-          {activeTab === 'bulk' && (
-            <BulkOperationsTab
-              employees={employees}
-              leaveTypes={leaveTypes}
-              bulkSelectedEmployees={bulkSelectedEmployees}
-              setBulkSelectedEmployees={setBulkSelectedEmployees}
-              bulkYear={bulkYear}
-              setBulkYear={setBulkYear}
-              bulkLeaveType={bulkLeaveType}
-              setBulkLeaveType={setBulkLeaveType}
-              bulkOperation={bulkOperation}
-              setBulkOperation={setBulkOperation}
-              bulkValue={bulkValue}
-              setBulkValue={setBulkValue}
-              bulkPreview={bulkPreview}
-              handleBulkPreview={handleBulkPreview}
-              handleExecuteBulk={handleExecuteBulk}
-              executingBulk={executingBulk}
+              selectedEmployees={selectedEmployees}
+              setSelectedEmployees={setSelectedEmployees}
+              year={year}
+              setYear={setYear}
+              leaveType={leaveType}
+              setLeaveType={setLeaveType}
+              operation={operation}
+              setOperation={setOperation}
+              value={value}
+              setValue={setValue}
+              preview={preview}
+              handlePreview={handlePreview}
+              handleExecute={handleExecute}
+              executing={executing}
               canManage={canManage}
               t={t}
             />
@@ -842,194 +718,53 @@ function LeaveTypesTab({
   );
 }
 
-// Allocations Tab Component
-function AllocationsTab({
+// Leave Allocations Tab Component (formerly Bulk Operations)
+function LeaveAllocationsTab({
   employees,
   leaveTypes,
-  selectedEmployee,
-  setSelectedEmployee,
-  selectedYear,
-  setSelectedYear,
-  balances,
-  editingBalances,
-  handleBalanceChange,
-  handleSaveBalances,
-  handleInitializeBalances,
-  savingBalances,
-  loading,
+  selectedEmployees,
+  setSelectedEmployees,
+  year,
+  setYear,
+  leaveType,
+  setLeaveType,
+  operation,
+  setOperation,
+  value,
+  setValue,
+  preview,
+  handlePreview,
+  handleExecute,
+  executing,
   canManage,
   t
 }) {
   return (
     <div className="space-y-6">
       <div className="card p-6">
-        <h4 className="text-lg font-medium mb-4">Per-Employee Allocations</h4>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">Employee</label>
-            <select
-              value={selectedEmployee || ''}
-              onChange={(e) => {
-                const empId = e.target.value ? parseInt(e.target.value, 10) : null;
-                setSelectedEmployee(empId);
-                if (empId) {
-                  // Load balances will be triggered by useEffect
-                }
-              }}
-              className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-            >
-              <option value="">Select employee...</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.first_name} {emp.last_name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Year</label>
-            <input
-              type="number"
-              value={selectedYear}
-              onChange={(e) => {
-                const year = parseInt(e.target.value, 10);
-                setSelectedYear(year);
-              }}
-              className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-              min="2020"
-              max="2100"
-            />
-          </div>
-        </div>
-        
-        {selectedEmployee && (
-          <>
-            <div className="flex gap-3 mb-4">
-              {canManage && (
-                <>
-                  <button
-                    onClick={handleSaveBalances}
-                    disabled={savingBalances}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {savingBalances ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button
-                    onClick={handleInitializeBalances}
-                    className="btn-secondary"
-                  >
-                    Initialize from Defaults
-                  </button>
-                </>
-              )}
-            </div>
-            
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tahoe-accent mx-auto"></div>
-                <p className="text-secondary mt-2">Loading balances...</p>
-              </div>
-            ) : balances.length === 0 ? (
-              <p className="text-secondary">No balances found for this employee/year. Click "Initialize from Defaults" to create them.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Leave Type</th>
-                      <th className="text-left py-2">Default</th>
-                      <th className="text-left py-2">Entitled Days</th>
-                      <th className="text-left py-2">Used Days</th>
-                      <th className="text-left py-2">Available Days</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {balances.map(balance => {
-                      const leaveType = leaveTypes.find(lt => lt.id === balance.leave_type_id);
-                      const entitledDays = editingBalances[balance.id] ?? parseFloat(balance.entitled_days);
-                      const usedDays = parseFloat(balance.used_days);
-                      const availableDays = entitledDays - usedDays + parseFloat(balance.carried_over_days || 0);
-                      
-                      return (
-                        <tr key={balance.id} className="border-b">
-                          <td className="py-2">{leaveType?.name || 'Unknown'}</td>
-                          <td className="py-2">{leaveType?.default_annual_entitlement || 0}</td>
-                          <td className="py-2">
-                            {canManage ? (
-                              <input
-                                type="number"
-                                min={usedDays}
-                                value={entitledDays}
-                                onChange={(e) => handleBalanceChange(balance.id, e.target.value)}
-                                className="w-24 px-2 py-1 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                              />
-                            ) : (
-                              <span>{entitledDays}</span>
-                            )}
-                          </td>
-                          <td className="py-2">{usedDays}</td>
-                          <td className="py-2">{availableDays.toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Bulk Operations Tab Component
-function BulkOperationsTab({
-  employees,
-  leaveTypes,
-  bulkSelectedEmployees,
-  setBulkSelectedEmployees,
-  bulkYear,
-  setBulkYear,
-  bulkLeaveType,
-  setBulkLeaveType,
-  bulkOperation,
-  setBulkOperation,
-  bulkValue,
-  setBulkValue,
-  bulkPreview,
-  handleBulkPreview,
-  handleExecuteBulk,
-  executingBulk,
-  canManage,
-  t
-}) {
-  return (
-    <div className="space-y-6">
-      <div className="card p-6">
-        <h4 className="text-lg font-medium mb-4">Bulk Operations</h4>
+        <h4 className="text-lg font-medium mb-4">Leave Allocations</h4>
+        <p className="text-sm text-secondary mb-4">Manage leave allocations for one or multiple employees. Select employee(s), choose leave type(s), and set the allocation amount.</p>
         
         {!canManage && (
-          <p className="text-secondary mb-4">You don't have permission to perform bulk operations.</p>
+          <p className="text-secondary mb-4">You don't have permission to manage leave allocations.</p>
         )}
         
         {canManage && (
           <>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Select Employees</label>
+                <label className="block text-sm font-medium mb-2">Select Employee(s)</label>
                 <div className="max-h-48 overflow-y-auto border rounded p-2">
                   {employees.map(emp => (
                     <label key={emp.id} className="flex items-center gap-2 p-2 hover:bg-tahoe-bg-hover rounded cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={bulkSelectedEmployees.includes(emp.id)}
+                        checked={selectedEmployees.includes(emp.id)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setBulkSelectedEmployees([...bulkSelectedEmployees, emp.id]);
+                            setSelectedEmployees([...selectedEmployees, emp.id]);
                           } else {
-                            setBulkSelectedEmployees(bulkSelectedEmployees.filter(id => id !== emp.id));
+                            setSelectedEmployees(selectedEmployees.filter(id => id !== emp.id));
                           }
                         }}
                       />
@@ -1044,8 +779,8 @@ function BulkOperationsTab({
                   <label className="block text-sm font-medium mb-2">Year</label>
                   <input
                     type="number"
-                    value={bulkYear}
-                    onChange={(e) => setBulkYear(parseInt(e.target.value, 10))}
+                    value={year}
+                    onChange={(e) => setYear(parseInt(e.target.value, 10))}
                     className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                     min="2020"
                     max="2100"
@@ -1054,8 +789,8 @@ function BulkOperationsTab({
                 <div>
                   <label className="block text-sm font-medium mb-2">Leave Type</label>
                   <select
-                    value={bulkLeaveType}
-                    onChange={(e) => setBulkLeaveType(e.target.value)}
+                    value={leaveType}
+                    onChange={(e) => setLeaveType(e.target.value)}
                     className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                   >
                     <option value="all">All Types</option>
@@ -1067,8 +802,8 @@ function BulkOperationsTab({
                 <div>
                   <label className="block text-sm font-medium mb-2">Operation</label>
                   <select
-                    value={bulkOperation}
-                    onChange={(e) => setBulkOperation(e.target.value)}
+                    value={operation}
+                    onChange={(e) => setOperation(e.target.value)}
                     className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                   >
                     <option value="set">Set to value</option>
@@ -1079,13 +814,13 @@ function BulkOperationsTab({
                 </div>
               </div>
               
-              {bulkOperation !== 'default' && (
+              {operation !== 'default' && (
                 <div>
                   <label className="block text-sm font-medium mb-2">Value</label>
                   <input
                     type="number"
-                    value={bulkValue}
-                    onChange={(e) => setBulkValue(e.target.value)}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
                     className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                     placeholder="Enter number of days"
                   />
@@ -1094,29 +829,29 @@ function BulkOperationsTab({
               
               <div className="flex gap-3">
                 <button
-                  onClick={handleBulkPreview}
+                  onClick={handlePreview}
                   className="btn-secondary"
                 >
                   Generate Preview
                 </button>
               </div>
               
-              {bulkPreview.length > 0 && (
+              {preview.length > 0 && (
                 <div>
-                  <h5 className="font-medium mb-2">Preview ({bulkPreview.length} updates)</h5>
+                  <h5 className="font-medium mb-2">Preview ({preview.length} updates)</h5>
                   <div className="max-h-64 overflow-y-auto border rounded p-2">
-                    {bulkPreview.map((p, idx) => (
+                    {preview.map((p, idx) => (
                       <div key={idx} className="text-sm p-2 border-b">
                         {p.employee_name} - {p.leave_type_name}: {p.current_value} → {p.new_value}
                       </div>
                     ))}
                   </div>
                   <button
-                    onClick={handleExecuteBulk}
-                    disabled={executingBulk}
+                    onClick={handleExecute}
+                    disabled={executing}
                     className="btn-primary mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {executingBulk ? 'Executing...' : 'Execute Bulk Update'}
+                    {executing ? 'Applying...' : 'Apply Allocations'}
                   </button>
                 </div>
               )}
