@@ -6,7 +6,7 @@ import { formatShortDate } from '../utils/timezone.js';
 
 const STATUS_COLORS = {
   'Pending': 'bg-tahoe-warning-bg text-tahoe-warning-text border-tahoe-warning-border',
-  'Approved': 'bg-tahoe-success-bg text-black border-tahoe-success-border',
+  'Approved': 'bg-tahoe-success-bg text-black border-black',
   'Rejected': 'bg-tahoe-error-bg text-tahoe-error-text border-tahoe-error-border'
 };
 

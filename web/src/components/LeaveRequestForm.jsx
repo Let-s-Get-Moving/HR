@@ -201,7 +201,7 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
             <div 
               className={`p-4 rounded-tahoe-input border ${
                 message.type === 'success' 
-                  ? 'bg-tahoe-success-bg text-tahoe-success-text border-tahoe-success-border' 
+                  ? 'bg-tahoe-success-bg text-tahoe-success-text border-black' 
                   : 'bg-tahoe-bg-secondary text-tahoe-text-primary border-tahoe-border'
               }`}
               style={message.type === 'success' ? { color: 'rgba(0, 0, 0, 1)' } : undefined}
