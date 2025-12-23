@@ -90,14 +90,15 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
   };
 
   return (
-    <div className="flex flex-col h-full bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-r border-slate-200 dark:border-slate-700">
+    <div className="flex flex-col h-full border-r" style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
       {/* Header */}
-      <div className="flex-shrink-0 p-4 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex-shrink-0 p-4 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-primary">Messages</h2>
+          <h2 className="text-lg font-semibold text-tahoe-text-primary">Messages</h2>
           <button
             onClick={onNewThread}
-            className="p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+            className="p-2 rounded-lg transition-all duration-tahoe"
+            style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
             title="New message"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,10 +114,11 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 pl-10 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+            className="w-full px-4 py-2 pl-10 rounded-tahoe-input text-sm focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
           />
           <svg
-            className="absolute left-3 top-2.5 w-5 h-5 text-slate-400"
+            className="absolute left-3 top-2.5 w-5 h-5 text-tahoe-text-muted"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -130,55 +132,55 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
       <div className="flex-1 overflow-y-auto min-h-0">
         {loading ? (
           <div className="flex items-center justify-center p-8">
-            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-4 border-tahoe-accent border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredThreads.length === 0 ? (
           <div className="flex flex-col items-center justify-center p-8 text-center">
-            <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-12 h-12 text-tahoe-text-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <p className="text-slate-500 dark:text-slate-400">No conversations</p>
+            <p className="text-tahoe-text-muted">No conversations</p>
             <button
               onClick={onNewThread}
-              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
+              className="mt-4 px-4 py-2 rounded-tahoe-pill transition-all duration-tahoe text-sm"
+              style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
             >
               Start a conversation
             </button>
           </div>
         ) : (
-          <div className="divide-y divide-slate-200 dark:divide-slate-700">
+          <div className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
             {filteredThreads.map((thread) => (
               <motion.button
                 key={thread.id}
                 onClick={() => onSelectThread(thread)}
-                className={`w-full text-left p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                  selectedThreadId === thread.id ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
-                }`}
+                className="w-full text-left p-4 hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+                style={selectedThreadId === thread.id ? { backgroundColor: 'rgba(10, 132, 255, 0.1)' } : {}}
                 whileHover={{ x: 2 }}
               >
                 <div className="flex items-start space-x-3">
                   {/* Avatar */}
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold" style={{ backgroundColor: '#0A84FF' }}>
                     {thread.other_user_name?.charAt(0)?.toUpperCase() || thread.other_username?.charAt(0)?.toUpperCase() || '?'}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-sm font-semibold text-primary truncate">
+                      <h3 className="text-sm font-semibold text-tahoe-text-primary truncate">
                         {thread.other_user_name || thread.other_username || 'Unknown User'}
                       </h3>
-                      <span className="text-xs text-slate-400 flex-shrink-0 ml-2">
+                      <span className="text-xs text-tahoe-text-muted flex-shrink-0 ml-2">
                         {formatTime(thread.last_message_at)}
                       </span>
                     </div>
                     {thread.subject && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-1">
+                      <p className="text-xs text-tahoe-text-muted truncate mb-1">
                         {thread.subject}
                       </p>
                     )}
                     {thread.other_user_role && (
-                      <span className="inline-block px-2 py-0.5 text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full">
+                      <span className="inline-block px-2 py-0.5 text-xs rounded-full" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#98989a' }}>
                         {thread.other_user_role}
                       </span>
                     )}

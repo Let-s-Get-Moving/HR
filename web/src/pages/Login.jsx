@@ -38,43 +38,47 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: '#0B0B0C' }}>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card w-full max-w-md"
+        transition={{ duration: 0.2 }}
+        className="w-full max-w-md rounded-tahoe shadow-tahoe border"
+        style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255, 255, 255, 0.12)' }}
       >
         <div className="p-8">
           {/* Logo and Branding */}
           <div className="text-center mb-8">
             <div className="text-4xl mb-4">🚛</div>
-            <h1 className="text-2xl font-bold mb-2 text-primary">Command & Control Logistics</h1>
-            <p className="text-secondary">Human Resources Management</p>
+            <h1 className="text-2xl font-semibold mb-2 text-tahoe-text-primary">Command & Control Logistics</h1>
+            <p className="text-tahoe-text-secondary">Human Resources Management</p>
           </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="form-group">
-              <label className="block text-sm font-medium mb-2 text-primary">Username</label>
+              <label className="block text-xs font-medium mb-1.5 text-tahoe-text-primary tracking-wide">Username</label>
               <input
                 type="text"
                 required
                 value={credentials.username}
                 onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-                className="w-full px-4 py-3 input-md"
+                className="w-full px-4 py-3 rounded-tahoe-input border transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 placeholder="Enter username"
                 disabled={loading}
               />
             </div>
 
             <div className="form-group">
-              <label className="block text-sm font-medium mb-2 text-primary">Password</label>
+              <label className="block text-xs font-medium mb-1.5 text-tahoe-text-primary tracking-wide">Password</label>
               <input
                 type="password"
                 required
                 value={credentials.password}
                 onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                className="w-full px-4 py-3 input-md"
+                className="w-full px-4 py-3 rounded-tahoe-input border transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 placeholder="Enter password"
                 disabled={loading}
               />
@@ -84,29 +88,30 @@ export default function Login({ onLogin }) {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-error text-sm text-center"
+                className="text-sm text-center text-red-500"
               >
                 {error}
               </motion.div>
             )}
 
             <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               type="submit"
               disabled={loading}
-              className="w-full btn-primary py-3 rounded-lg font-medium transition-colors disabled:opacity-50"
+              className="w-full py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe disabled:opacity-50"
+              style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
             >
               {loading ? "Signing In..." : "Sign In"}
             </motion.button>
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 card-sm">
-            <p className="text-xs text-secondary text-center">
-              <strong>Demo Credentials:</strong><br />
-              Username: <code className="text-primary font-medium">Avneet</code><br />
-              Password: <code className="text-primary font-medium">password123</code>
+          <div className="mt-6 p-4 rounded-tahoe border" style={{ backgroundColor: 'rgba(22, 22, 24, 0.6)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+            <p className="text-xs text-tahoe-text-secondary text-center">
+              <strong className="text-tahoe-text-primary">Demo Credentials:</strong><br />
+              Username: <code className="text-tahoe-accent font-medium">Avneet</code><br />
+              Password: <code className="text-tahoe-accent font-medium">password123</code>
             </p>
           </div>
         </div>

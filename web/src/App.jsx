@@ -217,41 +217,41 @@ export default function App() {
   const CurrentComponent = pages[currentPage].component;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen" style={{ backgroundColor: '#0B0B0C' }}>
       {/* Header */}
-      <header className="bg-white/90 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm sticky top-0 z-40">
-        <div className="px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-40 border-b" style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+        <div className="px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg text-secondary hover:text-primary hover:bg-hover dark:hover:bg-slate-700/50 transition-colors lg:hidden"
+                className="p-2 rounded-lg text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe lg:hidden"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-lg">HR</span>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-tahoe-sm" style={{ background: 'linear-gradient(135deg, #0A84FF 0%, #0071e3 100%)' }}>
+                  <span className="text-white font-semibold text-lg">HR</span>
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-primary">{t('app.title')}</h1>
-                  <p className="text-xs text-secondary">{t('app.subtitle')}</p>
+                  <h1 className="text-xl font-semibold text-tahoe-text-primary">{t('app.title')}</h1>
+                  <p className="text-xs text-tahoe-text-muted">{t('app.subtitle')}</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block text-sm">
-                <div className="text-primary font-medium">{t('app.welcome')}, {user.username}</div>
-                <div className="text-xs text-secondary">{t('app.lastLogin')}: {new Date().toLocaleDateString()}</div>
+                <div className="text-tahoe-text-primary font-medium">{t('app.welcome')}, {user.username}</div>
+                <div className="text-xs text-tahoe-text-muted">{t('app.lastLogin')}: {new Date().toLocaleDateString()}</div>
               </div>
               <NotificationCenter onNavigate={handleNavigate} />
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-secondary hover:text-primary hover:bg-hover dark:hover:bg-slate-700/50 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe"
               >
                 <Icons.logout />
                 <span className="hidden sm:inline font-medium">{t('nav.logout')}</span>
@@ -264,17 +264,19 @@ export default function App() {
       {/* Password Expiry Warning Banner */}
       {passwordWarning && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-yellow-500 dark:bg-yellow-600 text-black dark:text-white shadow-md"
+          transition={{ duration: 0.2 }}
+          className="shadow-tahoe-sm"
+          style={{ backgroundColor: 'rgba(255, 159, 10, 0.15)', borderBottom: '1px solid rgba(255, 159, 10, 0.3)' }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">⚠️</span>
                 <div>
-                  <p className="font-semibold">{passwordWarning.message}</p>
-                  <p className="text-sm opacity-90">
+                  <p className="font-semibold text-tahoe-text-primary">{passwordWarning.message}</p>
+                  <p className="text-sm text-tahoe-text-secondary">
                     {t('app.pleaseChangePassword')}
                   </p>
                 </div>
@@ -282,7 +284,8 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setCurrentPage('settings')}
-                  className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:opacity-90 transition-opacity"
+                  className="px-4 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                  style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
                 >
                   {t('app.changePassword')}
                 </button>
@@ -291,7 +294,7 @@ export default function App() {
                     setPasswordWarning(null);
                     localStorage.removeItem('passwordWarning');
                   }}
-                  className="p-2 hover:bg-black hover:bg-opacity-10 rounded-lg transition-colors"
+                  className="p-2 hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
                   title={t('app.dismiss')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,15 +309,17 @@ export default function App() {
 
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar Navigation */}
-        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-r border-slate-200 dark:border-slate-600 transform transition-transform duration-300 ease-in-out ${
+        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-tahoe ease-tahoe ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}>
+        }`}
+        style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRight: '1px solid rgba(255, 255, 255, 0.12)' }}
+        >
           <div className="p-6">
             <div className="flex justify-between items-center mb-6 lg:hidden">
-              <h2 className="text-lg font-semibold text-primary">{t('nav.navigation')}</h2>
+              <h2 className="text-lg font-semibold text-tahoe-text-primary">{t('nav.navigation')}</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-hover dark:hover:bg-slate-700/50 transition-colors"
+                className="p-2 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -325,16 +330,16 @@ export default function App() {
               {Object.entries(allowedPages).map(([key, page]) => (
                 <motion.button
                   key={key}
-                  whileHover={{ x: 4 }}
+                  whileHover={{ x: 2 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setCurrentPage(key);
-                    setSidebarOpen(false); // Close sidebar on mobile
+                    setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-tahoe text-left transition-all duration-tahoe ${
                     currentPage === key
-                      ? "bg-indigo-600 dark:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25 dark:shadow-indigo-500/50"
-                      : "text-secondary hover:bg-hover hover:text-primary dark:hover:bg-slate-700/50"
+                      ? "bg-tahoe-accent text-white shadow-tahoe-sm"
+                      : "text-tahoe-text-secondary hover:bg-tahoe-bg-hover hover:text-tahoe-text-primary"
                   }`}
                 >
                   <page.icon />
@@ -348,18 +353,18 @@ export default function App() {
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Main Content */}
-        <main className="flex-1 bg-slate-50/50 dark:bg-slate-900/50 p-6 lg:p-8 overflow-hidden">
+        <main className="flex-1 p-6 lg:p-8 overflow-hidden" style={{ backgroundColor: '#0B0B0C' }}>
           <motion.div
             key={currentPage}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className="h-full"
           >
             <CurrentComponent onNavigate={handleNavigate} user={user} pageParams={pageParams} />

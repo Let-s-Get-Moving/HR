@@ -76,7 +76,8 @@ export const SkipLink = ({ href, children = "Skip to main content" }) => {
   return (
     <a
       href={href}
-      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-indigo-600 text-white px-4 py-2 rounded-lg z-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 px-4 py-2 rounded-tahoe-pill z-50 focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+      style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
     >
       {children}
     </a>
@@ -123,13 +124,13 @@ export const AccessibleButton = ({
   className = "",
   ...props 
 }) => {
-  const baseClasses = "inline-flex items-center justify-center font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseClasses = "inline-flex items-center justify-center font-medium rounded-tahoe-pill transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variantClasses = {
-    primary: "bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-indigo-500",
-    secondary: "bg-neutral-700 hover:bg-neutral-600 text-white focus:ring-neutral-500",
-    danger: "bg-red-600 hover:bg-red-700 text-white focus:ring-red-500",
-    ghost: "bg-transparent hover:bg-neutral-700 text-neutral-300 hover:text-white focus:ring-neutral-500"
+    primary: "text-white focus:ring-tahoe-accent",
+    secondary: "text-white focus:ring-tahoe-accent",
+    danger: "text-white focus:ring-red-500",
+    ghost: "text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover focus:ring-tahoe-accent"
   };
   
   const sizeClasses = {
@@ -138,11 +139,19 @@ export const AccessibleButton = ({
     lg: "px-6 py-3 text-base"
   };
 
+  const variantStyles = {
+    primary: { backgroundColor: '#0A84FF', color: '#ffffff' },
+    secondary: { backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' },
+    danger: { backgroundColor: '#ff453a', color: '#ffffff' },
+    ghost: {}
+  };
+
   return (
     <button
       onClick={onClick}
       disabled={disabled || loading}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      style={variantStyles[variant]}
       aria-disabled={disabled || loading}
       {...props}
     >
@@ -174,7 +183,7 @@ export const AccessibleFormField = ({
     <div className={`space-y-2 ${className}`}>
       <label 
         htmlFor={fieldId}
-        className="block text-sm font-medium text-neutral-300"
+        className="block text-sm font-medium text-tahoe-text-primary"
       >
         {label}
         {required && <span className="text-red-400 ml-1" aria-label="required">*</span>}
@@ -188,13 +197,13 @@ export const AccessibleFormField = ({
       })}
       
       {helpText && (
-        <p id={helpId} className="text-sm text-neutral-400">
+        <p id={helpId} className="text-sm text-tahoe-text-muted">
           {helpText}
         </p>
       )}
       
       {error && (
-        <p id={errorId} className="text-sm text-red-400" role="alert">
+        <p id={errorId} className="text-sm text-tahoe-error-text" role="alert">
           {error}
         </p>
       )}
@@ -214,7 +223,7 @@ export const AccessibleTable = ({
     <div className="overflow-x-auto">
       <table className={`w-full ${className}`} {...props}>
         {caption && (
-          <caption className="text-left text-lg font-semibold mb-4 text-neutral-300">
+          <caption className="text-left text-lg font-semibold mb-4 text-tahoe-text-primary">
             {caption}
           </caption>
         )}
@@ -224,20 +233,20 @@ export const AccessibleTable = ({
               <th
                 key={index}
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-neutral-400 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-tahoe-text-secondary uppercase tracking-wider"
               >
                 {column.header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-800">
+        <tbody className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
           {data.map((row, rowIndex) => (
             <tr key={rowIndex}>
               {columns.map((column, colIndex) => (
                 <td
                   key={colIndex}
-                  className="px-6 py-4 whitespace-nowrap text-sm text-neutral-300"
+                  className="px-6 py-4 whitespace-nowrap text-sm text-tahoe-text-primary"
                 >
                   {column.render ? column.render(row) : row[column.key]}
                 </td>

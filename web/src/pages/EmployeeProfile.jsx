@@ -536,7 +536,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   if (loading) {
     return (
       <div className="p-6 flex items-center justify-center">
-        <div className="text-neutral-400">{t('employeeProfile.loadingProfile')}</div>
+        <div className="text-tahoe-text-muted">{t('employeeProfile.loadingProfile')}</div>
       </div>
     );
   }
@@ -555,7 +555,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-2xl font-bold">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold" style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}>
               {employee.first_name[0]}{employee.last_name[0]}
             </div>
             <div>
@@ -567,14 +567,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       value={editData.first_name || ''}
                       onChange={(e) => setEditData({...editData, first_name: e.target.value})}
                       placeholder={t('employeeProfile.firstName')}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-xl font-bold"
+                      className="rounded-tahoe-input px-3 py-1 text-xl font-bold transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
                     <input
                       type="text"
                       value={editData.last_name || ''}
                       onChange={(e) => setEditData({...editData, last_name: e.target.value})}
                       placeholder={t('employeeProfile.lastName')}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-xl font-bold"
+                      className="rounded-tahoe-input px-3 py-1 text-xl font-bold transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
                   </div>
                   <input
@@ -582,13 +584,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     value={editData.role_title || ''}
                     onChange={(e) => setEditData({...editData, role_title: e.target.value})}
                     placeholder={t('employeeProfile.roleTitle')}
-                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-1 text-sm text-neutral-400 w-full"
+                    className="rounded-tahoe-input px-3 py-1 text-sm w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                 </div>
               ) : (
                 <>
                   <h1 className="text-3xl font-bold">{employee.first_name} {employee.last_name}</h1>
-                  <p className="text-neutral-400">{employee.role_title}</p>
+                  <p className="text-tahoe-text-muted">{employee.role_title}</p>
                 </>
               )}
             </div>
@@ -597,7 +600,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             {!isEditing ? (
               <button
                 onClick={handleEdit}
-                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                className="px-4 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
               >
                 Edit Profile
               </button>
@@ -605,13 +609,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <>
                 <button
                   onClick={handleSave}
-                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                  style={{ backgroundColor: '#30d158', color: '#ffffff' }}
                 >
                   Save Changes
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="bg-neutral-600 hover:bg-neutral-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                 >
                   Cancel
                 </button>
@@ -621,13 +627,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         </div>
         
         <div className="grid grid-cols-4 gap-4">
-          <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">{t('employeeProfile.status')}</div>
+          <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.status')}</div>
             {isEditing ? (
               <select
                 value={editData.status || ''}
                 onChange={(e) => setEditData({...editData, status: e.target.value})}
-                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
+                className="rounded-tahoe-input px-2 py-1 w-full mt-1 transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
               >
                 <option value="Active">{t('employeeProfile.statusActive')}</option>
                 <option value="On Leave">{t('employeeProfile.statusOnLeave')}</option>
@@ -637,21 +644,22 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div className="font-medium">{employee.status}</div>
             )}
           </div>
-          <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">{t('employeeProfile.hireDate')}</div>
+          <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.hireDate')}</div>
             {isEditing ? (
               <input
                 type="date"
                 value={editData.hire_date || ''}
                 onChange={(e) => setEditData({...editData, hire_date: e.target.value})}
-                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
+                className="rounded-tahoe-input px-2 py-1 w-full mt-1 transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
               />
             ) : (
-              <div className="font-medium">{formatShortDate(employee.hire_date)}</div>
+              <div className="font-medium text-tahoe-text-primary">{formatShortDate(employee.hire_date)}</div>
             )}
           </div>
-          <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">{t('employeeProfile.hourlyRate')}</div>
+          <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.hourlyRate')}</div>
             {isEditing ? (
               <div className="flex items-center">
                 <span className="mr-1">$</span>
@@ -661,21 +669,23 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   min="0"
                   value={editData.hourly_rate || ''}
                   onChange={(e) => setEditData({...editData, hourly_rate: parseFloat(e.target.value) || 0})}
-                  className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-20 text-center"
+                  className="rounded-tahoe-input px-2 py-1 w-20 text-center transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
                 <span className="ml-1">/hr</span>
               </div>
             ) : (
-              <div className="font-medium">${employee.hourly_rate || 25}/hr</div>
+              <div className="font-medium text-tahoe-text-primary">${employee.hourly_rate || 25}/hr</div>
             )}
           </div>
-          <div className="bg-neutral-800 p-4 rounded-lg">
-            <div className="text-sm text-neutral-400">{t('employeeProfile.department')}</div>
+          <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.department')}</div>
             {isEditing ? (
               <select
                 value={editData.department_id || ''}
                 onChange={(e) => setEditData({...editData, department_id: parseInt(e.target.value) || null})}
-                className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 w-full mt-1"
+                className="rounded-tahoe-input px-2 py-1 w-full mt-1 transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
               >
                 <option value="">{t('employeeProfile.notAssigned')}</option>
                 {departments.map(dept => (
@@ -690,16 +700,17 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex space-x-1 mb-8 bg-neutral-800 p-1 rounded-lg">
+      <div className="flex space-x-1 mb-8 p-1 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+            className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-all duration-tahoe ${
               activeTab === tab.id
-                ? "bg-indigo-600 text-white"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-700"
+                ? "text-tahoe-primary-text"
+                : "text-tahoe-text-muted hover:text-tahoe-text-primary"
             }`}
+            style={activeTab === tab.id ? { backgroundColor: '#0A84FF' } : {}}
           >
             <span>{tab.icon}</span>
             <span>{tab.name}</span>
@@ -715,37 +726,39 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="grid grid-cols-2 gap-8"
         >
           <div className="space-y-6">
-            <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.personalInformation')}</h3>
+            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.personalInformation')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.email')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.email')}:</span>
                   {isEditing ? (
                     <div className="flex flex-col items-end gap-2">
-                      <div className="text-xs text-neutral-500">{t('employeeProfile.workEmail')}</div>
+                      <div className="text-xs text-tahoe-text-muted">{t('employeeProfile.workEmail')}</div>
                       <input
                         type="email"
                         value={editData.work_email || ''}
                         onChange={(e) => setEditData({...editData, work_email: e.target.value})}
-                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right w-64 font-mono text-xs text-indigo-400"
+                        className="rounded-tahoe-input px-2 py-1 text-right w-64 font-mono text-xs transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
                         placeholder="firstname@letsgetmovinggroup.com"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                       />
-                      <div className="text-xs text-neutral-500 mt-2">{t('employeeProfile.personalEmail')}</div>
+                      <div className="text-xs text-tahoe-text-muted mt-2">{t('employeeProfile.personalEmail')}</div>
                       <input
                         type="email"
                         value={editData.email || ''}
                         onChange={(e) => setEditData({...editData, email: e.target.value})}
-                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right w-64"
+                        className="rounded-tahoe-input px-2 py-1 text-right w-64 transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
                         placeholder={t('employeeProfile.personalEmailOptional')}
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                       />
                     </div>
                   ) : (
                     <div className="text-right space-y-1">
-                      <div className="font-mono text-xs text-indigo-400">
+                      <div className="font-mono text-xs text-tahoe-accent">
                         {employee.work_email || `${employee.first_name?.toLowerCase()}@letsgetmovinggroup.com`}
                       </div>
                       {employee.email && (
-                        <div className="text-neutral-300 text-xs">
+                        <div className="text-tahoe-text-primary text-xs">
                           {employee.email}
                         </div>
                       )}
@@ -753,43 +766,46 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.phone')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.phone')}:</span>
                   {isEditing ? (
                     <input
                       type="tel"
                       value={editData.phone || ''}
                       onChange={(e) => setEditData({...editData, phone: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 text-right"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
                   ) : (
-                    <span>{employee.phone || t('employeeProfile.notProvided')}</span>
+                    <span className="text-tahoe-text-primary">{employee.phone || t('employeeProfile.notProvided')}</span>
                   )}
                 </div>
                 {hasFullAccess(userRole) && (
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">Nickname:</span>
+                    <span className="text-tahoe-text-muted">Nickname:</span>
                     {isEditing ? (
                       <input
                         type="text"
                         value={editData.nickname || ''}
                         onChange={(e) => setEditData({...editData, nickname: e.target.value})}
-                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 text-right"
+                        className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 text-right"
                         placeholder="e.g., Dmytro Benz"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                       />
                     ) : (
-                      <span className="text-neutral-300">
-                        {employee.nickname || <span className="text-neutral-500 italic">Not set</span>}
+                      <span className="text-tahoe-text-primary">
+                        {employee.nickname || <span className="text-tahoe-text-muted italic">Not set</span>}
                       </span>
                     )}
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.gender')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.gender')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.gender || ''}
                       onChange={(e) => setEditData({...editData, gender: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     >
                       <option value="">{t('employeeProfile.notSpecified')}</option>
                       <option value="Male">{t('employeeProfile.genderMale')}</option>
@@ -798,17 +814,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       <option value="Prefer not to say">{t('employeeProfile.genderPreferNotToSay')}</option>
                     </select>
                   ) : (
-                    <span>{employee.gender || t('employeeProfile.notSpecified')}</span>
+                    <span className="text-tahoe-text-primary">{employee.gender || t('employeeProfile.notSpecified')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.birthDate')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.birthDate')}:</span>
                   {isEditing ? (
                     <input
                       type="date"
                       value={editData.birth_date || ''}
                       onChange={(e) => setEditData({...editData, birth_date: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
                   ) : (
                     <span>
@@ -832,29 +849,29 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
             </div>
 
-            <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.employmentDetails')}</h3>
+            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.employmentDetails')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.hireDate')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.hireDate')}:</span>
                   {isEditing ? (
                     <input
                       type="date"
                       value={editData.hire_date || ''}
                       onChange={(e) => setEditData({...editData, hire_date: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
                     />
                   ) : (
                     <span>{employee.hire_date ? formatShortDate(employee.hire_date) : t('employeeProfile.notSet')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.employmentType')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.employmentType')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.employment_type || ''}
                       onChange={(e) => setEditData({...editData, employment_type: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
                     >
                       <option value="Full-time">{t('employeeProfile.fullTime')}</option>
                       <option value="Part-time">{t('employeeProfile.partTime')}</option>
@@ -865,7 +882,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.department')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.department')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.department_id || ''}
@@ -874,7 +891,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         console.log('Department changed to:', newValue);
                         setEditData({...editData, department_id: newValue});
                       }}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
                     >
                       <option value="">{t('employeeProfile.noneToBeAssigned')}</option>
                       {departments.map(dept => (
@@ -886,12 +903,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.location')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.location')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.location_id || ''}
                       onChange={(e) => setEditData({...editData, location_id: parseInt(e.target.value) || null})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
                     >
                       <option value="">{t('employeeProfile.noneToBeAssigned')}</option>
                       {locations.map(loc => (
@@ -903,29 +920,29 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   )}
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-neutral-400">{t('employeeProfile.probationEnd')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.probationEnd')}:</span>
                   {isEditing ? (
                     <input
                       type="date"
                       value={editData.probation_end || ''}
                       onChange={(e) => setEditData({...editData, probation_end: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
                     />
                   ) : (
                     <span>{employee.probation_end ? formatShortDate(employee.probation_end) : t('employeeProfile.notSet')}</span>
                   )}
                 </div>
                 {/* Settings Section */}
-                <div className="mt-6 pt-6 border-t border-neutral-700">
-                  <h4 className="text-md font-semibold mb-4 text-neutral-300">{t('employeeProfile.settings')}</h4>
+                <div className="mt-6 pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                  <h4 className="text-md font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.settings')}</h4>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">{t('employeeProfile.jobTitle')}:</span>
+                      <span className="text-tahoe-text-muted">{t('employeeProfile.jobTitle')}:</span>
                       {isEditing ? (
                         <select
                           value={editData.job_title_id || ''}
                           onChange={(e) => setEditData({...editData, job_title_id: parseInt(e.target.value) || null})}
-                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
                         >
                           <option value="">{t('employeeProfile.notAssigned')}</option>
                           {jobTitles.filter(jt => !editData.department_id || jt.department_id === editData.department_id).map(jt => (
@@ -937,12 +954,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       )}
               </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">{t('employeeProfile.benefitsPackage')}:</span>
+                      <span className="text-tahoe-text-muted">{t('employeeProfile.benefitsPackage')}:</span>
                       {isEditing ? (
                         <select
                           value={editData.benefits_package_id || ''}
                           onChange={(e) => setEditData({...editData, benefits_package_id: parseInt(e.target.value) || null})}
-                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
                         >
                           <option value="">{t('employeeProfile.notAssigned')}</option>
                           {benefitsPackages.map(bp => (
@@ -954,12 +971,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       )}
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">{t('employeeProfile.workSchedule')}:</span>
+                      <span className="text-tahoe-text-muted">{t('employeeProfile.workSchedule')}:</span>
                       {isEditing ? (
                         <select
                           value={editData.work_schedule_id || ''}
                           onChange={(e) => setEditData({...editData, work_schedule_id: parseInt(e.target.value) || null})}
-                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
                         >
                           <option value="">{t('employeeProfile.notAssigned')}</option>
                           {workSchedules.map(ws => (
@@ -971,12 +988,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       )}
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">{t('employeeProfile.overtimePolicy')}:</span>
+                      <span className="text-tahoe-text-muted">{t('employeeProfile.overtimePolicy')}:</span>
                       {isEditing ? (
                         <select
                           value={editData.overtime_policy_id || ''}
                           onChange={(e) => setEditData({...editData, overtime_policy_id: parseInt(e.target.value) || null})}
-                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
                         >
                           <option value="">{t('employeeProfile.notAssigned')}</option>
                           {overtimePolicies.map(op => (
@@ -988,12 +1005,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       )}
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">{t('employeeProfile.attendancePolicy')}:</span>
+                      <span className="text-tahoe-text-muted">{t('employeeProfile.attendancePolicy')}:</span>
                       {isEditing ? (
                         <select
                           value={editData.attendance_policy_id || ''}
                           onChange={(e) => setEditData({...editData, attendance_policy_id: parseInt(e.target.value) || null})}
-                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
                         >
                           <option value="">{t('employeeProfile.notAssigned')}</option>
                           {attendancePolicies.map(ap => (
@@ -1005,12 +1022,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       )}
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">{t('employeeProfile.remoteWorkPolicy')}:</span>
+                      <span className="text-tahoe-text-muted">{t('employeeProfile.remoteWorkPolicy')}:</span>
                       {isEditing ? (
                         <select
                           value={editData.remote_work_policy_id || ''}
                           onChange={(e) => setEditData({...editData, remote_work_policy_id: parseInt(e.target.value) || null})}
-                          className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1 min-w-[200px]"
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[200px]"
                         >
                           <option value="">{t('employeeProfile.notAssigned')}</option>
                           {remoteWorkPolicies.map(rwp => (
@@ -1028,18 +1045,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="space-y-6">
-            <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-tahoe-text-primary">
                 <span className="mr-2">📋</span> Onboarding Status
               </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-400">{t('employeeProfile.contract')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.contract')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.contract_status || 'Not Sent'}
                       onChange={(e) => setEditData({...editData, contract_status: e.target.value})}
-                      className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
                     >
                       <option value="Not Sent">{t('employeeProfile.contractNotSent')}</option>
                       <option value="Sent">{t('employeeProfile.contractSent')}</option>
@@ -1051,7 +1068,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         ? 'bg-green-900/50 text-green-300' 
                         : employee.contract_status === 'Sent' 
                         ? 'bg-yellow-900/50 text-yellow-300'
-                        : 'bg-neutral-700 text-neutral-400'
+                        : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
                     }`}>
                       {employee.contract_status || t('employeeProfile.contractNotSent')}
                     </span>
@@ -1059,13 +1076,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 {(employee.contract_signed_date || isEditing) && (
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">{t('employeeProfile.signedOn')}:</span>
+                    <span className="text-tahoe-text-muted">{t('employeeProfile.signedOn')}:</span>
                     {isEditing ? (
                       <input
                         type="date"
                         value={editData.contract_signed_date || ''}
                         onChange={(e) => setEditData({...editData, contract_signed_date: e.target.value})}
-                        className="bg-neutral-700 border border-neutral-600 rounded px-2 py-1"
+                        className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
                       />
                     ) : (
                       <span>{formatShortDate(employee.contract_signed_date)}</span>
@@ -1073,14 +1090,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   </div>
                 )}
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-400">{t('employeeProfile.giftCard')}:</span>
+                  <span className="text-tahoe-text-muted">{t('employeeProfile.giftCard')}:</span>
                   {isEditing ? (
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={editData.gift_card_sent || false}
                         onChange={(e) => setEditData({...editData, gift_card_sent: e.target.checked})}
-                        className="w-4 h-4 bg-neutral-700 border-neutral-600 rounded"
+                        className="w-4 h-4 bg-tahoe-bg-secondary border-tahoe-border-primary rounded"
                       />
                       <span className="text-sm">{t('employeeProfile.sent')}</span>
                     </label>
@@ -1088,7 +1105,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       employee.gift_card_sent 
                         ? 'bg-green-900/50 text-green-300' 
-                        : 'bg-neutral-700 text-neutral-400'
+                        : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
                     }`}>
                       {employee.gift_card_sent ? t('employeeProfile.sentCheckmark') : t('employeeProfile.pending')}
                     </span>
@@ -1096,15 +1113,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 {employee.onboarding_source && (
                   <div className="flex justify-between">
-                    <span className="text-neutral-400">{t('employeeProfile.source')}:</span>
+                    <span className="text-tahoe-text-muted">{t('employeeProfile.source')}:</span>
                     <span className="text-xs">{employee.onboarding_source}</span>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.quickStats')}</h3>
+            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.quickStats')}</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>{t('employeeProfile.totalHoursWorked')}</span>
@@ -1125,8 +1142,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
             </div>
 
-            <div className="bg-neutral-800 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.recentActivity')}</h3>
+            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+              <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.recentActivity')}</h3>
               <div className="space-y-3">
                 {(timeEntries || []).slice(0, 5).map((entry) => (
                   <div key={entry.id} className="flex justify-between text-sm">
@@ -1148,7 +1165,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="space-y-6"
         >
           <div className="grid grid-cols-3 gap-6">
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.earningsSummary')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
@@ -1170,7 +1187,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     }, 0).toFixed(2);
                   })()}</span>
                 </div>
-                <hr className="border-neutral-700" />
+                <hr className="border-tahoe-border-primary" />
                 <div className="flex justify-between font-bold">
                   <span>{t('employeeProfile.total')}:</span>
                   <span>${(calculateTotalEarnings() || 0).toFixed(2)}</span>
@@ -1178,14 +1195,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
             </div>
 
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.deductions')}</h3>
               <div className="space-y-3">
                 {(() => {
                   const deductions = calculateDeductions(calculateTotalEarnings() || 0);
                   return (
                     <>
-                      <div className="flex justify-between text-xs text-neutral-400 mb-2">
+                      <div className="flex justify-between text-xs text-tahoe-text-muted mb-2">
                         <span>{t('employeeProfile.province')}: {deductions.province}</span>
                       </div>
                       <div className="flex justify-between">
@@ -1204,7 +1221,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         <span>{t('employeeProfile.provincialTax')} ({(DEDUCTION_RATES.provincial_tax[deductions.province] * 100).toFixed(2)}%):</span>
                         <span>${deductions.provincialTax.toFixed(2)}</span>
                       </div>
-                      <hr className="border-neutral-700" />
+                      <hr className="border-tahoe-border-primary" />
                       <div className="flex justify-between font-bold">
                         <span>{t('employeeProfile.totalDeductions')}:</span>
                         <span>${deductions.total.toFixed(2)}</span>
@@ -1215,23 +1232,23 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
             </div>
 
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.netPay')}</h3>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-400 mb-2">
+                <div className="text-3xl font-bold text-tahoe-success-text mb-2">
                   ${(() => {
                     const gross = calculateTotalEarnings() || 0;
                     const deductions = calculateDeductions(gross);
                     return (gross - deductions.total).toFixed(2);
                   })()}
                 </div>
-                <div className="text-sm text-neutral-400">{t('employeeProfile.netEarningsAfterDeductions')}</div>
+                <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.netEarningsAfterDeductions')}</div>
             </div>
           </div>
           </div>
 
           {/* YTD (Year-to-Date) Summary */}
-          <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 p-6 rounded-lg border border-indigo-700/50">
+          <div className="bg-gradient-to-r from-tahoe-primary-bg/30 to-tahoe-primary-bg/30 p-6 rounded-lg border border-tahoe-primary-bg/50">
             <h3 className="text-lg font-semibold mb-4 flex items-center">
               <span className="mr-2">📊</span> {t('employeeProfile.yearToDateSummary', { year: new Date().getFullYear() })}
             </h3>
@@ -1244,40 +1261,40 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 return (
                   <>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.grossEarnings')}</div>
-                      <div className="text-2xl font-bold text-green-400">${gross.toFixed(2)}</div>
+                      <div className="text-sm text-tahoe-text-muted mb-1">{t('employeeProfile.grossEarnings')}</div>
+                      <div className="text-2xl font-bold text-tahoe-success-text">${gross.toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.cppDeducted')}</div>
+                      <div className="text-sm text-tahoe-text-muted mb-1">{t('employeeProfile.cppDeducted')}</div>
                       <div className="text-xl font-semibold">${deductions.cpp.toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.eiDeducted')}</div>
+                      <div className="text-sm text-tahoe-text-muted mb-1">{t('employeeProfile.eiDeducted')}</div>
                       <div className="text-xl font-semibold">${deductions.ei.toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.taxWithheld')}</div>
+                      <div className="text-sm text-tahoe-text-muted mb-1">{t('employeeProfile.taxWithheld')}</div>
                       <div className="text-xl font-semibold">${(deductions.federalTax + deductions.provincialTax).toFixed(2)}</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-sm text-neutral-400 mb-1">{t('employeeProfile.netPay')}</div>
-                      <div className="text-2xl font-bold text-indigo-400">${net.toFixed(2)}</div>
+                      <div className="text-sm text-tahoe-text-muted mb-1">{t('employeeProfile.netPay')}</div>
+                      <div className="text-2xl font-bold text-tahoe-primary-bg">${net.toFixed(2)}</div>
                     </div>
                   </>
                 );
               })()}
             </div>
-            <div className="mt-4 text-xs text-neutral-400 text-center">
+            <div className="mt-4 text-xs text-tahoe-text-muted text-center">
               {t('employeeProfile.basedOnTimeEntries', { province: getEmployeeProvince() })}
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.payrollHistory')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-neutral-700">
+                  <tr className="border-b border-tahoe-border-primary">
                     <th className="text-left py-2">{t('employeeProfile.period')}</th>
                     <th className="text-left py-2">{t('employeeProfile.hours')}</th>
                     <th className="text-left py-2">{t('employeeProfile.rate')}</th>
@@ -1288,7 +1305,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </thead>
                 <tbody>
                   {(payrollHistory || []).map((payroll) => (
-                    <tr key={payroll.id} className="border-b border-neutral-700">
+                    <tr key={payroll.id} className="border-b border-tahoe-border-primary">
                       <td className="py-2">{formatShortDate(payroll.pay_period_start)} - {formatShortDate(payroll.pay_period_end)}</td>
                       <td className="py-2">{payroll.total_hours}</td>
                       <td className="py-2">${payroll.hourly_rate}</td>
@@ -1311,12 +1328,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.timeEntries')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-neutral-700">
+                  <tr className="border-b border-tahoe-border-primary">
                     <th className="text-left py-2">{t('employeeProfile.day')}</th>
                     <th className="text-left py-2">{t('employeeProfile.date')}</th>
                     <th className="text-left py-2">{t('employeeProfile.clockIn')}</th>
@@ -1344,7 +1361,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       const dailyTotal = dayEntries.reduce((sum, e) => sum + parseFloat(e.hours_worked || 0), 0);
                       
                       return dayEntries.map((entry, idx) => (
-                        <tr key={entry.id} className="border-b border-neutral-700">
+                        <tr key={entry.id} className="border-b border-tahoe-border-primary">
                           <td className="py-2 font-medium">
                             {idx === 0 ? formatShortDate(entry.work_date) : ''}
                           </td>
@@ -1354,10 +1371,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                           <td className="py-2">{entry.clock_in ? (typeof entry.clock_in === 'string' && entry.clock_in.length <= 8 ? entry.clock_in.slice(0, 5) : new Date(entry.clock_in).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})) : '-'}</td>
                           <td className="py-2">{entry.clock_out ? (typeof entry.clock_out === 'string' && entry.clock_out.length <= 8 ? entry.clock_out.slice(0, 5) : new Date(entry.clock_out).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})) : '-'}</td>
                           <td className="py-2 text-right">{entry.hours_worked ? formatHoursAsTime(parseFloat(entry.hours_worked)) : '-'}</td>
-                          <td className="py-2 text-right font-semibold text-indigo-400">
+                          <td className="py-2 text-right font-semibold text-tahoe-primary-bg">
                             {idx === dayEntries.length - 1 ? formatHoursAsTime(dailyTotal) : ''}
                           </td>
-                          <td className="py-2 pl-8 text-sm text-neutral-400">{entry.notes || ''}</td>
+                          <td className="py-2 pl-8 text-sm text-tahoe-text-muted">{entry.notes || ''}</td>
                         </tr>
                       ));
                     });
@@ -1376,12 +1393,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold">{t('employeeProfile.employeeDocuments')}</h3>
               <button
                 onClick={() => setShowUploadModal(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg flex items-center space-x-2 transition"
+                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg flex items-center space-x-2 transition"
               >
                 <span>📤</span>
                 <span>{t('employeeProfile.uploadDocument')}</span>
@@ -1394,7 +1411,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
 
               if (!hasDocuments) {
                 return (
-                  <div className="text-center py-12 text-neutral-400">
+                  <div className="text-center py-12 text-tahoe-text-muted">
                     <div className="text-6xl mb-4">📁</div>
                     <p>{t('employeeProfile.noDocumentsUploadedYet')}</p>
                     <p className="text-sm mt-2">{t('employeeProfile.clickUploadDocumentToAddFiles')}</p>
@@ -1417,7 +1434,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
-                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
@@ -1432,13 +1449,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-neutral-400 hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-red-400 transition"
                               >
                                 🗑️
                               </button>
@@ -1462,7 +1479,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
-                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
@@ -1477,13 +1494,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-neutral-400 hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-red-400 transition"
                               >
                                 🗑️
                               </button>
@@ -1507,7 +1524,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
-                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
@@ -1522,13 +1539,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-neutral-400 hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-red-400 transition"
                               >
                                 🗑️
                               </button>
@@ -1552,13 +1569,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
-                                <div className="text-sm text-neutral-400">{doc.file_name}</div>
+                                <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
                                 <div className="text-xs text-neutral-500">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                                 {doc.notes && (
-                                  <div className="text-xs text-neutral-400 mt-1">{t('employeeProfile.note')}: {doc.notes}</div>
+                                  <div className="text-xs text-tahoe-text-muted mt-1">{t('employeeProfile.note')}: {doc.notes}</div>
                                 )}
                               </div>
                             </div>
@@ -1570,13 +1587,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </span>
                               <button
                                 onClick={() => handleViewDocument(doc)}
-                                className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
                               >
                                 👁️ {t('employeeProfile.view')}
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-neutral-400 hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-red-400 transition"
                               >
                                 🗑️
                               </button>
@@ -1597,7 +1614,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-neutral-800 p-6 rounded-lg max-w-md w-full mx-4"
+                className="bg-tahoe-card-bg p-6 rounded-lg max-w-md w-full mx-4"
               >
                 <h3 className="text-xl font-semibold mb-4">{t('employeeProfile.uploadDocument')}</h3>
                 
@@ -1607,7 +1624,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <select
                       value={uploadData.doc_type}
                       onChange={(e) => setUploadData({...uploadData, doc_type: e.target.value})}
-                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2"
+                      className="w-full rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-3 py-2"
                     >
                       <option value="Contract">{t('employeeProfile.docTypeContract')}</option>
                       <option value="VoidCheque">{t('employeeProfile.docTypeVoidCheque')}</option>
@@ -1628,7 +1645,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <select
                       value={uploadData.document_category}
                       onChange={(e) => setUploadData({...uploadData, document_category: e.target.value})}
-                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2"
+                      className="w-full rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-3 py-2"
                     >
                       <option value="Financial">{t('employeeProfile.categoryFinancial')}</option>
                       <option value="Immigration">{t('employeeProfile.categoryImmigration')}</option>
@@ -1644,10 +1661,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       type="file"
                       accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                       onChange={handleFileSelect}
-                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2 text-sm"
+                      className="w-full rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-3 py-2 text-sm"
                     />
                     {uploadData.file && (
-                      <p className="text-xs text-neutral-400 mt-1">
+                      <p className="text-xs text-tahoe-text-muted mt-1">
                         {t('employeeProfile.selected')}: {uploadData.file_name} ({(uploadData.file.size / 1024).toFixed(1)} KB)
                       </p>
                     )}
@@ -1658,7 +1675,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <textarea
                       value={uploadData.notes}
                       onChange={(e) => setUploadData({...uploadData, notes: e.target.value})}
-                      className="w-full bg-neutral-700 border border-neutral-600 rounded px-3 py-2 text-sm"
+                      className="w-full rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-3 py-2 text-sm"
                       rows="3"
                       placeholder={t('employeeProfile.optionalNotesPlaceholder')}
                     ></textarea>
@@ -1678,7 +1695,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   <div className="flex space-x-3 mt-6">
                     <button
                       onClick={handleUploadDocument}
-                      className="flex-1 bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg transition"
+                      className="flex-1 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-4 py-2 rounded-lg transition"
                     >
                       {t('common.upload')}
                     </button>
@@ -1713,7 +1730,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-2 gap-6"
         >
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.identifiers')}</h3>
             <div className="space-y-4">
               {/* SIN Number */}
@@ -1724,11 +1741,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="text"
                     value={editData.sin_number || ''}
                     onChange={(e) => setEditData({...editData, sin_number: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                     placeholder={t('employeeProfile.sinPlaceholder')}
                   />
                 ) : (
-                  <div className="font-mono text-indigo-400">{employee.sin_number || '—'}</div>
+                  <div className="font-mono text-tahoe-primary-bg">{employee.sin_number || '—'}</div>
                 )}
               </div>
               {/* SIN Expiry Date */}
@@ -1739,7 +1756,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="date"
                     value={editData.sin_expiry_date ? editData.sin_expiry_date.split('T')[0] : ''}
                     onChange={(e) => setEditData({...editData, sin_expiry_date: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                   />
                 ) : (
                   <div>
@@ -1760,7 +1777,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.bankAccounts')}</h3>
             <div className="space-y-4">
               {/* Bank Name */}
@@ -1771,7 +1788,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="text"
                     value={editData.bank_name || ''}
                     onChange={(e) => setEditData({...editData, bank_name: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                     placeholder={t('employeeProfile.bankName')}
                   />
                 ) : (
@@ -1786,7 +1803,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="text"
                     value={editData.bank_transit_number || ''}
                     onChange={(e) => setEditData({...editData, bank_transit_number: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                     placeholder={t('employeeProfile.transitNumberPlaceholder')}
                   />
                 ) : (
@@ -1801,7 +1818,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="text"
                     value={editData.bank_account_number || ''}
                     onChange={(e) => setEditData({...editData, bank_account_number: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                     placeholder={t('employeeProfile.accountNumber')}
                   />
                 ) : (
@@ -1811,7 +1828,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.addresses')}</h3>
             <div className="space-y-4">
               {/* Full Address */}
@@ -1821,7 +1838,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   <textarea
                     value={editData.full_address || ''}
                     onChange={(e) => setEditData({...editData, full_address: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                     placeholder={t('employeeProfile.fullAddress')}
                     rows={3}
                   />
@@ -1832,7 +1849,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.emergencyContacts')}</h3>
             <div className="space-y-4">
               {/* Emergency Contact Name */}
@@ -1843,7 +1860,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="text"
                     value={editData.emergency_contact_name || ''}
                     onChange={(e) => setEditData({...editData, emergency_contact_name: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                     placeholder={t('employeeProfile.contactName')}
                   />
                 ) : (
@@ -1858,7 +1875,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     type="tel"
                     value={editData.emergency_contact_phone || ''}
                     onChange={(e) => setEditData({...editData, emergency_contact_phone: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
                     placeholder={t('employeeProfile.phoneNumber')}
                   />
                 ) : (
@@ -1868,12 +1885,12 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.compensationHistory')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-neutral-700">
+                  <tr className="border-b border-tahoe-border-primary">
                     <th className="text-left py-2">{t('employeeProfile.effective')}</th>
                     <th className="text-left py-2">{t('employeeProfile.type')}</th>
                     <th className="text-left py-2">{t('employeeProfile.rate')}</th>
@@ -1882,7 +1899,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </thead>
                 <tbody>
                   {(hrDetails.compensation_history || []).map(ch => (
-                    <tr key={ch.id} className="border-b border-neutral-700">
+                    <tr key={ch.id} className="border-b border-tahoe-border-primary">
                       <td className="py-2">{formatShortDate(ch.effective_date)}</td>
                       <td className="py-2">{ch.rate_type}</td>
                       <td className="py-2">${ch.regular_rate}</td>
@@ -1890,14 +1907,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     </tr>
                   ))}
                   {(!hrDetails.compensation_history || hrDetails.compensation_history.length === 0) && (
-                    <tr><td className="text-neutral-400 text-sm py-2" colSpan={4}>{t('employeeProfile.noCompensationRecords')}</td></tr>
+                    <tr><td className="text-tahoe-text-muted text-sm py-2" colSpan={4}>{t('employeeProfile.noCompensationRecords')}</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.statusHistory')}</h3>
             <div className="space-y-2">
               {(hrDetails.status_history || []).map(sh => (
@@ -1907,7 +1924,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
               ))}
               {(!hrDetails.status_history || hrDetails.status_history.length === 0) && (
-                <div className="text-neutral-400 text-sm">{t('employeeProfile.noStatusHistory')}</div>
+                <div className="text-tahoe-text-muted text-sm">{t('employeeProfile.noStatusHistory')}</div>
               )}
             </div>
           </div>
@@ -1921,14 +1938,14 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h3 className="text-lg font-semibold mb-4">{t('employeeProfile.trainingRecords')}</h3>
             <div className="grid gap-4">
               {(trainingRecords || []).map((record) => (
                 <div key={record.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg">
                   <div>
                     <div className="font-medium">{record.training_name}</div>
-                    <div className="text-sm text-neutral-400">{t('employeeProfile.completed')}: {formatShortDate(record.completed_on)}</div>
+                    <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.completed')}: {formatShortDate(record.completed_on)}</div>
                     <div className="text-xs text-neutral-500">{t('employeeProfile.validFor', { months: record.validity_months })}</div>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -1961,61 +1978,61 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <h3 className="text-lg font-semibold mb-4 text-red-400">⚠️ {t('employeeProfile.terminationInformation')}</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <div className="text-sm text-neutral-400">{t('employeeProfile.terminationDate')}</div>
+                <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.terminationDate')}</div>
                 <div className="font-medium text-lg">{terminationDetails.termination_date ? formatShortDate(terminationDetails.termination_date) : t('common.n/a')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">{t('employeeProfile.terminationType')}</div>
+                <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.terminationType')}</div>
                 <div className="font-medium">{terminationDetails.termination_type || t('common.n/a')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">{t('employeeProfile.reasonCategory')}</div>
+                <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.reasonCategory')}</div>
                 <div className="font-medium">{terminationDetails.reason_category || t('common.n/a')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">{t('employeeProfile.initiatedBy')}</div>
+                <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.initiatedBy')}</div>
                 <div className="font-medium">{terminationDetails.initiated_by || t('common.n/a')}</div>
               </div>
             </div>
           </div>
 
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h4 className="font-semibold mb-3">{t('employeeProfile.terminationReason')}</h4>
             <p className="text-neutral-300">{terminationDetails.termination_reason || t('employeeProfile.noReasonProvided')}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h4 className="font-semibold mb-4">{t('employeeProfile.timeline')}</h4>
               <div className="space-y-3">
                 <div>
-                  <div className="text-sm text-neutral-400">{t('employeeProfile.noticePeriod')}</div>
+                  <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.noticePeriod')}</div>
                   <div className="font-medium">{terminationDetails.notice_period_days || 0} {t('employeeProfile.days')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">{t('employeeProfile.lastWorkingDay')}</div>
+                  <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.lastWorkingDay')}</div>
                   <div className="font-medium">{terminationDetails.last_working_day ? formatShortDate(terminationDetails.last_working_day) : t('common.n/a')}</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h4 className="font-semibold mb-4">{t('employeeProfile.financialSummary')}</h4>
               <div className="space-y-3">
                 <div>
-                  <div className="text-sm text-neutral-400">{t('employeeProfile.severancePayment')}</div>
+                  <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.severancePayment')}</div>
                   <div className="font-medium">{terminationDetails.severance_paid ? `$${terminationDetails.severance_amount || 0}` : t('employeeProfile.notPaid')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">{t('employeeProfile.vacationPayout')}</div>
+                  <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.vacationPayout')}</div>
                   <div className="font-medium">${terminationDetails.vacation_payout || 0}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">{t('employeeProfile.finalPayDate')}</div>
+                  <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.finalPayDate')}</div>
                   <div className="font-medium">{terminationDetails.final_pay_date ? formatShortDate(terminationDetails.final_pay_date) : t('common.n/a')}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-400">{t('employeeProfile.benefitsEndDate')}</div>
+                  <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.benefitsEndDate')}</div>
                   <div className="font-medium">{terminationDetails.benefits_end_date ? formatShortDate(terminationDetails.benefits_end_date) : t('common.n/a')}</div>
                 </div>
               </div>
@@ -2031,28 +2048,28 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-6"
         >
-          <div className="bg-neutral-800 p-6 rounded-lg">
+          <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h4 className="font-semibold mb-4">{t('employeeProfile.exitInterview')}</h4>
             <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
-                <div className="text-sm text-neutral-400">{t('employeeProfile.interviewDate')}</div>
+                <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.interviewDate')}</div>
                 <div className="font-medium">{terminationDetails.exit_interview_date ? formatShortDate(terminationDetails.exit_interview_date) : t('employeeProfile.notConducted')}</div>
               </div>
               <div>
-                <div className="text-sm text-neutral-400">{t('employeeProfile.conductedBy')}</div>
+                <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.conductedBy')}</div>
                 <div className="font-medium">{terminationDetails.exit_interview_conducted_by || t('common.n/a')}</div>
               </div>
             </div>
             {terminationDetails.exit_interview_notes && (
               <div>
-                <div className="text-sm text-neutral-400 mb-2">{t('employeeProfile.interviewNotes')}</div>
+                <div className="text-sm text-tahoe-text-muted mb-2">{t('employeeProfile.interviewNotes')}</div>
                 <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.exit_interview_notes}</div>
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-6">
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h4 className="font-semibold mb-4">{t('employeeProfile.equipmentReturn')}</h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -2062,20 +2079,20 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 {terminationDetails.equipment_return_date && (
                   <div>
-                    <div className="text-sm text-neutral-400">{t('employeeProfile.returnDate')}</div>
+                    <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.returnDate')}</div>
                     <div className="font-medium">{formatShortDate(terminationDetails.equipment_return_date)}</div>
                   </div>
                 )}
                 {terminationDetails.equipment_return_notes && (
                   <div>
-                    <div className="text-sm text-neutral-400">{t('employeeProfile.notes')}</div>
+                    <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.notes')}</div>
                     <div className="text-neutral-300">{terminationDetails.equipment_return_notes}</div>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h4 className="font-semibold mb-4">{t('employeeProfile.systemAccess')}</h4>
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -2085,7 +2102,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 {terminationDetails.access_revoked_date && (
                   <div>
-                    <div className="text-sm text-neutral-400">{t('employeeProfile.revokedDate')}</div>
+                    <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.revokedDate')}</div>
                     <div className="font-medium">{formatShortDate(terminationDetails.access_revoked_date)}</div>
                   </div>
                 )}
@@ -2094,7 +2111,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           {terminationDetails.final_pay_notes && (
-            <div className="bg-neutral-800 p-6 rounded-lg">
+            <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h4 className="font-semibold mb-3">{t('employeeProfile.finalPayNotes')}</h4>
               <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.final_pay_notes}</div>
             </div>

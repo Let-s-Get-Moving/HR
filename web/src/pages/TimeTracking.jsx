@@ -384,7 +384,7 @@ export default function TimeTracking() {
   if (loading && timecards.length === 0) {
     return (
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-gray-400">{t('timeTracking.loadingTimecards')}</div>
+          <div className="text-lg text-tahoe-text-muted">{t('timeTracking.loadingTimecards')}</div>
         </div>
     );
   }
@@ -403,7 +403,8 @@ export default function TimeTracking() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowUploadModal(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe flex items-center gap-2"
+            style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -414,14 +415,15 @@ export default function TimeTracking() {
       </div>
 
       {/* View Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 overflow-x-auto">
+      <div className="flex gap-2 mb-6 border-b overflow-x-auto" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
         <button
           onClick={() => setView("day-view")}
-          className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
+          className={`px-4 py-3 font-medium transition-all duration-tahoe border-b-2 whitespace-nowrap ${
             view === "day-view"
-              ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-              : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
+              ? "text-tahoe-accent"
+              : "border-transparent text-tahoe-text-secondary hover:text-tahoe-text-primary"
           }`}
+          style={view === "day-view" ? { borderColor: '#0A84FF' } : {}}
         >
           <div className="flex items-center gap-2">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -434,11 +436,12 @@ export default function TimeTracking() {
         {userRole !== 'user' && (
           <button
             onClick={() => setView("uploads")}
-            className={`px-4 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
+            className={`px-4 py-3 font-medium transition-all duration-tahoe border-b-2 whitespace-nowrap ${
               view === "uploads" || view === "upload-detail" || view === "employee-timecard"
-                ? "border-indigo-600 text-indigo-600 dark:text-indigo-400"
-                : "border-transparent text-secondary hover:text-primary hover:border-slate-300 dark:hover:border-slate-600"
+                ? "text-tahoe-accent"
+                : "border-transparent text-tahoe-text-secondary hover:text-tahoe-text-primary"
             }`}
+            style={(view === "uploads" || view === "upload-detail" || view === "employee-timecard") ? { borderColor: '#0A84FF' } : {}}
           >
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,7 +455,8 @@ export default function TimeTracking() {
         {view === "individual" && (
           <button
             onClick={() => setView("main")}
-            className="px-4 py-3 font-medium border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 flex items-center gap-2 whitespace-nowrap"
+            className="px-4 py-3 font-medium border-b-2 text-tahoe-accent flex items-center gap-2 whitespace-nowrap transition-all duration-tahoe"
+            style={{ borderColor: '#0A84FF' }}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -481,7 +485,8 @@ export default function TimeTracking() {
                   const period = payPeriods.find(p => p.pay_period_start === e.target.value);
                   setSelectedPeriod(period);
                 }}
-                className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
               >
                 <option value="">{t('timeTracking.selectPeriod')}</option>
                 {payPeriods.map((period) => (
@@ -498,7 +503,7 @@ export default function TimeTracking() {
                 <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.searchEmployee')}</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -507,7 +512,8 @@ export default function TimeTracking() {
                     placeholder={t('timeTracking.searchByName')}
                     value={employeeSearch}
                     onChange={(e) => setEmployeeSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                    className="w-full pl-10 pr-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   {employeeSearch && (
                 <button
@@ -522,14 +528,14 @@ export default function TimeTracking() {
                 </div>
                 {/* Autocomplete dropdown */}
                 {employeeSearch && filteredEmployees.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-10 mt-1 w-full rounded-tahoe-input shadow-lg max-h-60 overflow-auto border backdrop-blur-lg" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                     {filteredEmployees.slice(0, 10).map((emp) => (
                       <button
                         key={emp.id}
                         onClick={() => {
                           setEmployeeSearch(`${emp.first_name} ${emp.last_name}`);
                         }}
-                        className="w-full px-4 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-primary"
+                        className="w-full px-4 py-2 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-primary"
                       >
                         <div className="font-medium">{emp.first_name} {emp.last_name}</div>
                         <div className="text-sm text-secondary">{emp.email}</div>
@@ -633,7 +639,7 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
         animate={{ opacity: 1 }}
         className="card p-8 text-center"
       >
-        <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-16 h-16 mx-auto mb-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
         <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noTimecardsFound')}</h3>
@@ -651,7 +657,7 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
     >
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-100 dark:bg-slate-800">
+          <thead className="bg-tahoe-bg-secondary">
             <tr>
               <th className="px-6 py-4 text-left text-sm font-medium text-primary">{t('timeTracking.employee')}</th>
               <th className="px-6 py-4 text-left text-sm font-medium text-primary">{t('timeTracking.email')}</th>
@@ -661,9 +667,9 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
               <th className="px-6 py-4 text-center text-sm font-medium text-primary">{t('timeTracking.actions')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          <tbody className="divide-y">
             {timecards.map((timecard) => (
-              <tr key={timecard.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+              <tr key={timecard.id} className="hover:bg-tahoe-bg-hover transition-colors">
                 <td className="px-6 py-4">
                   <div className="font-medium text-primary">{timecard.employee_name}</div>
                   <div className="text-sm text-secondary">{timecard.role_title || "N/A"}</div>
@@ -683,10 +689,10 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
                 </td>
                 <td className="px-6 py-4 text-center">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    timecard.status === 'Approved' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                    timecard.status === 'Submitted' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                    timecard.status === 'Approved' ? 'bg-tahoe-success-bg/20 text-tahoe-success-text' :
+                    timecard.status === 'Submitted' ? 'bg-tahoe-info-bg/20 text-tahoe-info-text' :
                     timecard.status === 'Rejected' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
-                    'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400'
+                    'bg-tahoe-bg-secondary/20 text-tahoe-text-muted'
                   }`}>
                     {timecard.status}
                   </span>
@@ -696,7 +702,7 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onViewIndividual(timecard.employee_id)}
-                    className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium text-sm"
+                    className="text-tahoe-accent hover:text-tahoe-accent-hover font-medium text-sm"
                   >
                     View Details →
                   </motion.button>
@@ -728,7 +734,7 @@ function DashboardView({ stats, selectedPeriod, t }) {
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-secondary">{t('timeTracking.totalEmployees')}</h3>
-            <svg className="w-8 h-8 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-tahoe-primary-bg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
@@ -738,7 +744,7 @@ function DashboardView({ stats, selectedPeriod, t }) {
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-secondary">{t('timeTracking.totalHours')}</h3>
-            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-tahoe-info-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -748,7 +754,7 @@ function DashboardView({ stats, selectedPeriod, t }) {
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-secondary">{t('timeTracking.overtimeHours')}</h3>
-            <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-tahoe-warning-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
@@ -761,7 +767,7 @@ function DashboardView({ stats, selectedPeriod, t }) {
         <div className="card p-6">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-secondary">{t('timeTracking.missingPunches')}</h3>
-            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-tahoe-error-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
@@ -771,24 +777,24 @@ function DashboardView({ stats, selectedPeriod, t }) {
 
       {/* Employee Details Table */}
       <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="px-6 py-4 border-b">
           <h2 className="text-lg font-semibold text-primary">{t('timeTracking.employeeBreakdown')}</h2>
           <p className="text-sm text-secondary">{t('timeTracking.detailedHoursOvertime')}</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-100 dark:bg-slate-800">
+            <thead style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.employee')}</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.totalHours')}</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.overtime')}</th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-primary">{t('timeTracking.missingPunches')}</th>
-                <th className="px-6 py-3 text-center text-sm font-medium text-primary">{t('timeTracking.status')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.employee')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.totalHours')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.overtime')}</th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.missingPunches')}</th>
+                <th className="px-6 py-3 text-center text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.status')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
               {stats.employees.map((emp) => (
-                <tr key={emp.employee_id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                <tr key={emp.employee_id} className="hover:bg-tahoe-bg-hover transition-all duration-tahoe">
                   <td className="px-6 py-4 text-sm text-primary font-medium">{emp.employee_name}</td>
                   <td className="px-6 py-4 text-sm text-right text-primary">{formatHoursAsTime(parseFloat(emp.total_hours || 0))}</td>
                   <td className="px-6 py-4 text-sm text-right">
@@ -811,9 +817,9 @@ function DashboardView({ stats, selectedPeriod, t }) {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      emp.status === 'Approved' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                      emp.status === 'Submitted' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                      'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400'
+                      emp.status === 'Approved' ? 'bg-tahoe-success-bg/20 text-tahoe-success-text' :
+                      emp.status === 'Submitted' ? 'bg-tahoe-info-bg/20 text-tahoe-info-text' :
+                      'bg-tahoe-bg-secondary/20 text-tahoe-text-muted'
                     }`}>
                       {emp.status}
                         </span>
@@ -907,42 +913,42 @@ function IndividualView({ timecard, onBack, t }) {
 
       {/* Daily Entries */}
       <div className="card overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="px-6 py-4 border-b">
           <h3 className="text-lg font-semibold text-primary">{t('timeTracking.dailyTimeEntries')}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-100 dark:bg-slate-800">
+            <thead style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.date')}</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.clockIn')}</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.clockOut')}</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.workTime')}</th>
-                <th className="px-6 py-3 text-right text-sm font-medium text-primary">{t('timeTracking.totalHours')}</th>
-                <th className="px-6 py-3 text-left text-sm font-medium text-primary">{t('timeTracking.notesLabel')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.date')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.clockIn')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.clockOut')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.workTime')}</th>
+                <th className="px-6 py-3 text-right text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.totalHours')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.notesLabel')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+            <tbody className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
               {dailyTotals.map(({ date, entries, totalHours }) => (
                 <React.Fragment key={date}>
                   {entries.map((entry, idx) => (
-                    <tr key={entry.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <tr key={entry.id} className="hover:bg-tahoe-bg-hover transition-all duration-tahoe">
                       {idx === 0 && (
-                        <td rowSpan={entries.length} className="px-6 py-4 font-medium text-primary border-r border-slate-200 dark:border-slate-700">
+                        <td rowSpan={entries.length} className="px-6 py-4 font-medium text-tahoe-text-primary border-r" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                           <div>{formatShortDate(date)}</div>
                           <div className="text-sm">{formatShortDate(date)}</div>
                         </td>
                       )}
                       <td className="px-6 py-4 text-sm text-primary">
-                        {entry.clock_in || <span className="text-red-500">{t('timeTracking.missing')}</span>}
+                        {entry.clock_in || <span className="text-tahoe-error-text">{t('timeTracking.missing')}</span>}
                       </td>
                       <td className="px-6 py-4 text-sm text-primary">
-                        {entry.clock_out || <span className="text-red-500">{t('timeTracking.missing')}</span>}
+                        {entry.clock_out || <span className="text-tahoe-error-text">{t('timeTracking.missing')}</span>}
                       </td>
                       <td className="px-6 py-4 text-sm text-right text-primary">
                         {formatHoursAsTime(parseFloat(entry.hours_worked || 0))}
                       </td>
-                      <td className="px-6 py-4 text-sm text-right font-semibold text-indigo-600 dark:text-indigo-400">
+                      <td className="px-6 py-4 text-sm text-right font-semibold text-tahoe-accent">
                         {formatHoursAsTime(totalHours)}
                       </td>
                       <td className="px-6 py-4 text-sm text-secondary">
@@ -951,11 +957,11 @@ function IndividualView({ timecard, onBack, t }) {
                     </tr>
                   ))}
                   {entries.length > 1 && (
-                    <tr className="bg-slate-50 dark:bg-slate-800/30">
+                    <tr className="bg-tahoe-bg-secondary">
                       <td colSpan="3" className="px-6 py-2 text-right text-sm font-semibold text-primary">
                         Daily Total:
                       </td>
-                      <td className="px-6 py-2 text-sm text-right font-semibold text-indigo-600 dark:text-indigo-400">
+                      <td className="px-6 py-2 text-sm text-right font-semibold text-tahoe-accent">
                         {totalHours.toFixed(2)}
                       </td>
                       <td></td>
@@ -1001,7 +1007,8 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                 type="file"
                 accept=".xlsx,.xls"
                 onChange={onFileChange}
-                className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
               />
               {uploadFile && (
                 <p className="mt-2 text-sm text-secondary">{t('timeTracking.uploadModal.selected')} {uploadFile.name}</p>
@@ -1016,7 +1023,8 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                   type="date"
                   value={manualPeriodStart}
                   onChange={(e) => setManualPeriodStart(e.target.value)}
-                  className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
                 <div>
@@ -1025,7 +1033,8 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                   type="date"
                   value={manualPeriodEnd}
                   onChange={(e) => setManualPeriodEnd(e.target.value)}
-                  className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                 </div>
             </div>
@@ -1033,16 +1042,16 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
             {/* Status Message */}
             {uploadStatus.status && (
               <div className={`p-4 rounded-lg ${
-                uploadStatus.status === 'success' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                uploadStatus.status === 'success' ? 'bg-tahoe-success-bg/20 text-tahoe-success-text' :
                 uploadStatus.status === 'error' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
-                'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                'bg-tahoe-info-bg/20 text-tahoe-info-text'
               }`}>
                 {uploadStatus.message}
               </div>
             )}
 
             {/* Info Box */}
-            <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg">
+            <div className="bg-tahoe-bg-secondary p-4 rounded-lg">
               <h3 className="font-medium mb-2 text-primary">{t('timeTracking.uploadModal.expectedFormat')}</h3>
               <ul className="text-sm text-secondary space-y-1 list-disc list-inside">
                 <li>{t('timeTracking.uploadModal.formatInfo1')}</li>
@@ -1063,7 +1072,7 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                   <button
                 onClick={onUpload}
                 disabled={!uploadFile || uploadStatus.status === 'processing'}
-                className="bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-medium transition-colors"
+                className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-medium transition-colors"
                   >
                 {uploadStatus.status === 'processing' ? t('timeTracking.uploadModal.processing2') : t('timeTracking.uploadModal.upload')}
                   </button>
@@ -1198,7 +1207,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
               type="date"
               value={selectedDate}
               onChange={(e) => onDateChange(e.target.value)}
-              className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+              className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-primary"
             />
           </div>
           <div className="text-sm text-secondary">
@@ -1212,7 +1221,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
         <div className="card p-4">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -1221,13 +1230,13 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
               placeholder={t('timeTracking.search')}
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+              className="block w-full pl-10 pr-10 py-3 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2 text-sm text-tahoe-text-primary"
             />
             {searchQuery && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
                   onClick={() => onSearchChange("")}
-                  className="text-neutral-400 hover:text-primary transition-colors"
+                  className="text-tahoe-text-muted hover:text-primary transition-colors"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1249,7 +1258,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
         <div className="text-center py-12 text-secondary">{t('timeTracking.loading')}</div>
       ) : filteredEmployees.length === 0 && searchQuery ? (
         <div className="card p-12 text-center">
-          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 mx-auto mb-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noEmployeesFound')}</h3>
@@ -1257,7 +1266,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
         </div>
       ) : employees.length === 0 ? (
         <div className="card p-12 text-center">
-          <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-16 h-16 mx-auto mb-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <h3 className="text-lg font-medium text-primary mb-2">{t('timeTracking.noDataForDate')}</h3>
@@ -1268,7 +1277,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
           {filteredEmployees.map((employee) => (
             <div key={employee.employee_id} className="card overflow-hidden">
               {/* Employee Header */}
-              <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+              <div className="bg-tahoe-bg-secondary px-6 py-4 border-b">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <h3 className="font-semibold text-primary text-lg">
@@ -1276,7 +1285,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                     </h3>
                     {/* Work email from database */}
                     {employee.work_email && (
-                      <p className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                      <p className="text-sm font-medium text-tahoe-accent">
                         {employee.work_email}
                       </p>
                     )}
@@ -1302,7 +1311,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
               {/* Time Entries Table */}
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-100 dark:bg-slate-800">
+                  <thead className="bg-tahoe-bg-secondary">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.clockInHeader')}</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.clockOutHeader')}</th>
@@ -1311,19 +1320,19 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                       <th className="px-6 py-3 text-center text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.actionsHeader')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                  <tbody className="divide-y">
                     {employee.entries.map((entry, idx) => {
                       const isEditing = editingEntryId === entry.entry_id;
                       
                       return (
-                        <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                        <tr key={idx} className="hover:bg-tahoe-bg-hover transition-colors">
                           <td className="px-6 py-3">
                             {isEditing ? (
                               <input
                                 type="time"
                                 value={editForm.clock_in}
                                 onChange={(e) => setEditForm({ ...editForm, clock_in: e.target.value })}
-                                className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
+                                className="w-full px-2 py-1 bg-tahoe-input-bg border border-tahoe-input-border rounded text-sm text-tahoe-text-primary"
                               />
                             ) : (
                               <span className="text-sm text-primary">{formatTime(entry.clock_in) || "—"}</span>
@@ -1335,7 +1344,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 type="time"
                                 value={editForm.clock_out}
                                 onChange={(e) => setEditForm({ ...editForm, clock_out: e.target.value })}
-                                className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
+                                className="w-full px-2 py-1 bg-tahoe-input-bg border border-tahoe-input-border rounded text-sm text-tahoe-text-primary"
                               />
                             ) : (
                               <span className="text-sm text-primary">{formatTime(entry.clock_out) || "—"}</span>
@@ -1353,7 +1362,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 value={editForm.notes}
                                 onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                                 placeholder={t('timeTracking.dayViewTable.addNotes')}
-                                className="w-full px-2 py-1 bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-sm text-primary"
+                                className="w-full px-2 py-1 bg-tahoe-input-bg border border-tahoe-input-border rounded text-sm text-tahoe-text-primary"
                               />
                             ) : (
                               <span className="text-sm text-secondary">{entry.notes || "—"}</span>
@@ -1365,14 +1374,14 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                                 <button
                                   onClick={() => handleSave(entry.entry_id)}
                                   disabled={saving}
-                                  className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50"
+                                  className="px-3 py-1 bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 text-white rounded text-xs font-medium disabled:opacity-50"
                                 >
                                   {saving ? t('timeTracking.dayViewTable.saving') : t('timeTracking.dayViewTable.save')}
                                 </button>
                                 <button
                                   onClick={handleCancel}
                                   disabled={saving}
-                                  className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded text-xs font-medium disabled:opacity-50"
+                                  className="px-3 py-1 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover text-white rounded text-xs font-medium disabled:opacity-50"
                                 >
                                   {t('timeTracking.dayViewTable.cancel')}
                                 </button>
@@ -1380,7 +1389,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                             ) : (
                               <button
                                 onClick={() => handleEdit(entry)}
-                                className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium"
+                                className="px-3 py-1 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded text-xs font-medium"
                               >
                                 {t('timeTracking.dayViewTable.edit')}
                               </button>

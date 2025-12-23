@@ -138,11 +138,11 @@ export default function Dashboard({ onNavigate, user }) {
 
   if (loading) {
     return (
-      <div className="dashboard-container p-6 max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto" style={{ padding: '24px' }}>
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">{t('dashboard.title')}</h1>
-            <p className="text-neutral-400">{t('dashboard.loadingInsights')}</p>
+            <h1 className="text-3xl font-semibold text-tahoe-text-primary mb-2">{t('dashboard.title')}</h1>
+            <p className="text-tahoe-text-muted">{t('dashboard.loadingInsights')}</p>
           </div>
         </div>
         
@@ -164,22 +164,23 @@ export default function Dashboard({ onNavigate, user }) {
   const trainingCompletion = cmp?.training_complete || 0;
 
   return (
-    <div className="dashboard-container p-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto" style={{ padding: '24px' }}>
       {/* Header with Refresh and Time Range */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <Greeting name={getUserFirstName()} />
-          <p className="text-neutral-400 mt-2">{t('dashboard.happeningInOrg')}</p>
+          <p className="text-tahoe-text-muted mt-2">{t('dashboard.happeningInOrg')}</p>
         </div>
         
         <div className="flex items-center space-x-4">
           {/* Time Range Selector */}
           <div className="flex items-center space-x-2">
-            <label className="text-sm text-neutral-400">{t('dashboard.timeRange')}:</label>
+            <label className="text-sm text-tahoe-text-muted">{t('dashboard.timeRange')}:</label>
             <select
               value={selectedTimeRange}
               onChange={(e) => setSelectedTimeRange(e.target.value)}
-              className="bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="px-3 py-2 rounded-tahoe-input border text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
             >
               <option value="week">{t('dashboard.thisWeek')}</option>
               <option value="month">{t('dashboard.thisMonth')}</option>
@@ -192,7 +193,8 @@ export default function Dashboard({ onNavigate, user }) {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-all duration-tahoe disabled:opacity-50"
+            style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
           >
             <svg 
               className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} 
@@ -210,9 +212,9 @@ export default function Dashboard({ onNavigate, user }) {
       {/* Enhanced Key Metrics with Animations */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.05, duration: 0.2 }}
         >
           <MetricCard 
             label={t('dashboard.activeEmployees')}
@@ -225,9 +227,9 @@ export default function Dashboard({ onNavigate, user }) {
         </motion.div>
         
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1, duration: 0.2 }}
         >
           <MetricCard 
             label={t('dashboard.newHiresThisMonth')} 
@@ -240,9 +242,9 @@ export default function Dashboard({ onNavigate, user }) {
         </motion.div>
         
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.15, duration: 0.2 }}
         >
           <MetricCard 
             label={t('dashboard.turnoverRate')} 
@@ -285,20 +287,20 @@ export default function Dashboard({ onNavigate, user }) {
           {totalPayroll > 0 ? (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">{t('dashboard.totalPayroll')}</span>
+                <span className="text-tahoe-text-muted">{t('dashboard.totalPayroll')}</span>
                 <span className="text-2xl font-bold text-green-400">
                   ${totalPayroll.toLocaleString()}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">{t('dashboard.avgPerEmployee')}</span>
+                <span className="text-tahoe-text-muted">{t('dashboard.avgPerEmployee')}</span>
                 <span className="text-lg text-white">
                   ${wf?.total ? (totalPayroll / wf.total).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) : 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">{t('dashboard.period')}</span>
-                <span className="text-sm text-indigo-400">
+                <span className="text-tahoe-text-muted">{t('dashboard.period')}</span>
+                <span className="text-sm text-tahoe-accent">
                   {getTimeRangeLabel(selectedTimeRange)}
                 </span>
               </div>
@@ -306,8 +308,8 @@ export default function Dashboard({ onNavigate, user }) {
           ) : (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📊</div>
-              <p className="text-neutral-400 text-sm mb-2">No payroll data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
-              <p className="text-neutral-500 text-xs">{t('dashboard.uploadTimecardsToGenerate')}</p>
+              <p className="text-tahoe-text-muted text-sm mb-2">No payroll data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
+              <p className="text-tahoe-text-muted text-xs">{t('dashboard.uploadTimecardsToGenerate')}</p>
             </div>
           )}
         </div>
@@ -320,20 +322,20 @@ export default function Dashboard({ onNavigate, user }) {
           {avgHoursPerEmployee > 0 || att?.employees_tracked > 0 ? (
             <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">{t('dashboard.avgHoursWeek')}</span>
+                <span className="text-tahoe-text-muted">{t('dashboard.avgHoursWeek')}</span>
                 <span className="text-2xl font-bold text-blue-400">
                   {avgHoursPerEmployee > 0 ? `${avgHoursPerEmployee}h` : 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">{t('dashboard.employeesTracked')}</span>
+                <span className="text-tahoe-text-muted">{t('dashboard.employeesTracked')}</span>
                 <span className="text-lg text-white">
                   {att?.employees_tracked || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-neutral-400">{t('dashboard.period')}</span>
-                <span className="text-sm text-indigo-400">
+                <span className="text-tahoe-text-muted">{t('dashboard.period')}</span>
+                <span className="text-sm text-tahoe-accent">
                   {getTimeRangeLabel(selectedTimeRange)}
                 </span>
               </div>
@@ -341,8 +343,8 @@ export default function Dashboard({ onNavigate, user }) {
           ) : (
             <div className="text-center py-8">
               <div className="text-4xl mb-3">📅</div>
-              <p className="text-neutral-400 text-sm mb-2">No attendance data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
-              <p className="text-neutral-500 text-xs">{t('dashboard.uploadTimecardsToTrackAttendance')}</p>
+              <p className="text-tahoe-text-muted text-sm mb-2">No attendance data for {getTimeRangeLabel(selectedTimeRange).toLowerCase()}</p>
+              <p className="text-tahoe-text-muted text-xs">{t('dashboard.uploadTimecardsToTrackAttendance')}</p>
             </div>
           )}
         </div>
@@ -354,13 +356,13 @@ export default function Dashboard({ onNavigate, user }) {
           </div>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">Pending Requests</span>
+              <span className="text-tahoe-text-muted">Pending Requests</span>
               <span className="text-2xl font-bold text-yellow-400">
                 {analytics?.leaveStats?.pending_requests || 0}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-neutral-400">On Leave Today</span>
+              <span className="text-tahoe-text-muted">On Leave Today</span>
               <span className="text-lg text-white">
                 {analytics?.leaveStats?.employees_on_leave_today || 0}
               </span>
@@ -389,24 +391,24 @@ export default function Dashboard({ onNavigate, user }) {
               />
               <div className="flex flex-col gap-3 text-sm">
                 <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-indigo-400"></div>
+                  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: '#818cf8' }}></div>
                   <div>
                     <div className="text-white font-medium">{t('dashboard.fullTime')}</div>
-                    <div className="text-neutral-400">{wf.breakdown.full_time || 0} {t('dashboard.employees')}</div>
+                    <div className="text-tahoe-text-muted">{wf.breakdown.full_time || 0} {t('dashboard.employees')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-green-400"></div>
                   <div>
                     <div className="text-white font-medium">{t('dashboard.partTime')}</div>
-                    <div className="text-neutral-400">{wf.breakdown.part_time || 0} {t('dashboard.employees')}</div>
+                    <div className="text-tahoe-text-muted">{wf.breakdown.part_time || 0} {t('dashboard.employees')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 rounded-full bg-pink-400"></div>
                   <div>
                     <div className="text-white font-medium">{t('dashboard.contract')}</div>
-                    <div className="text-neutral-400">{wf.breakdown.contract || 0} {t('dashboard.employees')}</div>
+                    <div className="text-tahoe-text-muted">{wf.breakdown.contract || 0} {t('dashboard.employees')}</div>
                   </div>
                 </div>
               </div>
@@ -426,13 +428,14 @@ export default function Dashboard({ onNavigate, user }) {
               {analytics.departmentDistribution.map((dept, index) => (
                 <div key={dept.department} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 rounded-full bg-indigo-400"></div>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: '#818cf8' }}></div>
                     <span className="text-sm font-medium text-white">{dept.department}</span>
                   </div>
                   <div className="flex items-center space-x-3">
-                    <div className="w-20 bg-neutral-700 rounded-full h-2">
+                    <div className="w-20 rounded-full h-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
                       <div 
-                        className="bg-indigo-500 h-2 rounded-full transition-all duration-500" 
+                        className="h-2 rounded-full transition-all duration-500"
+                        style={{ backgroundColor: '#818cf8' }} 
                         style={{ width: `${dept.percentage}%` }}
                       ></div>
                     </div>
@@ -444,7 +447,7 @@ export default function Dashboard({ onNavigate, user }) {
               ))}
             </div>
           ) : (
-            <div className="text-center text-neutral-400 py-8">
+            <div className="text-center text-tahoe-text-muted py-8">
               <div className="text-4xl mb-2">📊</div>
               <p>{t('dashboard.noDepartmentData')}</p>
             </div>
@@ -464,18 +467,18 @@ export default function Dashboard({ onNavigate, user }) {
           <div className="space-y-4">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 bg-neutral-800/50 rounded-lg">
-                  <div className="w-2 h-2 bg-indigo-400 rounded-full mt-2"></div>
+                <div key={index} className="flex items-start space-x-3 p-3 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+                  <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: '#818cf8' }}></div>
                   <div className="flex-1">
                     <p className="text-sm text-white">{activity.description}</p>
-                    <p className="text-xs text-neutral-400 mt-1">
+                    <p className="text-xs text-tahoe-text-muted mt-1">
                       {activity.timestamp ? formatShortDate(activity.timestamp) : 'Unknown date'}
                     </p>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center text-neutral-400 py-8">
+              <div className="text-center text-tahoe-text-muted py-8">
                 <div className="text-4xl mb-2">📝</div>
                 <p>{t('dashboard.noActivity')}</p>
               </div>

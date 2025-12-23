@@ -136,11 +136,11 @@ export default function PayrollV2() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-white p-6">
+      <div className="min-h-screen bg-tahoe-bg-primary text-white p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-20">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500 mx-auto"></div>
-            <p className="mt-4 text-neutral-400">Loading payroll data...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-tahoe-accent mx-auto"></div>
+            <p className="mt-4 text-tahoe-text-muted">Loading payroll data...</p>
           </div>
         </div>
       </div>
@@ -148,15 +148,15 @@ export default function PayrollV2() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-6">
+    <div className="min-h-screen bg-tahoe-bg-primary text-white p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Payroll Management</h1>
-          <p className="text-neutral-400">
+          <h1 className="text-3xl font-bold mb-2 text-tahoe-text-primary">Payroll Management</h1>
+          <p className="text-tahoe-text-secondary">
             Automatically calculated from approved timecards (hourly rate × hours)
           </p>
-          <p className="text-sm text-neutral-500 mt-1">
+          <p className="text-sm text-tahoe-text-muted mt-1">
             ⚡ Payroll is automatically created when ALL timecards for an employee/period are approved
           </p>
         </div>
@@ -195,16 +195,17 @@ export default function PayrollV2() {
         )}
 
         {/* Tabs */}
-        <div className="flex space-x-2 mb-6 border-b border-neutral-800">
+        <div className="flex space-x-2 mb-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+              className={`px-6 py-3 font-medium transition-all duration-tahoe border-b-2 ${
                 activeTab === tab.id
-                  ? "border-indigo-500 text-white"
-                  : "border-transparent text-neutral-400 hover:text-white"
+                  ? "text-tahoe-text-primary"
+                  : "border-transparent text-tahoe-text-muted hover:text-tahoe-text-primary"
               }`}
+              style={activeTab === tab.id ? { borderColor: '#0A84FF' } : {}}
             >
               <span className="mr-2">{tab.icon}</span>
               {tab.name}
@@ -217,22 +218,22 @@ export default function PayrollV2() {
           <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-neutral-900 rounded-lg p-6 border border-neutral-800">
-                <div className="text-sm text-neutral-400 mb-1">Next Pay Date</div>
-                <div className="text-2xl font-bold text-indigo-400">
+              <div className="rounded-tahoe-input p-6 border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                <div className="text-sm text-tahoe-text-muted mb-1">Next Pay Date</div>
+                <div className="text-2xl font-bold text-tahoe-accent">
                   {nextPayPeriod ? formatShortDate(nextPayPeriod.pay_date) : "N/A"}
                 </div>
               </div>
 
-              <div className="bg-neutral-900 rounded-lg p-6 border border-neutral-800">
-                <div className="text-sm text-neutral-400 mb-1">Total Employees</div>
+              <div className="rounded-tahoe-input p-6 border">
+                <div className="text-sm text-tahoe-text-muted mb-1">Total Employees</div>
                 <div className="text-2xl font-bold">
                   {vacationBalances.length}
                 </div>
               </div>
 
-              <div className="bg-neutral-900 rounded-lg p-6 border border-neutral-800">
-                <div className="text-sm text-neutral-400 mb-1">Total Vacation Balance</div>
+              <div className="rounded-tahoe-input p-6 border">
+                <div className="text-sm text-tahoe-text-muted mb-1">Total Vacation Balance</div>
                 <div className="text-2xl font-bold text-green-400">
                   $
                   {vacationBalances
@@ -241,28 +242,28 @@ export default function PayrollV2() {
                 </div>
               </div>
 
-              <div className="bg-neutral-900 rounded-lg p-6 border border-neutral-800">
-                <div className="text-sm text-neutral-400 mb-1">Pay Periods</div>
+              <div className="rounded-tahoe-input p-6 border">
+                <div className="text-sm text-tahoe-text-muted mb-1">Pay Periods</div>
                 <div className="text-2xl font-bold">{payPeriods.length}</div>
               </div>
             </div>
 
             {/* Pay Periods List */}
-            <div className="bg-neutral-900 rounded-lg border border-neutral-800">
-              <div className="p-6 border-b border-neutral-800">
+            <div className="rounded-tahoe-input border">
+              <div className="p-6 border-b">
                 <h2 className="text-xl font-semibold">Pay Periods</h2>
               </div>
 
-              <div className="divide-y divide-neutral-800">
+              <div className="divide-y">
                 {payPeriods.length === 0 ? (
-                  <div className="p-8 text-center text-neutral-400">
+                  <div className="p-8 text-center text-tahoe-text-muted">
                     <div className="text-4xl mb-4">💰</div>
                     <p>No payroll records found</p>
                     <p className="text-sm mt-2">Payroll will appear automatically when timecards are approved</p>
                   </div>
                 ) : (
                   payPeriods.map((period, index) => (
-                    <div key={index} className="p-6 hover:bg-neutral-800/50 transition-colors cursor-pointer"
+                    <div key={index} className="p-6 hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}
                          onClick={() => setSelectedPayPeriod(period)}>
                       <div className="flex justify-between items-start mb-4">
                         <div>
@@ -270,7 +271,7 @@ export default function PayrollV2() {
                             {formatShortDate(period.pay_period_start)} -{" "}
                             {formatShortDate(period.pay_period_end)}
                           </h3>
-                          <p className="text-sm text-neutral-400">
+                          <p className="text-sm text-tahoe-text-muted">
                             Pay Date: {formatShortDate(period.pay_date)}
                           </p>
                         </div>
@@ -278,19 +279,19 @@ export default function PayrollV2() {
 
                       <div className="grid grid-cols-4 gap-4">
                         <div>
-                          <div className="text-sm text-neutral-400">Employees</div>
+                          <div className="text-sm text-tahoe-text-muted">Employees</div>
                           <div className="text-lg font-semibold">{period.employee_count || 0}</div>
                         </div>
                         <div>
-                          <div className="text-sm text-neutral-400">Gross Pay</div>
+                          <div className="text-sm text-tahoe-text-muted">Gross Pay</div>
                           <div className="text-lg font-semibold">${parseFloat(period.total_gross_pay || 0).toFixed(2)}</div>
                         </div>
                         <div>
-                          <div className="text-sm text-neutral-400">Net Pay</div>
+                          <div className="text-sm text-tahoe-text-muted">Net Pay</div>
                           <div className="text-lg font-semibold">${parseFloat(period.total_net_pay || 0).toFixed(2)}</div>
                         </div>
                         <div>
-                          <div className="text-sm text-neutral-400">Vacation Accrued</div>
+                          <div className="text-sm text-tahoe-text-muted">Vacation Accrued</div>
                           <div className="text-lg font-semibold text-green-400">
                             ${parseFloat(period.total_vacation_accrued || 0).toFixed(2)}
                           </div>
@@ -307,31 +308,31 @@ export default function PayrollV2() {
         {/* Vacation Balances Tab */}
         {activeTab === "vacation" && (
           <div className="space-y-6">
-            <div className="bg-neutral-900 rounded-lg border border-neutral-800">
-              <div className="p-6 border-b border-neutral-800">
+            <div className="rounded-tahoe-input border">
+              <div className="p-6 border-b">
                 <h2 className="text-xl font-semibold">Employee Vacation Balances</h2>
-                <p className="text-sm text-neutral-400 mt-1">
+                <p className="text-sm text-tahoe-text-muted mt-1">
                   Employees accrue 4% vacation pay on all hours worked
                 </p>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-800/50">
+                  <thead className="bg-tahoe-bg-secondary">
                     <tr>
-                      <th className="text-left px-6 py-3 text-sm font-medium text-neutral-400">Employee</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Hourly Rate</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Hours Balance</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Pay Balance</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Total Earned</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Total Paid</th>
-                      <th className="text-center px-6 py-3 text-sm font-medium text-neutral-400">Actions</th>
+                      <th className="text-left px-6 py-3 text-sm font-medium text-tahoe-text-muted">Employee</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Hourly Rate</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Hours Balance</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Pay Balance</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Total Earned</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Total Paid</th>
+                      <th className="text-center px-6 py-3 text-sm font-medium text-tahoe-text-muted">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-800">
+                  <tbody className="divide-y">
                     {vacationBalances.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-neutral-400">
+                        <td colSpan="7" className="px-6 py-12 text-center text-tahoe-text-muted">
                           <div className="text-4xl mb-4">🏖️</div>
                           <p>No vacation balance records yet</p>
                           <p className="text-sm mt-2">Balances will appear after payroll is calculated</p>
@@ -339,13 +340,13 @@ export default function PayrollV2() {
                       </tr>
                     ) : (
                       vacationBalances.map((emp) => (
-                        <tr key={emp.employee_id} className="hover:bg-neutral-800/30">
+                        <tr key={emp.employee_id} className="hover:bg-tahoe-bg-hover">
                           <td className="px-6 py-4">
                             <div>
                               <div className="font-medium">
                                 {emp.first_name} {emp.last_name}
                               </div>
-                              <div className="text-sm text-neutral-400">{emp.email}</div>
+                              <div className="text-sm text-tahoe-text-muted">{emp.email}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right">${parseFloat(emp.hourly_rate || 0).toFixed(2)}</td>
@@ -355,10 +356,10 @@ export default function PayrollV2() {
                           <td className="px-6 py-4 text-right font-semibold text-green-400">
                             ${parseFloat(emp.vacation_pay_balance || 0).toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 text-right text-neutral-400">
+                          <td className="px-6 py-4 text-right text-tahoe-text-muted">
                             ${parseFloat(emp.vacation_pay_earned || 0).toFixed(2)}
                           </td>
-                          <td className="px-6 py-4 text-right text-neutral-400">
+                          <td className="px-6 py-4 text-right text-tahoe-text-muted">
                             ${parseFloat(emp.vacation_pay_paid || 0).toFixed(2)}
                           </td>
                           <td className="px-6 py-4 text-center">
@@ -370,8 +371,8 @@ export default function PayrollV2() {
                               disabled={parseFloat(emp.vacation_hours_balance || 0) <= 0}
                               className={`px-3 py-1 rounded-lg text-sm font-medium ${
                                 parseFloat(emp.vacation_hours_balance || 0) > 0
-                                  ? "bg-indigo-600 hover:bg-indigo-700 text-white"
-                                  : "bg-neutral-800 text-neutral-500 cursor-not-allowed"
+                                  ? "bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white"
+                                  : "bg-tahoe-bg-quaternary text-tahoe-text-muted cursor-not-allowed"
                               }`}
                             >
                               Pay Out
@@ -391,7 +392,7 @@ export default function PayrollV2() {
         {activeTab === "history" && (
           <div className="space-y-6">
             {/* Date Range Filter */}
-            <div className="bg-neutral-900 rounded-lg border border-neutral-800 p-4">
+            <div className="rounded-tahoe-input border p-4">
               <div className="flex items-end gap-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium mb-2">Start Date</label>
@@ -399,7 +400,7 @@ export default function PayrollV2() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-tahoe-input border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
                   />
                 </div>
                 <div className="flex-1">
@@ -408,49 +409,49 @@ export default function PayrollV2() {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-tahoe-input border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
                   />
                 </div>
                 <button
                   onClick={applyDateFilter}
-                  className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium"
+                  className="px-6 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium"
                 >
                   Apply Filter
                 </button>
                 <button
                   onClick={clearDateFilter}
-                  className="px-6 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg font-medium"
+                  className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg font-medium"
                 >
                   Clear
                 </button>
               </div>
             </div>
 
-            <div className="bg-neutral-900 rounded-lg border border-neutral-800">
-              <div className="p-6 border-b border-neutral-800">
+            <div className="rounded-tahoe-input border">
+              <div className="p-6 border-b">
                 <h2 className="text-xl font-semibold">Payment History</h2>
-                <p className="text-sm text-neutral-400 mt-1">
+                <p className="text-sm text-tahoe-text-muted mt-1">
                   All payroll records (automatically calculated from approved timecards)
                 </p>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-neutral-800/50">
+                  <thead className="bg-tahoe-bg-secondary">
                     <tr>
-                      <th className="text-left px-6 py-3 text-sm font-medium text-neutral-400">Employee</th>
-                      <th className="text-left px-6 py-3 text-sm font-medium text-neutral-400">Pay Period</th>
-                      <th className="text-left px-6 py-3 text-sm font-medium text-neutral-400">Pay Date</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Hours</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Gross Pay</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Vacation Accrued</th>
-                      <th className="text-right px-6 py-3 text-sm font-medium text-neutral-400">Net Pay</th>
+                      <th className="text-left px-6 py-3 text-sm font-medium text-tahoe-text-muted">Employee</th>
+                      <th className="text-left px-6 py-3 text-sm font-medium text-tahoe-text-muted">Pay Period</th>
+                      <th className="text-left px-6 py-3 text-sm font-medium text-tahoe-text-muted">Pay Date</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Hours</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Gross Pay</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Vacation Accrued</th>
+                      <th className="text-right px-6 py-3 text-sm font-medium text-tahoe-text-muted">Net Pay</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-neutral-800">
+                  <tbody className="divide-y">
                     {payrolls.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="px-6 py-12 text-center text-neutral-400">
+                        <td colSpan="7" className="px-6 py-12 text-center text-tahoe-text-muted">
                           <div className="text-4xl mb-4">📋</div>
                           <p>No payroll history yet</p>
                           <p className="text-sm mt-2">Payroll will appear when timecards are approved</p>
@@ -458,13 +459,13 @@ export default function PayrollV2() {
                       </tr>
                     ) : (
                       payrolls.map((payroll) => (
-                        <tr key={payroll.id} className="hover:bg-neutral-800/30">
+                        <tr key={payroll.id} className="hover:bg-tahoe-bg-hover">
                           <td className="px-6 py-4">
                             <div>
                               <div className="font-medium">
                                 {payroll.first_name} {payroll.last_name}
                               </div>
-                              <div className="text-sm text-neutral-400">{payroll.department || "N/A"}</div>
+                              <div className="text-sm text-tahoe-text-muted">{payroll.department || "N/A"}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm">
@@ -508,28 +509,28 @@ export default function PayrollV2() {
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-neutral-900 rounded-lg p-6 max-w-md w-full mx-4 border border-neutral-800"
+              className="bg-tahoe-card-bg rounded-lg p-6 max-w-md w-full mx-4 border border-tahoe-border-primary"
             >
               <h3 className="text-xl font-semibold mb-4">Vacation Payout</h3>
 
               <div className="mb-6">
                 <div className="mb-4">
-                  <div className="text-sm text-neutral-400">Employee</div>
+                  <div className="text-sm text-tahoe-text-muted">Employee</div>
                   <div className="font-medium">
                     {selectedEmployee.first_name} {selectedEmployee.last_name}
                   </div>
                 </div>
 
-                <div className="bg-neutral-800 rounded-lg p-4 mb-4">
+                <div className="bg-tahoe-bg-secondary rounded-lg p-4 mb-4">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <div className="text-neutral-400">Available Hours</div>
+                      <div className="text-tahoe-text-muted">Available Hours</div>
                       <div className="text-lg font-semibold">
                         {formatHours(parseFloat(selectedEmployee.vacation_hours_balance || 0))}
                       </div>
                     </div>
                     <div>
-                      <div className="text-neutral-400">Available Pay</div>
+                      <div className="text-tahoe-text-muted">Available Pay</div>
                       <div className="text-lg font-semibold text-green-400">
                         ${parseFloat(selectedEmployee.vacation_pay_balance || 0).toFixed(2)}
                       </div>
@@ -548,10 +549,10 @@ export default function PayrollV2() {
                     max={parseFloat(selectedEmployee.vacation_hours_balance || 0)}
                     value={vacationHoursToPay}
                     onChange={(e) => setVacationHoursToPay(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full rounded-tahoe-input border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
                     placeholder="0.00"
                   />
-                  <div className="text-xs text-neutral-400 mt-1">
+                  <div className="text-xs text-tahoe-text-muted mt-1">
                     Max: {formatHours(parseFloat(selectedEmployee.vacation_hours_balance || 0))}
                   </div>
                 </div>
@@ -564,7 +565,7 @@ export default function PayrollV2() {
                     setSelectedEmployee(null);
                     setVacationHoursToPay("");
                   }}
-                  className="flex-1 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 rounded-lg font-medium"
+                  className="flex-1 px-4 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg font-medium"
                 >
                   Cancel
                 </button>
@@ -573,8 +574,8 @@ export default function PayrollV2() {
                   disabled={!vacationHoursToPay || parseFloat(vacationHoursToPay) <= 0}
                   className={`flex-1 px-4 py-2 rounded-lg font-medium ${
                     vacationHoursToPay && parseFloat(vacationHoursToPay) > 0
-                      ? "bg-indigo-600 hover:bg-indigo-700"
-                      : "bg-neutral-700 text-neutral-400 cursor-not-allowed"
+                      ? "bg-tahoe-primary-bg hover:bg-tahoe-primary-hover"
+                      : "bg-tahoe-bg-secondary text-tahoe-text-muted cursor-not-allowed"
                   }`}
                 >
                   Process Payout

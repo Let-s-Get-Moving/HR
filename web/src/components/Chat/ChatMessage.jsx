@@ -16,20 +16,21 @@ export default function ChatMessage({ message, isOwn, senderName, highlightMessa
     >
       <div className={`max-w-[70%] sm:max-w-[60%] ${isOwn ? 'order-2' : 'order-1'}`}>
         {!isOwn && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1 px-2">
+          <p className="text-xs text-tahoe-text-muted mb-1 px-2">
             {senderName || 'Unknown'}
           </p>
         )}
         <div
-          className={`rounded-2xl px-4 py-2 transition-all duration-300 ${
+          className={`rounded-tahoe px-4 py-2 transition-all duration-tahoe ${
             isOwn
-              ? 'bg-indigo-600 text-white rounded-br-sm'
-              : 'bg-slate-100 dark:bg-slate-700 text-primary rounded-bl-sm'
+              ? 'rounded-br-sm'
+              : 'rounded-bl-sm'
           } ${
             isHighlighted 
-              ? 'ring-4 ring-yellow-400 dark:ring-yellow-500 shadow-lg scale-105' 
+              ? 'ring-4 ring-yellow-400 shadow-tahoe-md scale-105' 
               : ''
           }`}
+          style={isOwn ? { backgroundColor: '#0A84FF', color: '#ffffff' } : { backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
         >
           <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
           
@@ -45,11 +46,11 @@ export default function ChatMessage({ message, isOwn, senderName, highlightMessa
           {/* Timestamp and edit indicator */}
           <div className="flex items-center justify-end space-x-2 mt-1">
             {message.is_edited && (
-              <span className={`text-xs ${isOwn ? 'text-indigo-200' : 'text-slate-400'}`}>
+              <span className={`text-xs ${isOwn ? 'text-white/70' : 'text-tahoe-text-muted'}`}>
                 (edited)
               </span>
             )}
-            <span className={`text-xs ${isOwn ? 'text-indigo-200' : 'text-slate-400'}`}>
+            <span className={`text-xs ${isOwn ? 'text-white/70' : 'text-tahoe-text-muted'}`}>
               {formatTime(message.created_at)}
             </span>
           </div>

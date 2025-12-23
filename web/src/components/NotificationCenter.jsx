@@ -205,7 +205,7 @@ export default function NotificationCenter({ onNavigate }) {
       {/* Bell Icon Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg text-secondary hover:text-primary hover:bg-hover dark:hover:bg-slate-700/50 transition-colors"
+        className="relative p-2 rounded-lg text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe"
         aria-label="Notifications"
       >
         <svg 
@@ -235,7 +235,7 @@ export default function NotificationCenter({ onNavigate }) {
 
         {/* Connection Status Indicator */}
         {!connected && (
-          <span className="absolute bottom-0 right-0 w-2 h-2 bg-yellow-500 rounded-full border-2 border-white dark:border-slate-900" />
+          <span className="absolute bottom-0 right-0 w-2 h-2 bg-yellow-500 rounded-full border-2" style={{ borderColor: '#0B0B0C' }} />
         )}
       </button>
 
@@ -257,23 +257,24 @@ export default function NotificationCenter({ onNavigate }) {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute right-0 mt-2 w-[90vw] sm:w-96 lg:w-[400px] max-h-[600px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xl z-50 flex flex-col"
+              className="absolute right-0 mt-2 w-[90vw] sm:w-96 lg:w-[400px] max-h-[600px] rounded-tahoe shadow-tahoe-lg z-50 flex flex-col"
+              style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-semibold text-primary">Notifications</h3>
+              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                <h3 className="text-lg font-semibold text-tahoe-text-primary">Notifications</h3>
                 <div className="flex items-center space-x-2">
                   {unreadInFilter > 0 && (
                     <button
                       onClick={markAllAsRead}
-                      className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                      className="text-sm text-tahoe-accent hover:underline transition-all duration-tahoe"
                     >
                       Mark all read
                     </button>
                   )}
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    className="p-1 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -283,17 +284,18 @@ export default function NotificationCenter({ onNavigate }) {
               </div>
 
               {/* Filters */}
-              <div className="p-3 border-b border-slate-200 dark:border-slate-700">
+              <div className="p-3 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                 <div className="flex space-x-2 overflow-x-auto">
                   {['all', 'unread', ...Object.keys(NOTIFICATION_TYPES)].map((type) => (
                     <button
                       key={type}
                       onClick={() => setFilter(type)}
-                      className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                      className={`px-3 py-1.5 rounded-tahoe-pill text-sm font-medium whitespace-nowrap transition-all duration-tahoe ${
                         filter === type
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-slate-100 dark:bg-slate-700 text-secondary hover:bg-slate-200 dark:hover:bg-slate-600'
+                          ? 'text-white'
+                          : 'text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover'
                       }`}
+                      style={filter === type ? { backgroundColor: '#0A84FF' } : { backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
                     >
                       {type === 'all' ? 'All' : type === 'unread' ? 'Unread' : NOTIFICATION_TYPES[type]?.label || type}
                     </button>
@@ -305,17 +307,17 @@ export default function NotificationCenter({ onNavigate }) {
               <div className="flex-1 overflow-y-auto">
                 {loading ? (
                   <div className="flex items-center justify-center p-8">
-                    <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-4 border-tahoe-accent border-t-transparent rounded-full animate-spin" />
                   </div>
                 ) : filteredNotifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-8 text-center">
-                    <svg className="w-12 h-12 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-12 h-12 text-tahoe-text-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
-                    <p className="text-slate-500 dark:text-slate-400">No notifications</p>
+                    <p className="text-tahoe-text-muted">No notifications</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-200 dark:divide-slate-700">
+                  <div className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                     {filteredNotifications.map((notification) => {
                       const typeInfo = NOTIFICATION_TYPES[notification.type] || { label: notification.type, color: 'bg-gray-500' };
                       return (
@@ -323,9 +325,8 @@ export default function NotificationCenter({ onNavigate }) {
                           key={notification.id}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer ${
-                            !notification.is_read ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : ''
-                          }`}
+                          className="p-4 hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
+                          style={!notification.is_read ? { backgroundColor: 'rgba(10, 132, 255, 0.1)' } : {}}
                           onClick={() => {
                             // Mark as read
                             if (!notification.is_read) {
@@ -351,7 +352,7 @@ export default function NotificationCenter({ onNavigate }) {
                             {/* Content */}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between">
-                                <h4 className={`text-sm font-medium ${notification.is_read ? 'text-secondary' : 'text-primary font-semibold'}`}>
+                                <h4 className={`text-sm font-medium ${notification.is_read ? 'text-tahoe-text-secondary' : 'text-tahoe-text-primary font-semibold'}`}>
                                   {notification.title}
                                 </h4>
                                 <div className="flex items-center space-x-1 ml-2">
@@ -360,15 +361,15 @@ export default function NotificationCenter({ onNavigate }) {
                                       e.stopPropagation();
                                       notification.is_read ? markAsUnread(notification.id) : markAsRead(notification.id);
                                     }}
-                                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                    className="p-1 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe"
                                     title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
                                   >
                                     {notification.is_read ? (
-                                      <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <svg className="w-4 h-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                       </svg>
                                     ) : (
-                                      <svg className="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <svg className="w-4 h-4 text-tahoe-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                       </svg>
                                     )}
@@ -378,17 +379,17 @@ export default function NotificationCenter({ onNavigate }) {
                                       e.stopPropagation();
                                       deleteNotification(notification.id);
                                     }}
-                                    className="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                    className="p-1 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe"
                                     title="Delete"
                                   >
-                                    <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                     </svg>
                                   </button>
                                 </div>
                               </div>
-                              <p className="text-sm text-secondary mt-1 line-clamp-2">{notification.message}</p>
-                              <p className="text-xs text-slate-400 mt-2">{formatTime(notification.created_at)}</p>
+                              <p className="text-sm text-tahoe-text-secondary mt-1 line-clamp-2">{notification.message}</p>
+                              <p className="text-xs text-tahoe-text-muted mt-2">{formatTime(notification.created_at)}</p>
                             </div>
                           </div>
                         </motion.div>

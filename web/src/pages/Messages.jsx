@@ -180,17 +180,18 @@ export default function Messages({ pageParams = {} }) {
 
       {/* New Thread Modal */}
       {showNewThreadModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-slate-800 rounded-2xl p-6 w-full max-w-md shadow-xl"
+            className="rounded-tahoe p-6 w-full max-w-md shadow-tahoe-lg"
+            style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
           >
-            <h3 className="text-lg font-semibold text-primary mb-4">New Conversation</h3>
+            <h3 className="text-lg font-semibold text-tahoe-text-primary mb-4">New Conversation</h3>
 
             <div className="space-y-4">
               <div className="relative">
-                <label className="block text-sm font-medium text-primary mb-2">
+                <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
                   Select participant
                 </label>
                 <div className="relative">
@@ -235,12 +236,13 @@ export default function Messages({ pageParams = {} }) {
                       }
                     }}
                     placeholder="Type to search employees..."
-                    className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                    className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   
                   {/* Suggestions Dropdown */}
                   {showSuggestions && searchQuery && (
-                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                    <div className="absolute z-50 w-full mt-1 rounded-tahoe shadow-tahoe-lg max-h-60 overflow-y-auto" style={{ backgroundColor: 'rgba(22, 22, 24, 0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                       {availableUsers
                         .filter(u => 
                           u.id !== currentUserId &&
@@ -260,13 +262,12 @@ export default function Messages({ pageParams = {} }) {
                                 setSearchQuery(displayName);
                                 setShowSuggestions(false);
                               }}
-                              className={`w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${
-                                index === selectedUserIndex ? 'bg-indigo-50 dark:bg-indigo-900/20' : ''
-                              }`}
+                              className="w-full text-left px-4 py-2 hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+                              style={index === selectedUserIndex ? { backgroundColor: 'rgba(10, 132, 255, 0.1)' } : {}}
                             >
-                              <div className="font-medium text-primary">{displayName}</div>
+                              <div className="font-medium text-tahoe-text-primary">{displayName}</div>
                               {user.role && (
-                                <div className="text-xs text-slate-500 dark:text-slate-400">{user.role}</div>
+                                <div className="text-xs text-tahoe-text-muted">{user.role}</div>
                               )}
                             </button>
                           );
@@ -277,7 +278,7 @@ export default function Messages({ pageParams = {} }) {
                          u.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          u.last_name?.toLowerCase().includes(searchQuery.toLowerCase()))
                       ).length === 0 && (
-                        <div className="px-4 py-2 text-sm text-slate-500 dark:text-slate-400">
+                        <div className="px-4 py-2 text-sm text-tahoe-text-muted">
                           No employees found
                         </div>
                       )}
@@ -285,7 +286,7 @@ export default function Messages({ pageParams = {} }) {
                   )}
                 </div>
                 {newThreadParticipant && (
-                  <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+                  <div className="mt-2 text-sm text-tahoe-text-secondary">
                     Selected: {availableUsers.find(u => u.id.toString() === newThreadParticipant)?.employee_name || 
                                 `${availableUsers.find(u => u.id.toString() === newThreadParticipant)?.first_name} ${availableUsers.find(u => u.id.toString() === newThreadParticipant)?.last_name}`}
                   </div>
@@ -293,7 +294,7 @@ export default function Messages({ pageParams = {} }) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-primary mb-2">
+                <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
                   Subject (optional)
                 </label>
                 <input
@@ -301,7 +302,8 @@ export default function Messages({ pageParams = {} }) {
                   value={newThreadSubject}
                   onChange={(e) => setNewThreadSubject(e.target.value)}
                   placeholder="e.g., Leave Request #123"
-                  className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
             </div>
@@ -314,14 +316,16 @@ export default function Messages({ pageParams = {} }) {
                   setNewThreadSubject('');
                   setSearchQuery('');
                 }}
-                className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-700 text-primary hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                className="px-4 py-2 rounded-tahoe-pill transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
               >
                 Cancel
               </button>
               <button
                 onClick={createThread}
                 disabled={!newThreadParticipant || creatingThread}
-                className="px-4 py-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+                className="px-4 py-2 rounded-tahoe-pill disabled:opacity-50 transition-all duration-tahoe"
+                style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
               >
                 {creatingThread ? 'Creating...' : 'Create'}
               </button>

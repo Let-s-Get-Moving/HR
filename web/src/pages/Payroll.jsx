@@ -218,7 +218,8 @@ export default function Payroll() {
                 const period = payPeriods.find(p => p.pay_date === e.target.value);
                 setSelectedPeriod(period);
               }}
-              className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+              className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
             >
               <option value="">{t('payroll.selectPayDate')}</option>
               {payPeriods.map((period) => {
@@ -271,7 +272,7 @@ export default function Payroll() {
         <div className="card p-4 mb-6">
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -280,13 +281,14 @@ export default function Payroll() {
               placeholder={t('payroll.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+              className="block w-full pl-10 pr-10 py-3 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-sm transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
             />
             {searchQuery && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="text-neutral-400 hover:text-primary transition-colors"
+                  className="text-tahoe-text-muted hover:text-tahoe-text-primary transition-all duration-tahoe"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -379,7 +381,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
             onClick={() => onEmployeeClick(employee)}
           >
             {/* Employee Header */}
-            <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <div className="px-6 py-4 border-b" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <h3 className="font-semibold text-primary text-lg">
@@ -426,7 +428,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                       </div>
 
               {/* Pay Breakdown */}
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="mt-4 pt-4 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-secondary">{t('payroll.regularPay')}</span>
@@ -452,7 +454,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
               </div>
 
               {/* Click for details hint */}
-              <div className="mt-4 text-center text-xs text-indigo-600 dark:text-indigo-400">
+              <div className="mt-4 text-center text-xs text-tahoe-accent">
                 Click for detailed breakdown →
               </div>
             </div>
@@ -556,7 +558,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
           {/* Detailed Breakdown */}
           <div className="space-y-6">
             {/* Hours Breakdown */}
-            <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-lg">
+            <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
               <h3 className="text-lg font-semibold text-primary mb-4">{t('payroll.hoursBreakdown')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
@@ -575,7 +577,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
           </div>
                 <div>
                   <div className="text-xs text-secondary uppercase mb-1">{t('payroll.hourlyRate')}</div>
-                  <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                  <div className="text-2xl font-bold text-tahoe-accent">
                     {formatCurrency(employee.hourly_rate)}
           </div>
         </div>
@@ -583,10 +585,10 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
     </div>
 
             {/* Pay Breakdown */}
-            <div className="bg-slate-100 dark:bg-slate-800/50 p-4 rounded-lg">
+            <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
               <h3 className="text-lg font-semibold text-primary mb-4">{t('payroll.payBreakdown')}</h3>
               <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between items-center py-2 border-b">
           <div>
                     <div className="font-medium text-primary">{t('payroll.regularPayLabel')}</div>
                     <div className="text-xs text-secondary">
@@ -595,7 +597,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
     </div>
                   <div className="text-xl font-bold text-primary">{formatCurrency(employee.regular_pay)}</div>
         </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between items-center py-2 border-b">
                   <div>
                     <div className="font-medium text-primary">{t('payroll.overtimePayLabel')}</div>
                     <div className="text-xs text-secondary">
@@ -606,14 +608,14 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
                     {formatCurrency(employee.overtime_pay)}
           </div>
         </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between items-center py-2 border-b">
                   <div>
                     <div className="font-medium text-primary">{t('payroll.grossPayLabel')}</div>
                     <div className="text-xs text-secondary">{t('payroll.totalBeforeDeductions')}</div>
                   </div>
                   <div className="text-xl font-bold text-primary">{formatCurrency(employee.gross_pay)}</div>
                 </div>
-                <div className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between items-center py-2 border-b">
                   <div>
                     <div className="font-medium text-primary">{t('payroll.deductions')}</div>
                     <div className="text-xs text-secondary">{t('payroll.taxesBenefitsEtc')}</div>
@@ -672,7 +674,8 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
           <div className="mt-6 flex justify-end">
                   <button
               onClick={onClose}
-              className="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-lg font-medium transition-colors"
+              className="px-6 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+              style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
                   >
               Close
                   </button>

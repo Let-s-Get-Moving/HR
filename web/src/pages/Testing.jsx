@@ -283,7 +283,7 @@ export default function Testing() {
       case "failed": return "text-red-400";
       case "warning": return "text-yellow-400";
       case "running": return "text-blue-400";
-      default: return "text-neutral-400";
+      default: return "text-tahoe-text-muted";
     }
   };
 
@@ -303,7 +303,7 @@ export default function Testing() {
       case "failed": return "bg-red-500/20 text-red-400 border-red-500/50";
       case "warning": return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
       case "running": return "bg-blue-500/20 text-blue-400 border-blue-500/50";
-      default: return "bg-neutral-500/20 text-neutral-400 border-neutral-500/50";
+      default: return "bg-tahoe-bg-quaternary/20 text-tahoe-text-muted border-tahoe-border-primary/50";
     }
   };
 
@@ -332,7 +332,7 @@ export default function Testing() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-white">System Testing</h1>
-        <p className="text-neutral-400 mt-1">Comprehensive testing suite for C&C HR System</p>
+        <p className="text-tahoe-text-muted mt-1">Comprehensive testing suite for C&C HR System</p>
       </div>
 
       {/* System Information */}
@@ -340,15 +340,15 @@ export default function Testing() {
         <h3 className="text-lg font-semibold text-white mb-4">System Information</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
           <div>
-            <span className="font-medium text-neutral-400">Screen:</span> 
+            <span className="font-medium text-tahoe-text-muted">Screen:</span> 
             <span className="ml-2 text-white">{systemInfo.screenSize}</span>
           </div>
           <div>
-            <span className="font-medium text-neutral-400">Viewport:</span> 
+            <span className="font-medium text-tahoe-text-muted">Viewport:</span> 
             <span className="ml-2 text-white">{systemInfo.viewport}</span>
           </div>
           <div>
-            <span className="font-medium text-neutral-400">Timezone:</span> 
+            <span className="font-medium text-tahoe-text-muted">Timezone:</span> 
             <span className="ml-2 text-white">{systemInfo.timezone}</span>
           </div>
         </div>
@@ -359,14 +359,15 @@ export default function Testing() {
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div>
             <h3 className="text-lg font-semibold text-white">Test Suite</h3>
-            <p className="text-sm text-neutral-400 mt-1">
+            <p className="text-sm text-tahoe-text-muted mt-1">
               Run comprehensive tests across all system modules
             </p>
           </div>
           <button
             onClick={runAllTests}
             disabled={runningTests}
-            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-800 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-medium text-white transition-all shadow-lg hover:shadow-indigo-500/50"
+            className="px-6 py-3 rounded-tahoe-pill font-medium text-white transition-all duration-tahoe shadow-lg disabled:cursor-not-allowed"
+            style={{ backgroundColor: runningTests ? 'rgba(10, 132, 255, 0.5)' : '#0A84FF' }}
           >
             {runningTests ? "🔄 Running Tests..." : "▶️ Run All Tests"}
           </button>
@@ -375,21 +376,21 @@ export default function Testing() {
         {/* Stats */}
         {hasResults && stats.totalTests > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-neutral-800/50 rounded-xl p-4">
+            <div className="rounded-tahoe-input p-4" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
               <div className="text-2xl font-bold text-white">{stats.totalTests}</div>
-              <div className="text-sm text-neutral-400">Total Tests</div>
+              <div className="text-sm text-tahoe-text-muted">Total Tests</div>
             </div>
             <div className="bg-green-500/10 rounded-xl p-4">
               <div className="text-2xl font-bold text-green-400">{stats.passed}</div>
-              <div className="text-sm text-neutral-400">Passed</div>
+              <div className="text-sm text-tahoe-text-muted">Passed</div>
             </div>
             <div className="bg-yellow-500/10 rounded-xl p-4">
               <div className="text-2xl font-bold text-yellow-400">{stats.warned}</div>
-              <div className="text-sm text-neutral-400">Warnings</div>
+              <div className="text-sm text-tahoe-text-muted">Warnings</div>
             </div>
             <div className="bg-red-500/10 rounded-xl p-4">
               <div className="text-2xl font-bold text-red-400">{stats.failed}</div>
-              <div className="text-sm text-neutral-400">Failed</div>
+              <div className="text-sm text-tahoe-text-muted">Failed</div>
             </div>
           </div>
         )}
@@ -411,14 +412,14 @@ export default function Testing() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h4 className="text-lg font-semibold text-white">{testGroup.name}</h4>
-                  <p className="text-sm text-neutral-400">{testGroup.description}</p>
+                  <p className="text-sm text-tahoe-text-muted">{testGroup.description}</p>
                 </div>
                 {hasGroupResult && (
                   <div className="flex items-center gap-3">
                     <div className={`px-3 py-1 rounded-full border text-sm font-medium ${getStatusBadge(groupResult.status)}`}>
                       {getStatusIcon(groupResult.status)} {groupResult.status.toUpperCase()}
                     </div>
-                    <div className="text-sm text-neutral-400">
+                    <div className="text-sm text-tahoe-text-muted">
                       {groupResult.passed}/{groupResult.total}
                     </div>
                   </div>
@@ -432,18 +433,19 @@ export default function Testing() {
                   return (
                     <div 
                       key={index} 
-                      className="flex items-center justify-between p-3 bg-neutral-800/30 rounded-xl hover:bg-neutral-800/50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-xl transition-all duration-tahoe"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-white">{endpoint.name}</div>
-                        <div className="text-xs text-neutral-500 font-mono">{endpoint.url}</div>
+                        <div className="text-xs text-tahoe-text-muted font-mono">{endpoint.url}</div>
                       </div>
                       {testResult && (
                         <div className="flex items-center gap-3 ml-4">
                           <span className={`text-lg ${getStatusColor(testResult.status)}`}>
                             {getStatusIcon(testResult.status)}
                           </span>
-                          <span className="text-sm text-neutral-400 max-w-md truncate">
+                          <span className="text-sm text-tahoe-text-muted max-w-md truncate">
                             {testResult.result || testResult.error}
                           </span>
                         </div>
@@ -472,12 +474,12 @@ export default function Testing() {
             { icon: "⏰", name: "Time & Attendance", desc: "Timecard tracking" },
             { icon: "✅", name: "Compliance", desc: "Regulatory compliance" },
           ].map((module, idx) => (
-            <div key={idx} className="p-4 bg-neutral-800/30 rounded-xl hover:bg-neutral-800/50 transition-colors">
+            <div key={idx} className="p-4 rounded-xl transition-all duration-tahoe" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="text-2xl">{module.icon}</div>
                 <div className="font-medium text-white">{module.name}</div>
               </div>
-              <div className="text-sm text-neutral-400">{module.desc}</div>
+              <div className="text-sm text-tahoe-text-muted">{module.desc}</div>
             </div>
           ))}
         </div>

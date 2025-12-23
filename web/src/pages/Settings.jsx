@@ -2328,12 +2328,12 @@ export default function Settings() {
                 disabled={saving[key]}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 ${
                   editBoolValue 
-                    ? 'bg-green-500 hover:bg-green-600' 
-                    : 'bg-red-500 hover:bg-red-600'
+                    ? 'bg-tahoe-success-bg hover:bg-tahoe-success-bg/80' 
+                    : 'bg-tahoe-error-bg hover:bg-tahoe-error-bg/80'
                 } ${saving[key] ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform duration-200 ${
+                  className={`inline-block h-4 w-4 transform rounded-full bg-tahoe-bg-primary shadow-lg transition-transform duration-200 ${
                     editBoolValue ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -2634,7 +2634,7 @@ export default function Settings() {
             >
               {renderSettingField(setting, category)}
               {setting?.key && saving[setting.key] && (
-                <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
+                <div className="mt-2 text-xs text-tahoe-accent">{t('settings.saving')}</div>
               )}
             </div>
           ))}
@@ -2661,7 +2661,7 @@ export default function Settings() {
               {/* Departments Button */}
               <button
                 onClick={() => setShowDepartmentsModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">🏢</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.departments.title')}</h4>
@@ -2671,7 +2671,7 @@ export default function Settings() {
               {/* Locations Button */}
               <button
                 onClick={() => setShowLocationsModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">📍</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.locations.title')}</h4>
@@ -2681,7 +2681,7 @@ export default function Settings() {
               {/* Leave Policies Button */}
               <button
                 onClick={() => setShowLeavePoliciesModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">📋</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.leavePolicies.title')}</h4>
@@ -2691,7 +2691,7 @@ export default function Settings() {
               {/* Holidays Button */}
               <button
                 onClick={() => setShowHolidaysModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">🎉</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.holidays.title')}</h4>
@@ -2701,7 +2701,7 @@ export default function Settings() {
               {/* Job Titles Button */}
               <button
                 onClick={() => setShowJobTitlesModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">💼</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.jobTitles.title')}</h4>
@@ -2711,7 +2711,7 @@ export default function Settings() {
               {/* Benefits Packages Button */}
               <button
                 onClick={() => setShowBenefitsPackagesModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">🎁</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.benefitsPackages.title')}</h4>
@@ -2721,7 +2721,7 @@ export default function Settings() {
               {/* Work Schedules Button */}
               <button
                 onClick={() => setShowWorkSchedulesModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">⏰</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.workSchedules.title')}</h4>
@@ -2731,7 +2731,7 @@ export default function Settings() {
               {/* Overtime Policies Button */}
               <button
                 onClick={() => setShowOvertimePoliciesModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">⏱️</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.overtimePolicies.title')}</h4>
@@ -2741,7 +2741,7 @@ export default function Settings() {
               {/* Attendance Policies Button */}
               <button
                 onClick={() => setShowAttendancePoliciesModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">📊</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.attendancePolicies.title')}</h4>
@@ -2751,7 +2751,7 @@ export default function Settings() {
               {/* Remote Work Policies Button */}
               <button
                 onClick={() => setShowRemoteWorkPoliciesModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">🏠</div>
                 <h4 className="text-lg font-semibold mb-2">{t('settings.remoteWorkPolicies.title')}</h4>
@@ -2761,7 +2761,7 @@ export default function Settings() {
               {/* Commission Structures Button */}
               <button
                 onClick={() => setShowCommissionStructuresModal(true)}
-                className="card p-6 text-left hover:bg-neutral-800 transition-colors cursor-pointer"
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
               >
                 <div className="text-3xl mb-3">💰</div>
                 <h4 className="text-lg font-semibold mb-2">Commission Structures</h4>
@@ -2816,7 +2816,7 @@ export default function Settings() {
         {/* Regular System Settings */}
         {Object.entries(categories).map(([category, settings]) => (
           <div key={category}>
-            <h4 className="text-md font-medium text-neutral-300 mb-4">{category}</h4>
+            <h4 className="text-md font-medium text-tahoe-text-primary mb-4">{category}</h4>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {settings.map((setting) => (
                 <div
@@ -2825,7 +2825,7 @@ export default function Settings() {
                 >
                   {renderSettingField(setting, "system")}
                   {saving[setting.key] && (
-                    <div className="mt-2 text-xs text-indigo-400">{t('settings.saving')}</div>
+                    <div className="mt-2 text-xs text-tahoe-accent">{t('settings.saving')}</div>
                   )}
                 </div>
               ))}
@@ -2852,11 +2852,11 @@ export default function Settings() {
       }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.departments.title')}</h2>
             <button
               onClick={handleClose}
@@ -2882,7 +2882,7 @@ export default function Settings() {
                     type="text"
                     defaultValue=""
                     placeholder={t('settings.departments.namePlaceholder')}
-                    className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                    className="flex-1 px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                     maxLength={100}
                   />
                   <button
@@ -2909,7 +2909,7 @@ export default function Settings() {
                   {departments.map((dept) => (
                     <div
                       key={dept.id}
-                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                      className="flex items-center justify-between p-4 rounded-tahoe-input border"
                     >
                       <div className="flex-1">
                         <div className="font-medium text-white">{dept.name}</div>
@@ -2925,7 +2925,7 @@ export default function Settings() {
                         <button
                           onClick={() => handleDeleteDepartment(dept.id)}
                           disabled={deletingDepartment === dept.id || (departmentEmployeeCounts[dept.id] || 0) > 0}
-                          className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                          className="ml-4 px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                           title={
                             (departmentEmployeeCounts[dept.id] || 0) > 0
                               ? t('settings.departments.cannotDelete')
@@ -2965,11 +2965,11 @@ export default function Settings() {
       }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.locations.title')}</h2>
             <button
               onClick={handleClose}
@@ -2996,7 +2996,7 @@ export default function Settings() {
                       type="text"
                       defaultValue=""
                       placeholder={t('settings.locations.namePlaceholder')}
-                      className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      className="flex-1 px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                       maxLength={100}
                     />
                     <input
@@ -3004,14 +3004,14 @@ export default function Settings() {
                       type="text"
                       defaultValue=""
                       placeholder={t('settings.locations.regionPlaceholder')}
-                      className="flex-1 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                      className="flex-1 px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                       maxLength={50}
                     />
-                    <label className="flex items-center gap-2 px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg cursor-pointer">
+                    <label className="flex items-center gap-2 px-4 py-2 rounded-tahoe-input border cursor-pointer transition-all duration-tahoe" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                       <input
                         type="checkbox"
                         defaultChecked={true}
-                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                        className="w-4 h-4 text-tahoe-accent rounded focus:ring-tahoe-accent"
                       />
                       <span className="text-sm text-white">{t('settings.locations.active')}</span>
                     </label>
@@ -3042,7 +3042,7 @@ export default function Settings() {
                     return (
                       <div
                         key={loc.id}
-                        className="p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                        className="p-4 rounded-tahoe-input border"
                       >
                         {isEditing ? (
                           <div className="space-y-3">
@@ -3051,22 +3051,22 @@ export default function Settings() {
                                 type="text"
                                 value={editingLocation.name}
                                 onChange={(e) => setEditingLocation({...editingLocation, name: e.target.value})}
-                                className="flex-1 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded text-white"
+                                className="flex-1 px-3 py-2 rounded-tahoe-input border transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-white"
                                 placeholder={t('settings.locations.namePlaceholder')}
                               />
                               <input
                                 type="text"
                                 value={editingLocation.region || ''}
                                 onChange={(e) => setEditingLocation({...editingLocation, region: e.target.value})}
-                                className="flex-1 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded text-white"
+                                className="flex-1 px-3 py-2 rounded-tahoe-input border transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-white"
                                 placeholder={t('settings.locations.regionPlaceholder')}
                               />
-                              <label className="flex items-center gap-2 px-3 py-2 bg-neutral-700 border border-neutral-600 rounded cursor-pointer">
+                              <label className="flex items-center gap-2 px-3 py-2 rounded-tahoe-input border transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent cursor-pointer">
                                 <input
                                   type="checkbox"
                                   checked={editingLocation.is_active}
                                   onChange={(e) => setEditingLocation({...editingLocation, is_active: e.target.checked})}
-                                  className="w-4 h-4 text-indigo-600 rounded"
+                                  className="w-4 h-4 text-tahoe-accent rounded"
                                 />
                                 <span className="text-sm text-white">{t('settings.locations.active')}</span>
                               </label>
@@ -3078,7 +3078,7 @@ export default function Settings() {
                                   region: editingLocation.region.trim() || null,
                                   is_active: editingLocation.is_active
                                 })}
-                                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                                className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
                               >
                                 {t('settings.locations.save')}
                               </button>
@@ -3087,7 +3087,7 @@ export default function Settings() {
                                   setEditingLocation(null);
                                   setLocationError('');
                                 }}
-                                className="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
+                                className="px-4 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover text-white rounded-lg transition-colors"
                               >
                                 {t('settings.locations.cancel')}
                               </button>
@@ -3102,11 +3102,11 @@ export default function Settings() {
                                   <span className="text-sm text-secondary">({loc.region})</span>
                                 )}
                                 {loc.is_active ? (
-                                  <span className="px-2 py-1 text-xs bg-green-600/20 text-green-400 rounded">
+                                  <span className="px-2 py-1 text-xs bg-tahoe-success-bg/20 text-tahoe-success-text rounded">
                                     {t('settings.locations.active')}
                                   </span>
                                 ) : (
-                                  <span className="px-2 py-1 text-xs bg-red-600/20 text-red-400 rounded">
+                                  <span className="px-2 py-1 text-xs bg-tahoe-error-bg/20 text-tahoe-error-text rounded">
                                     {t('settings.locations.inactive')}
                                   </span>
                                 )}
@@ -3123,14 +3123,14 @@ export default function Settings() {
                               <div className="flex gap-2 ml-4">
                                 <button
                                   onClick={() => setEditingLocation({...loc})}
-                                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                                  className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
                                 >
                                   {t('settings.locations.edit')}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteLocation(loc.id)}
                                   disabled={deletingLocation === loc.id || (locationEmployeeCounts[loc.id] || 0) > 0}
-                                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                                  className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                                   title={
                                     (locationEmployeeCounts[loc.id] || 0) > 0
                                       ? t('settings.locations.cannotDelete', { count: locationEmployeeCounts[loc.id] })
@@ -3171,11 +3171,11 @@ export default function Settings() {
       }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.leavePolicies.title')}</h2>
             <button
               onClick={handleClose}
@@ -3212,7 +3212,7 @@ export default function Settings() {
                               setLeaveTypeError('');
                             }}
                             placeholder={t('settings.leavePolicies.namePlaceholder')}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                             maxLength={100}
                             required
                           />
@@ -3227,7 +3227,7 @@ export default function Settings() {
                               const val = parseInt(e.target.value, 10) || 0;
                               setEditingLeaveTypeData({...editingLeaveTypeData, default_annual_entitlement: val});
                             }}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                             required
                           />
                         </div>
@@ -3240,7 +3240,7 @@ export default function Settings() {
                             setEditingLeaveTypeData({...editingLeaveTypeData, description: e.target.value});
                           }}
                           placeholder={t('settings.leavePolicies.descriptionPlaceholder')}
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           rows="2"
                         />
                       </div>
@@ -3280,7 +3280,7 @@ export default function Settings() {
                               onChange={(e) => {
                                 setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
                               }}
-                              className="h-10 w-20 rounded border border-neutral-700"
+                              className="h-10 w-20 rounded border"
                             />
                             <input
                               type="text"
@@ -3289,7 +3289,7 @@ export default function Settings() {
                                 setEditingLeaveTypeData({...editingLeaveTypeData, color: e.target.value});
                               }}
                               placeholder="#3B82F6"
-                              className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                              className="flex-1 px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                               pattern="^#[0-9A-Fa-f]{6}$"
                             />
                           </div>
@@ -3310,7 +3310,7 @@ export default function Settings() {
                             setEditingLeaveTypeData(null);
                             setLeaveTypeError('');
                           }}
-                          className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                          className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white"
                         >
                           {t('settings.leavePolicies.cancel')}
                         </button>
@@ -3327,7 +3327,7 @@ export default function Settings() {
                             type="text"
                             defaultValue=""
                             placeholder={t('settings.leavePolicies.namePlaceholder')}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                             maxLength={100}
                             required
                           />
@@ -3339,7 +3339,7 @@ export default function Settings() {
                             type="number"
                             min="0"
                             defaultValue="0"
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                             required
                           />
                         </div>
@@ -3350,7 +3350,7 @@ export default function Settings() {
                           ref={(el) => leaveTypeInputRefs.current.description = el}
                           defaultValue=""
                           placeholder={t('settings.leavePolicies.descriptionPlaceholder')}
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           rows="2"
                         />
                       </div>
@@ -3380,14 +3380,14 @@ export default function Settings() {
                               ref={(el) => leaveTypeInputRefs.current.color = el}
                               type="color"
                               defaultValue="#3B82F6"
-                              className="h-10 w-20 rounded border border-neutral-700"
+                              className="h-10 w-20 rounded border"
                             />
                             <input
                               type="text"
                               defaultValue="#3B82F6"
                               pattern="^#[0-9A-Fa-f]{6}$"
                               placeholder="#3B82F6"
-                              className="flex-1 px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                              className="flex-1 px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                             />
                           </div>
                         </div>
@@ -3420,7 +3420,7 @@ export default function Settings() {
                   {leaveTypes.map((lt) => (
                     <div
                       key={lt.id}
-                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                      className="flex items-center justify-between p-4 rounded-tahoe-input border"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
@@ -3454,14 +3454,14 @@ export default function Settings() {
                               setEditingLeaveTypeData(leaveType ? {...leaveType} : null);
                               setEditingLeaveType(lt.id);
                             }}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
                           >
                             {t('settings.leavePolicies.edit')}
                           </button>
                           <button
                             onClick={() => handleDeleteLeaveType(lt.id)}
                             disabled={deletingLeaveType === lt.id || (leaveTypeUsageCounts[lt.id] || 0) > 0}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                             title={
                               (leaveTypeUsageCounts[lt.id] || 0) > 0
                                 ? t('settings.leavePolicies.cannotDelete')
@@ -3498,11 +3498,11 @@ export default function Settings() {
       }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.holidays.title')}</h2>
             <button
               onClick={handleClose}
@@ -3530,7 +3530,7 @@ export default function Settings() {
                         ref={(el) => holidayInputRefs.current.date = el}
                         type="date"
                         defaultValue=""
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                         required
                       />
                     </div>
@@ -3541,7 +3541,7 @@ export default function Settings() {
                         type="text"
                         defaultValue=""
                         placeholder={t('settings.holidays.descriptionPlaceholder')}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                         maxLength={200}
                         required
                       />
@@ -3571,7 +3571,7 @@ export default function Settings() {
                             applies_to_id: newType === 'All' ? null : null
                           });
                         }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                       >
                         <option value="All">{t('settings.holidays.appliesToAll')}</option>
                         <option value="Department">{t('settings.holidays.appliesToDepartment')}</option>
@@ -3589,7 +3589,7 @@ export default function Settings() {
                         <select
                           value={newHoliday.applies_to_id || ''}
                           onChange={(e) => setNewHoliday({...newHoliday, applies_to_id: e.target.value ? parseInt(e.target.value, 10) : null})}
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                         >
                           <option value="">{t('settings.holidays.select')}</option>
                           {newHoliday.applies_to_type === 'Department' && departments.map(dept => (
@@ -3632,7 +3632,7 @@ export default function Settings() {
                     return (
                       <div
                         key={holiday.id}
-                        className={`flex items-center justify-between p-4 bg-neutral-800 rounded-lg border ${isUpcoming ? 'border-yellow-600' : 'border-neutral-700'}`}
+                        className={`flex items-center justify-between p-4 rounded-tahoe-input border ${isUpcoming ? 'border-yellow-600' : 'border-tahoe-border-primary'}`}
                       >
                         <div className="flex-1">
                           <div className="font-medium text-white">{holiday.description}</div>
@@ -3641,7 +3641,7 @@ export default function Settings() {
                             {holiday.is_company_closure && ` • ${t('settings.holidays.companyClosure')}`}
                             {isUpcoming && ` • ${t('settings.holidays.upcoming')}`}
                             {holiday.applies_to_type && holiday.applies_to_type !== 'All' && (
-                              <span className="text-xs text-indigo-400 ml-2">
+                              <span className="text-xs text-tahoe-accent ml-2">
                                 • {holiday.applies_to_type === 'Department' ? t('settings.holidays.appliesToDepartment') :
                                     holiday.applies_to_type === 'JobTitle' ? t('settings.holidays.appliesToJobTitle') :
                                     t('settings.holidays.appliesToEmployee')}
@@ -3653,7 +3653,7 @@ export default function Settings() {
                           <button
                             onClick={() => handleDeleteHoliday(holiday.id)}
                             disabled={deletingHoliday === holiday.id}
-                            className="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="ml-4 px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                           >
                             {deletingHoliday === holiday.id ? t('settings.holidays.deleting') : t('settings.holidays.delete')}
                           </button>
@@ -3690,10 +3690,10 @@ export default function Settings() {
       }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.jobTitles.title')}</h2>
             <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3724,7 +3724,7 @@ export default function Settings() {
                               setEditingJobTitleData({...editingJobTitleData, name: e.target.value});
                               setJobTitleError('');
                             }}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                             required
                           />
                         </div>
@@ -3736,7 +3736,7 @@ export default function Settings() {
                               const val = e.target.value ? parseInt(e.target.value, 10) : null;
                               setEditingJobTitleData({...editingJobTitleData, department_id: val});
                             }}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           >
                             <option value="">{t('settings.jobTitles.selectDepartment')}</option>
                             {departments.map(dept => (
@@ -3752,7 +3752,7 @@ export default function Settings() {
                           onChange={(e) => {
                             setEditingJobTitleData({...editingJobTitleData, description: e.target.value});
                           }}
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           rows="2"
                         />
                       </div>
@@ -3765,7 +3765,7 @@ export default function Settings() {
                             onChange={(e) => {
                               setEditingJobTitleData({...editingJobTitleData, level_grade: e.target.value});
                             }}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           />
                         </div>
                         <div>
@@ -3776,7 +3776,7 @@ export default function Settings() {
                               const val = e.target.value ? parseInt(e.target.value, 10) : null;
                               setEditingJobTitleData({...editingJobTitleData, reports_to_id: val});
                             }}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           >
                             <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
                             {editingJobTitleData?.id ? jobTitles.filter(jt => jt.id !== editingJobTitleData.id).map(jt => (
@@ -3796,7 +3796,7 @@ export default function Settings() {
                               const val = e.target.value ? parseFloat(e.target.value) : null;
                               setEditingJobTitleData({...editingJobTitleData, min_salary: val});
                             }}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           />
                         </div>
                         <div>
@@ -3809,7 +3809,7 @@ export default function Settings() {
                               const val = e.target.value ? parseFloat(e.target.value) : null;
                               setEditingJobTitleData({...editingJobTitleData, max_salary: val});
                             }}
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           />
                         </div>
                       </div>
@@ -3824,7 +3824,7 @@ export default function Settings() {
                             ref={(el) => jobTitleInputRefs.current.name = el}
                             type="text"
                             defaultValue=""
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                             required
                           />
                         </div>
@@ -3833,7 +3833,7 @@ export default function Settings() {
                           <select
                             ref={(el) => jobTitleInputRefs.current.department_id = el}
                             defaultValue=""
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           >
                             <option value="">{t('settings.jobTitles.selectDepartment')}</option>
                             {departments.map(dept => (
@@ -3847,7 +3847,7 @@ export default function Settings() {
                         <textarea
                           ref={(el) => jobTitleInputRefs.current.description = el}
                           defaultValue=""
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           rows="2"
                         />
                       </div>
@@ -3858,7 +3858,7 @@ export default function Settings() {
                             ref={(el) => jobTitleInputRefs.current.level_grade = el}
                             type="text"
                             defaultValue=""
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           />
                         </div>
                         <div>
@@ -3866,7 +3866,7 @@ export default function Settings() {
                           <select
                             ref={(el) => jobTitleInputRefs.current.reports_to_id = el}
                             defaultValue=""
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           >
                             <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
                             {jobTitles.map(jt => (
@@ -3883,7 +3883,7 @@ export default function Settings() {
                             type="number"
                             step="0.01"
                             defaultValue=""
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           />
                         </div>
                         <div>
@@ -3893,7 +3893,7 @@ export default function Settings() {
                             type="number"
                             step="0.01"
                             defaultValue=""
-                            className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           />
                         </div>
                       </div>
@@ -3923,7 +3923,7 @@ export default function Settings() {
                           if (jobTitleInputRefs.current.min_salary) jobTitleInputRefs.current.min_salary.value = '';
                           if (jobTitleInputRefs.current.max_salary) jobTitleInputRefs.current.max_salary.value = '';
                         }}
-                        className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                        className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white"
                       >
                         {t('settings.jobTitles.cancel')}
                       </button>
@@ -3945,7 +3945,7 @@ export default function Settings() {
                   {jobTitles.map((jt) => (
                     <div
                       key={jt.id}
-                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                      className="flex items-center justify-between p-4 rounded-tahoe-input border"
                     >
                       <div className="flex-1">
                         <div className="font-medium text-white">{jt.name}</div>
@@ -3981,14 +3981,14 @@ export default function Settings() {
                                 setJobTitleError(t('settings.jobTitles.notFound') || 'Job title not found');
                               }
                             }}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
                           >
                             {t('settings.jobTitles.edit')}
                           </button>
                           <button
                             onClick={() => handleDeleteJobTitle(jt.id)}
                             disabled={deletingJobTitle === jt.id || (jt.employee_count || 0) > 0}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                             title={jt.employee_count > 0 ? t('settings.jobTitles.cannotDelete') : t('settings.jobTitles.delete')}
                           >
                             {deletingJobTitle === jt.id ? t('settings.jobTitles.deleting') : t('settings.jobTitles.delete')}
@@ -4028,10 +4028,10 @@ export default function Settings() {
       }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.benefitsPackages.title')}</h2>
             <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4061,7 +4061,7 @@ export default function Settings() {
                             setEditingBenefitsPackageData({...editingBenefitsPackageData, name: e.target.value});
                             setBenefitsPackageError('');
                           }}
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           required
                         />
                       </div>
@@ -4072,7 +4072,7 @@ export default function Settings() {
                           onChange={(e) => {
                             setEditingBenefitsPackageData({...editingBenefitsPackageData, description: e.target.value});
                           }}
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           rows="2"
                         />
                       </div>
@@ -4086,7 +4086,7 @@ export default function Settings() {
                           ref={(el) => benefitsPackageInputRefs.current.name = el}
                           type="text"
                           defaultValue=""
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           required
                         />
                       </div>
@@ -4095,7 +4095,7 @@ export default function Settings() {
                         <textarea
                           ref={(el) => benefitsPackageInputRefs.current.description = el}
                           defaultValue=""
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           rows="2"
                         />
                       </div>
@@ -4144,7 +4144,7 @@ export default function Settings() {
                             setNewBenefitsPackage({...newBenefitsPackage, coverage_level: e.target.value});
                           }
                         }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                       >
                         <option value="Basic">{t('settings.benefitsPackages.basic')}</option>
                         <option value="Standard">{t('settings.benefitsPackages.standard')}</option>
@@ -4165,7 +4165,7 @@ export default function Settings() {
                             setNewBenefitsPackage({...newBenefitsPackage, employee_cost: val});
                           }
                         }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                       />
                     </div>
                     <div>
@@ -4182,7 +4182,7 @@ export default function Settings() {
                             setNewBenefitsPackage({...newBenefitsPackage, employer_cost: val});
                           }
                         }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white"
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                       />
                     </div>
                   </div>
@@ -4202,7 +4202,7 @@ export default function Settings() {
                           setEditingBenefitsPackageData(null);
                           setBenefitsPackageError('');
                         }}
-                        className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                        className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white"
                       >
                         {t('settings.benefitsPackages.cancel')}
                       </button>
@@ -4224,7 +4224,7 @@ export default function Settings() {
                   {benefitsPackages.map((bp) => (
                     <div
                       key={bp.id}
-                      className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700"
+                      className="flex items-center justify-between p-4 rounded-tahoe-input border"
                     >
                       <div className="flex-1">
                         <div className="font-medium text-white">{bp.name}</div>
@@ -4254,14 +4254,14 @@ export default function Settings() {
                               setEditingBenefitsPackageData(pkg ? {...pkg} : null);
                               setEditingBenefitsPackage(bp.id);
                             }}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors"
                           >
                             {t('settings.benefitsPackages.edit')}
                           </button>
                           <button
                             onClick={() => handleDeleteBenefitsPackage(bp.id)}
                             disabled={deletingBenefitsPackage === bp.id || (bp.employee_count || 0) > 0}
-                            className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                             title={bp.employee_count > 0 ? t('settings.benefitsPackages.cannotDelete') : t('settings.benefitsPackages.delete')}
                           >
                             {deletingBenefitsPackage === bp.id ? t('settings.benefitsPackages.deleting') : t('settings.benefitsPackages.delete')}
@@ -4293,8 +4293,8 @@ export default function Settings() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.workSchedules.title')}</h2>
             <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -4310,24 +4310,24 @@ export default function Settings() {
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.name')} *</label>
                       <input type="text" value={editingWorkScheduleData?.name ?? newWorkSchedule.name}
                         onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, name: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, name: e.target.value}); } setWorkScheduleError(''); }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" required />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.descriptionLabel')}</label>
                       <textarea value={editingWorkScheduleData?.description ?? newWorkSchedule.description}
                         onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, description: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, description: e.target.value}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" rows="2" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.startTime')} *</label>
                       <input type="time" value={editingWorkScheduleData?.start_time ?? newWorkSchedule.start_time}
                         onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, start_time: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, start_time: e.target.value}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" required />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.endTime')} *</label>
                       <input type="time" value={editingWorkScheduleData?.end_time ?? newWorkSchedule.end_time}
                         onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, end_time: e.target.value}); } else { setNewWorkSchedule({...newWorkSchedule, end_time: e.target.value}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" required />
                     </div>
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.daysOfWeek')}</label>
@@ -4353,7 +4353,7 @@ export default function Settings() {
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.breakDuration')}</label>
                       <input type="number" value={editingWorkScheduleData?.break_duration_minutes ?? newWorkSchedule.break_duration_minutes}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 0; if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, break_duration_minutes: val}); } else { setNewWorkSchedule({...newWorkSchedule, break_duration_minutes: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div className="flex items-center mt-6"><input type="checkbox" checked={editingWorkScheduleData?.flexible_hours ?? newWorkSchedule.flexible_hours}
                       onChange={(e) => { if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, flexible_hours: e.target.checked}); } else { setNewWorkSchedule({...newWorkSchedule, flexible_hours: e.target.checked}); } }} onClick={(e) => { e.stopPropagation(); e.preventDefault(); }} className="mr-2" />
@@ -4362,14 +4362,14 @@ export default function Settings() {
                     <div><label className="block text-sm font-medium mb-2">{t('settings.workSchedules.maxHoursPerWeek')}</label>
                       <input type="number" value={editingWorkScheduleData?.max_hours_per_week ?? newWorkSchedule.max_hours_per_week}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 40; if (editingWorkScheduleData) { setEditingWorkScheduleData({...editingWorkScheduleData, max_hours_per_week: val}); } else { setNewWorkSchedule({...newWorkSchedule, max_hours_per_week: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                   </div>
                   <div className="flex gap-3">
                     <button type="submit" disabled={addingWorkSchedule} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingWorkSchedule ? t('settings.workSchedules.saving') : (editingWorkSchedule ? t('settings.workSchedules.update') : t('settings.workSchedules.add'))}
                     </button>
-                    {editingWorkSchedule && <button type="button" onClick={() => { setEditingWorkSchedule(null); setEditingWorkScheduleData(null); setWorkScheduleError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.workSchedules.cancel')}</button>}
+                    {editingWorkSchedule && <button type="button" onClick={() => { setEditingWorkSchedule(null); setEditingWorkScheduleData(null); setWorkScheduleError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.workSchedules.cancel')}</button>}
                   </div>
                 </form>
                 {workScheduleError && <p className="mt-2 text-sm text-red-400">{workScheduleError}</p>}
@@ -4380,7 +4380,7 @@ export default function Settings() {
               {workSchedules.length === 0 ? <p className="text-secondary">{t('settings.workSchedules.noSchedules')}</p> : (
                 <div className="space-y-3">
                   {workSchedules.map((ws) => (
-                    <div key={ws.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={ws.id} className="flex items-center justify-between p-4 rounded-tahoe-input border">
                       <div className="flex-1">
                         <div className="font-medium text-white">{ws.name}</div>
                         {ws.description && <div className="text-sm text-secondary mt-1">{ws.description}</div>}
@@ -4392,8 +4392,8 @@ export default function Settings() {
                           const schedule = workSchedules.find(w => w.id === ws.id);
                           setEditingWorkScheduleData(schedule ? {...schedule} : null);
                           setEditingWorkSchedule(ws.id);
-                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.workSchedules.edit')}</button>
-                        <button onClick={() => handleDeleteWorkSchedule(ws.id)} disabled={deletingWorkSchedule === ws.id || (ws.employee_count || 0) > 0} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors" title={ws.employee_count > 0 ? t('settings.workSchedules.cannotDelete') : t('settings.workSchedules.delete')}>
+                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.workSchedules.edit')}</button>
+                        <button onClick={() => handleDeleteWorkSchedule(ws.id)} disabled={deletingWorkSchedule === ws.id || (ws.employee_count || 0) > 0} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors" title={ws.employee_count > 0 ? t('settings.workSchedules.cannotDelete') : t('settings.workSchedules.delete')}>
                           {deletingWorkSchedule === ws.id ? t('settings.workSchedules.deleting') : t('settings.workSchedules.delete')}
                         </button>
                       </div>}
@@ -4421,8 +4421,8 @@ export default function Settings() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.overtimePolicies.title')}</h2>
             <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -4437,28 +4437,28 @@ export default function Settings() {
                   <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.name')} *</label>
                     <input type="text" value={editingOvertimePolicyData?.name ?? newOvertimePolicy.name}
                       onChange={(e) => { if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, name: e.target.value}); } else { setNewOvertimePolicy({...newOvertimePolicy, name: e.target.value}); } setOvertimePolicyError(''); }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" required />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.descriptionLabel')}</label>
                     <textarea value={editingOvertimePolicyData?.description ?? newOvertimePolicy.description}
                       onChange={(e) => { if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, description: e.target.value}); } else { setNewOvertimePolicy({...newOvertimePolicy, description: e.target.value}); } }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" rows="2" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.weeklyThreshold')}</label>
                       <input type="number" step="0.1" value={editingOvertimePolicyData?.weekly_threshold_hours ?? newOvertimePolicy.weekly_threshold_hours}
                         onChange={(e) => { const val = parseFloat(e.target.value) || 40; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, weekly_threshold_hours: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, weekly_threshold_hours: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.dailyThreshold')}</label>
                       <input type="number" step="0.1" value={editingOvertimePolicyData?.daily_threshold_hours ?? newOvertimePolicy.daily_threshold_hours}
                         onChange={(e) => { const val = parseFloat(e.target.value) || 8; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, daily_threshold_hours: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, daily_threshold_hours: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.multiplier')}</label>
                       <input type="number" step="0.1" value={editingOvertimePolicyData?.multiplier ?? newOvertimePolicy.multiplier}
                         onChange={(e) => { const val = parseFloat(e.target.value) || 1.5; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, multiplier: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, multiplier: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -4469,7 +4469,7 @@ export default function Settings() {
                     <div><label className="block text-sm font-medium mb-2">{t('settings.overtimePolicies.appliesTo')}</label>
                       <select value={editingOvertimePolicyData?.applies_to_type ?? newOvertimePolicy.applies_to_type}
                         onChange={(e) => { if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, applies_to_type: e.target.value, applies_to_id: null}); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option value="All">{t('settings.overtimePolicies.all')}</option>
                         <option value="Department">{t('settings.overtimePolicies.department')}</option>
                         <option value="JobTitle">{t('settings.overtimePolicies.jobTitle')}</option>
@@ -4481,7 +4481,7 @@ export default function Settings() {
                       </label>
                         <select value={editingOvertimePolicyData?.applies_to_id ?? newOvertimePolicy.applies_to_id ?? ''}
                           onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingOvertimePolicyData) { setEditingOvertimePolicyData({...editingOvertimePolicyData, applies_to_id: val}); } else { setNewOvertimePolicy({...newOvertimePolicy, applies_to_id: val}); } }}
-                          className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                          className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                           <option value="">{t('settings.overtimePolicies.select')}</option>
                           {(editingOvertimePolicyData?.applies_to_type ?? newOvertimePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
                         </select>
@@ -4492,7 +4492,7 @@ export default function Settings() {
                     <button type="submit" disabled={addingOvertimePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingOvertimePolicy ? t('settings.overtimePolicies.saving') : (editingOvertimePolicy ? t('settings.overtimePolicies.update') : t('settings.overtimePolicies.add'))}
                     </button>
-                    {editingOvertimePolicy && <button type="button" onClick={() => { setEditingOvertimePolicy(null); setEditingOvertimePolicyData(null); setOvertimePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.overtimePolicies.cancel')}</button>}
+                    {editingOvertimePolicy && <button type="button" onClick={() => { setEditingOvertimePolicy(null); setEditingOvertimePolicyData(null); setOvertimePolicyError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.overtimePolicies.cancel')}</button>}
                   </div>
                 </form>
                 {overtimePolicyError && <p className="mt-2 text-sm text-red-400">{overtimePolicyError}</p>}
@@ -4503,7 +4503,7 @@ export default function Settings() {
               {overtimePolicies.length === 0 ? <p className="text-secondary">{t('settings.overtimePolicies.noPolicies')}</p> : (
                 <div className="space-y-3">
                   {overtimePolicies.map((op) => (
-                    <div key={op.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={op.id} className="flex items-center justify-between p-4 rounded-tahoe-input border">
                       <div className="flex-1">
                         <div className="font-medium text-white">{op.name}</div>
                         {op.description && <div className="text-sm text-secondary mt-1">{op.description}</div>}
@@ -4515,8 +4515,8 @@ export default function Settings() {
                           const policy = overtimePolicies.find(o => o.id === op.id);
                           setEditingOvertimePolicyData(policy ? {...policy} : null);
                           setEditingOvertimePolicy(op.id);
-                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.overtimePolicies.edit')}</button>
-                        <button onClick={() => handleDeleteOvertimePolicy(op.id)} disabled={deletingOvertimePolicy === op.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.overtimePolicies.edit')}</button>
+                        <button onClick={() => handleDeleteOvertimePolicy(op.id)} disabled={deletingOvertimePolicy === op.id} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
                           {deletingOvertimePolicy === op.id ? t('settings.overtimePolicies.deleting') : t('settings.overtimePolicies.delete')}
                         </button>
                       </div>}
@@ -4544,8 +4544,8 @@ export default function Settings() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.attendancePolicies.title')}</h2>
             <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -4560,43 +4560,43 @@ export default function Settings() {
                   <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.name')} *</label>
                     <input type="text" value={editingAttendancePolicyData?.name ?? newAttendancePolicy.name}
                       onChange={(e) => { if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, name: e.target.value}); } else { setNewAttendancePolicy({...newAttendancePolicy, name: e.target.value}); } setAttendancePolicyError(''); }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" required />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.descriptionLabel')}</label>
                     <textarea value={editingAttendancePolicyData?.description ?? newAttendancePolicy.description}
                       onChange={(e) => { if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, description: e.target.value}); } else { setNewAttendancePolicy({...newAttendancePolicy, description: e.target.value}); } }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" rows="2" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.lateGracePeriod')}</label>
                       <input type="number" value={editingAttendancePolicyData?.late_grace_period_minutes ?? newAttendancePolicy.late_grace_period_minutes}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 15; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, late_grace_period_minutes: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, late_grace_period_minutes: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.absenceLimitPerMonth')}</label>
                       <input type="number" value={editingAttendancePolicyData?.absence_limit_per_month ?? newAttendancePolicy.absence_limit_per_month}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, absence_limit_per_month: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_limit_per_month: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.tardinessPenalty')}</label>
                       <input type="number" value={editingAttendancePolicyData?.tardiness_penalty_points ?? newAttendancePolicy.tardiness_penalty_points}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 1; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, tardiness_penalty_points: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, tardiness_penalty_points: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.absencePenalty')}</label>
                       <input type="number" value={editingAttendancePolicyData?.absence_penalty_points ?? newAttendancePolicy.absence_penalty_points}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 3; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, absence_penalty_points: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, absence_penalty_points: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.pointThresholdTermination')}</label>
                       <input type="number" value={editingAttendancePolicyData?.point_threshold_termination ?? newAttendancePolicy.point_threshold_termination}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 10; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, point_threshold_termination: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, point_threshold_termination: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                     <div><label className="block text-sm font-medium mb-2">{t('settings.attendancePolicies.appliesTo')}</label>
                       <select value={editingAttendancePolicyData?.applies_to_type ?? newAttendancePolicy.applies_to_type}
                         onChange={(e) => { if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, applies_to_type: e.target.value, applies_to_id: null}); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_type: e.target.value, applies_to_id: null}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option value="All">{t('settings.attendancePolicies.all')}</option>
                         <option value="Department">{t('settings.attendancePolicies.department')}</option>
                         <option value="JobTitle">{t('settings.attendancePolicies.jobTitle')}</option>
@@ -4609,7 +4609,7 @@ export default function Settings() {
                     </label>
                       <select value={editingAttendancePolicyData?.applies_to_id ?? newAttendancePolicy.applies_to_id ?? ''}
                         onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingAttendancePolicyData) { setEditingAttendancePolicyData({...editingAttendancePolicyData, applies_to_id: val}); } else { setNewAttendancePolicy({...newAttendancePolicy, applies_to_id: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option value="">{t('settings.attendancePolicies.select')}</option>
                         {(editingAttendancePolicyData?.applies_to_type ?? newAttendancePolicy.applies_to_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
                       </select>
@@ -4619,7 +4619,7 @@ export default function Settings() {
                     <button type="submit" disabled={addingAttendancePolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingAttendancePolicy ? t('settings.attendancePolicies.saving') : (editingAttendancePolicy ? t('settings.attendancePolicies.update') : t('settings.attendancePolicies.add'))}
                     </button>
-                    {editingAttendancePolicy && <button type="button" onClick={() => { setEditingAttendancePolicy(null); setEditingAttendancePolicyData(null); setAttendancePolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.attendancePolicies.cancel')}</button>}
+                    {editingAttendancePolicy && <button type="button" onClick={() => { setEditingAttendancePolicy(null); setEditingAttendancePolicyData(null); setAttendancePolicyError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.attendancePolicies.cancel')}</button>}
                   </div>
                 </form>
                 {attendancePolicyError && <p className="mt-2 text-sm text-red-400">{attendancePolicyError}</p>}
@@ -4630,7 +4630,7 @@ export default function Settings() {
               {attendancePolicies.length === 0 ? <p className="text-secondary">{t('settings.attendancePolicies.noPolicies')}</p> : (
                 <div className="space-y-3">
                   {attendancePolicies.map((ap) => (
-                    <div key={ap.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={ap.id} className="flex items-center justify-between p-4 rounded-tahoe-input border">
                       <div className="flex-1">
                         <div className="font-medium text-white">{ap.name}</div>
                         {ap.description && <div className="text-sm text-secondary mt-1">{ap.description}</div>}
@@ -4644,8 +4644,8 @@ export default function Settings() {
                           const policy = attendancePolicies.find(a => a.id === ap.id);
                           setEditingAttendancePolicyData(policy ? {...policy} : null);
                           setEditingAttendancePolicy(ap.id);
-                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.attendancePolicies.edit')}</button>
-                        <button onClick={() => handleDeleteAttendancePolicy(ap.id)} disabled={deletingAttendancePolicy === ap.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.attendancePolicies.edit')}</button>
+                        <button onClick={() => handleDeleteAttendancePolicy(ap.id)} disabled={deletingAttendancePolicy === ap.id} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
                           {deletingAttendancePolicy === ap.id ? t('settings.attendancePolicies.deleting') : t('settings.attendancePolicies.delete')}
                         </button>
                       </div>}
@@ -4756,8 +4756,8 @@ export default function Settings() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">Commission Structures</h2>
             <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -4773,7 +4773,7 @@ export default function Settings() {
                   <h4 className="text-md font-medium text-primary mb-4">Sales Agents Commission Structure</h4>
                   <div className="space-y-3">
                     {localCommissionStructures.salesAgent.map((threshold, index) => (
-                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-tahoe-bg-secondary/50 rounded-lg">
                         <div>
                           <label className="block text-xs text-secondary mb-1">Lead Conversion %</label>
                           <input
@@ -4784,7 +4784,7 @@ export default function Settings() {
                               newAgent[index] = { ...newAgent[index], leadPct: e.target.value };
                               setLocalCommissionStructures({ ...localCommissionStructures, salesAgent: newAgent });
                             }}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                            className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-tahoe-text-primary"
                             placeholder="30"
                           />
                         </div>
@@ -4798,7 +4798,7 @@ export default function Settings() {
                               newAgent[index] = { ...newAgent[index], revenue: e.target.value };
                               setLocalCommissionStructures({ ...localCommissionStructures, salesAgent: newAgent });
                             }}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                            className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-tahoe-text-primary"
                             placeholder="115000"
                           />
                         </div>
@@ -4813,7 +4813,7 @@ export default function Settings() {
                               newAgent[index] = { ...newAgent[index], commission: e.target.value };
                               setLocalCommissionStructures({ ...localCommissionStructures, salesAgent: newAgent });
                             }}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                            className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-tahoe-text-primary"
                             placeholder="3.5"
                           />
                         </div>
@@ -4824,7 +4824,7 @@ export default function Settings() {
                     ))}
                     
                     {/* Vacation Package */}
-                    <div className="grid grid-cols-2 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg mt-4">
+                    <div className="grid grid-cols-2 gap-3 items-end p-3 bg-tahoe-bg-secondary/50 rounded-lg mt-4">
                       <div>
                         <label className="block text-xs text-secondary mb-1">Vacation Package Value ($)</label>
                         <input
@@ -4833,7 +4833,7 @@ export default function Settings() {
                           onChange={(e) => {
                             setLocalCommissionStructures({ ...localCommissionStructures, vacationPackage: e.target.value });
                           }}
-                          className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                          className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-tahoe-text-primary"
                           placeholder="5000"
                         />
                       </div>
@@ -4849,7 +4849,7 @@ export default function Settings() {
                   <h4 className="text-md font-medium text-primary mb-4">Sales Managers Commission Structure</h4>
                   <div className="space-y-3">
                     {localCommissionStructures.salesManager.map((threshold, index) => (
-                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+                      <div key={index} className="grid grid-cols-4 gap-3 items-end p-3 bg-tahoe-bg-secondary/50 rounded-lg">
                         <div>
                           <label className="block text-xs text-secondary mb-1">Min Booking %</label>
                           <input
@@ -4860,7 +4860,7 @@ export default function Settings() {
                               newManager[index] = { ...newManager[index], min: e.target.value };
                               setLocalCommissionStructures({ ...localCommissionStructures, salesManager: newManager });
                             }}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                            className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-tahoe-text-primary"
                             placeholder="0"
                           />
                         </div>
@@ -4874,7 +4874,7 @@ export default function Settings() {
                               newManager[index] = { ...newManager[index], max: e.target.value };
                               setLocalCommissionStructures({ ...localCommissionStructures, salesManager: newManager });
                             }}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                            className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-tahoe-text-primary"
                             placeholder="19"
                           />
                         </div>
@@ -4889,7 +4889,7 @@ export default function Settings() {
                               newManager[index] = { ...newManager[index], commission: e.target.value };
                               setLocalCommissionStructures({ ...localCommissionStructures, salesManager: newManager });
                             }}
-                            className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                            className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-tahoe-text-primary"
                             placeholder="0.25"
                           />
                         </div>
@@ -4905,13 +4905,13 @@ export default function Settings() {
                   <button
                     onClick={handleSave}
                     disabled={localSaving}
-                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {localSaving ? 'Saving...' : 'Save All Changes'}
                   </button>
                   <button
                     onClick={handleClose}
-                    className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white"
+                    className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white"
                   >
                     Cancel
                   </button>
@@ -4943,8 +4943,8 @@ export default function Settings() {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) handleClose(); }}>
         <div className="bg-black/50 absolute inset-0" />
         <div
-          className="relative bg-neutral-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between p-6 border-b border-neutral-700">
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-2xl font-semibold">{t('settings.remoteWorkPolicies.title')}</h2>
             <button onClick={handleClose} className="text-secondary hover:text-white transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -4959,18 +4959,18 @@ export default function Settings() {
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.name')} *</label>
                     <input type="text" value={editingRemoteWorkPolicyData?.name ?? newRemoteWorkPolicy.name}
                       onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, name: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, name: e.target.value}); } setRemoteWorkPolicyError(''); }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" required />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" required />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.descriptionLabel')}</label>
                     <textarea value={editingRemoteWorkPolicyData?.description ?? newRemoteWorkPolicy.description}
                       onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, description: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, description: e.target.value}); } }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="2" />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" rows="2" />
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.eligibilityCriteria')}</label>
                       <select value={editingRemoteWorkPolicyData?.eligibility_type ?? newRemoteWorkPolicy.eligibility_type}
                         onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, eligibility_type: e.target.value, eligibility_id: null}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_type: e.target.value, eligibility_id: null}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option value="All">{t('settings.remoteWorkPolicies.all')}</option>
                         <option value="Department">{t('settings.remoteWorkPolicies.department')}</option>
                         <option value="JobTitle">{t('settings.remoteWorkPolicies.jobTitle')}</option>
@@ -4979,7 +4979,7 @@ export default function Settings() {
                     <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.daysPerWeekAllowed')}</label>
                       <input type="number" min="0" max="5" value={editingRemoteWorkPolicyData?.days_per_week_allowed ?? newRemoteWorkPolicy.days_per_week_allowed}
                         onChange={(e) => { const val = parseInt(e.target.value, 10) || 5; if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, days_per_week_allowed: val}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, days_per_week_allowed: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                     </div>
                   </div>
                   {(editingRemoteWorkPolicyData?.eligibility_type ?? newRemoteWorkPolicy.eligibility_type) !== 'All' && (
@@ -4988,7 +4988,7 @@ export default function Settings() {
                     </label>
                       <select value={editingRemoteWorkPolicyData?.eligibility_id ?? newRemoteWorkPolicy.eligibility_id ?? ''}
                         onChange={(e) => { const val = e.target.value ? parseInt(e.target.value, 10) : null; if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, eligibility_id: val}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, eligibility_id: val}); } }}
-                        className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option value="">{t('settings.remoteWorkPolicies.select')}</option>
                         {(editingRemoteWorkPolicyData?.eligibility_type ?? newRemoteWorkPolicy.eligibility_type) === 'Department' ? departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>) : jobTitles.map(jt => <option key={jt.id} value={jt.id}>{jt.name}</option>)}
                       </select>
@@ -5001,18 +5001,18 @@ export default function Settings() {
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentProvided')}</label>
                     <input type="text" value={editingRemoteWorkPolicyData?.equipment_provided ?? newRemoteWorkPolicy.equipment_provided}
                       onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, equipment_provided: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_provided: e.target.value}); } }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" />
                   </div>
                   <div><label className="block text-sm font-medium mb-2">{t('settings.remoteWorkPolicies.equipmentPolicy')}</label>
                     <textarea value={editingRemoteWorkPolicyData?.equipment_policy ?? newRemoteWorkPolicy.equipment_policy}
                       onChange={(e) => { if (editingRemoteWorkPolicyData) { setEditingRemoteWorkPolicyData({...editingRemoteWorkPolicyData, equipment_policy: e.target.value}); } else { setNewRemoteWorkPolicy({...newRemoteWorkPolicy, equipment_policy: e.target.value}); } }}
-                      className="w-full px-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" rows="3" />
+                      className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" rows="3" />
                   </div>
                   <div className="flex gap-3">
                     <button type="submit" disabled={addingRemoteWorkPolicy} className="btn-primary px-6 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed">
                       {addingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.saving') : (editingRemoteWorkPolicy ? t('settings.remoteWorkPolicies.update') : t('settings.remoteWorkPolicies.add'))}
                     </button>
-                    {editingRemoteWorkPolicy && <button type="button" onClick={() => { setEditingRemoteWorkPolicy(null); setEditingRemoteWorkPolicyData(null); setRemoteWorkPolicyError(''); }} className="px-6 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg text-white">{t('settings.remoteWorkPolicies.cancel')}</button>}
+                    {editingRemoteWorkPolicy && <button type="button" onClick={() => { setEditingRemoteWorkPolicy(null); setEditingRemoteWorkPolicyData(null); setRemoteWorkPolicyError(''); }} className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg text-white">{t('settings.remoteWorkPolicies.cancel')}</button>}
                   </div>
                 </form>
                 {remoteWorkPolicyError && <p className="mt-2 text-sm text-red-400">{remoteWorkPolicyError}</p>}
@@ -5023,7 +5023,7 @@ export default function Settings() {
               {remoteWorkPolicies.length === 0 ? <p className="text-secondary">{t('settings.remoteWorkPolicies.noPolicies')}</p> : (
                 <div className="space-y-3">
                   {remoteWorkPolicies.map((rwp) => (
-                    <div key={rwp.id} className="flex items-center justify-between p-4 bg-neutral-800 rounded-lg border border-neutral-700">
+                    <div key={rwp.id} className="flex items-center justify-between p-4 rounded-tahoe-input border">
                       <div className="flex-1">
                         <div className="font-medium text-white">{rwp.name}</div>
                         {rwp.description && <div className="text-sm text-secondary mt-1">{rwp.description}</div>}
@@ -5038,8 +5038,8 @@ export default function Settings() {
                           const policy = remoteWorkPolicies.find(r => r.id === rwp.id);
                           setEditingRemoteWorkPolicyData(policy ? {...policy} : null);
                           setEditingRemoteWorkPolicy(rwp.id);
-                        }} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">{t('settings.remoteWorkPolicies.edit')}</button>
-                        <button onClick={() => handleDeleteRemoteWorkPolicy(rwp.id)} disabled={deletingRemoteWorkPolicy === rwp.id} className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                        }} className="px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover text-white rounded-lg transition-colors">{t('settings.remoteWorkPolicies.edit')}</button>
+                        <button onClick={() => handleDeleteRemoteWorkPolicy(rwp.id)} disabled={deletingRemoteWorkPolicy === rwp.id} className="px-4 py-2 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
                           {deletingRemoteWorkPolicy === rwp.id ? t('settings.remoteWorkPolicies.deleting') : t('settings.remoteWorkPolicies.delete')}
                         </button>
                       </div>}
@@ -5156,7 +5156,7 @@ export default function Settings() {
                   {trustedDevices.map((device) => (
                     <div 
                       key={device.id} 
-                      className="flex items-start justify-between p-4 bg-neutral-900 bg-opacity-40 rounded-lg border border-neutral-700 hover:border-neutral-600 transition-all"
+                      className="flex items-start justify-between p-4 bg-tahoe-card-bg bg-opacity-40 rounded-lg border hover:border-tahoe-border-primary transition-all"
                     >
                       <div className="flex-1">
                         <div className="flex items-center space-x-2 mb-1">
@@ -5220,7 +5220,7 @@ export default function Settings() {
       {showMFAModal && mfaData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div
-            className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
+            className="bg-tahoe-card-bg rounded-lg shadow-xl max-w-md w-full p-6"
           >
             <h2 className="text-2xl font-bold mb-4">{t('settings.mfaSetup.title')}</h2>
             
@@ -5231,7 +5231,7 @@ export default function Settings() {
                 <p className="text-sm text-secondary mb-3">
                   {t('settings.mfaSetup.step1Description')}
                 </p>
-                <div className="bg-white p-4 rounded-lg flex justify-center">
+                <div className="bg-tahoe-bg-primary p-4 rounded-lg flex justify-center">
                   <img src={mfaData.qrCode} alt={t('settings.mfaSetup.qrCodeAlt')} className="w-48 h-48" />
                 </div>
               </div>
@@ -5239,7 +5239,7 @@ export default function Settings() {
               {/* Manual Entry */}
               <div>
                 <p className="text-sm text-secondary mb-1">{t('settings.mfaSetup.orManualEntry')}</p>
-                <div className="bg-neutral-900 p-3 rounded font-mono text-sm break-all">
+                <div className="bg-tahoe-card-bg p-3 rounded font-mono text-sm break-all">
                   {mfaData.secret}
                 </div>
               </div>
@@ -5256,7 +5256,7 @@ export default function Settings() {
                   value={mfaVerificationCode}
                   onChange={(e) => setMfaVerificationCode(e.target.value.replace(/\D/g, ''))}
                   placeholder={t('settings.mfaSetup.verificationCode')}
-                  className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded-lg text-center text-2xl tracking-widest font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-3 bg-tahoe-card-bg border rounded-lg text-center text-2xl tracking-widest font-mono focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                   autoFocus
                 />
                 {mfaError && (
@@ -5271,7 +5271,7 @@ export default function Settings() {
                   <p className="text-sm text-secondary mb-2">
                     {t('settings.mfaSetup.backupCodesDescription')}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 bg-neutral-900 p-3 rounded font-mono text-sm">
+                  <div className="grid grid-cols-2 gap-2 bg-tahoe-card-bg p-3 rounded font-mono text-sm">
                     {mfaData.backupCodes.map((code, index) => (
                       <div key={index} className="text-center">{code}</div>
                     ))}
@@ -5284,14 +5284,14 @@ export default function Settings() {
                 <button
                   onClick={closeMFAModal}
                   disabled={mfaVerifying}
-                  className="flex-1 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
                   {t('settings.cancel')}
                 </button>
                 <button
                   onClick={verifyMFACode}
                   disabled={mfaVerifying || mfaVerificationCode.length !== 6}
-                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {mfaVerifying ? t('settings.mfaSetup.verifying') : t('settings.mfaSetup.enableMFA')}
                 </button>
@@ -5305,7 +5305,7 @@ export default function Settings() {
       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div
-            className="bg-neutral-800 rounded-lg shadow-xl max-w-md w-full p-6"
+            className="bg-tahoe-card-bg rounded-lg shadow-xl max-w-md w-full p-6"
           >
             <h2 className="text-2xl font-bold mb-4">{t('settings.passwordChange.title')}</h2>
             
@@ -5317,7 +5317,7 @@ export default function Settings() {
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                  className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2 bg-tahoe-card-bg border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                   placeholder={t('settings.passwordChange.enterCurrentPassword')}
                   required
                 />
@@ -5330,7 +5330,7 @@ export default function Settings() {
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                  className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2 bg-tahoe-card-bg border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                   placeholder={t('settings.passwordChange.enterNewPassword')}
                   required
                   minLength="8"
@@ -5347,7 +5347,7 @@ export default function Settings() {
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                  className="w-full px-4 py-2 bg-neutral-900 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-4 py-2 bg-tahoe-card-bg border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                   placeholder={t('settings.passwordChange.reenterNewPassword')}
                   required
                 />
@@ -5372,14 +5372,14 @@ export default function Settings() {
                 <button
                   type="button"
                   onClick={closePasswordModal}
-                  className="flex-1 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors"
+                  className="flex-1 px-4 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg font-medium transition-colors"
                   disabled={passwordSuccess}
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={passwordSuccess}
                 >
                   {t('settings.changePassword')}

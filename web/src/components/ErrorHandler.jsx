@@ -28,17 +28,18 @@ export const ErrorMessage = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className={`card border-red-500/50 bg-red-900/10 ${className}`}
+      className={`card border ${className}`}
+      style={{ borderColor: 'rgba(255, 69, 58, 0.3)', backgroundColor: 'rgba(255, 69, 58, 0.1)' }}
     >
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
-          <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-5 w-5 text-tahoe-error-text" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-red-400">{title}</h3>
-          <div className="mt-2 text-sm text-red-300">
+          <h3 className="text-sm font-medium text-tahoe-error-text">{title}</h3>
+          <div className="mt-2 text-sm text-tahoe-error-text">
             {typeof error === 'string' ? error : error?.message || 'An unexpected error occurred'}
           </div>
           <div className="mt-4 flex space-x-3">
@@ -46,7 +47,8 @@ export const ErrorMessage = ({
               <button
                 onClick={handleRetry}
                 disabled={isRetrying}
-                className="text-sm bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded font-medium transition-colors"
+                className="text-sm disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: '#ff453a', color: '#ffffff' }}
               >
                 {isRetrying ? 'Retrying...' : 'Retry'}
               </button>
@@ -54,7 +56,8 @@ export const ErrorMessage = ({
             {onDismiss && (
               <button
                 onClick={onDismiss}
-                className="text-sm text-red-400 hover:text-red-300 px-3 py-1 rounded font-medium transition-colors"
+                className="text-sm px-3 py-1 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ff453a', border: '1px solid rgba(255, 69, 58, 0.3)' }}
               >
                 Dismiss
               </button>
@@ -78,22 +81,24 @@ export const SuccessMessage = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className={`card border-green-500/50 bg-green-900/10 ${className}`}
+      className={`card border ${className}`}
+      style={{ borderColor: 'rgba(48, 209, 88, 0.3)', backgroundColor: 'rgba(48, 209, 88, 0.1)' }}
     >
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
-          <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-5 w-5 text-tahoe-success-text" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-green-400">{title}</h3>
-          <div className="mt-2 text-sm text-green-300">{message}</div>
+          <h3 className="text-sm font-medium text-tahoe-success-text">{title}</h3>
+          <div className="mt-2 text-sm text-tahoe-success-text">{message}</div>
           {onDismiss && (
             <div className="mt-4">
               <button
                 onClick={onDismiss}
-                className="text-sm text-green-400 hover:text-green-300 px-3 py-1 rounded font-medium transition-colors"
+                className="text-sm px-3 py-1 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#30d158', border: '1px solid rgba(48, 209, 88, 0.3)' }}
               >
                 Dismiss
               </button>
@@ -117,22 +122,24 @@ export const WarningMessage = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className={`card border-yellow-500/50 bg-yellow-900/10 ${className}`}
+      className={`card border ${className}`}
+      style={{ borderColor: 'rgba(255, 214, 10, 0.3)', backgroundColor: 'rgba(255, 214, 10, 0.1)' }}
     >
       <div className="flex items-start space-x-3">
         <div className="flex-shrink-0">
-          <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+          <svg className="h-5 w-5 text-tahoe-warning-text" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-yellow-400">{title}</h3>
-          <div className="mt-2 text-sm text-yellow-300">{message}</div>
+          <h3 className="text-sm font-medium text-tahoe-warning-text">{title}</h3>
+          <div className="mt-2 text-sm text-tahoe-warning-text">{message}</div>
           {onDismiss && (
             <div className="mt-4">
               <button
                 onClick={onDismiss}
-                className="text-sm text-yellow-400 hover:text-yellow-300 px-3 py-1 rounded font-medium transition-colors"
+                className="text-sm px-3 py-1 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffd60a', border: '1px solid rgba(255, 214, 10, 0.3)' }}
               >
                 Dismiss
               </button>
@@ -182,7 +189,7 @@ export const ValidationErrorHandler = ({ errors, className = "" }) => {
   return (
     <div className={`space-y-2 ${className}`}>
       {Object.entries(errors).map(([field, message]) => (
-        <div key={field} className="text-sm text-red-400 flex items-center space-x-2">
+        <div key={field} className="text-sm text-tahoe-error-text flex items-center space-x-2">
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>

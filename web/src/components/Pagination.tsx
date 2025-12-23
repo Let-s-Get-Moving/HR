@@ -105,7 +105,7 @@ const Pagination: React.FC<PaginationProps> = ({
         {visiblePages.map((page, index) => (
           <React.Fragment key={index}>
             {page === '...' ? (
-              <span className="px-3 py-2 text-sm text-slate-500 dark:text-slate-400">
+              <span className="px-3 py-2 text-sm text-tahoe-text-muted">
                 ...
               </span>
             ) : (

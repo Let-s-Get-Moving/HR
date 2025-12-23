@@ -673,7 +673,8 @@ export default function BonusesCommissions() {
         <h3 className="text-lg font-semibold">Employee Bonuses</h3>
         <button
           onClick={() => setShowAddBonus(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-all duration-tahoe"
+          style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
         >
           + Add Bonus
         </button>
@@ -701,7 +702,7 @@ export default function BonusesCommissions() {
                   {bonus.status}
                 </span>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-green-400">${bonus.amount.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-tahoe-success-text">${bonus.amount.toLocaleString()}</div>
                   <div className="text-xs text-tertiary">{bonus.percentage}% of base</div>
                 </div>
               </div>
@@ -710,30 +711,30 @@ export default function BonusesCommissions() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <span className="font-medium text-tertiary">Criteria:</span>
-                <p className="text-sm text-neutral-300 mt-1">{bonus.criteria}</p>
+                <p className="text-sm text-tahoe-text-primary mt-1">{bonus.criteria}</p>
               </div>
               <div>
                 <span className="font-medium text-tertiary">Payment Date:</span>
-                <div className="text-sm text-neutral-300">
+                <div className="text-sm text-tahoe-text-primary">
                   {bonus.payment_date || 'Pending'}
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-neutral-700">
+            <div className="mt-4 pt-4 border-t">
               <div className="flex justify-between items-center text-sm text-tertiary">
                 <span>Approved by: {bonus.approved_by || 'Pending'}</span>
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => handleEditBonus(bonus)}
-                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="text-tahoe-accent hover:text-tahoe-accent-hover transition-all duration-tahoe"
                   >
                     Edit
                   </button>
                   {bonus.status === 'Pending' && (
                     <button 
                       onClick={() => handleApproveBonus(bonus)}
-                      className="text-green-400 hover:text-green-300 transition-colors"
+                      className="text-tahoe-success-text hover:text-tahoe-success-text/80 transition-colors"
                     >
                       Approve
                     </button>
@@ -759,7 +760,8 @@ export default function BonusesCommissions() {
         <h3 className="text-lg font-semibold">Sales Commissions</h3>
         <button
           onClick={() => setShowAddCommission(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-all duration-tahoe"
+          style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
         >
           + Add Commission
         </button>
@@ -785,7 +787,7 @@ export default function BonusesCommissions() {
                   {commission.status}
                 </span>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-blue-400">${commission.commission_amount.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-tahoe-info-text">${commission.commission_amount.toLocaleString()}</div>
                   <div className="text-xs text-tertiary">{commission.commission_rate}% rate</div>
                 </div>
               </div>
@@ -794,19 +796,19 @@ export default function BonusesCommissions() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
                 <span className="font-medium text-tertiary">Base Amount:</span>
-                <div className="text-sm text-neutral-300">${commission.base_amount.toLocaleString()}</div>
+                <div className="text-sm text-tahoe-text-primary">${commission.base_amount.toLocaleString()}</div>
               </div>
               <div>
                 <span className="font-medium text-tertiary">Commission Rate:</span>
-                <div className="text-sm text-neutral-300">{commission.commission_rate}%</div>
+                <div className="text-sm text-tahoe-text-primary">{commission.commission_rate}%</div>
               </div>
               <div>
                 <span className="font-medium text-tertiary">Sales Target:</span>
-                <div className="text-sm text-neutral-300">${commission.sales_target.toLocaleString()}</div>
+                <div className="text-sm text-tahoe-text-primary">${commission.sales_target.toLocaleString()}</div>
               </div>
               <div>
                 <span className="font-medium text-tertiary">Achievement:</span>
-                <div className="text-sm text-neutral-300">{commission.target_achievement}%</div>
+                <div className="text-sm text-tahoe-text-primary">{commission.target_achievement}%</div>
               </div>
             </div>
 
@@ -815,7 +817,7 @@ export default function BonusesCommissions() {
                 <span className="text-sm font-medium">Target Achievement</span>
                 <span className="text-sm text-tertiary">{commission.target_achievement}%</span>
               </div>
-              <div className="w-full bg-neutral-700 rounded-full h-2">
+              <div className="w-full rounded-full h-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
                 <div 
                   className={`h-2 rounded-full transition-all duration-300 ${
                     commission.target_achievement >= 100 ? 'bg-green-400' : 
@@ -826,19 +828,19 @@ export default function BonusesCommissions() {
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-neutral-700">
+            <div className="mt-4 pt-4 border-t">
               <div className="flex justify-between items-center text-sm text-tertiary">
                 <span>Payment Date: {commission.payment_date}</span>
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => handleViewBonusDetails(commission)}
-                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="text-tahoe-accent hover:text-tahoe-accent-hover transition-all duration-tahoe"
                   >
                     View Details
                   </button>
                   <button 
                     onClick={handleExportBonuses}
-                    className="text-green-400 hover:text-green-300 transition-colors"
+                    className="text-tahoe-success-text hover:text-tahoe-success-text/80 transition-colors"
                   >
                     Export
                   </button>
@@ -857,17 +859,17 @@ export default function BonusesCommissions() {
         <h3 className="text-lg font-semibold">{t('bonuses.excelCommissionImport')}</h3>
       </div>
 
-      <div className="bg-neutral-900 p-6 rounded-lg">
+      <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
         <div className="space-y-4">
-          <div className="bg-amber-900/20 border border-amber-700/30 p-3 rounded-lg">
+          <div className="bg-amber-900/20 border border-amber-700/30 p-3 rounded-tahoe-input">
             <p className="text-xs text-amber-200">
               {t('bonuses.supportedFormat')}
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">{t('bonuses.uploadExcelFile')}</label>
-            <div className="border-2 border-dashed border-neutral-700 rounded-lg p-6 text-center">
+            <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">{t('bonuses.uploadExcelFile')}</label>
+            <div className="border-2 border-dashed rounded-tahoe-input p-6 text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
               <input
                 type="file"
                 accept=".xlsx,.xls"
@@ -877,10 +879,10 @@ export default function BonusesCommissions() {
               />
               <label htmlFor="excel-upload" className="cursor-pointer">
                 <div className="text-4xl mb-2">📊</div>
-                <p className="text-neutral-400">
+                <p className="text-tahoe-text-muted">
                   {importFile ? importFile.name : t('bonuses.clickToUploadExcelFile')}
                 </p>
-                <p className="text-xs text-neutral-500 mt-1">
+                <p className="text-xs text-tahoe-text-muted mt-1">
                   {t('bonuses.supportsFormats')}
                 </p>
               </label>
@@ -888,11 +890,12 @@ export default function BonusesCommissions() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">{t('bonuses.periodMonthOptional')}</label>
+            <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">{t('bonuses.periodMonthOptional')}</label>
             <select
               value={manualPeriod}
               onChange={(e) => setManualPeriod(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2 text-sm"
+              className="w-full rounded-tahoe-input px-4 py-2 text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
             >
               <option value="">{t('bonuses.autoDetectFromSheetName')}</option>
               {(() => {
@@ -914,13 +917,13 @@ export default function BonusesCommissions() {
                 return options;
               })()}
             </select>
-            <p className="text-xs text-neutral-500 mt-1">
+            <p className="text-xs text-tahoe-text-muted mt-1">
               {t('bonuses.autoDetectHelper')}
             </p>
           </div>
 
           {importStatus && (
-            <div className={`p-4 rounded-lg ${
+            <div className={`p-4 rounded-tahoe-input ${
               importStatus.status === 'success' ? 'bg-green-900 text-green-300' :
               importStatus.status === 'error' ? 'bg-red-900 text-red-300' :
               'bg-blue-900 text-blue-300'
@@ -933,7 +936,8 @@ export default function BonusesCommissions() {
             <button
               onClick={handleImport}
               disabled={!importFile}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-600 px-6 py-3 rounded-lg font-medium transition-colors"
+              className="flex-1 px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe disabled:cursor-not-allowed"
+              style={{ backgroundColor: !importFile ? 'rgba(255, 255, 255, 0.12)' : '#0A84FF', color: '#ffffff' }}
             >
               {t('bonuses.importCommissionData')}
             </button>
@@ -942,7 +946,8 @@ export default function BonusesCommissions() {
                 setImportFile(null);
                 setImportStatus(null);
               }}
-              className="px-6 py-3 bg-neutral-700 hover:bg-neutral-600 rounded-lg font-medium transition-colors"
+              className="px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
             >
               {t('bonuses.clear')}
             </button>
@@ -958,7 +963,8 @@ export default function BonusesCommissions() {
         <h3 className="text-lg font-semibold">Compensation Structures</h3>
         <button
           onClick={() => setShowAddStructure(true)}
-          className="bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          className="px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-all duration-tahoe"
+          style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
         >
           + Add Structure
         </button>
@@ -967,7 +973,7 @@ export default function BonusesCommissions() {
       <div className="grid gap-6">
         {/* Bonus Structures */}
         <div>
-          <h4 className="text-lg font-semibold mb-4 text-green-400">Bonus Structures</h4>
+          <h4 className="text-lg font-semibold mb-4 text-tahoe-success-text">Bonus Structures</h4>
           <div className="grid gap-4">
             {bonusStructures.map((structure) => (
               <motion.div
@@ -988,23 +994,23 @@ export default function BonusesCommissions() {
                       {structure.status}
                     </span>
                     <div className="text-right">
-                      <div className="text-sm font-medium text-green-400">Max: ${structure.max_bonus.toLocaleString()}</div>
+                      <div className="text-sm font-medium text-tahoe-success-text">Max: ${structure.max_bonus.toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
 
                 <div className="mb-4">
                   <span className="font-medium text-tertiary">Calculation Method:</span>
-                  <p className="text-sm text-neutral-300 mt-1">{structure.calculation_method}</p>
+                  <p className="text-sm text-tahoe-text-primary mt-1">{structure.calculation_method}</p>
                 </div>
 
                 <div className="mb-4">
                   <span className="font-medium text-tertiary">Bonus Tiers:</span>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
                     {structure.tiers.map((tier, index) => (
-                      <div key={index} className="bg-neutral-800 p-2 rounded text-sm">
+                      <div key={index} className="p-2 rounded-tahoe-input text-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                         <div className="text-tertiary">{tier.min_performance}-{tier.max_performance}%</div>
-                        <div className="text-green-400 font-medium">{tier.bonus_percentage}% bonus</div>
+                        <div className="text-tahoe-success-text font-medium">{tier.bonus_percentage}% bonus</div>
                       </div>
                     ))}
                   </div>
@@ -1012,19 +1018,19 @@ export default function BonusesCommissions() {
 
                 <div className="mb-4">
                   <span className="font-medium text-tertiary">Eligibility Criteria:</span>
-                  <p className="text-sm text-neutral-300 mt-1">{structure.eligibility_criteria}</p>
+                  <p className="text-sm text-tahoe-text-primary mt-1">{structure.eligibility_criteria}</p>
                 </div>
 
                 <div className="flex justify-end space-x-2">
                   <button 
                     onClick={() => handleEditBonusStructure(structure)}
-                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="text-tahoe-accent hover:text-tahoe-accent-hover transition-all duration-tahoe"
                   >
                     Edit Structure
                   </button>
                   <button 
                     onClick={() => handleApplyBonusStructureToEmployees(structure)}
-                    className="text-green-400 hover:text-green-300 transition-colors"
+                    className="text-tahoe-success-text hover:text-tahoe-success-text/80 transition-colors"
                   >
                     Apply to Employees
                   </button>
@@ -1036,7 +1042,7 @@ export default function BonusesCommissions() {
 
         {/* Commission Structures */}
         <div>
-          <h4 className="text-lg font-semibold mb-4 text-blue-400">Commission Structures</h4>
+          <h4 className="text-lg font-semibold mb-4 text-tahoe-info-text">Commission Structures</h4>
           <div className="grid gap-4">
             {commissionStructures.map((structure) => (
               <motion.div
@@ -1057,7 +1063,7 @@ export default function BonusesCommissions() {
                       {structure.status}
                     </span>
                     <div className="text-right">
-                      <div className="text-sm font-medium text-blue-400">Max: ${structure.max_commission.toLocaleString()}</div>
+                      <div className="text-sm font-medium text-tahoe-info-text">Max: ${structure.max_commission.toLocaleString()}</div>
                     </div>
                   </div>
                 </div>
@@ -1065,19 +1071,19 @@ export default function BonusesCommissions() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                   <div>
                     <span className="font-medium text-tertiary">Base Rate:</span>
-                    <div className="text-sm text-neutral-300">{structure.base_rate}%</div>
+                    <div className="text-sm text-tahoe-text-primary">{structure.base_rate}%</div>
                   </div>
                   <div>
                     <span className="font-medium text-tertiary">Acceleration Rate:</span>
-                    <div className="text-sm text-neutral-300">{structure.acceleration_rate}%</div>
+                    <div className="text-sm text-tahoe-text-primary">{structure.acceleration_rate}%</div>
                   </div>
                   <div>
                     <span className="font-medium text-tertiary">Threshold:</span>
-                    <div className="text-sm text-neutral-300">${structure.threshold.toLocaleString()}</div>
+                    <div className="text-sm text-tahoe-text-primary">${structure.threshold.toLocaleString()}</div>
                   </div>
                   <div>
                     <span className="font-medium text-tertiary">Calculation:</span>
-                    <div className="text-sm text-neutral-300">{structure.calculation_method}</div>
+                    <div className="text-sm text-tahoe-text-primary">{structure.calculation_method}</div>
                   </div>
                 </div>
 
@@ -1085,9 +1091,9 @@ export default function BonusesCommissions() {
                   <span className="font-medium text-tertiary">Commission Tiers:</span>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mt-2">
                     {structure.tiers.map((tier, index) => (
-                      <div key={index} className="bg-neutral-800 p-2 rounded text-sm">
+                      <div key={index} className="p-2 rounded-tahoe-input text-sm" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                         <div className="text-tertiary">${tier.min_sales.toLocaleString()}-${tier.max_sales.toLocaleString()}</div>
-                        <div className="text-blue-400 font-medium">{tier.rate}% rate</div>
+                        <div className="text-tahoe-info-text font-medium">{tier.rate}% rate</div>
                       </div>
                     ))}
                   </div>
@@ -1096,13 +1102,13 @@ export default function BonusesCommissions() {
                 <div className="flex justify-end space-x-2">
                   <button 
                     onClick={() => handleEditBonusStructure(structure)}
-                    className="text-indigo-400 hover:text-indigo-300 transition-colors"
+                    className="text-tahoe-accent hover:text-tahoe-accent-hover transition-all duration-tahoe"
                   >
                     Edit Structure
                   </button>
                   <button 
                     onClick={() => handleApplyBonusStructureToEmployees(structure)}
-                    className="text-green-400 hover:text-green-300 transition-colors"
+                    className="text-tahoe-success-text hover:text-tahoe-success-text/80 transition-colors"
                   >
                     Apply to Employees
                   </button>
@@ -1217,20 +1223,21 @@ export default function BonusesCommissions() {
                   handleCellCancel();
                 }
               }}
-              className="w-24 px-2 py-1 bg-neutral-800 border border-neutral-600 rounded text-sm text-white"
+              className="w-24 px-2 py-1 rounded-tahoe-input text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
               autoFocus
             />
             <button
               onClick={() => handleCellSave(record.id, fieldName)}
               disabled={isSaving}
-              className="px-2 py-1 bg-green-600 hover:bg-green-700 rounded text-xs disabled:opacity-50"
+              className="px-2 py-1 bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 rounded text-xs disabled:opacity-50"
               title="Save (Enter)"
             >
               ✓
             </button>
             <button
               onClick={handleCellCancel}
-              className="px-2 py-1 bg-red-600 hover:bg-red-700 rounded text-xs"
+              className="px-2 py-1 bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 rounded text-xs"
               title="Cancel (Esc)"
             >
               ✕
@@ -1242,7 +1249,7 @@ export default function BonusesCommissions() {
     
     return (
       <td
-        className={`py-2 px-3 ${className} ${canEdit ? 'cursor-pointer hover:bg-neutral-700/50' : ''}`}
+        className={`py-2 px-3 ${className} ${canEdit ? 'cursor-pointer hover:bg-tahoe-bg-hover transition-all duration-tahoe' : ''}`}
         onDoubleClick={() => {
           if (canEdit) {
             const rawVal = getRawValue();
@@ -1252,7 +1259,7 @@ export default function BonusesCommissions() {
         title={canEdit ? 'Double-click to edit' : ''}
       >
         {isSaving ? (
-          <span className="text-neutral-500">Saving...</span>
+          <span className="text-tahoe-text-muted">Saving...</span>
         ) : (
           displayValue
         )}
@@ -1269,8 +1276,8 @@ export default function BonusesCommissions() {
       return (
         <div className="space-y-6">
           <div className="text-center py-8">
-            <div className="text-neutral-400">{t('bonuses.noCommissionDataAvailable')}</div>
-            <div className="text-sm text-neutral-500 mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
+            <div className="text-tahoe-text-muted">{t('bonuses.noCommissionDataAvailable')}</div>
+            <div className="text-sm text-tahoe-text-muted mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
           </div>
           
           {/* Commission Structure Legend - Always visible */}
@@ -1287,7 +1294,7 @@ export default function BonusesCommissions() {
             <h3 className="text-lg font-semibold">{t('bonuses.commissionAnalytics')}</h3>
             <button
               onClick={loadAnalyticsData}
-              className="bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded text-sm transition-colors"
+              className="bg-tahoe-primary-bg hover:bg-tahoe-primary-hover px-3 py-1.5 rounded text-sm transition-colors"
             >
               🔄 {t('common.refresh')}
             </button>
@@ -1298,14 +1305,14 @@ export default function BonusesCommissions() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Commission Period Filter */}
               <div>
-                <label className="block text-sm font-medium mb-2 text-primary">Commission Period</label>
+                <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Commission Period</label>
                 <select
                   value={selectedPeriod || ""}
                   onChange={(e) => {
                     setSelectedPeriod(e.target.value);
                     setShowCalendar(false);
                   }}
-                  className="w-full px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-primary"
+                  className="w-full px-4 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-tahoe-text-primary"
                 >
                   <option value="">Select commission period...</option>
                   {availablePeriods.map((period) => {
@@ -1378,13 +1385,13 @@ export default function BonusesCommissions() {
               placeholder="Search by employee name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm text-primary"
+              className="block w-full pl-10 pr-10 py-3 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2 text-sm text-tahoe-text-primary"
             />
             {searchQuery && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="text-neutral-400 hover:text-primary transition-colors"
+                  className="text-tahoe-text-muted hover:text-tahoe-text-primary transition-colors"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1404,39 +1411,39 @@ export default function BonusesCommissions() {
         {analyticsData && (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="card p-4 text-center">
-              <div className="text-2xl font-bold text-green-400">
+              <div className="text-2xl font-bold text-tahoe-success-text">
                 ${(analyticsData.total_commission_earned || 0).toLocaleString()}
               </div>
               <div className="text-xs text-tertiary">Commission Earned</div>
-              <div className="text-xs text-neutral-500 mt-1">(before deductions)</div>
+              <div className="text-xs text-tahoe-text-muted mt-1">(before deductions)</div>
         </div>
         <div className="card p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">
+              <div className="text-2xl font-bold text-tahoe-warning-text">
                 ${(analyticsData.total_due || 0).toLocaleString()}
               </div>
               <div className="text-xs text-tertiary">Total Due</div>
-              <div className="text-xs text-neutral-500 mt-1">(after deductions)</div>
+              <div className="text-xs text-tahoe-text-muted mt-1">(after deductions)</div>
         </div>
         <div className="card p-4 text-center">
-              <div className="text-2xl font-bold text-blue-400">
+              <div className="text-2xl font-bold text-tahoe-info-text">
                 ${(analyticsData.total_amount_paid || 0).toLocaleString()}
               </div>
               <div className="text-xs text-tertiary">Amount Paid</div>
-              <div className="text-xs text-neutral-500 mt-1">(paid to employees)</div>
+              <div className="text-xs text-tahoe-text-muted mt-1">(paid to employees)</div>
         </div>
         <div className="card p-4 text-center">
-              <div className="text-2xl font-bold text-purple-400">
+              <div className="text-2xl font-bold text-tahoe-primary-bg">
                 ${(analyticsData.total_remaining || 0).toLocaleString()}
               </div>
               <div className="text-xs text-tertiary">Remaining</div>
-              <div className="text-xs text-neutral-500 mt-1">(still owed)</div>
+              <div className="text-xs text-tahoe-text-muted mt-1">(still owed)</div>
         </div>
         <div className="card p-4 text-center">
-              <div className="text-2xl font-bold text-indigo-400">
+              <div className="text-2xl font-bold text-tahoe-primary-bg">
                 {analyticsData.total_employees || 0}
         </div>
               <div className="text-xs text-tertiary">Employees</div>
-              <div className="text-xs text-neutral-500 mt-1">(with commissions)</div>
+              <div className="text-xs text-tahoe-text-muted mt-1">(with commissions)</div>
       </div>
           </div>
         )}
@@ -1446,73 +1453,73 @@ export default function BonusesCommissions() {
 
         {/* Unified Commissions & Bonuses Table - All Fields Combined */}
         <div className="card p-6">
-          <h4 className="text-lg font-semibold mb-4 text-indigo-400">
+          <h4 className="text-lg font-semibold mb-4 text-tahoe-primary-bg">
             📋 Commissions & Bonuses ({filteredMonthly.length})
           </h4>
           <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-neutral-900 z-20">
-                <tr className="border-b border-neutral-700">
-                  <th className="text-left py-2 px-3 sticky left-0 bg-neutral-900 z-30">Name</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Hourly Rate</th>
+              <thead className="sticky top-0 bg-tahoe-card-bg z-20">
+                <tr className="border-b border-tahoe-border-primary">
+                  <th className="text-left py-2 px-3 sticky left-0 bg-tahoe-card-bg z-30">Name</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Hourly Rate</th>
                   
                   {/* Revenue Fields */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue SM (All locations)</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue Add Ons+</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue Deduction</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Total Revenue</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Revenue SM (All locations)</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Revenue Add Ons+</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Revenue Deduction</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Total Revenue</th>
                   
                   {/* Commission Fields */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">Booking %</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Commission %</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Commission Earned</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Booking %</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Commission %</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Commission Earned</th>
                   
                   {/* Bonus Fields */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">Spiff Bonus</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Revenue Bonus</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Spiff Bonus</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Revenue Bonus</th>
                   
                   {/* US Revenue & Commission Fields */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">Total US Revenue</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Commission % (US)</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Commission Earned US</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">1.25X</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Bonuses for US Jobs 1.25X</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Total US Revenue</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Commission % (US)</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Commission Earned US</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">1.25X</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Bonuses for US Jobs 1.25X</th>
                   
                   {/* Booking Bonus/Deduction */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">$5/$10 Bonus</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">$5/$10 Deduction</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">$5/$10 Bonus</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">$5/$10 Deduction</th>
                   
                   {/* Pay Periods */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">Pay Period 1</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Cash Paid (PP1)</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Pay Period 2</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Cash Paid (PP2)</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Pay Period 3</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Cash Paid (PP3)</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Pay Period 1</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Cash Paid (PP1)</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Pay Period 2</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Cash Paid (PP2)</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Pay Period 3</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Cash Paid (PP3)</th>
                   
                   {/* Deductions */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">- Hourly Paid Out</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">- Deduction by Sales Manager</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Missing Punch Deduction</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Customer Support Deduction</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Post Commission Deduction</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Dispatch Deduction</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Other Deduction</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">- Hourly Paid Out</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">- Deduction by Sales Manager</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Missing Punch Deduction</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Customer Support Deduction</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Post Commission Deduction</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Dispatch Deduction</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Other Deduction</th>
                   
                   {/* Totals */}
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-green-400 font-semibold">Total Due</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-blue-400 font-semibold">Amount Paid</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900 text-purple-400 font-semibold">Remaining Amount</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg text-tahoe-success-text font-semibold">Total Due</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg text-tahoe-info-text font-semibold">Amount Paid</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg text-tahoe-primary-bg font-semibold">Remaining Amount</th>
                   
                   {/* Notes */}
-                  <th className="text-left py-2 px-3 bg-neutral-900">Corporate Open Jobs</th>
-                  <th className="text-left py-2 px-3 bg-neutral-900">Parking Pass Fee</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Corporate Open Jobs</th>
+                  <th className="text-left py-2 px-3 bg-tahoe-card-bg">Parking Pass Fee</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMonthly.length > 0 ? filteredMonthly.map((record, idx) => (
-                  <tr key={record.id || idx} className="border-b border-neutral-800 hover:bg-neutral-800/50">
-                    <td className="py-2 px-3 font-medium sticky left-0 bg-neutral-900 z-10">{record.employee_name || record.name_raw}</td>
+                  <tr key={record.id || idx} className="border-b border-tahoe-border-primary hover:bg-tahoe-card-bg/50">
+                    <td className="py-2 px-3 font-medium sticky left-0 bg-tahoe-card-bg z-10">{record.employee_name || record.name_raw}</td>
                     {renderEditableCell(record, 'hourly_rate', formatCurrencyDisplay(record.hourly_rate), 'currency')}
                     {renderEditableCell(record, 'rev_sm_all_locations', formatCurrencyDisplay(record.rev_sm_all_locations), 'currency')}
                     {renderEditableCell(record, 'rev_add_ons', formatCurrencyDisplay(record.rev_add_ons), 'currency')}
@@ -1520,22 +1527,22 @@ export default function BonusesCommissions() {
                     {renderEditableCell(record, 'total_revenue_all', formatCurrencyDisplay(record.total_revenue_all), 'currency')}
                     {renderEditableCell(record, 'booking_pct', formatPercentageDisplay(record.booking_pct), 'percentage')}
                     {renderEditableCell(record, 'commission_pct', formatPercentageDisplay(record.commission_pct), 'percentage')}
-                    {renderEditableCell(record, 'commission_earned', formatCurrencyDisplay(record.commission_earned), 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'commission_earned', formatCurrencyDisplay(record.commission_earned), 'currency', 'text-tahoe-success-text')}
                     {renderEditableCell(record, 'spiff_bonus', formatCurrencyDisplay(record.spiff_bonus), 'currency')}
                     {renderEditableCell(record, 'revenue_bonus', formatCurrencyDisplay(record.revenue_bonus), 'currency')}
                     {renderEditableCell(record, 'bonus_us_jobs_125x', formatCurrencyDisplay(record.bonus_us_jobs_125x), 'currency')}
                     {renderEditableCell(record, 'total_us_revenue', formatCurrencyDisplay(record.total_us_revenue), 'currency')}
                     {renderEditableCell(record, 'commission_pct_us', formatPercentageDisplay(record.commission_pct_us), 'percentage')}
-                    {renderEditableCell(record, 'commission_earned_us', formatCurrencyDisplay(record.commission_earned_us), 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'commission_earned_us', formatCurrencyDisplay(record.commission_earned_us), 'currency', 'text-tahoe-success-text')}
                     {renderEditableCell(record, 'commission_125x', formatCurrencyDisplay(record.commission_125x), 'currency', 'text-yellow-400')}
-                    {renderEditableCell(record, 'booking_bonus_plus', formatCurrencyDisplay(record.booking_bonus_plus), 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'booking_bonus_plus', formatCurrencyDisplay(record.booking_bonus_plus), 'currency', 'text-tahoe-success-text')}
                     {renderEditableCell(record, 'booking_bonus_minus', formatCurrencyDisplay(record.booking_bonus_minus), 'currency', 'text-red-400')}
                     {renderEditableCell(record, 'pay_period_1', formatCurrencyDisplay(record.pay_period_1), 'currency')}
-                    {renderEditableCell(record, 'pay_period_1_cash_paid', record.pay_period_1_cash_paid ? formatCurrencyDisplay(record.pay_period_1_cash_paid) : '-', 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'pay_period_1_cash_paid', record.pay_period_1_cash_paid ? formatCurrencyDisplay(record.pay_period_1_cash_paid) : '-', 'currency', 'text-tahoe-success-text')}
                     {renderEditableCell(record, 'pay_period_2', formatCurrencyDisplay(record.pay_period_2), 'currency')}
-                    {renderEditableCell(record, 'pay_period_2_cash_paid', record.pay_period_2_cash_paid ? formatCurrencyDisplay(record.pay_period_2_cash_paid) : '-', 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'pay_period_2_cash_paid', record.pay_period_2_cash_paid ? formatCurrencyDisplay(record.pay_period_2_cash_paid) : '-', 'currency', 'text-tahoe-success-text')}
                     {renderEditableCell(record, 'pay_period_3', formatCurrencyDisplay(record.pay_period_3), 'currency')}
-                    {renderEditableCell(record, 'pay_period_3_cash_paid', record.pay_period_3_cash_paid ? formatCurrencyDisplay(record.pay_period_3_cash_paid) : '-', 'currency', 'text-green-400')}
+                    {renderEditableCell(record, 'pay_period_3_cash_paid', record.pay_period_3_cash_paid ? formatCurrencyDisplay(record.pay_period_3_cash_paid) : '-', 'currency', 'text-tahoe-success-text')}
                     {renderEditableCell(record, 'hourly_paid_out_minus', formatCurrencyDisplay(record.hourly_paid_out_minus), 'currency', 'text-red-400')}
                     {renderEditableCell(record, 'deduction_sales_manager_minus', formatCurrencyDisplay(record.deduction_sales_manager_minus), 'currency', 'text-red-400')}
                     {renderEditableCell(record, 'deduction_missing_punch_minus', formatCurrencyDisplay(record.deduction_missing_punch_minus), 'currency', 'text-red-400')}
@@ -1543,15 +1550,15 @@ export default function BonusesCommissions() {
                     {renderEditableCell(record, 'deduction_post_commission_collected_minus', formatCurrencyDisplay(record.deduction_post_commission_collected_minus), 'currency', 'text-red-400')}
                     {renderEditableCell(record, 'deduction_dispatch_minus', formatCurrencyDisplay(record.deduction_dispatch_minus), 'currency', 'text-red-400')}
                     {renderEditableCell(record, 'deduction_other_minus', formatCurrencyDisplay(record.deduction_other_minus), 'currency', 'text-red-400')}
-                    {renderEditableCell(record, 'total_due', formatCurrencyDisplay(record.total_due), 'currency', 'text-green-400 font-semibold')}
-                    {renderEditableCell(record, 'amount_paid', formatCurrencyDisplay(record.amount_paid), 'currency', 'text-blue-400 font-semibold')}
+                    {renderEditableCell(record, 'total_due', formatCurrencyDisplay(record.total_due), 'currency', 'text-tahoe-success-text font-semibold')}
+                    {renderEditableCell(record, 'amount_paid', formatCurrencyDisplay(record.amount_paid), 'currency', 'text-tahoe-info-text font-semibold')}
                     {renderEditableCell(record, 'remaining_amount', formatCurrencyDisplay(record.remaining_amount), 'currency', 'text-purple-400 font-semibold')}
                     {renderEditableCell(record, 'corporate_open_jobs_note', record.corporate_open_jobs_note || '-', 'text', 'text-neutral-400 text-xs')}
                     {renderEditableCell(record, 'parking_pass_fee_note', record.parking_pass_fee_note || '-', 'text', 'text-neutral-400 text-xs')}
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan="38" className="py-4 px-4 text-center text-neutral-500">
+                    <td colSpan="38" className="py-4 px-4 text-center text-tahoe-text-muted">
                       No commission data for this period
                     </td>
                   </tr>
@@ -1597,7 +1604,7 @@ export default function BonusesCommissions() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex flex-wrap gap-1 mb-6 bg-neutral-800 p-1 rounded-lg">
+      <div className="flex flex-wrap gap-1 mb-6 bg-tahoe-card-bg p-1 rounded-lg">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -1634,7 +1641,7 @@ export default function BonusesCommissions() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Employee</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option>Select Employee</option>
                       {employees.map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -1643,7 +1650,7 @@ export default function BonusesCommissions() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Bonus Type</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option value="Performance Bonus">Performance Bonus</option>
                       <option value="Project Completion">Project Completion</option>
                       <option value="Customer Satisfaction">Customer Satisfaction</option>
@@ -1657,13 +1664,13 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Amount</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="5000"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Period</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option value="Q1 2025">Q1 2025</option>
                       <option value="Q2 2025">Q2 2025</option>
                       <option value="Q3 2025">Q3 2025</option>
@@ -1676,7 +1683,7 @@ export default function BonusesCommissions() {
                   <label className="block text-sm font-medium mb-2">Criteria</label>
                   <textarea
                     rows={3}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Describe the criteria for this bonus..."
                   />
                 </div>
@@ -1715,7 +1722,7 @@ export default function BonusesCommissions() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Employee</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option>Select Employee</option>
                       {employees.filter(emp => emp.commission_rate > 0).map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -1724,7 +1731,7 @@ export default function BonusesCommissions() {
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Commission Type</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option value="Sales Commission">Sales Commission</option>
                       <option value="Referral Commission">Referral Commission</option>
                       <option value="Upsell Commission">Upsell Commission</option>
@@ -1736,13 +1743,13 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Base Amount</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="150000"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Period</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option value="Q1 2025">Q1 2025</option>
                       <option value="Q2 2025">Q2 2025</option>
                       <option value="Q3 2025">Q3 2025</option>
@@ -1755,7 +1762,7 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Sales Target</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="120000"
                     />
                   </div>
@@ -1763,7 +1770,7 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Target Achievement</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="125"
                       step="0.1"
                     />
@@ -1806,13 +1813,13 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Structure Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="e.g., Sales Performance Bonus"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-2">Department</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option value="All">All Departments</option>
                       {departments.map(dept => (
                         <option key={dept.id} value={dept.name}>{dept.name}</option>
@@ -1823,7 +1830,7 @@ export default function BonusesCommissions() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">Structure Type</label>
-                    <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500">
+                    <select className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2">
                       <option value="Bonus">Bonus</option>
                       <option value="Commission">Commission</option>
                       <option value="Hybrid">Hybrid</option>
@@ -1833,7 +1840,7 @@ export default function BonusesCommissions() {
                     <label className="block text-sm font-medium mb-2">Max Amount</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="15000"
                     />
                   </div>
@@ -1842,7 +1849,7 @@ export default function BonusesCommissions() {
                   <label className="block text-sm font-medium mb-2">Calculation Method</label>
                   <textarea
                     rows={2}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Describe how the compensation is calculated..."
                   />
                 </div>
@@ -1850,7 +1857,7 @@ export default function BonusesCommissions() {
                   <label className="block text-sm font-medium mb-2">Eligibility Criteria</label>
                   <textarea
                     rows={2}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Describe eligibility requirements..."
                   />
                 </div>
@@ -1892,7 +1899,7 @@ export default function BonusesCommissions() {
                     <select
                       value={editingBonus.employee_id}
                       onChange={(e) => setEditingBonus({...editingBonus, employee_id: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     >
                       {employees.map(emp => (
                         <option key={emp.id} value={emp.id}>{emp.name}</option>
@@ -1904,7 +1911,7 @@ export default function BonusesCommissions() {
                     <select
                       value={editingBonus.bonus_type}
                       onChange={(e) => setEditingBonus({...editingBonus, bonus_type: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     >
                       <option value="Performance">Performance</option>
                       <option value="Project">Project</option>
@@ -1921,7 +1928,7 @@ export default function BonusesCommissions() {
                       type="number"
                       value={editingBonus.amount}
                       onChange={(e) => setEditingBonus({...editingBonus, amount: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="5000"
                     />
                   </div>
@@ -1931,7 +1938,7 @@ export default function BonusesCommissions() {
                       type="text"
                       value={editingBonus.period}
                       onChange={(e) => setEditingBonus({...editingBonus, period: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="Q4 2024"
                     />
                   </div>
@@ -1942,7 +1949,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={editingBonus.criteria}
                     onChange={(e) => setEditingBonus({...editingBonus, criteria: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Describe the criteria for this bonus..."
                   />
                 </div>
@@ -1951,7 +1958,7 @@ export default function BonusesCommissions() {
                   <select
                     value={editingBonus.status}
                     onChange={(e) => setEditingBonus({...editingBonus, status: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                   >
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
@@ -2001,7 +2008,7 @@ export default function BonusesCommissions() {
                       type="text"
                       value={editingStructure.name}
                       onChange={(e) => setEditingStructure({...editingStructure, name: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="e.g., Sales Performance Bonus"
                     />
                   </div>
@@ -2011,7 +2018,7 @@ export default function BonusesCommissions() {
                       type="number"
                       value={editingStructure.base_amount}
                       onChange={(e) => setEditingStructure({...editingStructure, base_amount: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                       placeholder="5000"
                     />
                   </div>
@@ -2022,7 +2029,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={editingStructure.criteria}
                     onChange={(e) => setEditingStructure({...editingStructure, criteria: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Describe the criteria for this structure..."
                   />
                 </div>
@@ -2032,7 +2039,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={editingStructure.calculation_method}
                     onChange={(e) => setEditingStructure({...editingStructure, calculation_method: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Describe how this structure is calculated..."
                   />
                 </div>
@@ -2042,7 +2049,7 @@ export default function BonusesCommissions() {
                     type="date"
                     value={editingStructure.effective_date}
                     onChange={(e) => setEditingStructure({...editingStructure, effective_date: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
@@ -2079,7 +2086,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Approve Bonus</h3>
-              <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
+              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-lg">
                 <h4 className="font-medium mb-2">Bonus Details</h4>
                 <p><strong>Employee:</strong> {actionBonus.employee_name}</p>
                 <p><strong>Amount:</strong> ${actionBonus.amount}</p>
@@ -2093,7 +2100,7 @@ export default function BonusesCommissions() {
                     type="text"
                     value={approveData.approved_by}
                     onChange={(e) => setApproveData({...approveData, approved_by: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Enter approver name"
                     required
                   />
@@ -2104,7 +2111,7 @@ export default function BonusesCommissions() {
                     type="date"
                     value={approveData.payment_date}
                     onChange={(e) => setApproveData({...approveData, payment_date: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     required
                   />
                 </div>
@@ -2114,7 +2121,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={approveData.approval_notes}
                     onChange={(e) => setApproveData({...approveData, approval_notes: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Add any notes about this approval..."
                   />
                 </div>
@@ -2131,7 +2138,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Approve Bonus
                   </button>
@@ -2152,7 +2159,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Reject Bonus</h3>
-              <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
+              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-lg">
                 <h4 className="font-medium mb-2">Bonus Details</h4>
                 <p><strong>Employee:</strong> {actionBonus.employee_name}</p>
                 <p><strong>Amount:</strong> ${actionBonus.amount}</p>
@@ -2166,7 +2173,7 @@ export default function BonusesCommissions() {
                     type="text"
                     value={rejectData.rejected_by}
                     onChange={(e) => setRejectData({...rejectData, rejected_by: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Enter rejector name"
                     required
                   />
@@ -2176,7 +2183,7 @@ export default function BonusesCommissions() {
                   <select
                     value={rejectData.rejection_reason}
                     onChange={(e) => setRejectData({...rejectData, rejection_reason: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     required
                   >
                     <option value="">Select reason</option>
@@ -2193,7 +2200,7 @@ export default function BonusesCommissions() {
                     rows={3}
                     value={rejectData.rejection_notes}
                     onChange={(e) => setRejectData({...rejectData, rejection_notes: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     placeholder="Explain why this bonus is being rejected..."
                     required
                   />
@@ -2211,7 +2218,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Reject Bonus
                   </button>
@@ -2234,20 +2241,20 @@ export default function BonusesCommissions() {
               <h3 className="text-xl font-bold mb-4">Bonus Details</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 bg-neutral-800 rounded-lg">
+                  <div className="p-4 bg-tahoe-card-bg rounded-lg">
                     <h4 className="font-medium mb-2 text-indigo-400">Employee Information</h4>
                     <p><strong>Name:</strong> {actionBonus.employee_name}</p>
                     <p><strong>Department:</strong> {actionBonus.department || 'N/A'}</p>
                     <p><strong>Role:</strong> {actionBonus.role_title || 'N/A'}</p>
                   </div>
-                  <div className="p-4 bg-neutral-800 rounded-lg">
+                  <div className="p-4 bg-tahoe-card-bg rounded-lg">
                     <h4 className="font-medium mb-2 text-indigo-400">Bonus Information</h4>
                     <p><strong>Amount:</strong> ${actionBonus.amount}</p>
                     <p><strong>Type:</strong> {actionBonus.bonus_type}</p>
                     <p><strong>Period:</strong> {actionBonus.period}</p>
                   </div>
                 </div>
-                <div className="p-4 bg-neutral-800 rounded-lg">
+                <div className="p-4 bg-tahoe-card-bg rounded-lg">
                   <h4 className="font-medium mb-2 text-indigo-400">Status & Approval</h4>
                   <p><strong>Status:</strong> <span className={`px-2 py-1 rounded text-sm ${
                     actionBonus.status === 'Approved' ? 'bg-green-900 text-green-300' :
@@ -2257,7 +2264,7 @@ export default function BonusesCommissions() {
                   <p><strong>Approved by:</strong> {actionBonus.approved_by || 'Pending'}</p>
                   <p><strong>Created:</strong> {formatShortDate(actionBonus.created_at)}</p>
                 </div>
-                <div className="p-4 bg-neutral-800 rounded-lg">
+                <div className="p-4 bg-tahoe-card-bg rounded-lg">
                   <h4 className="font-medium mb-2 text-indigo-400">Criteria & Notes</h4>
                   <p><strong>Criteria:</strong> {actionBonus.criteria || 'No criteria specified'}</p>
                   {actionBonus.approval_notes && (
@@ -2298,7 +2305,7 @@ export default function BonusesCommissions() {
                     <select
                       value={exportData.format}
                       onChange={(e) => setExportData({...exportData, format: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     >
                       <option value="CSV">CSV</option>
                       <option value="Excel">Excel</option>
@@ -2310,7 +2317,7 @@ export default function BonusesCommissions() {
                     <select
                       value={exportData.date_range}
                       onChange={(e) => setExportData({...exportData, date_range: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     >
                       <option value="All">All Time</option>
                       <option value="This Year">This Year</option>
@@ -2326,7 +2333,7 @@ export default function BonusesCommissions() {
                     <select
                       value={exportData.status_filter}
                       onChange={(e) => setExportData({...exportData, status_filter: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     >
                       <option value="All">All Statuses</option>
                       <option value="Pending">Pending Only</option>
@@ -2356,7 +2363,7 @@ export default function BonusesCommissions() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                    className="bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
                     Export Bonuses
                   </button>
@@ -2377,7 +2384,7 @@ export default function BonusesCommissions() {
           >
             <div className="p-6">
               <h3 className="text-xl font-bold mb-4">Apply Bonus Structure</h3>
-              <div className="mb-4 p-4 bg-neutral-800 rounded-lg">
+              <div className="mb-4 p-4 bg-tahoe-card-bg rounded-lg">
                 <h4 className="font-medium mb-2">Structure Details</h4>
                 <p><strong>Name:</strong> {actionStructure.name}</p>
                 <p><strong>Base Amount:</strong> ${actionStructure.base_amount}</p>
@@ -2389,7 +2396,7 @@ export default function BonusesCommissions() {
                   <select
                     value={applyData.apply_to}
                     onChange={(e) => setApplyData({...applyData, apply_to: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                   >
                     <option value="All Employees">All Employees</option>
                     <option value="Department">Specific Department</option>
@@ -2402,7 +2409,7 @@ export default function BonusesCommissions() {
                     <select
                       value={applyData.department_id}
                       onChange={(e) => setApplyData({...applyData, department_id: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     >
                       <option value="">Select Department</option>
                       {employees.map(emp => emp.department).filter((dept, index, self) => self.indexOf(dept) === index).map(dept => (
@@ -2417,7 +2424,7 @@ export default function BonusesCommissions() {
                     type="date"
                     value={applyData.effective_date}
                     onChange={(e) => setApplyData({...applyData, effective_date: e.target.value})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 bg-tahoe-input-bg border border-tahoe-input-border rounded-lg focus:outline-none focus:ring-tahoe-accent focus:ring-2"
                     required
                   />
                 </div>
@@ -2463,12 +2470,12 @@ export default function BonusesCommissions() {
                 <h3 className="text-xl font-bold">Success</h3>
               </div>
               <div className="mb-6">
-                <p className="text-neutral-300">{successMessage}</p>
+                <p className="text-tahoe-text-primary">{successMessage}</p>
               </div>
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowSuccessMessage(false)}
-                  className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="bg-tahoe-success-bg hover:bg-tahoe-success-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   OK
                 </button>
@@ -2496,12 +2503,12 @@ export default function BonusesCommissions() {
                 <h3 className="text-xl font-bold">Error</h3>
               </div>
               <div className="mb-6">
-                <p className="text-neutral-300">{errorMessage}</p>
+                <p className="text-tahoe-text-primary">{errorMessage}</p>
               </div>
               <div className="flex justify-end">
                 <button
                   onClick={() => setShowErrorMessage(false)}
-                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="bg-tahoe-error-bg hover:bg-tahoe-error-bg/80 px-4 py-2 rounded-lg font-medium transition-colors"
                 >
                   OK
                 </button>

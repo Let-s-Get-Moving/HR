@@ -16,20 +16,20 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   ...props
 }, ref) => {
   const buttonId = id || generateId('button');
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-tahoe-pill transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 focus:ring-offset-tahoe-bg-primary disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variantClasses = {
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white focus:ring-indigo-500 shadow-sm hover:shadow-md',
-    secondary: 'bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-900 dark:text-white focus:ring-slate-500',
-    outline: 'border border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/20 focus:ring-indigo-500',
-    ghost: 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 focus:ring-slate-500',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-sm hover:shadow-md'
+    primary: 'bg-tahoe-accent hover:bg-tahoe-accent-hover text-white shadow-tahoe-sm hover:shadow-tahoe-md',
+    secondary: 'bg-tahoe-border-primary hover:bg-tahoe-border-secondary border border-tahoe-border-primary text-white focus:ring-tahoe-border-secondary',
+    outline: 'border border-tahoe-accent text-tahoe-accent hover:bg-tahoe-accent hover:text-white focus:ring-tahoe-accent',
+    ghost: 'text-tahoe-text-secondary hover:bg-tahoe-bg-hover focus:ring-tahoe-border-primary',
+    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-tahoe-sm hover:shadow-tahoe-md'
   };
 
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base'
+    sm: 'px-4 py-2 text-xs',
+    md: 'px-5 py-2.5 text-sm',
+    lg: 'px-7 py-3.5 text-base'
   };
 
   const classes = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;

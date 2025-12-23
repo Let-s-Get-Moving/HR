@@ -165,7 +165,7 @@ export default function Employees() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">{t('employees.title')}</h1>
-          <p className="text-neutral-400 mt-1">{t('employees.description', 'Manage your workforce and employee records')}</p>
+          <p className="text-tahoe-text-muted mt-1">{t('employees.description', 'Manage your workforce and employee records')}</p>
         </div>
         {/* Hide Add Employee button for user role */}
         {userRole !== 'user' && (
@@ -173,7 +173,8 @@ export default function Employees() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowOnboarding(true)}
-            className="bg-indigo-600 hover:bg-indigo-700 px-4 sm:px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
+            className="px-4 sm:px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe w-full sm:w-auto"
+            style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
           >
             + {t('employees.addEmployee')}
           </motion.button>
@@ -188,7 +189,8 @@ export default function Employees() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full px-4 py-3 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
             >
               <option value="active">{t('employees.active')} {t('employees.title')}</option>
               <option value="terminated">{t('employees.terminated')} {t('employees.title')}</option>
@@ -198,7 +200,7 @@ export default function Employees() {
           {/* Search Bar */}
           <div className="relative flex-1">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-tahoe-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -207,13 +209,14 @@ export default function Employees() {
               placeholder={t('employees.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="block w-full pl-10 pr-10 py-3 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm"
+              className="block w-full pl-10 pr-10 py-3 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-sm transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
             />
             {searchQuery && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                 <button
                   onClick={() => handleSearch("")}
-                  className="text-neutral-400 hover:text-white transition-colors"
+                  className="text-tahoe-text-muted hover:text-tahoe-text-primary transition-all duration-tahoe"
                 >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -225,7 +228,7 @@ export default function Employees() {
         </div>
       )}
       {userRole !== 'user' && searchQuery && (
-        <div className="mb-4 text-sm text-neutral-400">
+        <div className="mb-4 text-sm text-tahoe-text-muted">
           Found {filteredEmployees.length} employee{filteredEmployees.length !== 1 ? 's' : ''} matching "{searchQuery}"
         </div>
       )}
@@ -234,34 +237,34 @@ export default function Employees() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-neutral-800">
+            <thead style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
               <tr>
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.name')}</th>
-                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.email')}</th>
+                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.name')}</th>
+                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.email')}</th>
                 {filterStatus === "active" && (
-                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.department')}</th>
+                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.department')}</th>
                 )}
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.employmentType')}</th>
-                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.hireDate')}</th>
-                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.status')}</th>
+                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.employmentType')}</th>
+                <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.hireDate')}</th>
+                <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.status')}</th>
                 {filterStatus === "terminated" && (
-                  <th className="hidden lg:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.terminationDate')}</th>
+                  <th className="hidden lg:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.terminationDate')}</th>
                 )}
                 {filterStatus === "active" && (
-                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-neutral-300">{t('employees.actions')}</th>
+                  <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.actions')}</th>
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-800">
+            <tbody className="divide-y divide-y">
               {filteredEmployees.length === 0 && searchQuery ? (
                 <tr>
-                  <td colSpan="9" className="px-6 py-8 text-center text-neutral-400">
+                  <td colSpan="9" className="px-6 py-8 text-center text-tahoe-text-muted">
                     <div className="flex flex-col items-center">
-                      <svg className="h-12 w-12 text-neutral-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-12 w-12 text-tahoe-text-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                      <p className="text-lg font-medium mb-1">{t('employees.noEmployees')}</p>
-                      <p className="text-sm">{t('employees.searchHint', 'Try adjusting your search terms or clear the search to see all employees.')}</p>
+                      <p className="text-lg font-medium mb-1 text-tahoe-text-primary">{t('employees.noEmployees')}</p>
+                      <p className="text-sm text-tahoe-text-secondary">{t('employees.searchHint', 'Try adjusting your search terms or clear the search to see all employees.')}</p>
                     </div>
                   </td>
                 </tr>
@@ -269,22 +272,22 @@ export default function Employees() {
                 filteredEmployees.map((employee) => (
                 <tr 
                   key={employee.id} 
-                  className="hover:bg-neutral-800/50 cursor-pointer transition-colors"
+                  className="hover:bg-tahoe-bg-hover cursor-pointer transition-all duration-tahoe"
                   onClick={() => setSelectedEmployee(employee)}
                 >
                   <td className="px-3 sm:px-6 py-4">
                     <div>
-                      <div className="font-medium">{employee.first_name} {employee.last_name}</div>
-                      <div className="text-sm text-neutral-400">{employee.role_title}</div>
+                      <div className="font-medium text-tahoe-text-primary">{employee.first_name} {employee.last_name}</div>
+                      <div className="text-sm text-tahoe-text-muted">{employee.role_title}</div>
                     </div>
                   </td>
                   <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-sm">
                     <div className="space-y-1">
-                      <div className="text-indigo-400 font-mono text-xs">
+                      <div className="text-tahoe-accent font-mono text-xs">
                         {employee.first_name.toLowerCase()}@letsgetmovinggroup.com
                       </div>
                       {employee.email && employee.email.toLowerCase() !== `${employee.first_name.toLowerCase()}@letsgetmovinggroup.com` && (
-                        <div className="text-neutral-300 text-xs">
+                        <div className="text-tahoe-text-secondary text-xs">
                           {employee.email}
                         </div>
                       )}
@@ -367,18 +370,18 @@ export default function Employees() {
 
       {/* Employee Profile Modal */}
       {selectedEmployee && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-tahoe-bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="w-full max-w-7xl max-h-[95vh] overflow-hidden"
           >
-            <div className="bg-neutral-900 rounded-lg shadow-2xl">
-              <div className="flex justify-between items-center p-6 border-b border-neutral-800">
-                <h2 className="text-2xl font-bold">{t('employees.employeeDetails')}</h2>
+            <div className="rounded-tahoe-input shadow-2xl backdrop-blur-lg" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+              <div className="flex justify-between items-center p-6 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                <h2 className="text-2xl font-bold text-tahoe-text-primary">{t('employees.employeeDetails')}</h2>
                 <button
                   onClick={() => setSelectedEmployee(null)}
-                  className="text-neutral-400 hover:text-white transition-colors"
+                  className="text-tahoe-text-muted hover:text-tahoe-text-primary transition-all duration-tahoe"
                 >
                   ✕
                 </button>

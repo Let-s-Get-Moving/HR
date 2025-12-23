@@ -20,9 +20,10 @@ const SkeletonLoader: React.FC<SkeletonLoaderProps> = ({
       {Array.from({ length: lines }).map((_, index) => (
         <div
           key={index}
-          className={`bg-slate-200 dark:bg-slate-700 ${height} ${width} ${
-            rounded ? 'rounded' : ''
+          className={`${height} ${width} ${
+            rounded ? 'rounded-tahoe-input' : ''
           } ${index < lines - 1 ? 'mb-2' : ''}`}
+          style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
         />
       ))}
     </div>

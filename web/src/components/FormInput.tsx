@@ -33,26 +33,26 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
   const hasHelp = !!helperText;
 
   const inputClasses = `
-    w-full px-3 py-2 border rounded-lg transition-colors duration-200
-    focus:outline-none focus:ring-2 focus:ring-offset-1
+    w-full px-4 py-3 border rounded-tahoe-input transition-all duration-tahoe
+    focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 focus:ring-offset-tahoe-bg-primary
     disabled:opacity-50 disabled:cursor-not-allowed
     ${leftIcon ? 'pl-10' : ''}
     ${rightIcon ? 'pr-10' : ''}
     ${hasError 
-      ? 'border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500' 
-      : 'border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500'
+      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+      : 'border-tahoe-border-primary focus:ring-tahoe-accent focus:border-tahoe-accent'
     }
-    bg-white dark:bg-slate-800 text-slate-900 dark:text-white
-    placeholder-slate-400 dark:placeholder-slate-500
+    bg-tahoe-input-bg text-tahoe-text-primary
+    placeholder-tahoe-text-muted
     ${className}
-  `.trim();
+  `.trim().replace(/\s+/g, ' ');
 
   return (
     <div className={`space-y-1 ${containerClassName}`}>
       {label && (
         <label 
           htmlFor={inputId}
-          className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+          className="block text-xs font-medium text-tahoe-text-primary mb-1.5 tracking-wide"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -62,7 +62,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
       <div className="relative">
         {leftIcon && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <div className="text-slate-400 dark:text-slate-500">
+            <div className="text-tahoe-text-muted">
               {leftIcon}
             </div>
           </div>
@@ -80,7 +80,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
         
         {rightIcon && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <div className="text-slate-400 dark:text-slate-500">
+            <div className="text-tahoe-text-muted">
               {rightIcon}
             </div>
           </div>
@@ -90,7 +90,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
       {error && (
         <p 
           id={errorId}
-          className="text-sm text-red-600 dark:text-red-400"
+          className="text-xs text-red-500 mt-1"
           role="alert"
           aria-live="polite"
         >
@@ -101,7 +101,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
       {helperText && !error && (
         <p 
           id={helpId}
-          className="text-sm text-slate-500 dark:text-slate-400"
+          className="text-xs text-tahoe-text-muted mt-1"
         >
           {helperText}
         </p>

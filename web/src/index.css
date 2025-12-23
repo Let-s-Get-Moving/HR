@@ -95,82 +95,91 @@
   --nav-text-active: #ffffff;
 }
 
-/* Professional Dark Theme - Ultra Dark & Professional */
+/* macOS Tahoe Dark Theme */
 .dark {
-  /* Background Colors - Much Darker */
-  --bg-primary: #000000;
-  --bg-secondary: #0a0a0a;
-  --bg-tertiary: #1a1a1a;
-  --bg-quaternary: #2a2a2a;
-  --bg-hover: #1a1a1a;
-  --bg-active: #2a2a2a;
+  /* Background Colors - Tahoe Dark */
+  --bg-primary: #0B0B0C;
+  --bg-secondary: #161618;
+  --bg-tertiary: #1a1a1c;
+  --bg-quaternary: #242426;
+  --bg-hover: rgba(255, 255, 255, 0.08);
+  --bg-active: rgba(255, 255, 255, 0.12);
   
-  /* Dashboard specific lighter backgrounds */
-  --dashboard-bg: #0f0f0f;
-  --dashboard-card-bg: #1a1a1a;
+  /* Dashboard specific backgrounds */
+  --dashboard-bg: #0B0B0C;
+  --dashboard-card-bg: rgba(22, 22, 24, 0.8);
   
   /* Text Colors - High Contrast */
   --text-primary: #ffffff;
-  --text-secondary: #e2e8f0;
-  --text-tertiary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-inverse: #0f172a;
+  --text-secondary: #e5e5e7;
+  --text-tertiary: #d1d1d3;
+  --text-muted: #98989a;
+  --text-inverse: #0B0B0C;
   
-  /* Border Colors */
-  --border-primary: #475569;
-  --border-secondary: #64748b;
-  --border-focus: #60a5fa;
-  --border-error: #f87171;
+  /* Border Colors - Subtle white borders */
+  --border-primary: rgba(255, 255, 255, 0.12);
+  --border-secondary: rgba(255, 255, 255, 0.18);
+  --border-focus: #0A84FF;
+  --border-error: #ff453a;
   
-  /* Card Colors - Darker */
-  --card-bg: #0a0a0a;
-  --card-border: #1a1a1a;
-  --card-shadow: rgba(0, 0, 0, 0.5);
+  /* Card Colors - Glassy panels */
+  --card-bg: rgba(22, 22, 24, 0.8);
+  --card-border: rgba(255, 255, 255, 0.12);
+  --card-shadow: rgba(0, 0, 0, 0.25);
   
   /* Status Colors */
-  --success-bg: #064e3b;
-  --success-text: #6ee7b7;
-  --success-border: #065f46;
+  --success-bg: rgba(48, 209, 88, 0.15);
+  --success-text: #30d158;
+  --success-border: rgba(48, 209, 88, 0.3);
   
-  --warning-bg: #78350f;
-  --warning-text: #fbbf24;
-  --warning-border: #92400e;
+  --warning-bg: rgba(255, 159, 10, 0.15);
+  --warning-text: #ff9f0a;
+  --warning-border: rgba(255, 159, 10, 0.3);
   
-  --error-bg: #7f1d1d;
-  --error-text: #fca5a5;
-  --error-border: #991b1b;
+  --error-bg: rgba(255, 69, 58, 0.15);
+  --error-text: #ff453a;
+  --error-border: rgba(255, 69, 58, 0.3);
   
-  --info-bg: #1e3a8a;
-  --info-text: #93c5fd;
-  --info-border: #1e40af;
+  --info-bg: rgba(10, 132, 255, 0.15);
+  --info-text: #0A84FF;
+  --info-border: rgba(10, 132, 255, 0.3);
   
-  /* Interactive Colors */
-  --primary-bg: #3b82f6;
-  --primary-hover: #2563eb;
+  /* Interactive Colors - macOS Blue accent */
+  --primary-bg: #0A84FF;
+  --primary-hover: #0071e3;
   --primary-text: #ffffff;
   
-  --secondary-bg: #6b7280;
-  --secondary-hover: #4b5563;
+  --secondary-bg: rgba(255, 255, 255, 0.12);
+  --secondary-hover: rgba(255, 255, 255, 0.18);
   --secondary-text: #ffffff;
   
   /* Form Elements */
-  --input-bg: #1e293b;
-  --input-border: #475569;
-  --input-focus: #60a5fa;
-  --input-disabled: #334155;
+  --input-bg: rgba(255, 255, 255, 0.12);
+  --input-border: rgba(255, 255, 255, 0.12);
+  --input-focus: #0A84FF;
+  --input-disabled: rgba(255, 255, 255, 0.06);
+  
+  /* Tahoe specific - for Tailwind classes */
+  --tahoe-input-bg: rgba(255, 255, 255, 0.12);
+  --tahoe-card-bg: rgba(22, 22, 24, 0.8);
+  --tahoe-bg-hover: rgba(255, 255, 255, 0.08);
   
   /* Navigation */
-  --nav-bg: #1e293b;
-  --nav-border: #475569;
-  --nav-hover: #334155;
-  --nav-active: #475569;
+  --nav-bg: rgba(22, 22, 24, 0.8);
+  --nav-border: rgba(255, 255, 255, 0.12);
+  --nav-hover: rgba(255, 255, 255, 0.08);
+  --nav-active: rgba(10, 132, 255, 0.2);
+  
+  /* Backdrop blur */
+  --backdrop-blur: blur(20px);
 }
 
-/* Apply theme variables globally - Swiss Watch Precision */
+/* Apply theme variables globally - macOS Tahoe Style */
 html, body, #root {
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  transition: background-color 180ms cubic-bezier(0.25, 0.8, 0.25, 1), color 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
   min-height: 100vh;
 }
 
@@ -185,9 +194,20 @@ html, body, #root {
   color: white;
 }
 
-/* Apply theme to ALL elements - Complete Coverage */
+/* Apply theme to ALL elements - macOS Tahoe Style */
 *, *::before, *::after {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 180ms cubic-bezier(0.25, 0.8, 0.25, 1), 
+              color 180ms cubic-bezier(0.25, 0.8, 0.25, 1), 
+              border-color 180ms cubic-bezier(0.25, 0.8, 0.25, 1), 
+              box-shadow 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none;
+    animation: none;
+  }
 }
 
 /* Ensure all containers inherit theme */
@@ -205,14 +225,15 @@ h1, h2, h3, h4, h5, h6, p, span, div, label, input, select, textarea, button, a,
   background-color: var(--card-bg);
 }
 
-/* Beautiful Card System */
+/* macOS Tahoe Card System */
 .card {
-  @apply rounded-2xl shadow-lg;
+  border-radius: 20px;
   background-color: var(--card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: 0 4px 6px -1px var(--card-shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* Dashboard specific styling */
@@ -222,38 +243,69 @@ h1, h2, h3, h4, h5, h6, p, span, div, label, input, select, textarea, button, a,
 }
 
 .dashboard-card {
-  @apply rounded-2xl shadow-lg;
+  border-radius: 20px;
   background-color: var(--dashboard-card-bg);
   border: 1px solid var(--card-border);
-  box-shadow: 0 4px 6px -1px var(--card-shadow);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .card:hover {
-  box-shadow: 0 20px 25px -5px var(--card-shadow);
-  transform: translateY(-2px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
 }
 
 .card-sm {
-  @apply rounded-xl p-4;
+  border-radius: 18px;
+  padding: 16px;
 }
 
 .card-md {
-  @apply rounded-2xl p-6;
+  border-radius: 20px;
+  padding: 24px;
 }
 
 .card-lg {
-  @apply rounded-3xl p-8;
+  border-radius: 24px;
+  padding: 32px;
 }
 
-/* Professional Typography */
-h1, h2, h3, h4, h5, h6 {
-  color: var(--text-primary);
+/* macOS Tahoe Typography */
+h1 {
+  font-size: 24px;
   font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
 }
 
-p, span, div, label {
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+}
+
+h3, h4, h5, h6 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+p, span, div {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   color: var(--text-primary);
 }
 
@@ -269,32 +321,32 @@ p, span, div, label {
   color: var(--text-muted);
 }
 
-/* Swiss Watch Precision Form Elements */
+/* macOS Tahoe Form Elements */
 input, select, textarea {
   background-color: var(--input-bg);
-  border: 2px solid var(--input-border);
+  border: 1px solid var(--input-border);
   color: var(--text-primary);
-  border-radius: 0.875rem;
-  padding: 0.875rem 1.125rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1.5;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   width: 100%;
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--input-focus);
   box-shadow: 
-    0 0 0 4px rgba(59, 130, 246, 0.1), 
-    0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 0 0 1px var(--input-focus);
-  transform: translateY(-1px);
+    0 0 0 3px rgba(10, 132, 255, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: scale(1.01);
   background-color: var(--input-bg);
 }
 
@@ -308,8 +360,7 @@ input:disabled, select:disabled, textarea:disabled {
 
 input:hover:not(:disabled), select:hover:not(:disabled), textarea:hover:not(:disabled) {
   border-color: var(--border-secondary);
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
-  transform: translateY(-0.5px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 input::placeholder, textarea::placeholder {
@@ -624,83 +675,90 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
 
-/* Beautiful Button System */
+/* macOS Tahoe Button System */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary-bg) 0%, var(--primary-hover) 100%);
+  background: var(--primary-bg);
   color: var(--primary-text);
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 10px 20px;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
   position: relative;
   overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  background: var(--primary-hover);
+  box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4);
+  transform: translateY(-1px);
 }
 
 .btn-primary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(10, 132, 255, 0.3);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, var(--secondary-bg) 0%, var(--secondary-hover) 100%);
+  background: var(--secondary-bg);
   color: var(--secondary-text);
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--border-primary);
+  padding: 10px 20px;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .btn-secondary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  background: var(--secondary-hover);
+  border-color: var(--border-secondary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .btn-secondary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .btn-sm {
-  padding: 0.5rem 1rem;
-  font-size: 0.75rem;
-  border-radius: 0.5rem;
+  padding: 8px 16px;
+  font-size: 12px;
+  border-radius: 9999px;
 }
 
 .btn-lg {
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  border-radius: 1rem;
+  padding: 14px 28px;
+  font-size: 16px;
+  border-radius: 9999px;
 }
 
 .btn-outline {
   background: transparent;
   color: var(--primary-bg);
-  border: 2px solid var(--primary-bg);
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--primary-bg);
+  padding: 10px 20px;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 180ms cubic-bezier(0.25, 0.8, 0.25, 1);
   cursor: pointer;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
 .btn-outline:hover {
   background: var(--primary-bg);
   color: var(--primary-text);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
 }
 
 /* Beautiful Status Badges */
@@ -840,25 +898,28 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   color: var(--primary-text);
 }
 
-/* Professional Tables */
+/* macOS Tahoe Tables */
 .table {
   width: 100%;
   border-collapse: collapse;
 }
 
 .table th {
-  background-color: var(--bg-secondary);
+  background-color: transparent;
   color: var(--text-primary);
-  padding: 0.75rem;
+  padding: 12px 16px;
   text-align: left;
-  font-weight: 600;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.01em;
   border-bottom: 1px solid var(--border-primary);
 }
 
 .table td {
-  padding: 0.75rem;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--border-primary);
   color: var(--text-primary);
+  font-size: 14px;
 }
 
 .table tr:hover {
@@ -1043,20 +1104,28 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   }
 }
 
-/* Custom scrollbar */
+/* macOS Style Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.3);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }

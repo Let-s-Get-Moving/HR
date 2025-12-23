@@ -2,12 +2,13 @@ import React from "react";
 
 export default function MetricCard({ label, value, sub, icon, trend, trendUp }) {
   return (
-    <div className="card p-6 hover:shadow-lg transition-all duration-300 border border-neutral-700 hover:border-indigo-500/50">
+    <div className="p-6 rounded-tahoe border transition-all duration-tahoe hover:shadow-tahoe-md" 
+         style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
       <div className="flex items-center justify-between mb-3">
-        <div className="text-sm text-neutral-400 font-medium">{label}</div>
+        <div className="text-xs text-tahoe-text-muted font-medium tracking-wide">{label}</div>
         {icon && <div className="text-2xl">{icon}</div>}
       </div>
-      <div className="text-3xl font-bold text-white mb-2">{value}</div>
+      <div className="text-3xl font-semibold text-tahoe-text-primary mb-2">{value}</div>
       {trend && (
         <div className={`flex items-center text-sm ${trendUp ? 'text-green-400' : 'text-red-400'}`}>
           <svg className={`w-4 h-4 mr-1 ${trendUp ? 'rotate-0' : 'rotate-180'}`} fill="currentColor" viewBox="0 0 20 20">
@@ -16,7 +17,7 @@ export default function MetricCard({ label, value, sub, icon, trend, trendUp }) 
           {trend}
         </div>
       )}
-      {sub && <div className="mt-1 text-xs text-neutral-500">{sub}</div>}
+      {sub && <div className="mt-1 text-xs text-tahoe-text-muted">{sub}</div>}
     </div>
   );
 }

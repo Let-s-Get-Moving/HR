@@ -5,9 +5,9 @@ import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 
 const STATUS_COLORS = {
-  'Pending': 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200',
-  'Approved': 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200',
-  'Rejected': 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+  'Pending': 'bg-tahoe-warning-bg text-tahoe-warning-text border-tahoe-warning-border',
+  'Approved': 'bg-tahoe-success-bg text-tahoe-success-text border-tahoe-success-border',
+  'Rejected': 'bg-tahoe-error-bg text-tahoe-error-text border-tahoe-error-border'
 };
 
 const STATUS_ICONS = {
@@ -120,8 +120,8 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
     return (
       <div className="card p-6">
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="text-secondary mt-2">{t('leave.loadingRequests')}</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tahoe-accent mx-auto"></div>
+          <p className="text-tahoe-text-secondary mt-2">{t('leave.loadingRequests')}</p>
         </div>
       </div>
     );
@@ -138,34 +138,37 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
       {/* Header */}
       <div className="card p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-primary">{t('leave.leaveRequestManagement')}</h2>
+          <h2 className="text-2xl font-bold text-tahoe-text-primary">{t('leave.leaveRequestManagement')}</h2>
           <button
             onClick={loadRequests}
-            className="px-4 py-2 text-sm bg-slate-100 dark:bg-slate-700 text-primary rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+            className="px-4 py-2 text-sm rounded-tahoe-pill transition-all duration-tahoe"
+            style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
           >
             {t('common.refresh')}
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+        <div className="flex space-x-1 rounded-tahoe p-1" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
           <button
             onClick={() => setActiveTab('pending')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-4 rounded-tahoe-input text-sm font-medium transition-all duration-tahoe ${
               activeTab === 'pending'
-                ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                : 'text-secondary hover:text-primary'
+                ? 'text-tahoe-text-primary shadow-sm'
+                : 'text-tahoe-text-secondary hover:text-tahoe-text-primary'
             }`}
+            style={activeTab === 'pending' ? { backgroundColor: 'rgba(255, 255, 255, 0.2)' } : {}}
           >
             {t('leave.pending')} ({pendingRequests.length})
           </button>
           <button
             onClick={() => setActiveTab('all')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+            className={`flex-1 py-2 px-4 rounded-tahoe-input text-sm font-medium transition-all duration-tahoe ${
               activeTab === 'all'
-                ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                : 'text-secondary hover:text-primary'
+                ? 'text-tahoe-text-primary shadow-sm'
+                : 'text-tahoe-text-secondary hover:text-tahoe-text-primary'
             }`}
+            style={activeTab === 'all' ? { backgroundColor: 'rgba(255, 255, 255, 0.2)' } : {}}
           >
             {t('leave.allRequests')} ({allRequests.length})
           </button>
@@ -177,8 +180,8 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
         {currentRequests.length === 0 ? (
           <div className="card p-12 text-center">
             <div className="text-6xl mb-4">📝</div>
-            <h3 className="text-lg font-medium text-primary mb-2">{t('leave.noLeaveRequests')}</h3>
-            <p className="text-secondary">
+            <h3 className="text-lg font-medium text-tahoe-text-primary mb-2">{t('leave.noLeaveRequests')}</h3>
+            <p className="text-tahoe-text-secondary">
               {activeTab === 'pending' 
                 ? t('leave.noPendingRequestsToReview')
                 : t('leave.noLeaveRequestsSubmitted')
@@ -189,18 +192,18 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
           currentRequests.map((request) => (
             <div
               key={request.id}
-              className="card p-6 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="card p-6 hover:bg-tahoe-bg-hover transition-all duration-tahoe"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
-                    <h3 className="font-medium text-primary">{request.leave_type}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_COLORS[request.status]}`}>
+                    <h3 className="font-medium text-tahoe-text-primary">{request.leave_type}</h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[request.status]}`}>
                       {STATUS_ICONS[request.status]} {request.status}
                     </span>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-secondary mb-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-tahoe-text-secondary mb-3">
                     <div>
                       <span className="font-medium">{t('leave.employee')}:</span> {request.first_name} {request.last_name}
                     </div>
@@ -217,9 +220,9 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
 
                   {/* Leave Balance for Pending Requests */}
                   {request.status === 'Pending' && (
-                    <div className="mb-3 p-3 bg-slate-100 dark:bg-slate-700 rounded-lg">
-                      <h4 className="font-medium text-primary text-sm mb-2">{t('leave.employeeLeaveBalance')}:</h4>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div className="mb-3 p-3 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
+                      <h4 className="font-medium text-tahoe-text-primary text-sm mb-2">{t('leave.employeeLeaveBalance')}:</h4>
+                      <div className="grid grid-cols-3 gap-4 text-sm text-tahoe-text-secondary">
                         <div>{t('leave.vacation')}: {getLeaveBalance(request, 'Vacation')} {t('leave.days')}</div>
                         <div>{t('leave.sickLeave')}: {getLeaveBalance(request, 'Sick Leave')} {t('leave.days')}</div>
                         <div>{t('leave.personal')}: {getLeaveBalance(request, 'Personal Leave')} {t('leave.days')}</div>
@@ -229,19 +232,19 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
 
                   {request.reason && (
                     <div className="mb-3">
-                      <span className="font-medium text-primary text-sm">{t('leave.reason')}:</span>
-                      <p className="text-secondary text-sm mt-1">{request.reason}</p>
+                      <span className="font-medium text-tahoe-text-primary text-sm">{t('leave.reason')}:</span>
+                      <p className="text-tahoe-text-secondary text-sm mt-1">{request.reason}</p>
                     </div>
                   )}
 
                   {request.review_notes && (
                     <div className="mb-3">
-                      <span className="font-medium text-primary text-sm">{t('leave.hrNotes')}:</span>
-                      <p className="text-secondary text-sm mt-1">{request.review_notes}</p>
+                      <span className="font-medium text-tahoe-text-primary text-sm">{t('leave.hrNotes')}:</span>
+                      <p className="text-tahoe-text-secondary text-sm mt-1">{request.review_notes}</p>
                     </div>
                   )}
 
-                  <div className="text-xs text-tertiary">
+                  <div className="text-xs text-tahoe-text-muted">
                     {t('leave.submitted')}: {formatDate(request.requested_at)}
                     {request.reviewed_at && (
                       <span> • {t('leave.reviewed')}: {formatDate(request.reviewed_at)} {t('leave.by')} {request.reviewed_by_name}</span>
@@ -254,7 +257,8 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
                   <div className="flex gap-2 ml-4">
                     <button
                       onClick={() => setSelectedRequest(request)}
-                      className="px-3 py-1 text-sm bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 rounded hover:bg-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+                      className="px-3 py-1 text-sm rounded-tahoe-pill transition-all duration-tahoe"
+                      style={{ backgroundColor: 'rgba(10, 132, 255, 0.2)', color: '#0A84FF', border: '1px solid rgba(10, 132, 255, 0.3)' }}
                     >
                       {t('leave.review')}
                     </button>
@@ -268,28 +272,28 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
 
       {/* Review Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-primary mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <div className="rounded-tahoe p-6 w-full max-w-md mx-4 shadow-tahoe-lg" style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <h3 className="text-lg font-semibold text-tahoe-text-primary mb-4">
               {t('leave.reviewLeaveRequest')}
             </h3>
             
             <div className="space-y-4">
-              <div>
-                <span className="font-medium">{t('leave.employee')}:</span> {selectedRequest.first_name} {selectedRequest.last_name}
+              <div className="text-tahoe-text-secondary">
+                <span className="font-medium text-tahoe-text-primary">{t('leave.employee')}:</span> {selectedRequest.first_name} {selectedRequest.last_name}
               </div>
-              <div>
-                <span className="font-medium">{t('leave.leaveType')}:</span> {selectedRequest.leave_type}
+              <div className="text-tahoe-text-secondary">
+                <span className="font-medium text-tahoe-text-primary">{t('leave.leaveType')}:</span> {selectedRequest.leave_type}
               </div>
-              <div>
-                <span className="font-medium">{t('leave.dates')}:</span> {formatDate(selectedRequest.start_date)} - {formatDate(selectedRequest.end_date)}
+              <div className="text-tahoe-text-secondary">
+                <span className="font-medium text-tahoe-text-primary">{t('leave.dates')}:</span> {formatDate(selectedRequest.start_date)} - {formatDate(selectedRequest.end_date)}
               </div>
-              <div>
-                <span className="font-medium">{t('leave.duration')}:</span> {getDuration(selectedRequest.start_date, selectedRequest.end_date)} {t('leave.days')}
+              <div className="text-tahoe-text-secondary">
+                <span className="font-medium text-tahoe-text-primary">{t('leave.duration')}:</span> {getDuration(selectedRequest.start_date, selectedRequest.end_date)} {t('leave.days')}
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-primary mb-2">
+                <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
                   Review Notes
                 </label>
                 <textarea
@@ -297,7 +301,8 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
                   onChange={(e) => setReviewNotes(e.target.value)}
                   rows={3}
                   placeholder={t('leave.addNotesAboutDecision')}
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary resize-none"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent resize-none transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
             </div>
@@ -308,21 +313,24 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
                   setSelectedRequest(null);
                   setReviewNotes('');
                 }}
-                className="px-4 py-2 text-sm bg-slate-100 dark:bg-slate-700 text-primary rounded-lg hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                className="px-4 py-2 text-sm rounded-tahoe-pill transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                 disabled={processing}
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleApproveReject(selectedRequest.id, 'Rejected')}
-                className="px-4 py-2 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800 transition-colors"
+                className="px-4 py-2 text-sm rounded-tahoe-pill transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 69, 58, 0.2)', color: '#ff453a', border: '1px solid rgba(255, 69, 58, 0.3)' }}
                 disabled={processing}
               >
                 {processing ? t('common.processing') : t('leave.reject')}
               </button>
               <button
                 onClick={() => handleApproveReject(selectedRequest.id, 'Approved')}
-                className="px-4 py-2 text-sm bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-200 dark:hover:bg-green-800 transition-colors"
+                className="px-4 py-2 text-sm rounded-tahoe-pill transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(48, 209, 88, 0.2)', color: '#30d158', border: '1px solid rgba(48, 209, 88, 0.3)' }}
                 disabled={processing}
               >
                 {processing ? t('common.processing') : t('leave.approve')}

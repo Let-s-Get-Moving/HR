@@ -25,34 +25,36 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-900">
+        <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0B0B0C' }}>
           <div className="max-w-md w-full mx-4">
-            <div className="card p-8 text-center">
+            <div className="p-8 text-center rounded-tahoe shadow-tahoe-lg" style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
               <div className="text-6xl mb-4">⚠️</div>
-              <h2 className="text-2xl font-bold mb-4">Something went wrong</h2>
-              <p className="text-neutral-400 mb-6">
+              <h2 className="text-2xl font-semibold mb-4 text-tahoe-text-primary">Something went wrong</h2>
+              <p className="text-tahoe-text-secondary mb-6">
                 We're sorry, but something unexpected happened. Please try refreshing the page.
               </p>
               <div className="space-y-3">
                 <button
                   onClick={() => window.location.reload()}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="w-full px-4 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                  style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
                 >
                   Refresh Page
                 </button>
                 <button
                   onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
-                  className="w-full bg-neutral-700 hover:bg-neutral-600 px-4 py-2 rounded-lg font-medium transition-colors"
+                  className="w-full px-4 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                 >
                   Try Again
                 </button>
               </div>
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details className="mt-6 text-left">
-                  <summary className="cursor-pointer text-sm text-neutral-500">
+                  <summary className="cursor-pointer text-sm text-tahoe-text-muted">
                     Error Details (Development)
                   </summary>
-                  <pre className="mt-2 text-xs text-red-400 bg-red-900/20 p-3 rounded overflow-auto">
+                  <pre className="mt-2 text-xs p-3 rounded-tahoe-input overflow-auto" style={{ backgroundColor: 'rgba(255, 69, 58, 0.15)', color: '#ff453a' }}>
                     {this.state.error.toString()}
                     {this.state.errorInfo.componentStack}
                   </pre>

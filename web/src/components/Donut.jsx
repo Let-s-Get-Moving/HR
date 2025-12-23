@@ -5,7 +5,7 @@ export default function Donut({ size=120, stroke=16, segments }) {
   let offset = 0;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={radius} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={stroke}/>
       {segments.map((s, i) => {
         const len = (s.value * circumference);
         const el = (

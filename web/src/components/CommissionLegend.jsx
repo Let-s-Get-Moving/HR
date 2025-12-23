@@ -119,7 +119,7 @@ export default function CommissionLegend() {
   if (loading) {
     return (
       <div className="card p-6">
-        <div className="text-center text-secondary">Loading commission structure...</div>
+        <div className="text-center text-tahoe-text-secondary">Loading commission structure...</div>
       </div>
     );
   }
@@ -128,10 +128,10 @@ export default function CommissionLegend() {
     <div className="space-y-6">
       {/* Sales Agents Commission Structure */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold mb-4 text-primary">
+        <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">
           Commission Structure for Sales Agents
         </h3>
-        <p className="text-sm text-secondary mb-4">
+        <p className="text-sm text-tahoe-text-secondary mb-4">
           The Proportionate Percentage will be determined based on the following calculation:
         </p>
         <div className="space-y-3">
@@ -140,13 +140,13 @@ export default function CommissionLegend() {
             if (index === 6 && threshold.leadPct >= 55) {
               return (
                 <React.Fragment key={index}>
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                    <p className="text-sm text-primary">
+                  <div className="p-3 rounded-tahoe-input border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                    <p className="text-sm text-tahoe-text-primary">
                       If the Employee converts more than 50% of the leads & more than {formatCurrency(threshold.revenue)} of the revenue = {formatPercentage(threshold.commission)}
                     </p>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-                    <p className="text-sm text-primary">
+                  <div className="p-3 rounded-tahoe-input border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                    <p className="text-sm text-tahoe-text-primary">
                       If the Employee converts more than {formatPercentage(threshold.leadPct)} of the leads & more than {formatCurrency(threshold.revenue)} of the revenue = {formatPercentage(threshold.commission)} + Vacation Package valued up to {formatCurrency(salesAgentSettings.vacationPackage)}
                     </p>
                   </div>
@@ -174,9 +174,10 @@ export default function CommissionLegend() {
             return (
               <div
                 key={index}
-                className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                className="p-3 rounded-tahoe-input border"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}
               >
-                <p className="text-sm text-primary">{conditionText}</p>
+                <p className="text-sm text-tahoe-text-primary">{conditionText}</p>
               </div>
             );
           })}
@@ -185,10 +186,10 @@ export default function CommissionLegend() {
 
       {/* Sales Managers Commission Structure */}
       <div className="card p-6">
-        <h3 className="text-lg font-semibold mb-4 text-primary">
+        <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">
           Commission Structure for Sales Managers
         </h3>
-        <p className="text-sm text-secondary mb-4">
+        <p className="text-sm text-tahoe-text-secondary mb-4">
           The Proportionate Percentage will be determined based on the following calculation:
         </p>
         <div className="space-y-3">
@@ -203,9 +204,10 @@ export default function CommissionLegend() {
             return (
               <div
                 key={index}
-                className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700"
+                className="p-3 rounded-tahoe-input border"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}
               >
-                <p className="text-sm text-primary">{conditionText}</p>
+                <p className="text-sm text-tahoe-text-primary">{conditionText}</p>
               </div>
             );
           })}

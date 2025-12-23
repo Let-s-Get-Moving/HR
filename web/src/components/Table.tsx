@@ -70,7 +70,7 @@ function Table<T>({
 
   if (loading) {
     return (
-      <div className={`bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
+      <div className={`bg-tahoe-card-bg backdrop-blur-tahoe rounded-tahoe border border-tahoe-border-primary overflow-hidden ${className}`} style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
         <div className="p-6">
           <SkeletonLoader lines={1} height="h-4" className="mb-4" />
           <SkeletonLoader lines={5} height="h-4" />
@@ -81,28 +81,28 @@ function Table<T>({
 
   if (data.length === 0) {
     return (
-      <div className={`bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-12 text-center ${className}`}>
+      <div className={`bg-tahoe-card-bg backdrop-blur-tahoe rounded-tahoe border border-tahoe-border-primary p-12 text-center ${className}`} style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
         <div className="empty-state">
           <div className="empty-state-icon">
             <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h3 className="empty-state-title">No data available</h3>
-          <p className="empty-state-description">{emptyMessage}</p>
+          <h3 className="empty-state-title text-tahoe-text-primary">No data available</h3>
+          <p className="empty-state-description text-tahoe-text-secondary">{emptyMessage}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden ${className}`}>
+    <div className={`bg-tahoe-card-bg backdrop-blur-tahoe rounded-tahoe border border-tahoe-border-primary overflow-hidden ${className}`} style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-          <thead className="bg-slate-50 dark:bg-slate-900/50">
+        <table className="min-w-full">
+          <thead>
             <tr>
               {selectable && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider w-12">
+                <th className="px-4 py-3 text-left text-xs font-medium text-tahoe-text-muted tracking-wider w-12 border-b border-tahoe-border-primary">
                   <input
                     type="checkbox"
                     checked={isAllSelected}
@@ -117,8 +117,8 @@ function Table<T>({
               {columns.map((column) => (
                 <th
                   key={String(column.key)}
-                  className={`px-6 py-3 text-${column.align || 'left'} text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider ${
-                    column.sortable ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800' : ''
+                  className={`px-4 py-3 text-${column.align || 'left'} text-xs font-medium text-tahoe-text-muted tracking-wider border-b border-tahoe-border-primary ${
+                    column.sortable ? 'cursor-pointer hover:bg-tahoe-bg-hover' : ''
                   }`}
                   style={{ width: column.width }}
                   onClick={() => column.sortable && handleSort(column.key)}
@@ -130,8 +130,8 @@ function Table<T>({
                         <svg
                           className={`w-3 h-3 ${
                             sortKey === column.key && sortDirection === 'asc'
-                              ? 'text-indigo-600 dark:text-indigo-400'
-                              : 'text-slate-400 dark:text-slate-500'
+                              ? 'text-tahoe-accent'
+                              : 'text-tahoe-text-muted'
                           }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
@@ -141,8 +141,8 @@ function Table<T>({
                         <svg
                           className={`w-3 h-3 -mt-1 ${
                             sortKey === column.key && sortDirection === 'desc'
-                              ? 'text-indigo-600 dark:text-indigo-400'
-                              : 'text-slate-400 dark:text-slate-500'
+                              ? 'text-tahoe-accent'
+                              : 'text-tahoe-text-muted'
                           }`}
                           fill="currentColor"
                           viewBox="0 0 20 20"
@@ -156,20 +156,16 @@ function Table<T>({
               ))}
             </tr>
           </thead>
-          <tbody className={`divide-y divide-slate-200 dark:divide-slate-700 ${
-            striped ? 'bg-white dark:bg-slate-800' : ''
-          }`}>
+          <tbody>
             {data.map((item, index) => (
               <tr
                 key={getRowKey(item)}
                 className={`${
-                  striped && index % 2 === 1 ? 'bg-slate-50 dark:bg-slate-900/50' : ''
-                } ${
-                  hoverable ? 'hover:bg-slate-50 dark:hover:bg-slate-700/50' : ''
-                } transition-colors duration-150`}
+                  hoverable ? 'hover:bg-tahoe-bg-hover' : ''
+                } transition-colors duration-tahoe border-b border-tahoe-border-primary last:border-b-0`}
               >
                 {selectable && (
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedItems.some(selected => getRowKey(selected) === getRowKey(item))}
@@ -181,7 +177,7 @@ function Table<T>({
                 {columns.map((column) => (
                   <td
                     key={String(column.key)}
-                    className={`px-6 py-4 whitespace-nowrap text-${column.align || 'left'} text-sm text-slate-900 dark:text-white`}
+                    className={`px-4 py-3 whitespace-nowrap text-${column.align || 'left'} text-sm text-tahoe-text-primary`}
                   >
                     {column.render
                       ? column.render(item[column.key], item)

@@ -193,7 +193,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   required
                   value={formData.first_name}
                   onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
               <div>
@@ -203,7 +204,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   required
                   value={formData.last_name}
                   onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
             </div>
@@ -215,9 +217,9 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 placeholder="firstname@letsgetmovinggroup.com"
                 value={formData.work_email}
                 onChange={(e) => setFormData({...formData, work_email: e.target.value})}
-                className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 font-mono text-sm"
+                className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe font-mono text-sm"
               />
-              <p className="text-xs text-neutral-400 mt-1">{t('employeeOnboarding.companyEmailAddress')}</p>
+              <p className="text-xs text-tahoe-text-muted mt-1">{t('employeeOnboarding.companyEmailAddress')}</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -227,7 +229,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   placeholder={t('employeeOnboarding.personalEmailPlaceholder')}
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
               <div>
@@ -236,7 +239,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
             </div>
@@ -246,7 +250,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 <select
                   value={formData.gender}
                   onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 >
                   <option value="">{t('employeeOnboarding.selectGender')}</option>
                   <option value="Male">{t('employeeOnboarding.genderMale')}</option>
@@ -261,7 +266,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   type="date"
                   value={formData.birth_date}
                   onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
             </div>
@@ -297,7 +303,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                       probation_end: probationEnd ? probationEnd.toISOString().split('T')[0] : ""
                     });
                   }}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
               <div>
@@ -306,7 +313,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   required
                   value={formData.employment_type}
                   onChange={(e) => setFormData({...formData, employment_type: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 >
                   <option value="Full-time">{t('employeeOnboarding.fullTime')}</option>
                   <option value="Part-time">{t('employeeOnboarding.partTime')}</option>
@@ -320,7 +328,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                 <select
                   value={formData.department_id}
                   onChange={(e) => setFormData({...formData, department_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 >
                   <option value="">{t('employeeOnboarding.departmentToBeAssigned')}</option>
                   {departments.map(dept => (
@@ -330,17 +339,18 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  {t('employeeOnboarding.systemAccessRole')} * <span className="text-indigo-400">({t('employeeOnboarding.determinesPermissions')})</span>
+                  {t('employeeOnboarding.systemAccessRole')} * <span className="text-tahoe-accent">({t('employeeOnboarding.determinesPermissions')})</span>
                 </label>
                 <select
                   value={formData.user_role}
                   onChange={(e) => setFormData({...formData, user_role: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 >
                   <option value="user">{t('employeeOnboarding.userEmployeeAccess')}</option>
                   <option value="manager">{t('employeeOnboarding.managerHRAccess')}</option>
                 </select>
-                <p className="text-xs text-neutral-400 mt-1">
+                <p className="text-xs text-tahoe-text-muted mt-1">
                   {t('employeeOnboarding.userManagerDescription')}
                 </p>
               </div>
@@ -352,7 +362,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   type="text"
                   value={formData.hourly_rate}
                   onChange={(e) => setFormData({...formData, hourly_rate: parseFloat(e.target.value) || 0})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
               <div>
@@ -361,17 +372,18 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   type="date"
                   value={formData.probation_end}
                   onChange={(e) => setFormData({...formData, probation_end: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   readOnly
                 />
               </div>
             </div>
-            <p className="text-xs text-neutral-400">{t('employeeOnboarding.standardProbationPeriod')}</p>
+            <p className="text-xs text-tahoe-text-muted">{t('employeeOnboarding.standardProbationPeriod')}</p>
             
             {/* Settings Section */}
-            <div className="mt-6 pt-6 border-t border-neutral-700">
-              <h4 className="text-md font-semibold mb-4 text-neutral-300">{t('employeeOnboarding.settings')}</h4>
-              <p className="text-xs text-neutral-400 mb-4">{t('employeeOnboarding.settingsOptional')}</p>
+            <div className="mt-6 pt-6 border-t" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+              <h4 className="text-md font-semibold mb-4 text-tahoe-text-primary">{t('employeeOnboarding.settings')}</h4>
+              <p className="text-xs text-tahoe-text-muted mb-4">{t('employeeOnboarding.settingsOptional')}</p>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -379,7 +391,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <select
                     value={formData.job_title_id}
                     onChange={(e) => setFormData({...formData, job_title_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   >
                     <option value="">{t('employeeOnboarding.selectJobTitle')}</option>
                     {jobTitles.filter(jt => !formData.department_id || jt.department_id === parseInt(formData.department_id)).map(jt => (
@@ -392,7 +405,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <select
                     value={formData.benefits_package_id}
                     onChange={(e) => setFormData({...formData, benefits_package_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   >
                     <option value="">{t('employeeOnboarding.selectBenefitsPackage')}</option>
                     {benefitsPackages.map(bp => (
@@ -405,7 +419,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <select
                     value={formData.work_schedule_id}
                     onChange={(e) => setFormData({...formData, work_schedule_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   >
                     <option value="">{t('employeeOnboarding.selectWorkSchedule')}</option>
                     {workSchedules.map(ws => (
@@ -418,7 +433,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <select
                     value={formData.overtime_policy_id}
                     onChange={(e) => setFormData({...formData, overtime_policy_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   >
                     <option value="">{t('employeeOnboarding.selectOvertimePolicy')}</option>
                     {overtimePolicies.map(op => (
@@ -431,7 +447,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <select
                     value={formData.attendance_policy_id}
                     onChange={(e) => setFormData({...formData, attendance_policy_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   >
                     <option value="">{t('employeeOnboarding.selectAttendancePolicy')}</option>
                     {attendancePolicies.map(ap => (
@@ -444,7 +461,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   <select
                     value={formData.remote_work_policy_id}
                     onChange={(e) => setFormData({...formData, remote_work_policy_id: e.target.value ? parseInt(e.target.value, 10) : ""})}
-                    className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   >
                     <option value="">{t('employeeOnboarding.selectRemoteWorkPolicy')}</option>
                     {remoteWorkPolicies.map(rwp => (
@@ -467,7 +485,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             className="space-y-6"
           >
             <h3 className="text-lg font-semibold mb-4">{t('employeeOnboarding.personalDetailsBanking')}</h3>
-            <p className="text-sm text-neutral-400 mb-4">
+            <p className="text-sm text-tahoe-text-muted mb-4">
               {t('employeeOnboarding.documentsCanBeUploadedLater')}
             </p>
             
@@ -480,12 +498,13 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   placeholder={t('employeeOnboarding.addressPlaceholder')}
                   value={formData.full_address}
                   onChange={(e) => setFormData({...formData, full_address: e.target.value})}
-                  className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
               </div>
 
               {/* SIN Information */}
-              <div className="bg-neutral-800 p-4 rounded-lg">
+              <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                 <h4 className="font-medium mb-3">{t('employeeOnboarding.socialInsuranceNumber')}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <input
@@ -493,7 +512,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                     placeholder={t('employeeOnboarding.sinPlaceholder')}
                     value={formData.sin_number}
                     onChange={(e) => setFormData({...formData, sin_number: e.target.value})}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   <div>
                     <input
@@ -501,16 +521,17 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                       placeholder={t('employeeOnboarding.expiryDatePlaceholder')}
                       value={formData.sin_expiry_date}
                       onChange={(e) => setFormData({...formData, sin_expiry_date: e.target.value})}
-                      className="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
-                    <p className="text-xs text-neutral-400 mt-1">{t('employeeOnboarding.leaveEmptyIfPermanent')}</p>
+                    <p className="text-xs text-tahoe-text-muted mt-1">{t('employeeOnboarding.leaveEmptyIfPermanent')}</p>
                   </div>
                 </div>
-                <p className="text-xs text-neutral-400 mt-2">{t('employeeOnboarding.requiredForPayrollTax')}</p>
+                <p className="text-xs text-tahoe-text-muted mt-2">{t('employeeOnboarding.requiredForPayrollTax')}</p>
               </div>
 
               {/* Direct Deposit Information */}
-              <div className="bg-neutral-800 p-4 rounded-lg">
+              <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                 <h4 className="font-medium mb-3">{t('employeeOnboarding.directDepositInformation')}</h4>
                 <div className="grid grid-cols-3 gap-3">
                   <input
@@ -518,27 +539,30 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                     placeholder={t('employeeOnboarding.bankNamePlaceholder')}
                     value={formData.bank_name}
                     onChange={(e) => setFormData({...formData, bank_name: e.target.value})}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   <input
                     type="text"
                     placeholder={t('employeeOnboarding.transitNumberPlaceholder')}
                     value={formData.bank_transit_number}
                     onChange={(e) => setFormData({...formData, bank_transit_number: e.target.value})}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   <input
                     type="text"
                     placeholder={t('employeeOnboarding.accountNumberPlaceholder')}
                     value={formData.bank_account_number}
                     onChange={(e) => setFormData({...formData, bank_account_number: e.target.value})}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                 </div>
               </div>
 
               {/* Emergency Contact */}
-              <div className="bg-neutral-800 p-4 rounded-lg">
+              <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                 <h4 className="font-medium mb-3">{t('employeeOnboarding.emergencyContact')}</h4>
                 <div className="grid grid-cols-2 gap-3">
                   <input
@@ -546,14 +570,16 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                     placeholder={t('employeeOnboarding.namePlaceholder')}
                     value={formData.emergency_contact_name}
                     onChange={(e) => setFormData({...formData, emergency_contact_name: e.target.value})}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   <input
                     type="tel"
                     placeholder={t('employeeOnboarding.phonePlaceholder')}
                     value={formData.emergency_contact_phone}
                     onChange={(e) => setFormData({...formData, emergency_contact_phone: e.target.value})}
-                    className="px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg focus:outline-none focus:border-indigo-500"
+                    className="px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                 </div>
               </div>
@@ -574,42 +600,42 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-neutral-800 p-4 rounded-lg">
+                <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                   <h4 className="font-medium mb-3">{t('employeeOnboarding.personalInformation')}</h4>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.name')}:</span> {formData.first_name} {formData.last_name}</div>
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.workEmail')}:</span> <span className="font-mono text-xs text-indigo-400">{formData.work_email}</span></div>
-                    {formData.email && <div><span className="text-neutral-400">{t('employeeOnboarding.personalEmail')}:</span> {formData.email}</div>}
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.phone')}:</span> {formData.phone || t('employeeOnboarding.notProvided')}</div>
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.gender')}:</span> {formData.gender || t('employeeOnboarding.notSpecified')}</div>
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.birthDate')}:</span> {formData.birth_date || t('employeeOnboarding.notProvided')}</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.name')}:</span> {formData.first_name} {formData.last_name}</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.workEmail')}:</span> <span className="font-mono text-xs text-tahoe-accent">{formData.work_email}</span></div>
+                    {formData.email && <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.personalEmail')}:</span> {formData.email}</div>}
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.phone')}:</span> {formData.phone || t('employeeOnboarding.notProvided')}</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.gender')}:</span> {formData.gender || t('employeeOnboarding.notSpecified')}</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.birthDate')}:</span> {formData.birth_date || t('employeeOnboarding.notProvided')}</div>
                   </div>
                 </div>
                 
-                <div className="bg-neutral-800 p-4 rounded-lg">
+                <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                   <h4 className="font-medium mb-3">{t('employeeOnboarding.employmentDetails')}</h4>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.hireDate')}:</span> {formData.hire_date}</div>
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.type')}:</span> {formData.employment_type}</div>
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.department')}:</span> {departments.find(d => d.id == formData.department_id)?.name || t('employeeOnboarding.none')}</div>
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.hourlyRate')}:</span> ${formData.hourly_rate}/hr</div>
-                    <div><span className="text-neutral-400">{t('employeeOnboarding.systemAccess')}:</span> <span className="text-indigo-400">{formData.user_role === 'user' ? t('employeeOnboarding.userEmployee') : t('employeeOnboarding.managerHR')}</span></div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.hireDate')}:</span> {formData.hire_date}</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.type')}:</span> {formData.employment_type}</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.department')}:</span> {departments.find(d => d.id == formData.department_id)?.name || t('employeeOnboarding.none')}</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.hourlyRate')}:</span> ${formData.hourly_rate}/hr</div>
+                    <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.systemAccess')}:</span> <span className="text-tahoe-accent">{formData.user_role === 'user' ? t('employeeOnboarding.userEmployee') : t('employeeOnboarding.managerHR')}</span></div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-neutral-800 p-4 rounded-lg">
+              <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                 <h4 className="font-medium mb-3">{t('employeeOnboarding.bankingPersonalDetails')}</h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="text-neutral-400">{t('employeeOnboarding.address')}:</span> {formData.full_address || t('employeeOnboarding.notProvided')}</div>
-                  <div><span className="text-neutral-400">{t('employeeOnboarding.sin')}:</span> {formData.sin_number ? '***-***-' + formData.sin_number.slice(-3) : t('employeeOnboarding.notProvided')}</div>
-                  <div><span className="text-neutral-400">{t('employeeOnboarding.bank')}:</span> {formData.bank_name || t('employeeOnboarding.notProvided')}</div>
-                  <div><span className="text-neutral-400">{t('employeeOnboarding.emergencyContact')}:</span> {formData.emergency_contact_name || t('employeeOnboarding.notProvided')}</div>
+                  <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.address')}:</span> {formData.full_address || t('employeeOnboarding.notProvided')}</div>
+                  <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.sin')}:</span> {formData.sin_number ? '***-***-' + formData.sin_number.slice(-3) : t('employeeOnboarding.notProvided')}</div>
+                  <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.bank')}:</span> {formData.bank_name || t('employeeOnboarding.notProvided')}</div>
+                  <div><span className="text-tahoe-text-muted">{t('employeeOnboarding.emergencyContact')}:</span> {formData.emergency_contact_name || t('employeeOnboarding.notProvided')}</div>
                 </div>
               </div>
 
-              <div className="bg-indigo-900/30 border border-indigo-700 p-4 rounded-lg">
-                <p className="text-sm text-indigo-300">
+              <div className="p-4 rounded-tahoe-input border" style={{ backgroundColor: 'rgba(10, 132, 255, 0.15)', borderColor: 'rgba(10, 132, 255, 0.3)' }}>
+                <p className="text-sm text-tahoe-accent">
                   📄 <strong>{t('employeeOnboarding.note')}:</strong> {t('employeeOnboarding.documentsCanBeUploadedAfter')}
                 </p>
               </div>
@@ -619,9 +645,10 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   type="checkbox"
                   checked={formData.reviewed}
                   onChange={(e) => setFormData({...formData, reviewed: e.target.checked})}
-                  className="w-4 h-4 text-indigo-600 bg-neutral-700 border-neutral-600 rounded focus:ring-indigo-500"
+                  className="w-4 h-4 rounded focus:ring-tahoe-accent"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', accentColor: '#0A84FF' }}
                 />
-                <span className="text-sm">{t('employeeOnboarding.confirmAllInformation')}</span>
+                <span className="text-sm text-tahoe-text-primary">{t('employeeOnboarding.confirmAllInformation')}</span>
               </label>
             </div>
           </motion.div>
@@ -644,11 +671,11 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-bold">{t('employeeOnboarding.addNewEmployee')}</h2>
-              <p className="text-neutral-400">{t('employeeOnboarding.completeOnboardingProcess')}</p>
+              <p className="text-tahoe-text-muted">{t('employeeOnboarding.completeOnboardingProcess')}</p>
             </div>
             <button
               onClick={onClose}
-              className="text-neutral-400 hover:text-white"
+              className="text-tahoe-text-muted hover:text-tahoe-text-primary transition-all duration-tahoe"
             >
               ✕
             </button>
@@ -658,17 +685,19 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
           <div className="flex justify-between mb-8">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-tahoe ${
                   currentStep >= step.id 
-                    ? 'bg-indigo-600 border-indigo-600 text-white' 
-                    : 'border-neutral-600 text-neutral-400'
-                }`}>
+                    ? 'text-white' 
+                    : 'text-tahoe-text-muted'
+                }`}
+                style={currentStep >= step.id ? { backgroundColor: '#0A84FF', borderColor: '#0A84FF' } : { borderColor: 'rgba(255, 255, 255, 0.12)' }}
+                >
                   {currentStep > step.id ? '✓' : step.icon}
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`w-16 h-0.5 mx-2 ${
-                    currentStep > step.id ? 'bg-indigo-600' : 'bg-neutral-600'
-                  }`} />
+                  <div className={`w-16 h-0.5 mx-2 transition-all duration-tahoe`}
+                  style={currentStep > step.id ? { backgroundColor: '#0A84FF' } : { backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+                  />
                 )}
               </div>
             ))}
@@ -684,7 +713,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             <button
               onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
               disabled={currentStep === 1}
-              className="px-4 py-2 text-neutral-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 rounded-tahoe-pill disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
             >
               ← Previous
             </button>
@@ -692,7 +722,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             {currentStep < 4 ? (
               <button
                 onClick={() => setCurrentStep(currentStep + 1)}
-                className="bg-indigo-600 hover:bg-indigo-700 px-6 py-2 rounded-lg font-medium transition-colors"
+                className="px-6 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
               >
                 Next →
               </button>
@@ -700,7 +731,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               <button
                 onClick={handleSubmit}
                 disabled={!formData.reviewed}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-neutral-600 px-6 py-2 rounded-lg font-medium transition-colors"
+                className="px-6 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe disabled:opacity-50"
+                style={{ backgroundColor: '#30d158', color: '#ffffff' }}
               >
                 Complete Onboarding
               </button>

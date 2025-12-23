@@ -364,13 +364,13 @@ export default function Login({ onLogin }) {
               )}
 
               {/* Trust This Device Checkbox */}
-              <div className="flex items-start space-x-3 p-3 bg-neutral-900 bg-opacity-30 rounded-lg border border-neutral-700">
+              <div className="flex items-start space-x-3 p-3 rounded-tahoe-input border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                 <input
                   type="checkbox"
                   id="trustDevice"
                   checked={trustDevice}
                   onChange={(e) => setTrustDevice(e.target.checked)}
-                  className="mt-1 w-4 h-4 rounded border-neutral-600 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-neutral-900"
+                  className="mt-1 w-4 h-4 rounded border-tahoe-border-primary text-tahoe-accent focus:ring-tahoe-accent focus:ring-offset-tahoe-bg-primary transition-all duration-tahoe"
                 />
                 <label htmlFor="trustDevice" className="flex-1 text-sm">
                   <div className="font-medium text-primary">{t('login.trustDevice')}</div>

@@ -84,17 +84,25 @@ const Modal: React.FC<ModalProps> = ({
   return (
     <FocusTrap active={isOpen}>
       <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div className="flex min-h-full items-center justify-center p-6 text-center sm:p-0">
           {/* Overlay */}
           <div
-            className="fixed inset-0 bg-slate-500 bg-opacity-75 transition-opacity"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-tahoe"
             onClick={handleOverlayClick}
+            style={{ animation: isOpen ? 'fadeIn 180ms cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none' }}
           />
           
           {/* Modal */}
           <div
             ref={modalRef}
-            className={`relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full ${sizeClasses[size]} ${className}`}
+            className={`relative transform overflow-hidden rounded-tahoe bg-tahoe-card-bg backdrop-blur-tahoe text-left shadow-tahoe-lg transition-all duration-tahoe sm:my-8 sm:w-full ${sizeClasses[size]} ${className}`}
+            style={{ 
+              backgroundColor: 'rgba(22, 22, 24, 0.8)', 
+              backdropFilter: 'blur(20px)', 
+              WebkitBackdropFilter: 'blur(20px)',
+              animation: isOpen ? 'modalSlideIn 200ms cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none',
+              border: '1px solid rgba(255, 255, 255, 0.12)'
+            }}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? 'modal-title' : undefined}
@@ -103,12 +111,12 @@ const Modal: React.FC<ModalProps> = ({
           >
           {/* Header */}
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between p-6 border-b border-tahoe-border-primary">
               <div className="flex-1">
                 {title && (
                   <h3
                     id="modal-title"
-                    className="text-lg font-semibold text-slate-900 dark:text-white"
+                    className="text-lg font-semibold text-tahoe-text-primary"
                   >
                     {title}
                   </h3>
@@ -116,7 +124,7 @@ const Modal: React.FC<ModalProps> = ({
                 {description && (
                   <p
                     id="modal-description"
-                    className="mt-1 text-sm text-slate-600 dark:text-slate-400"
+                    className="mt-1 text-sm text-tahoe-text-secondary"
                   >
                     {description}
                   </p>
@@ -125,7 +133,7 @@ const Modal: React.FC<ModalProps> = ({
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="ml-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                  className="ml-4 p-2 text-tahoe-text-muted hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe"
                   aria-label="Close modal"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,13 +151,29 @@ const Modal: React.FC<ModalProps> = ({
 
           {/* Actions */}
           {actions && (
-            <div className="flex items-center justify-end space-x-3 px-6 py-4 bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-end space-x-3 px-6 py-4 bg-tahoe-bg-secondary border-t border-tahoe-border-primary">
               {actions}
             </div>
           )}
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: scale(0.95) translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+      `}</style>
     </FocusTrap>
   );
 };
@@ -212,7 +236,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
           )}
         </div>
         <div className="flex-1">
-          <p className="text-sm text-slate-700 dark:text-slate-300">{message}</p>
+          <p className="text-sm text-tahoe-text-primary">{message}</p>
         </div>
       </div>
       

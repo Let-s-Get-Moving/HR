@@ -33,23 +33,23 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
   const hasError = !!error;
 
   const selectClasses = `
-    w-full px-3 py-2 border rounded-lg transition-colors duration-200
-    focus:outline-none focus:ring-2 focus:ring-offset-1
+    w-full px-4 py-3 border rounded-tahoe-input transition-all duration-tahoe
+    focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 focus:ring-offset-tahoe-bg-primary
     disabled:opacity-50 disabled:cursor-not-allowed
     ${hasError 
-      ? 'border-red-300 dark:border-red-600 focus:ring-red-500 focus:border-red-500' 
-      : 'border-slate-300 dark:border-slate-600 focus:ring-indigo-500 focus:border-indigo-500'
+      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+      : 'border-tahoe-border-primary focus:ring-tahoe-accent focus:border-tahoe-accent'
     }
-    bg-white dark:bg-slate-800 text-slate-900 dark:text-white
+    bg-tahoe-input-bg text-tahoe-text-primary
     ${className}
-  `.trim();
+  `.trim().replace(/\s+/g, ' ');
 
   return (
     <div className={`space-y-1 ${containerClassName}`}>
       {label && (
         <label 
           htmlFor={selectId}
-          className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+          className="block text-xs font-medium text-tahoe-text-primary mb-1.5 tracking-wide"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
@@ -79,13 +79,13 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
       </select>
       
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p className="text-xs text-red-500 mt-1">
           {error.message}
         </p>
       )}
       
       {helperText && !error && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-tahoe-text-muted mt-1">
           {helperText}
         </p>
       )}

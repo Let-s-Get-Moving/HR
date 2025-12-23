@@ -99,19 +99,20 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
       className="space-y-6"
     >
       <div className="card p-6">
-        <h2 className="text-2xl font-bold text-primary mb-6">{t('leave.submitLeaveRequest')}</h2>
+        <h2 className="text-2xl font-bold text-tahoe-text-primary mb-6">{t('leave.submitLeaveRequest')}</h2>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Leave Type */}
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">
+            <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
               Leave Type <span className="text-red-500">*</span>
             </label>
             <select
               name="leave_type"
               value={formData.leave_type}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary"
+              className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
               required
             >
               <option value="">{t('leave.selectLeaveType')}</option>
@@ -124,7 +125,7 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
           {/* Date Range */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">
+              <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
                 Start Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -132,12 +133,13 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
                 name="start_date"
                 value={formData.start_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary"
+                className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary mb-2">
+              <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
                 End Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -145,7 +147,8 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
                 name="end_date"
                 value={formData.end_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary"
+                className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 required
               />
             </div>
@@ -153,7 +156,7 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-medium text-primary mb-2">
+            <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
               Reason/Description
             </label>
             <textarea
@@ -162,16 +165,17 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
               onChange={handleInputChange}
               rows={4}
               placeholder={t('leave.reasonPlaceholderForm')}
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-primary resize-none"
+              className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent resize-none transition-all duration-tahoe"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
             />
           </div>
 
           {/* Message */}
           {message.text && (
-            <div className={`p-4 rounded-lg ${
+            <div className={`p-4 rounded-tahoe-input border ${
               message.type === 'success' 
-                ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
-                : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                ? 'bg-tahoe-success-bg text-tahoe-success-text border-tahoe-success-border' 
+                : 'bg-tahoe-error-bg text-tahoe-error-text border-tahoe-error-border'
             }`}>
               {message.text}
             </div>
@@ -182,7 +186,8 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-6 py-2 rounded-tahoe-pill focus:outline-none focus:ring-2 focus:ring-tahoe-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-tahoe"
+              style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
             >
               {loading ? 'Submitting...' : 'Submit Request'}
             </button>

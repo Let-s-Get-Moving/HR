@@ -57,11 +57,11 @@ const Toast: React.FC<ToastProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
         </svg>
       ),
-      bgColor: 'bg-green-50 dark:bg-green-900/20',
-      borderColor: 'border-green-200 dark:border-green-800',
-      iconColor: 'text-green-400',
-      titleColor: 'text-green-800 dark:text-green-200',
-      messageColor: 'text-green-700 dark:text-green-300',
+      bgColor: 'rgba(48, 209, 88, 0.15)',
+      borderColor: 'rgba(48, 209, 88, 0.3)',
+      iconColor: '#30d158',
+      titleColor: '#30d158',
+      messageColor: '#e5e5e7',
     },
     error: {
       icon: (
@@ -69,11 +69,11 @@ const Toast: React.FC<ToastProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       ),
-      bgColor: 'bg-red-50 dark:bg-red-900/20',
-      borderColor: 'border-red-200 dark:border-red-800',
-      iconColor: 'text-red-400',
-      titleColor: 'text-red-800 dark:text-red-200',
-      messageColor: 'text-red-700 dark:text-red-300',
+      bgColor: 'rgba(255, 69, 58, 0.15)',
+      borderColor: 'rgba(255, 69, 58, 0.3)',
+      iconColor: '#ff453a',
+      titleColor: '#ff453a',
+      messageColor: '#e5e5e7',
     },
     warning: {
       icon: (
@@ -81,11 +81,11 @@ const Toast: React.FC<ToastProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
         </svg>
       ),
-      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
-      borderColor: 'border-yellow-200 dark:border-yellow-800',
-      iconColor: 'text-yellow-400',
-      titleColor: 'text-yellow-800 dark:text-yellow-200',
-      messageColor: 'text-yellow-700 dark:text-yellow-300',
+      bgColor: 'rgba(255, 159, 10, 0.15)',
+      borderColor: 'rgba(255, 159, 10, 0.3)',
+      iconColor: '#ff9f0a',
+      titleColor: '#ff9f0a',
+      messageColor: '#e5e5e7',
     },
     info: {
       icon: (
@@ -93,11 +93,11 @@ const Toast: React.FC<ToastProps> = ({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-      borderColor: 'border-blue-200 dark:border-blue-800',
-      iconColor: 'text-blue-400',
-      titleColor: 'text-blue-800 dark:text-blue-200',
-      messageColor: 'text-blue-700 dark:text-blue-300',
+      bgColor: 'rgba(10, 132, 255, 0.15)',
+      borderColor: 'rgba(10, 132, 255, 0.3)',
+      iconColor: '#0A84FF',
+      titleColor: '#0A84FF',
+      messageColor: '#e5e5e7',
     },
   };
 
@@ -106,22 +106,23 @@ const Toast: React.FC<ToastProps> = ({
   return (
     <div
       className={`
-        max-w-sm w-full ${config.bgColor} ${config.borderColor} border rounded-lg shadow-lg pointer-events-auto
-        transform transition-all duration-300 ease-in-out
+        max-w-sm w-full rounded-tahoe shadow-tahoe pointer-events-auto backdrop-blur-tahoe
+        transform transition-all duration-tahoe ease-tahoe
         ${isVisible && !isLeaving ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
       `}
+      style={{ backgroundColor: config.bgColor, border: `1px solid ${config.borderColor}`, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
     >
       <div className="p-4">
         <div className="flex items-start">
-          <div className={`flex-shrink-0 ${config.iconColor}`}>
+          <div className="flex-shrink-0" style={{ color: config.iconColor }}>
             {config.icon}
           </div>
           <div className="ml-3 w-0 flex-1">
-            <p className={`text-sm font-medium ${config.titleColor}`}>
+            <p className="text-sm font-medium" style={{ color: config.titleColor }}>
               {title}
             </p>
             {message && (
-              <p className={`mt-1 text-sm ${config.messageColor}`}>
+              <p className="mt-1 text-sm" style={{ color: config.messageColor }}>
                 {message}
               </p>
             )}
@@ -129,7 +130,8 @@ const Toast: React.FC<ToastProps> = ({
               <div className="mt-2">
                 <button
                   onClick={action.onClick}
-                  className={`text-sm font-medium ${config.titleColor} hover:underline`}
+                  className="text-sm font-medium hover:underline transition-all duration-tahoe"
+                  style={{ color: config.titleColor }}
                 >
                   {action.label}
                 </button>
@@ -139,7 +141,8 @@ const Toast: React.FC<ToastProps> = ({
           <div className="ml-4 flex-shrink-0 flex">
             <button
               onClick={handleClose}
-              className={`inline-flex ${config.titleColor} hover:opacity-75 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 rounded-md`}
+              className="inline-flex hover:opacity-75 focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 rounded-lg transition-all duration-tahoe"
+              style={{ color: config.titleColor }}
             >
               <span className="sr-only">Close</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

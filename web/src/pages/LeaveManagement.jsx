@@ -372,17 +372,17 @@ export default function LeaveManagement() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Record Leave Entry Form */}
-            <div className="card p-6 bg-neutral-800">
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <div className="card p-6" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-tahoe-text-primary">
                 <span className="text-2xl mr-2">📝</span>
                 {t('leave.recordLeaveEntry')}
               </h3>
-              <p className="text-sm text-neutral-400 mb-6">{t('leave.hrRecordsDescription')}</p>
+              <p className="text-sm text-tahoe-text-muted mb-6">{t('leave.hrRecordsDescription')}</p>
               
               <form onSubmit={(e) => handleSubmitRequest(e, false)} className="space-y-4">
                 {/* Employee Selection with Search */}
                 <div className="form-group">
-                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                  <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                     {t('leave.employee')} <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -397,7 +397,8 @@ export default function LeaveManagement() {
                     }}
                     placeholder={t('leave.typeToSearch')}
                     required
-                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   <datalist id="employee-list">
                     {employees.map(emp => (
@@ -410,14 +411,15 @@ export default function LeaveManagement() {
 
                 {/* Leave Type */}
                 <div className="form-group">
-                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                  <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                     {t('leave.leaveType')} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={newRequest.leave_type_id}
                     onChange={(e) => setNewRequest({...newRequest, leave_type_id: e.target.value})}
                     required
-                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   >
                     <option value="">{t('leave.selectLeaveType')}</option>
                     {leaveTypes.map(type => (
@@ -428,9 +430,9 @@ export default function LeaveManagement() {
 
                 {/* Show leave balance if available */}
                 {selectedEmployeeBalance && (
-                  <div className="bg-neutral-700 border border-neutral-600 rounded p-3 text-sm">
+                  <div className="rounded-tahoe-input p-3 text-sm border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">{t('leave.availableDays')}</span>
+                      <span className="text-tahoe-text-muted">{t('leave.availableDays')}</span>
                       <span className="text-green-400 font-semibold">
                         {(selectedEmployeeBalance.entitled_days + selectedEmployeeBalance.carried_over_days - selectedEmployeeBalance.used_days).toFixed(1)} days
                       </span>
@@ -441,7 +443,7 @@ export default function LeaveManagement() {
                 {/* Dates */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                       {t('leave.startDate')} <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -449,11 +451,12 @@ export default function LeaveManagement() {
                       value={newRequest.start_date}
                       onChange={(e) => setNewRequest({...newRequest, start_date: e.target.value})}
                       required
-                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                       {t('leave.endDate')} <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -461,17 +464,18 @@ export default function LeaveManagement() {
                       value={newRequest.end_date}
                       onChange={(e) => setNewRequest({...newRequest, end_date: e.target.value})}
                       required
-                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
                   </div>
                 </div>
 
                 {/* Show calculated days */}
                 {newRequest.start_date && newRequest.end_date && (
-                  <div className="bg-indigo-900/30 border border-indigo-500/30 rounded p-3 text-sm">
+                  <div className="rounded-tahoe-input p-3 text-sm border" style={{ backgroundColor: 'rgba(10, 132, 255, 0.1)', borderColor: 'rgba(10, 132, 255, 0.3)' }}>
                     <div className="flex justify-between items-center">
-                      <span className="text-neutral-300">{t('leave.totalDays')}</span>
-                      <span className="text-indigo-400 font-semibold text-lg">
+                      <span className="text-tahoe-text-primary">{t('leave.totalDays')}</span>
+                      <span className="text-tahoe-accent font-semibold text-lg">
                         {calculateTotalDays(newRequest.start_date, newRequest.end_date)} days
                       </span>
                     </div>
@@ -481,14 +485,15 @@ export default function LeaveManagement() {
                 {/* Request Method and Status */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="form-group">
-                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                       {t('leave.requestMethod')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={newRequest.request_method}
                       onChange={(e) => setNewRequest({...newRequest, request_method: e.target.value})}
                       required
-                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     >
                       <option value="">{t('leave.howWasRequested')}</option>
                       <option value="Email">📧 {t('leave.email')}</option>
@@ -500,14 +505,15 @@ export default function LeaveManagement() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                    <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                       {t('leave.status')} <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={newRequest.status}
                       onChange={(e) => setNewRequest({...newRequest, status: e.target.value})}
                       required
-                      className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     >
                       <option value="Pending">{t('leave.pendingReview')}</option>
                       <option value="Approved">{t('leave.approvedStatus')}</option>
@@ -519,7 +525,7 @@ export default function LeaveManagement() {
 
                 {/* Reason */}
                 <div className="form-group">
-                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                  <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                     {t('leave.reason')}
                   </label>
                   <textarea
@@ -527,13 +533,14 @@ export default function LeaveManagement() {
                     onChange={(e) => setNewRequest({...newRequest, reason: e.target.value})}
                     rows="2"
                     placeholder={t('leave.reasonPlaceholder')}
-                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                 </div>
 
                 {/* Notes */}
                 <div className="form-group">
-                  <label className="text-sm font-medium text-neutral-300 mb-2 block">
+                  <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
                     {t('leave.hrNotes')}
                   </label>
                   <textarea
@@ -541,7 +548,8 @@ export default function LeaveManagement() {
                     onChange={(e) => setNewRequest({...newRequest, notes: e.target.value})}
                     rows="2"
                     placeholder={t('leave.hrNotesPlaceholder')}
-                    className="bg-neutral-700 border border-neutral-600 rounded px-3 py-2 w-full text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                 </div>
 
@@ -549,7 +557,8 @@ export default function LeaveManagement() {
                 <div className="grid grid-cols-2 gap-3 pt-4">
                   <button
                     type="submit"
-                    className="bg-neutral-600 hover:bg-neutral-700 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
+                    className="py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe flex items-center justify-center"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                   >
                     <span className="mr-2">💾</span>
                     Save as {newRequest.status}
@@ -635,7 +644,7 @@ export default function LeaveManagement() {
                     return (
                       <>
                         {/* Results info */}
-                        <div className="flex justify-between items-center mb-4 text-sm text-neutral-400">
+                        <div className="flex justify-between items-center mb-4 text-sm text-tahoe-text-muted">
                           <span>
                             {t('leave.showing')} {startIndex + 1}-{Math.min(endIndex, filteredRequests.length)} {t('leave.of')} {filteredRequests.length} {t('leave.requests')}
                           </span>
@@ -687,11 +696,11 @@ export default function LeaveManagement() {
 
                         {/* Pagination Controls */}
                         {totalPages > 1 && (
-                          <div className="flex justify-center items-center space-x-2 mt-6 pt-4 border-t border-neutral-700">
+                          <div className="flex justify-center items-center space-x-2 mt-6 pt-4 border-t">
                             <button
                               onClick={() => setHistoryCurrentPage(Math.max(1, historyCurrentPage - 1))}
                               disabled={historyCurrentPage === 1}
-                              className="px-3 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-800 disabled:text-neutral-500 rounded-lg transition-colors text-sm"
+                              className="px-3 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover disabled:bg-tahoe-bg-quaternary disabled:text-tahoe-text-muted rounded-lg transition-colors text-sm"
                             >
                               Previous
                             </button>
@@ -709,7 +718,7 @@ export default function LeaveManagement() {
                                 }
                                 
                                 if (pageNum === historyCurrentPage - 3 || pageNum === historyCurrentPage + 3) {
-                                  return <span key={pageNum} className="px-2 text-neutral-500">...</span>;
+                                  return <span key={pageNum} className="px-2 text-tahoe-text-muted">...</span>;
                                 }
                                 
                                 return (
@@ -718,8 +727,8 @@ export default function LeaveManagement() {
                                     onClick={() => setHistoryCurrentPage(pageNum)}
                                     className={`px-3 py-2 rounded-lg text-sm transition-colors ${
                                       isCurrentPage 
-                                        ? 'bg-indigo-600 text-white' 
-                                        : 'bg-neutral-700 hover:bg-neutral-600 text-neutral-300'
+                                        ? 'bg-tahoe-primary-bg text-tahoe-primary-text' 
+                                        : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover text-tahoe-text-primary'
                                     }`}
                                   >
                                     {pageNum}
@@ -731,7 +740,7 @@ export default function LeaveManagement() {
                             <button
                               onClick={() => setHistoryCurrentPage(Math.min(totalPages, historyCurrentPage + 1))}
                               disabled={historyCurrentPage === totalPages}
-                              className="px-3 py-2 bg-neutral-700 hover:bg-neutral-600 disabled:bg-neutral-800 disabled:text-neutral-500 rounded-lg transition-colors text-sm"
+                              className="px-3 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover disabled:bg-tahoe-bg-quaternary disabled:text-tahoe-text-muted rounded-lg transition-colors text-sm"
                             >
                               Next
                             </button>
@@ -818,10 +827,10 @@ export default function LeaveManagement() {
             <div className="card p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-xl font-semibold">{t('leave.balances.breakdown')}</h3>
-                <div className="flex items-center space-x-2 text-sm text-neutral-400">
+                <div className="flex items-center space-x-2 text-sm text-tahoe-text-muted">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                   <span>{t('leave.balances.available')}</span>
-                  <div className="w-3 h-3 bg-neutral-400 rounded-full ml-4"></div>
+                  <div className="w-3 h-3 bg-tahoe-text-muted rounded-full ml-4"></div>
                   <span>{t('leave.balances.used')}</span>
                 </div>
               </div>
@@ -830,22 +839,22 @@ export default function LeaveManagement() {
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">📊</div>
                   <h4 className="text-xl font-semibold mb-2 text-white">{t('leave.balances.noDataTitle')}</h4>
-                  <p className="text-neutral-400 mb-6">{t('leave.balances.noDataDescription')}</p>
+                  <p className="text-tahoe-text-muted mb-6">{t('leave.balances.noDataDescription')}</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                    <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
+                    <div className="p-4 border rounded-tahoe-input">
                       <div className="text-2xl mb-2">🏖️</div>
                       <h5 className="font-medium text-white">{t('leave.types.vacation')}</h5>
-                      <p className="text-sm text-neutral-400">20 days/year</p>
+                      <p className="text-sm text-tahoe-text-muted">20 days/year</p>
                     </div>
-                    <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
+                    <div className="p-4 border rounded-tahoe-input">
                       <div className="text-2xl mb-2">🤒</div>
                       <h5 className="font-medium text-white">{t('leave.types.sickLeave')}</h5>
-                      <p className="text-sm text-neutral-400">10 days/year</p>
+                      <p className="text-sm text-tahoe-text-muted">10 days/year</p>
                     </div>
-                    <div className="p-4 border border-neutral-700 rounded-lg bg-neutral-800">
+                    <div className="p-4 border rounded-tahoe-input">
                       <div className="text-2xl mb-2">🎯</div>
                       <h5 className="font-medium text-white">{t('leave.types.personalLeave')}</h5>
-                      <p className="text-sm text-neutral-400">5 days/year</p>
+                      <p className="text-sm text-tahoe-text-muted">5 days/year</p>
                     </div>
                   </div>
                 </div>
@@ -857,7 +866,7 @@ export default function LeaveManagement() {
                     const availablePercentage = 100 - usedPercentage;
                     
                     return (
-                      <div key={balance.id} className="p-4 border border-neutral-700 rounded-lg hover:shadow-md transition-shadow bg-neutral-800">
+                      <div key={balance.id} className="p-4 border border-tahoe-border-primary rounded-lg hover:shadow-md transition-shadow bg-tahoe-card-bg">
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <div className="text-2xl">
@@ -867,27 +876,27 @@ export default function LeaveManagement() {
                             </div>
                             <div>
                               <h4 className="font-semibold text-lg text-white">{balance.leave_type_name}</h4>
-                              <p className="text-sm text-neutral-400">
+                              <p className="text-sm text-tahoe-text-muted">
                                 {balance.accrual_rate || 2.5} days/month • Expires {balance.expiry_date || 'Never'}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="text-2xl font-bold text-blue-400">{balance.available_days || 0}</div>
-                            <div className="text-sm text-neutral-400">available</div>
+                            <div className="text-sm text-tahoe-text-muted">available</div>
                           </div>
                         </div>
                         
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="text-neutral-300">{t('leave.balances.used', { days: balance.used_days || 0 })}</span>
-                            <span className="text-neutral-300">{t('leave.balances.available', { days: balance.available_days || 0 })}</span>
+                            <span className="text-tahoe-text-primary">{t('leave.balances.used', { days: balance.used_days || 0 })}</span>
+                            <span className="text-tahoe-text-primary">{t('leave.balances.available', { days: balance.available_days || 0 })}</span>
                           </div>
                           
-                          <div className="w-full bg-neutral-600 rounded-full h-3 overflow-hidden">
+                          <div className="w-full bg-tahoe-bg-quaternary rounded-full h-3 overflow-hidden">
                             <div className="flex h-full">
                               <div 
-                                className="bg-neutral-400 transition-all duration-500"
+                                className="bg-tahoe-text-muted transition-all duration-500"
                                 style={{ width: `${usedPercentage}%` }}
                               ></div>
                               <div 
@@ -897,7 +906,7 @@ export default function LeaveManagement() {
                             </div>
                           </div>
                           
-                          <div className="flex justify-between text-xs text-neutral-400">
+                          <div className="flex justify-between text-xs text-tahoe-text-muted">
                             <span>{usedPercentage.toFixed(1)}% used</span>
                             <span>{availablePercentage.toFixed(1)}% available</span>
                           </div>
@@ -915,27 +924,27 @@ export default function LeaveManagement() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <button 
                   onClick={() => setActiveTab("requests")}
-                  className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800"
+                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
                 >
                   <div className="text-2xl mb-2">📋</div>
                   <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
-                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.reviewRequestsDesc')}</p>
+                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.reviewRequestsDesc')}</p>
                 </button>
                 <button 
                   onClick={() => setActiveTab("analytics")}
-                  className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800"
+                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
                 >
                   <div className="text-2xl mb-2">📊</div>
                   <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
-                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
+                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
                 </button>
                 <button 
                   onClick={() => setShowManagePolicies(true)}
-                  className="p-4 border border-neutral-700 rounded-lg hover:bg-neutral-800 transition-colors text-left bg-neutral-800 hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-500/20"
+                  className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left hover:border-tahoe-accent hover:shadow-lg hover:shadow-tahoe-accent/20"
                 >
                   <div className="text-2xl mb-2">⚙️</div>
                   <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
-                  <p className="text-sm text-neutral-400">{t('leave.hrManagement.managePoliciesDesc')}</p>
+                  <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.managePoliciesDesc')}</p>
                 </button>
               </div>
             </div>
@@ -956,7 +965,7 @@ export default function LeaveManagement() {
                   <div className="flex items-center space-x-4">
                     <button
                       onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-                      className="p-2 hover:bg-neutral-700 rounded-lg transition-colors"
+                      className="p-2 hover:bg-tahoe-bg-hover rounded-lg transition-colors"
                     >
                       ←
                     </button>
@@ -965,7 +974,7 @@ export default function LeaveManagement() {
                     </span>
                     <button
                       onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-                      className="p-2 hover:bg-neutral-700 rounded-lg transition-colors"
+                      className="p-2 hover:bg-tahoe-bg-hover rounded-lg transition-colors"
                     >
                       →
                     </button>
@@ -984,7 +993,7 @@ export default function LeaveManagement() {
                     t('leave.calendar.fri'),
                     t('leave.calendar.sat')
                   ].map(day => (
-                    <div key={day} className="p-3 text-center text-sm font-medium text-neutral-400">
+                    <div key={day} className="p-3 text-center text-sm font-medium text-tahoe-text-muted">
                       {day}
                     </div>
                   ))}
@@ -1000,8 +1009,8 @@ export default function LeaveManagement() {
                         onClick={() => day.isCurrentMonth && setSelectedDate(day.date)}
                         className={`
                           relative p-2 min-h-[60px] cursor-pointer transition-colors border border-transparent
-                          ${day.isCurrentMonth ? 'hover:bg-neutral-700' : 'text-neutral-600'}
-                          ${isSelected ? 'bg-indigo-600 text-white' : ''}
+                          ${day.isCurrentMonth ? 'hover:bg-tahoe-bg-hover' : 'text-tahoe-text-muted'}
+                          ${isSelected ? 'bg-tahoe-primary-bg text-tahoe-primary-text' : ''}
                           ${day.isToday ? 'ring-2 ring-indigo-400' : ''}
                         `}
                       >
@@ -1044,7 +1053,7 @@ export default function LeaveManagement() {
                                 })}
                                 
                                 {leaveRequests.length > (holidays.length > 0 ? 2 : 3) && (
-                            <div className="text-xs text-neutral-400">
+                            <div className="text-xs text-tahoe-text-muted">
                                     +{leaveRequests.length - (holidays.length > 0 ? 2 : 3)} more
                             </div>
                           )}
@@ -1103,7 +1112,7 @@ export default function LeaveManagement() {
                       const leaveRequests = dayItems.filter(item => item.type === 'leave_request' || !item.type);
                       
                       if (dayItems.length === 0) {
-                        return <p className="text-neutral-400 text-sm">{t('leave.calendar.noOneOnLeave')}</p>;
+                        return <p className="text-tahoe-text-muted text-sm">{t('leave.calendar.noOneOnLeave')}</p>;
                       }
                       
                       return (
@@ -1118,7 +1127,7 @@ export default function LeaveManagement() {
                                     🎉 {holiday.description}
                                   </div>
                                   {holiday.is_company_closure && (
-                                    <div className="text-xs text-neutral-400 mt-1">
+                                    <div className="text-xs text-tahoe-text-muted mt-1">
                                       {t('leave.calendar.companyClosure')}
                                     </div>
                                   )}
@@ -1130,20 +1139,20 @@ export default function LeaveManagement() {
                           {/* Show leave requests */}
                           {leaveRequests.length > 0 && (
                             <div>
-                              {holidays.length > 0 && <h5 className="text-sm font-semibold text-neutral-300 mb-2">{t('leave.calendar.leaveRequests')}</h5>}
+                              {holidays.length > 0 && <h5 className="text-sm font-semibold text-tahoe-text-primary mb-2">{t('leave.calendar.leaveRequests')}</h5>}
                               {leaveRequests.map((leave, index) => (
                                 <div key={`leave-${index}`} className="border-l-4 border-indigo-400 pl-4 py-2 mb-2">
                           <div className="font-medium">
                             {leave.first_name} {leave.last_name}
                           </div>
-                          <div className="text-sm text-neutral-400">
+                          <div className="text-sm text-tahoe-text-muted">
                             {leave.leave_type_name}
                           </div>
-                          <div className="text-xs text-neutral-500 mt-1">
+                          <div className="text-xs text-tahoe-text-muted mt-1">
                             {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
                           </div>
                           {leave.reason && (
-                            <div className="text-xs text-neutral-500 mt-1">
+                            <div className="text-xs text-tahoe-text-muted mt-1">
                               {leave.reason}
                             </div>
                           )}
@@ -1156,7 +1165,7 @@ export default function LeaveManagement() {
                     })()}
                   </div>
                 ) : (
-                  <p className="text-neutral-400 text-sm">{t('leave.calendar.clickDayPrompt')}</p>
+                  <p className="text-tahoe-text-muted text-sm">{t('leave.calendar.clickDayPrompt')}</p>
                 )}
               </div>
             </div>
@@ -1205,7 +1214,7 @@ export default function LeaveManagement() {
                 <h3 className="text-2xl font-bold text-white">{t('leave.policyManagement.title')}</h3>
                 <button
                   onClick={() => setShowManagePolicies(false)}
-                  className="text-neutral-400 hover:text-white transition-colors"
+                  className="text-tahoe-text-muted hover:text-white transition-colors"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1297,16 +1306,16 @@ export default function LeaveManagement() {
                   <h4 className="text-lg font-semibold mb-4 text-white">{t('leave.policyManagement.configuration')}</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.accrualFrequency')}</label>
-                      <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.accrualFrequency')}</label>
+                      <select className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option>{t('leave.policyManagement.monthly')}</option>
                         <option>{t('leave.policyManagement.biweekly')}</option>
                         <option>{t('leave.policyManagement.quarterly')}</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.fiscalYearStart')}</label>
-                      <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.fiscalYearStart')}</label>
+                      <select className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option>{t('leave.policyManagement.january1')}</option>
                         <option>{t('leave.policyManagement.april1')}</option>
                         <option>{t('leave.policyManagement.july1')}</option>
@@ -1314,8 +1323,8 @@ export default function LeaveManagement() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.minimumNoticePeriod')}</label>
-                      <select className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white">
+                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.minimumNoticePeriod')}</label>
+                      <select className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white">
                         <option>24 hours</option>
                         <option>48 hours</option>
                         <option>1 week</option>
@@ -1323,8 +1332,8 @@ export default function LeaveManagement() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-300 mb-2">{t('leave.policyManagement.maxConsecutiveDays')}</label>
-                      <input type="number" className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg focus:outline-none focus:border-indigo-500 text-white" placeholder="30" />
+                      <label className="block text-sm font-medium text-tahoe-text-primary mb-2">{t('leave.policyManagement.maxConsecutiveDays')}</label>
+                      <input type="number" className="w-full px-3 py-2 rounded-tahoe-input border focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white" placeholder="30" />
                     </div>
                   </div>
                 </div>
@@ -1333,11 +1342,11 @@ export default function LeaveManagement() {
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={() => setShowManagePolicies(false)}
-                    className="px-6 py-2 border border-neutral-600 rounded-lg font-medium transition-colors hover:bg-neutral-700 text-white"
+                    className="px-6 py-2 border rounded-tahoe-pill font-medium transition-colors hover:bg-tahoe-bg-hover text-white"
                   >
                     Cancel
                   </button>
-                  <button className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-medium transition-colors text-white">
+                  <button className="px-6 py-2 bg-tahoe-primary-bg hover:bg-tahoe-primary-hover rounded-lg font-medium transition-colors text-white">
                     Save Changes
                   </button>
                 </div>
