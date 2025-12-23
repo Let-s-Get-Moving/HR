@@ -754,7 +754,35 @@ function validateWebPContent(buffer) {
 /**
  * Main file validation function
  */
-export async function validateFileContent(file, expectedType) {
+/**
+ * Validate file content - auto-detects format if not specified
+ * @param {Object} file - File object with buffer and originalname
+ * @param {string} expectedType - 'csv', 'excel', or null for auto-detection
+ */
+export async function validateFileContent(file, expectedType = null) {
+  // Auto-detect format if not specified
+  if (!expectedType) {
+    const { detectFileType } = await import('./unifiedFileParser.js');
+    const detected = detectFileType(file.buffer, file.originalname);
+    if (detected === 'csv') {
+      expectedType = 'csv';
+    } else if (detected === 'excel') {
+      expectedType = 'excel';
+    } else {
+      // Try to determine from filename
+      if (file.originalname.endsWith('.csv')) {
+        expectedType = 'csv';
+      } else if (file.originalname.endsWith('.xlsx') || file.originalname.endsWith('.xls')) {
+        expectedType = 'excel';
+      } else {
+        return {
+          valid: false,
+          message: 'Unable to detect file type',
+          details: 'File must be CSV or Excel format'
+        };
+      }
+    }
+  }
   const { buffer, originalname, mimetype } = file;
   
   console.log(`🔍 [FILE_VALIDATION] Validating file: ${originalname}`);

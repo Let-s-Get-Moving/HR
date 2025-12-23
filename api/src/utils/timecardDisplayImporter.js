@@ -8,9 +8,12 @@ import { findAndMergeDuplicates } from './autoMergeDuplicates.js';
  * Preserves exact structure from Excel including multiple punches per day
  */
 
-// Load Excel workbook
-function loadExcelWorkbook(fileBuffer) {
-    return XLSX.read(fileBuffer, { type: 'buffer', cellDates: true });
+// Load file as workbook (handles both CSV and Excel)
+// Uses unified parser for format detection and normalization
+import { loadFileAsWorkbook } from './unifiedFileParser.js';
+
+function loadExcelWorkbook(fileBuffer, filename = null) {
+    return loadFileAsWorkbook(fileBuffer, filename || 'unknown');
 }
 
 // Get worksheet data as 2D array
@@ -275,8 +278,8 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
     try {
         await client.query('BEGIN');
         
-        // Load Excel
-        const workbook = loadExcelWorkbook(fileBuffer);
+        // Load file as workbook (handles both CSV and Excel)
+        const workbook = loadExcelWorkbook(fileBuffer, filename);
         const employees = [];
         
         // Parse pay period from filename and Excel

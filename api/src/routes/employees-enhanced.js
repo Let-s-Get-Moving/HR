@@ -18,10 +18,23 @@ import multer from "multer";
 
 const r = Router();
 
-// Configure multer for file uploads
+// Configure multer for file uploads (accepts both CSV and Excel)
 const upload = multer({ 
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const isExcel = file.mimetype.includes('sheet') || 
+                    file.originalname.endsWith('.xlsx') || 
+                    file.originalname.endsWith('.xls');
+    const isCSV = file.mimetype === 'text/csv' || 
+                  file.mimetype === 'application/csv' ||
+                  file.originalname.endsWith('.csv');
+    if (isExcel || isCSV) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only Excel or CSV files are allowed'), false);
+    }
+  }
 });
 
 // Get all employees
@@ -298,15 +311,15 @@ r.post("/:id/photo",
   }
 );
 
-// Bulk import employees from CSV
+// Bulk import employees from CSV or Excel
 r.post("/bulk-import",
   upload.single('csv_file'),
   createFileValidationMiddleware({
     required: true,
     maxSize: 5 * 1024 * 1024, // 5MB
-    allowedTypes: ['text/csv', 'application/csv'],
-    allowedExtensions: ['csv'],
-    contentValidation: 'csv'
+    allowedTypes: ['text/csv', 'application/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'],
+    allowedExtensions: ['csv', 'xlsx', 'xls'],
+    contentValidation: null // Will be detected automatically
   }),
   async (req, res) => {
     try {
@@ -317,23 +330,29 @@ r.post("/bulk-import",
         fileSize: file.size
       });
       
-      // Parse CSV content
-      const csvContent = file.buffer.toString('utf8');
-      const lines = csvContent.split('\n').filter(line => line.trim());
+      // Use unified parser to handle both CSV and Excel
+      const { loadFileAsWorkbook } = await import('../utils/unifiedFileParser.js');
+      const { getWorksheetData } = await import('../utils/excelParser.js');
       
-      if (lines.length < 2) {
+      const workbook = loadFileAsWorkbook(file.buffer, file.originalname);
+      const sheetName = workbook.SheetNames[0]; // Use first sheet
+      const data = getWorksheetData(workbook, sheetName);
+      
+      if (data.length < 2) {
         return res.status(400).json({
-          error: 'Invalid CSV file',
-          details: 'CSV file must have at least a header row and one data row'
+          error: 'Invalid file',
+          details: 'File must have at least a header row and one data row'
         });
       }
       
-      const headers = lines[0].split(',').map(h => h.trim());
-      const dataRows = lines.slice(1);
+      // First row is headers, rest are data rows
+      const headers = (data[0] || []).map(h => String(h || '').trim());
+      const dataRows = data.slice(1);
       
-      console.log('📊 [EMPLOYEES] CSV parsed:', {
+      console.log('📊 [EMPLOYEES] File parsed:', {
         headers,
-        rowCount: dataRows.length
+        rowCount: dataRows.length,
+        fileType: file.originalname.endsWith('.csv') ? 'CSV' : 'Excel'
       });
       
       // Validate each row
@@ -341,12 +360,12 @@ r.post("/bulk-import",
       const validRows = [];
       
       for (let i = 0; i < dataRows.length; i++) {
-        const row = dataRows[i].split(',').map(cell => cell.trim());
+        const row = dataRows[i] || [];
         const rowData = {};
         
-        // Map CSV columns to employee fields
+        // Map columns to employee fields (works for both CSV and Excel)
         headers.forEach((header, index) => {
-          const value = row[index] || '';
+          const value = row[index] !== null && row[index] !== undefined ? String(row[index]).trim() : '';
           switch (header.toLowerCase()) {
             case 'first_name':
             case 'firstname':
@@ -398,7 +417,7 @@ r.post("/bulk-import",
       
       if (validationErrors.length > 0) {
         return res.status(400).json({
-          error: 'CSV validation failed',
+          error: 'File validation failed',
           details: 'Some rows contain invalid data',
           validationErrors,
           validRowCount: validRows.length,

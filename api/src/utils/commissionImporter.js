@@ -763,8 +763,8 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
     const summary = new ImportSummary(filename, sheetName || 'default');
     
     try {
-        // Load Excel workbook
-        const workbook = loadExcelWorkbook(fileBuffer);
+        // Load file as workbook (handles both CSV and Excel)
+        const workbook = loadExcelWorkbook(fileBuffer, filename);
         const actualSheetName = sheetName || workbook.SheetNames[workbook.SheetNames.length - 1];
         summary.sheet = actualSheetName;
         

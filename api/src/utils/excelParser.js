@@ -10,12 +10,17 @@
  */
 
 import XLSX from 'xlsx';
+import { loadFileAsWorkbook } from './unifiedFileParser.js';
 
 /**
  * Load Excel workbook from buffer or file
+ * Now supports both CSV and Excel formats via unified parser
+ * Maintains backwards compatibility - existing code continues to work
  */
-export function loadExcelWorkbook(fileBuffer) {
-    return XLSX.read(fileBuffer, { type: 'buffer', cellDates: false, cellText: false });
+export function loadExcelWorkbook(fileBuffer, filename = null) {
+    // Use unified parser which handles both CSV and Excel
+    // If filename not provided, try to detect from buffer
+    return loadFileAsWorkbook(fileBuffer, filename || 'unknown');
 }
 
 /**
@@ -28,7 +33,7 @@ export function getWorksheetData(workbook, sheetName) {
     // Get the sheet range to ensure we capture all columns including empty ones
     const range = XLSX.utils.decode_range(sheet['!ref']);
     
-    return XLSX.utils.sheet_to_json(sheet, {
+    const data = XLSX.utils.sheet_to_json(sheet, {
         header: 1,           // Return array of arrays
         defval: null,        // Empty cells return null (not undefined)
         raw: false,          // Format values as strings
@@ -36,6 +41,16 @@ export function getWorksheetData(workbook, sheetName) {
         range: range,        // CRITICAL: Include full range to preserve empty cells
         blankrows: true      // Include blank rows (don't skip them)
     });
+    
+    // Normalize empty strings to null for consistency between CSV and Excel
+    return data.map(row => 
+        row.map(cell => {
+            if (cell === '' || cell === undefined) {
+                return null;
+            }
+            return cell;
+        })
+    );
 }
 
 /**

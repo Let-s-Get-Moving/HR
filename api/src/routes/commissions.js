@@ -14,15 +14,21 @@ const r = Router();
 // Apply scope filter to all commission routes
 r.use(applyScopeFilter);
 
-// Configure multer for file uploads (memory storage for Excel files)
+// Configure multer for file uploads (memory storage for Excel and CSV files)
 const upload = multer({ 
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.includes('sheet') || file.originalname.endsWith('.xlsx') || file.originalname.endsWith('.xls')) {
+    const isExcel = file.mimetype.includes('sheet') || 
+                    file.originalname.endsWith('.xlsx') || 
+                    file.originalname.endsWith('.xls');
+    const isCSV = file.mimetype === 'text/csv' || 
+                  file.mimetype === 'application/csv' ||
+                  file.originalname.endsWith('.csv');
+    if (isExcel || isCSV) {
       cb(null, true);
     } else {
-      cb(new Error('Only Excel files are allowed'), false);
+      cb(new Error('Only Excel or CSV files are allowed'), false);
     }
   }
 });
@@ -34,7 +40,7 @@ import { validateFileContent } from '../utils/fileValidation.js';
 r.post("/debug-headers", upload.single('excel_file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: 'No Excel file uploaded' });
+      return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const { loadExcelWorkbook, getWorksheetData, detectAllBlocks } = await import('../utils/excelParser.js');
@@ -93,13 +99,21 @@ r.post("/debug-headers", upload.single('excel_file'), async (req, res) => {
 r.post("/import", upload.single('excel_file'), async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ error: "No Excel file uploaded" });
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
     console.log(`🔍 [COMMISSIONS] Starting file validation for: ${req.file.originalname}`);
     
     // 1. COMPREHENSIVE FILE CONTENT VALIDATION
-    const fileValidation = await validateFileContent(req.file, 'excel');
+    // Determine file type based on extension
+    let fileType = 'excel';
+    if (req.file.originalname.endsWith('.csv')) {
+      fileType = 'csv';
+    } else if (req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls')) {
+      fileType = 'excel';
+    }
+    
+    const fileValidation = await validateFileContent(req.file, fileType);
     if (!fileValidation.valid) {
       console.log(`❌ [COMMISSIONS] File validation failed:`, fileValidation);
       return res.status(400).json({
