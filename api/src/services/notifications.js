@@ -1,5 +1,6 @@
 import { q } from '../db.js';
 import { emailService } from './email.js';
+import { parseLocalDate } from '../utils/dateUtils.js';
 
 class NotificationService {
   // Check if user has email notifications enabled (default: true)
@@ -108,10 +109,12 @@ class NotificationService {
       const totalDays = leave.total_days || 'N/A';
       
       // Format dates
-      const startDate = new Date(leave.start_date).toLocaleDateString('en-US', { 
+      const startDateObj = parseLocalDate(leave.start_date) || new Date(leave.start_date);
+      const endDateObj = parseLocalDate(leave.end_date) || new Date(leave.end_date);
+      const startDate = startDateObj.toLocaleDateString('en-US', { 
         year: 'numeric', month: 'short', day: 'numeric' 
       });
-      const endDate = new Date(leave.end_date).toLocaleDateString('en-US', { 
+      const endDate = endDateObj.toLocaleDateString('en-US', { 
         year: 'numeric', month: 'short', day: 'numeric' 
       });
       
@@ -187,10 +190,12 @@ HR System`;
       }
       
       const leaveType = leave.leave_type_name || 'leave';
-      const startDate = new Date(leave.start_date).toLocaleDateString('en-US', { 
+      const startDateObj = parseLocalDate(leave.start_date) || new Date(leave.start_date);
+      const endDateObj = parseLocalDate(leave.end_date) || new Date(leave.end_date);
+      const startDate = startDateObj.toLocaleDateString('en-US', { 
         year: 'numeric', month: 'short', day: 'numeric' 
       });
-      const endDate = new Date(leave.end_date).toLocaleDateString('en-US', { 
+      const endDate = endDateObj.toLocaleDateString('en-US', { 
         year: 'numeric', month: 'short', day: 'numeric' 
       });
       
@@ -252,7 +257,8 @@ HR System`;
       if (!empInfo) return;
       
       const hrUsers = await this.getHRUsers();
-      const formattedDate = new Date(terminationDate).toLocaleDateString('en-US', { 
+      const dateObj = parseLocalDate(terminationDate) || new Date(terminationDate);
+      const formattedDate = dateObj.toLocaleDateString('en-US', { 
         year: 'numeric', month: 'short', day: 'numeric' 
       });
       

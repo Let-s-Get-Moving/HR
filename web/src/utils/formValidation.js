@@ -3,6 +3,8 @@
  * Provides real-time validation for all forms
  */
 
+import { parseLocalDate } from './timezone.js';
+
 // Email validation
 export const validateEmail = (email) => {
   if (!email) return null;
@@ -27,8 +29,12 @@ export const validatePhone = (phone) => {
 export const validateDate = (date, options = {}) => {
   if (!date) return null;
   
-  const dateObj = new Date(date);
-  if (isNaN(dateObj.getTime())) {
+  // Use parseLocalDate for date-only strings to avoid timezone shifts
+  const dateObj = typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/) 
+    ? parseLocalDate(date) 
+    : new Date(date);
+  
+  if (!dateObj || isNaN(dateObj.getTime())) {
     return 'Please enter a valid date';
   }
   
@@ -106,8 +112,17 @@ export const validateLength = (value, options = {}) => {
 export const validateDateRange = (startDate, endDate) => {
   if (!startDate || !endDate) return null;
   
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  // Use parseLocalDate for date-only strings to avoid timezone shifts
+  const start = typeof startDate === 'string' && startDate.match(/^\d{4}-\d{2}-\d{2}$/)
+    ? parseLocalDate(startDate)
+    : new Date(startDate);
+  const end = typeof endDate === 'string' && endDate.match(/^\d{4}-\d{2}-\d{2}$/)
+    ? parseLocalDate(endDate)
+    : new Date(endDate);
+  
+  if (!start || !end || isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return 'Please enter valid dates';
+  }
   
   if (start > end) {
     return 'End date must be after start date';

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
-import { formatShortDate } from '../utils/timezone.js';
+import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
 import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
 
 export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
@@ -837,8 +837,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               const dateStr = employee.birth_date.includes('T') 
                                 ? employee.birth_date.split('T')[0] 
                                 : employee.birth_date;
-                              const date = new Date(dateStr + 'T00:00:00');
-                              return formatShortDate(date);
+                              const date = parseLocalDate(dateStr);
+                              return date ? formatShortDate(date) : 'Invalid Date';
                             } catch (e) {
                               console.error('❌ [EmployeeProfile] Error parsing birth date:', employee.birth_date, e);
                               return 'Invalid Date';
@@ -1766,11 +1766,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   <div>
                     {employee.sin_expiry_date ? (() => {
                       try {
-                        const dateStr = employee.sin_expiry_date.includes('T') 
+                        const dateStr = employee.sin_expiry_date.includes('T')
                           ? employee.sin_expiry_date.split('T')[0] 
                           : employee.sin_expiry_date;
-                        const date = new Date(dateStr + 'T00:00:00');
-                        return date.toLocaleDateString();
+                        const date = parseLocalDate(dateStr);
+                        return date ? date.toLocaleDateString() : 'Invalid Date';
                       } catch (e) {
                         return 'Invalid';
                       }

@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { q } from '../db.js';
 import { validateData, sanitizeInput } from '../utils/dbValidation.js';
+import { parseLocalDate } from '../utils/dateUtils.js';
 
 // Enhanced validation middleware factory
 export function createValidationMiddleware(schema, options = {}) {
@@ -280,12 +281,19 @@ function validateFileContent(file, validation) {
 // Common business rules
 export const businessRules = {
   // Employee rules
-  hireDateBeforeTermination: (data) => ({
-    valid: !data.termination_date || !data.hire_date || new Date(data.hire_date) < new Date(data.termination_date),
-    field: 'hire_date',
-    message: 'Hire date must be before termination date',
-    code: 'HIRE_BEFORE_TERMINATION'
-  }),
+  hireDateBeforeTermination: (data) => {
+    if (!data.termination_date || !data.hire_date) {
+      return { valid: true };
+    }
+    const hireDate = parseLocalDate(data.hire_date) || new Date(data.hire_date);
+    const termDate = parseLocalDate(data.termination_date) || new Date(data.termination_date);
+    return {
+      valid: hireDate < termDate,
+      field: 'hire_date',
+      message: 'Hire date must be before termination date',
+      code: 'HIRE_BEFORE_TERMINATION'
+    };
+  },
   
   // Time entry rules
   endTimeAfterStart: (data) => ({
@@ -296,20 +304,35 @@ export const businessRules = {
   }),
   
   // Leave request rules
-  endDateAfterStart: (data) => ({
-    valid: !data.start_date || !data.end_date || new Date(data.start_date) <= new Date(data.end_date),
-    field: 'end_date',
-    message: 'End date must be after or equal to start date',
-    code: 'END_AFTER_START_DATE'
-  }),
+  endDateAfterStart: (data) => {
+    if (!data.start_date || !data.end_date) {
+      return { valid: true };
+    }
+    const startDate = parseLocalDate(data.start_date) || new Date(data.start_date);
+    const endDate = parseLocalDate(data.end_date) || new Date(data.end_date);
+    return {
+      valid: startDate <= endDate,
+      field: 'end_date',
+      message: 'End date must be after or equal to start date',
+      code: 'END_AFTER_START_DATE'
+    };
+  },
   
   // Future date validation
-  notInFuture: (field) => (data) => ({
-    valid: !data[field] || new Date(data[field]) <= new Date(),
-    field,
-    message: `${field} cannot be in the future`,
-    code: 'FUTURE_DATE_NOT_ALLOWED'
-  })
+  notInFuture: (field) => (data) => {
+    if (!data[field]) {
+      return { valid: true };
+    }
+    const date = parseLocalDate(data[field]) || new Date(data[field]);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return {
+      valid: date <= now,
+      field,
+      message: `${field} cannot be in the future`,
+      code: 'FUTURE_DATE_NOT_ALLOWED'
+    };
+  }
 };
 
 // Common database constraints

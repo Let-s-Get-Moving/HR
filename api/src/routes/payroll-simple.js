@@ -1,6 +1,7 @@
 import express from "express";
 import { q } from "../db.js";
 import { applyScopeFilter } from "../middleware/rbac.js";
+import { parseLocalDate } from '../utils/dateUtils.js';
 // Note: Payroll notifications should be added when a process/finalize endpoint is implemented
 // import { createBulkNotifications } from "../utils/notifications.js";
 
@@ -17,8 +18,9 @@ r.use(applyScopeFilter);
  * - Base paydays: Sep 12, Sep 26, Oct 10, Oct 24...
  */
 function getPayPeriod(basePayday = '2025-09-26') {
-  // Use UTC to avoid timezone issues
-  const base = new Date(basePayday + 'T00:00:00Z');
+  // Parse base payday as local date, then convert to UTC for calculations
+  const baseLocal = parseLocalDate(basePayday) || new Date(basePayday);
+  const base = new Date(Date.UTC(baseLocal.getFullYear(), baseLocal.getMonth(), baseLocal.getDate()));
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   
@@ -252,7 +254,8 @@ r.get("/periods", async (req, res) => {
     console.log('📅 [PAYROLL-PERIODS] Grouping dates into 2-week pay periods...');
     // Group into 2-week pay periods (Saturday to Friday)
     const periods = [];
-    const basePayday = new Date('2025-09-26T00:00:00Z');
+    const basePaydayLocal = parseLocalDate('2025-09-26') || new Date('2025-09-26');
+    const basePayday = new Date(Date.UTC(basePaydayLocal.getFullYear(), basePaydayLocal.getMonth(), basePaydayLocal.getDate()));
     console.log('📅 [PAYROLL-PERIODS] Base payday:', basePayday.toISOString().split('T')[0]);
     
     dates.forEach(row => {
@@ -260,7 +263,9 @@ r.get("/periods", async (req, res) => {
       const workDateStr = typeof row.work_date === 'string' 
         ? row.work_date 
         : row.work_date.toISOString().split('T')[0];
-      const workDate = new Date(workDateStr + 'T00:00:00Z');
+      // Parse as local date, then convert to UTC for calculations
+      const workDateLocal = parseLocalDate(workDateStr) || new Date(workDateStr);
+      const workDate = new Date(Date.UTC(workDateLocal.getFullYear(), workDateLocal.getMonth(), workDateLocal.getDate()));
       
       // Find which pay period this date belongs to
       // Work weeks end on Friday, pay periods are 14 days (Sat-Fri, Sat-Fri)

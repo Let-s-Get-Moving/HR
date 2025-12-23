@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
+import { formatShortDate } from '../utils/timezone.js';
 
 // Convert decimal hours to HH:MM format
 const formatHoursAsTime = (decimalHours) => {
@@ -52,7 +53,7 @@ export function UploadsListView({ uploads, onViewUpload, loading, t }) {
               <div className="flex-1">
                 <h3 className="font-semibold text-tahoe-text-primary mb-2 line-clamp-2">{upload.filename}</h3>
                 <p className="text-sm text-tahoe-text-secondary">
-                  {new Date(upload.pay_period_start).toLocaleDateString()} - {new Date(upload.pay_period_end).toLocaleDateString()}
+                  {formatShortDate(upload.pay_period_start)} - {formatShortDate(upload.pay_period_end)}
                 </p>
               </div>
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
@@ -72,7 +73,7 @@ export function UploadsListView({ uploads, onViewUpload, loading, t }) {
             </div>
             
             <div className="mt-4 text-xs text-tahoe-text-secondary">
-              Uploaded {new Date(upload.upload_date).toLocaleDateString()} at {new Date(upload.upload_date).toLocaleTimeString()}
+              Uploaded {formatShortDate(upload.upload_date)} at {new Date(upload.upload_date).toLocaleTimeString()}
             </div>
           </motion.div>
         ))}
@@ -111,10 +112,10 @@ export function UploadDetailView({ upload, employees, onSelectEmployee, onBack, 
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-tahoe-text-primary mb-2">{upload?.filename}</h2>
             <p className="text-tahoe-text-secondary">
-              Period: {new Date(upload?.pay_period_start).toLocaleDateString()} - {new Date(upload?.pay_period_end).toLocaleDateString()}
+              Period: {formatShortDate(upload?.pay_period_start)} - {formatShortDate(upload?.pay_period_end)}
             </p>
             <p className="text-sm text-tahoe-text-secondary mt-1">
-              Uploaded {new Date(upload?.upload_date).toLocaleDateString()} at {new Date(upload?.upload_date).toLocaleTimeString()}
+              Uploaded {formatShortDate(upload?.upload_date)} at {new Date(upload?.upload_date).toLocaleTimeString()}
             </p>
           </div>
           <div className="text-right">
@@ -195,7 +196,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
           <div>
             <h2 className="text-2xl font-bold text-tahoe-text-primary">{employee?.full_name}</h2>
             <p className="text-tahoe-text-secondary">
-              Period: {new Date(upload?.pay_period_start).toLocaleDateString()} - {new Date(upload?.pay_period_end).toLocaleDateString()}
+              Period: {formatShortDate(upload?.pay_period_start)} - {formatShortDate(upload?.pay_period_end)}
             </p>
           </div>
           <div className="text-right">
@@ -234,7 +235,7 @@ export function EmployeeTimecardView({ employee, entries, upload, onBack, loadin
                       {entry.is_first_row ? entry.day_of_week : ''}
                     </td>
                     <td className="px-6 py-4 text-sm text-tahoe-text-primary">
-                      {entry.is_first_row ? new Date(entry.work_date).toLocaleDateString() : ''}
+                      {entry.is_first_row ? formatShortDate(entry.work_date) : ''}
                     </td>
                     <td className="px-6 py-4 text-sm text-tahoe-text-primary">
                       {entry.clock_in || ''}
@@ -374,7 +375,7 @@ export function UploadDashboardView({ stats, onBack, loading, t }) {
           <h3 className="font-semibold text-tahoe-text-primary mb-2">{t('timeTracking.latestUpload')}</h3>
           <p className="text-tahoe-text-secondary">{stats.latestUpload.filename}</p>
           <p className="text-sm text-tahoe-text-secondary mt-1">
-            {new Date(stats.latestUpload.upload_date).toLocaleDateString()} at {new Date(stats.latestUpload.upload_date).toLocaleTimeString()}
+            {formatShortDate(stats.latestUpload.upload_date)} at {new Date(stats.latestUpload.upload_date).toLocaleTimeString()}
           </p>
         </div>
       )}

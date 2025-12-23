@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
-import { formatShortDate } from '../utils/timezone.js';
+import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
 import { useUserRole } from '../hooks/useUserRole.js';
 
 export default function Payroll() {
@@ -179,8 +179,8 @@ export default function Payroll() {
   const safeFormatShortDate = (dateString) => {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString + 'T00:00:00Z');
-      if (isNaN(date.getTime())) return '';
+      const date = parseLocalDate(dateString);
+      if (!date) return '';
       return formatShortDate(date);
     } catch (error) {
       console.error('Error formatting date:', error, dateString);
@@ -223,12 +223,12 @@ export default function Payroll() {
             >
               <option value="">{t('payroll.selectPayDate')}</option>
               {payPeriods.map((period) => {
-                // Parse date as UTC to avoid timezone shifts
+                // Parse date as local to avoid timezone shifts
                 let formattedDate = '';
                 if (period.pay_date) {
                   try {
-                    const payDate = new Date(period.pay_date + 'T00:00:00Z');
-                    if (!isNaN(payDate.getTime())) {
+                    const payDate = parseLocalDate(period.pay_date);
+                    if (payDate) {
                       formattedDate = formatShortDate(payDate).toUpperCase();
                     }
                   } catch (error) {
@@ -487,9 +487,12 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
         if (dateValue.includes('T')) {
           date = new Date(dateValue);
         }
-        // If it's in YYYY-MM-DD format, append time for UTC
+        // If it's in YYYY-MM-DD format, parse as local date
         else {
-          date = new Date(dateValue + 'T00:00:00Z');
+          date = parseLocalDate(dateValue);
+          if (!date) {
+            date = new Date(dateValue); // Fallback
+          }
         }
       }
       // If it's a number (timestamp), use it directly

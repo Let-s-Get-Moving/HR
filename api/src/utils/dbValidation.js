@@ -1,6 +1,7 @@
 // Database validation utilities
 
 import { z } from 'zod';
+import { parseLocalDate } from './dateUtils.js';
 
 // Employee validation schemas
 export const employeeSchema = z.object({
@@ -97,7 +98,11 @@ export const payrollRunSchema = z.object({
   period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
   period_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format'),
 }).refine(
-  (data) => new Date(data.period_end) >= new Date(data.period_start),
+  (data) => {
+    const periodStart = parseLocalDate(data.period_start) || new Date(data.period_start);
+    const periodEnd = parseLocalDate(data.period_end) || new Date(data.period_end);
+    return periodEnd >= periodStart;
+  },
   {
     message: 'Period end must be after period start',
     path: ['period_end'],

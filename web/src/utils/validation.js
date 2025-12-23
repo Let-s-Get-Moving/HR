@@ -8,6 +8,8 @@
  * - User-friendly error messages
  */
 
+import { parseLocalDate } from './timezone.js';
+
 // Field validation functions
 export const fieldValidators = {
   // Text validation
@@ -91,8 +93,11 @@ export const fieldValidators = {
   // Date validation
   date: (value, fieldName = 'Date') => {
     if (!value) return null;
-    const date = new Date(value);
-    if (isNaN(date.getTime())) {
+    // Use parseLocalDate for date-only strings to avoid timezone shifts
+    const date = typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)
+      ? parseLocalDate(value)
+      : new Date(value);
+    if (!date || isNaN(date.getTime())) {
       return `${fieldName} must be a valid date`;
     }
     return null;
@@ -100,11 +105,16 @@ export const fieldValidators = {
   
   futureDate: (value, fieldName = 'Date') => {
     if (!value) return null;
-    const date = new Date(value);
-    if (isNaN(date.getTime())) {
+    // Use parseLocalDate for date-only strings to avoid timezone shifts
+    const date = typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)
+      ? parseLocalDate(value)
+      : new Date(value);
+    if (!date || isNaN(date.getTime())) {
       return `${fieldName} must be a valid date`;
     }
-    if (date <= new Date()) {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    if (date <= now) {
       return `${fieldName} must be in the future`;
     }
     return null;
@@ -112,11 +122,16 @@ export const fieldValidators = {
   
   pastDate: (value, fieldName = 'Date') => {
     if (!value) return null;
-    const date = new Date(value);
-    if (isNaN(date.getTime())) {
+    // Use parseLocalDate for date-only strings to avoid timezone shifts
+    const date = typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}$/)
+      ? parseLocalDate(value)
+      : new Date(value);
+    if (!date || isNaN(date.getTime())) {
       return `${fieldName} must be a valid date`;
     }
-    if (date >= new Date()) {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    if (date >= now) {
       return `${fieldName} must be in the past`;
     }
     return null;
