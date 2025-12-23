@@ -256,7 +256,10 @@ export default function LeaveManagement() {
       // Handle holidays
       if (item.type === 'holiday') {
         const holidayDate = parseLocalDate(item.date);
-        if (!holidayDate) return false;
+        if (!holidayDate) {
+          console.warn('Failed to parse holiday date:', item.date);
+          return false;
+        }
         holidayDate.setHours(0, 0, 0, 0);
         const checkDateOnly = new Date(checkDate);
         checkDateOnly.setHours(0, 0, 0, 0);
