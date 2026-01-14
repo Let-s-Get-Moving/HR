@@ -681,7 +681,6 @@ r.post("/change-password", optionalAuth, async (req, res) => {
     }
     
     // Hash new password
-    const bcrypt = await import('bcrypt');
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
     
     // Update password (trigger will automatically handle expiry and history)
