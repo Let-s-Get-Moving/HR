@@ -697,8 +697,8 @@ r.post("/change-password", optionalAuth, async (req, res) => {
     
     // Log activity
     await q(`
-      INSERT INTO user_activity_log (user_id, action, resource_type, details)
-      VALUES ($1, 'password_changed', 'auth', $2)
+      INSERT INTO user_activity_log (user_id, action, resource, resource_id, details)
+      VALUES ($1, 'password_changed', 'auth', NULL, $2)
     `, [userId, JSON.stringify({ self_initiated: !tempToken })]);
     
     console.log(`✅ Password changed successfully for user ${userId}`);
