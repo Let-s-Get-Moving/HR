@@ -163,10 +163,10 @@ Payroll (Main Component)
 
 ### Pay Period Logic
 - Based on Friday payday schedule
-- 2-week periods (Saturday to Friday)
-- Week 1 Saturday → Week 2 Friday = Pay Period
-- Payday is Friday of Week 3
-- Example: Sep 8-19 pay period → Sep 26 payday
+- 2-week periods (Monday to Sunday)
+- Week 1 Monday → Week 2 Sunday = Pay Period (14 days)
+- Payday is Friday, 5 days after period ends
+- Example: Dec 29 - Jan 11 pay period → Jan 16 payday
 
 ## Future Enhancements
 

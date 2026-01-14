@@ -12,10 +12,10 @@ r.use(applyScopeFilter);
 
 /**
  * Calculate next pay period based on Friday payday schedule
- * - Pay periods: Saturday to Friday (14 days)
- * - Payday is Friday, 7 days after period ends
- * - Example: Sep 26 payday covers Sep 6-19 work period
- * - Base paydays: Sep 12, Sep 26, Oct 10, Oct 24...
+ * - Pay periods: Monday to Sunday (14 days)
+ * - Payday is Friday, 5 days after period ends
+ * - Example: Jan 16 payday covers Dec 29 - Jan 11 work period
+ * - Base paydays: Sep 12, Sep 26, Oct 10, Oct 24, Jan 16...
  */
 function getPayPeriod(basePayday = '2025-09-26') {
   // Parse base payday as local date, then convert to UTC for calculations
@@ -32,11 +32,11 @@ function getPayPeriod(basePayday = '2025-09-26') {
   const nextPayday = new Date(base);
   nextPayday.setUTCDate(base.getUTCDate() + (periodsSinceBase + 1) * 14);
   
-  // Period ends 7 days before payday (Friday of Week 2)
+  // Period ends 5 days before payday (Sunday)
   const periodEnd = new Date(nextPayday);
-  periodEnd.setUTCDate(nextPayday.getUTCDate() - 7);
+  periodEnd.setUTCDate(nextPayday.getUTCDate() - 5);
   
-  // Period starts 13 days before period end (Saturday of Week 0/1)
+  // Period starts 13 days before period end (Monday, 2 weeks before)
   const periodStart = new Date(periodEnd);
   periodStart.setUTCDate(periodEnd.getUTCDate() - 13);
   
@@ -165,10 +165,10 @@ r.get("/calculate-live", async (req, res) => {
       
       const netPay = grossPay; // No deductions for now
       
-      // Calculate pay date (Friday after period end)
+      // Calculate pay date (Friday, 5 days after period end which is Sunday)
       const periodEnd = new Date(emp.pay_period_end);
       const payDate = new Date(periodEnd);
-      payDate.setDate(periodEnd.getDate() + 7); // Next Friday
+      payDate.setDate(periodEnd.getDate() + 5); // Friday after Sunday period end
       
       return {
         ...emp,
@@ -217,8 +217,9 @@ r.get("/calculate-live", async (req, res) => {
 });
 
 /**
- * Get all unique pay periods from timecards (no approval filter)
- * Groups by 2-week periods ending on Friday
+ * Get all unique pay periods from timecards
+ * Uses stored pay_period_start/end from timecards table directly
+ * Pay date = period_end + 5 days (Friday after Sunday)
  */
 r.get("/periods", async (req, res) => {
   const startTime = Date.now();
@@ -239,119 +240,53 @@ r.get("/periods", async (req, res) => {
       console.log(`🔒 [RBAC] Filtering periods for employee ${req.employeeId}`);
     }
     
-    // Get all timecard dates (no approval filter - if timecards exist, they count)
-    console.log('📅 [PAYROLL-PERIODS] Fetching all timecard dates...');
-    const { rows: dates } = await q(`
-      SELECT DISTINCT work_date
-      FROM timecard_entries te
-      JOIN timecards t ON te.timecard_id = t.id
+    // Get unique pay periods directly from timecards table
+    // pay_date = pay_period_end + 5 days (Friday after Sunday period end)
+    console.log('📅 [PAYROLL-PERIODS] Fetching pay periods from timecards...');
+    const { rows: periods } = await q(`
+      SELECT 
+        t.pay_period_start,
+        t.pay_period_end,
+        (t.pay_period_end + 5) AS pay_date,
+        COUNT(DISTINCT t.employee_id) as employee_count
+      FROM timecards t
       ${whereClause}
-      ORDER BY work_date DESC
+      GROUP BY t.pay_period_start, t.pay_period_end
+      ORDER BY t.pay_period_end DESC
     `, queryParams);
     
-    console.log(`📅 [PAYROLL-PERIODS] Found ${dates.length} unique work dates`);
+    console.log(`📅 [PAYROLL-PERIODS] Found ${periods.length} unique pay periods`);
     
-    console.log('📅 [PAYROLL-PERIODS] Grouping dates into 2-week pay periods...');
-    // Group into 2-week pay periods (Saturday to Friday)
-    const periods = [];
-    const basePaydayLocal = parseLocalDate('2025-09-26') || new Date('2025-09-26');
-    const basePayday = new Date(Date.UTC(basePaydayLocal.getFullYear(), basePaydayLocal.getMonth(), basePaydayLocal.getDate()));
-    console.log('📅 [PAYROLL-PERIODS] Base payday:', basePayday.toISOString().split('T')[0]);
-    
-    dates.forEach(row => {
-      // Handle both string and Date object formats
-      const workDateStr = typeof row.work_date === 'string' 
-        ? row.work_date 
-        : row.work_date.toISOString().split('T')[0];
-      // Parse as local date, then convert to UTC for calculations
-      const workDateLocal = parseLocalDate(workDateStr) || new Date(workDateStr);
-      const workDate = new Date(Date.UTC(workDateLocal.getFullYear(), workDateLocal.getMonth(), workDateLocal.getDate()));
-      
-      // Find which pay period this date belongs to
-      // Work weeks end on Friday, pay periods are 14 days (Sat-Fri, Sat-Fri)
-      // Payday is 7 days after period ends
-      
-      // Calculate days from base payday
-      const daysSinceBase = Math.floor((workDate - basePayday) / (1000 * 60 * 60 * 24));
-      
-      // Work date + 7 days = its payday
-      // Round this to the nearest 14-day cycle from base
-      const daysToPayday = daysSinceBase + 7;
-      const periodsSinceBase = Math.round(daysToPayday / 14); // Use Math.round instead of Math.floor
-      
-      // Calculate the actual payday for this work date
-      const payday = new Date(basePayday);
-      payday.setUTCDate(basePayday.getUTCDate() + periodsSinceBase * 14);
-      
-      // Period ends 7 days before payday (Friday of Week 2)
-      const periodEnd = new Date(payday);
-      periodEnd.setUTCDate(payday.getUTCDate() - 7);
-      
-      // Period starts 13 days before period end (Saturday of Week 0/1)
-      const periodStart = new Date(periodEnd);
-      periodStart.setUTCDate(periodEnd.getUTCDate() - 13);
-      
-      const key = `${periodStart.toISOString().split('T')[0]}_${periodEnd.toISOString().split('T')[0]}`;
-      
-      if (!periods.find(p => p.key === key)) {
-        periods.push({
-          key,
-          pay_period_start: periodStart.toISOString().split('T')[0],
-          pay_period_end: periodEnd.toISOString().split('T')[0],
-          pay_date: payday.toISOString().split('T')[0]
-        });
-      }
-    });
-    
-    console.log(`📅 [PAYROLL-PERIODS] Grouped into ${periods.length} unique pay periods`);
-    console.log('📅 [PAYROLL-PERIODS] Fetching employee counts for each period...');
-    
-    // Get employee counts for each period
-    const periodsWithCounts = await Promise.all(
-      periods.map(async (period) => {
-        // Build WHERE clause with RBAC filtering
-        let whereClause = "WHERE te.work_date >= $1::date AND te.work_date <= $2::date";
-        const queryParams = [period.pay_period_start, period.pay_period_end];
-        
-        // RBAC: Users can only see their own timecard periods
-        if (req.userScope === 'own' && req.employeeId) {
-          queryParams.push(req.employeeId);
-          whereClause += ` AND t.employee_id = $${queryParams.length}`;
-        }
-        
-        const { rows } = await q(`
-          SELECT COUNT(DISTINCT t.employee_id) as employee_count
-          FROM timecard_entries te
-          JOIN timecards t ON te.timecard_id = t.id
-          ${whereClause}
-        `, queryParams);
-        
-        return {
-          ...period,
-          employee_count: parseInt(rows[0].employee_count || 0)
-        };
-      })
-    );
-    
-    const sortedPeriods = periodsWithCounts.sort((a, b) => 
-      new Date(b.pay_date) - new Date(a.pay_date)
-    );
+    // Format dates as strings
+    const formattedPeriods = periods.map(period => ({
+      key: `${period.pay_period_start}_${period.pay_period_end}`,
+      pay_period_start: typeof period.pay_period_start === 'string' 
+        ? period.pay_period_start 
+        : period.pay_period_start.toISOString().split('T')[0],
+      pay_period_end: typeof period.pay_period_end === 'string' 
+        ? period.pay_period_end 
+        : period.pay_period_end.toISOString().split('T')[0],
+      pay_date: typeof period.pay_date === 'string' 
+        ? period.pay_date 
+        : period.pay_date.toISOString().split('T')[0],
+      employee_count: parseInt(period.employee_count || 0)
+    }));
     
     const totalTime = Date.now() - startTime;
     console.log(`📅 [PAYROLL-PERIODS] ✅ Complete in ${totalTime}ms`);
-    console.log(`📅 [PAYROLL-PERIODS] Returning ${sortedPeriods.length} periods`);
-    if (sortedPeriods.length > 0) {
+    console.log(`📅 [PAYROLL-PERIODS] Returning ${formattedPeriods.length} periods`);
+    if (formattedPeriods.length > 0) {
       console.log('📅 [PAYROLL-PERIODS] Period summary:');
-      sortedPeriods.slice(0, 5).forEach((p, idx) => {
-        console.log(`   ${idx + 1}. ${p.pay_period_start} to ${p.pay_period_end} (${p.employee_count} employees)`);
+      formattedPeriods.slice(0, 5).forEach((p, idx) => {
+        console.log(`   ${idx + 1}. ${p.pay_period_start} to ${p.pay_period_end} -> Pay ${p.pay_date} (${p.employee_count} employees)`);
       });
-      if (sortedPeriods.length > 5) {
-        console.log(`   ... and ${sortedPeriods.length - 5} more periods`);
+      if (formattedPeriods.length > 5) {
+        console.log(`   ... and ${formattedPeriods.length - 5} more periods`);
       }
     }
     console.log('═══════════════════════════════════════════════════════════\n');
     
-    res.json(sortedPeriods);
+    res.json(formattedPeriods);
   } catch (error) {
     const totalTime = Date.now() - startTime;
     console.error('\n═══════════════════════════════════════════════════════════');

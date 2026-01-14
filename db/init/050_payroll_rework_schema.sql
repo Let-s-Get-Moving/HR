@@ -214,8 +214,8 @@ BEGIN
         -- If all timecards are approved, calculate and create/update payroll
         IF v_all_approved THEN
             
-            -- Calculate pay date (day after period end)
-            v_pay_date := v_pay_period_end + INTERVAL '1 day';
+            -- Calculate pay date (Friday, 5 days after Sunday period end)
+            v_pay_date := v_pay_period_end + INTERVAL '5 days';
             
             -- Get total hours and overtime
             SELECT 
@@ -317,6 +317,8 @@ CREATE TRIGGER trigger_auto_create_payroll
 
 -- ===== HELPER FUNCTION: Calculate next pay period dates =====
 -- Based on bi-weekly schedule (last payout: Sept 26, 2025)
+-- Pay periods: Monday to Sunday (14 days)
+-- Pay date: Friday, 5 days after period ends
 CREATE OR REPLACE FUNCTION get_next_pay_period()
 RETURNS TABLE (
     period_start DATE,
@@ -324,7 +326,7 @@ RETURNS TABLE (
     pay_date DATE
 ) AS $$
 DECLARE
-    base_date DATE := '2025-09-26'::DATE;  -- Last payout date
+    base_date DATE := '2025-09-26'::DATE;  -- Reference payday (Friday)
     days_since INTEGER;
     weeks_since INTEGER;
     next_pay_date DATE;
@@ -335,13 +337,13 @@ BEGIN
     -- Calculate how many 2-week periods have passed
     weeks_since := FLOOR(days_since / 14.0);
     
-    -- Calculate next pay date
+    -- Calculate next pay date (Friday, every 2 weeks)
     next_pay_date := base_date + ((weeks_since + 1) * 14);
     
-    -- Period ends the day before pay date
-    period_end := next_pay_date - 1;
+    -- Period ends 5 days before pay date (Sunday)
+    period_end := next_pay_date - 5;
     
-    -- Period starts 14 days before period end
+    -- Period starts 13 days before period end (Monday)
     period_start := period_end - 13;
     
     pay_date := next_pay_date;
@@ -351,6 +353,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ===== HELPER FUNCTION: Get current pay period =====
+-- Pay periods: Monday to Sunday (14 days)
+-- Pay date: Friday, 5 days after period ends
 CREATE OR REPLACE FUNCTION get_current_pay_period()
 RETURNS TABLE (
     period_start DATE,
@@ -358,7 +362,7 @@ RETURNS TABLE (
     pay_date DATE
 ) AS $$
 DECLARE
-    base_date DATE := '2025-09-26'::DATE;
+    base_date DATE := '2025-09-26'::DATE;  -- Reference payday (Friday)
     days_since INTEGER;
     weeks_since INTEGER;
     current_pay_date DATE;
@@ -369,13 +373,13 @@ BEGIN
     -- Calculate how many complete 2-week periods have passed
     weeks_since := FLOOR(days_since / 14.0);
     
-    -- Current period pay date
+    -- Current period pay date (Friday, every 2 weeks)
     current_pay_date := base_date + (weeks_since * 14);
     
-    -- Period ends the day before pay date
-    period_end := current_pay_date - 1;
+    -- Period ends 5 days before pay date (Sunday)
+    period_end := current_pay_date - 5;
     
-    -- Period starts 14 days before period end
+    -- Period starts 13 days before period end (Monday)
     period_start := period_end - 13;
     
     pay_date := current_pay_date;
