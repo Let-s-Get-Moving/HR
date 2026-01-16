@@ -64,11 +64,56 @@ r.get("/employee/:id", async (req, res) => {
   }
 });
 
+// Helper function to calculate accrued days based on policy
+function calculateAccruedDays(hireDate, accrualRate, accrualFrequency, currentDate = new Date()) {
+  if (!hireDate || !accrualRate || accrualRate === 0) return 0;
+  
+  const hire = new Date(hireDate);
+  const now = new Date(currentDate);
+  const monthsDiff = (now.getFullYear() - hire.getFullYear()) * 12 + (now.getMonth() - hire.getMonth());
+  const daysDiff = Math.floor((now - hire) / (1000 * 60 * 60 * 24));
+  const weeksDiff = Math.floor(daysDiff / 7);
+  
+  switch (accrualFrequency) {
+    case 'monthly':
+      return accrualRate * monthsDiff;
+    case 'biweekly':
+      return accrualRate * Math.floor(weeksDiff / 2);
+    case 'quarterly':
+      return accrualRate * Math.floor(monthsDiff / 3);
+    case 'annually':
+      return accrualRate * Math.floor(monthsDiff / 12);
+    default:
+      return accrualRate * monthsDiff; // Default to monthly
+  }
+}
+
+// Helper function to calculate expiry date from carry_over_expiry_months
+function calculateExpiryDate(carryOverExpiryMonths, year) {
+  if (!carryOverExpiryMonths) return null;
+  
+  const expiryDate = new Date(year + 1, 0, 1); // Start of next year
+  expiryDate.setMonth(expiryDate.getMonth() + carryOverExpiryMonths);
+  return expiryDate.toISOString().split('T')[0];
+}
+
 // Get leave balances for all employees
 r.get("/balances", async (req, res) => {
   try {
+    const currentYear = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
+    
     let query = `
-      SELECT lb.*, lt.name as leave_type_name, e.first_name, e.last_name
+      SELECT 
+        lb.*,
+        lt.name as leave_type_name,
+        lt.default_annual_entitlement,
+        e.first_name,
+        e.last_name,
+        e.hire_date,
+        e.department_id,
+        e.job_title_id,
+        -- Calculate available_days
+        (COALESCE(lb.entitled_days, 0) + COALESCE(lb.carried_over_days, 0) - COALESCE(lb.used_days, 0)) as available_days
       FROM leave_balances lb
       JOIN leave_types lt ON lb.leave_type_id = lt.id
       JOIN employees e ON lb.employee_id = e.id
@@ -85,7 +130,10 @@ r.get("/balances", async (req, res) => {
     
     if (req.query.year) {
       conditions.push(`lb.year = $${params.length + 1}`);
-      params.push(parseInt(req.query.year, 10));
+      params.push(currentYear);
+    } else {
+      conditions.push(`lb.year = $${params.length + 1}`);
+      params.push(currentYear);
     }
     
     if (req.query.leave_type_id) {
@@ -107,7 +155,81 @@ r.get("/balances", async (req, res) => {
     query += ` ORDER BY e.first_name, lt.name`;
     
     const { rows } = await q(query, params);
-    res.json(rows);
+    
+    // Enrich each balance with policy information
+    const enrichedBalances = await Promise.all(rows.map(async (balance) => {
+      try {
+        // Get effective policy for this employee/leave_type combination
+        const policyQuery = `
+          SELECT lp.*
+          FROM leave_policies lp
+          WHERE (
+            (lp.leave_type_id = $1 OR lp.leave_type_id IS NULL)
+            AND (
+              (lp.applies_to_type = 'Employee' AND lp.applies_to_id = $2)
+              OR (lp.applies_to_type = 'JobTitle' AND lp.applies_to_id = $3)
+              OR (lp.applies_to_type = 'Department' AND lp.applies_to_id = $4)
+              OR (lp.applies_to_type = 'All')
+            )
+          )
+          ORDER BY
+            CASE WHEN lp.applies_to_type = 'Employee' THEN 1
+                 WHEN lp.applies_to_type = 'JobTitle' THEN 2
+                 WHEN lp.applies_to_type = 'Department' THEN 3
+                 ELSE 4 END,
+            CASE WHEN lp.leave_type_id = $1 THEN 1 ELSE 2 END
+          LIMIT 1
+        `;
+        
+        const policyParams = [
+          balance.leave_type_id,
+          balance.employee_id,
+          balance.job_title_id,
+          balance.department_id
+        ];
+        
+        const policyResult = await q(policyQuery, policyParams);
+        const policy = policyResult.rows[0] || {
+          accrual_rate: 0,
+          accrual_frequency: 'monthly',
+          carry_over_max_days: null,
+          carry_over_expiry_months: null
+        };
+        
+        // Calculate accrued entitlement if policy has accrual
+        let accruedEntitlement = balance.entitled_days;
+        if (policy.accrual_rate > 0 && balance.hire_date) {
+          accruedEntitlement = calculateAccruedDays(
+            balance.hire_date,
+            parseFloat(policy.accrual_rate),
+            policy.accrual_frequency || 'monthly'
+          );
+        }
+        
+        // Calculate expiry date
+        const expiryDate = calculateExpiryDate(policy.carry_over_expiry_months, balance.year);
+        
+        return {
+          ...balance,
+          accrual_rate: parseFloat(policy.accrual_rate) || 0,
+          accrual_frequency: policy.accrual_frequency || 'monthly',
+          expiry_date: expiryDate,
+          accrued_entitlement: accruedEntitlement
+        };
+      } catch (error) {
+        console.error(`Error enriching balance ${balance.id}:`, error);
+        // Return balance with defaults if policy lookup fails
+        return {
+          ...balance,
+          accrual_rate: 0,
+          accrual_frequency: 'monthly',
+          expiry_date: null,
+          accrued_entitlement: balance.entitled_days
+        };
+      }
+    }));
+    
+    res.json(enrichedBalances);
   } catch (error) {
     console.error('Error getting leave balances:', error);
     res.status(500).json({ error: error.message });
@@ -379,6 +501,113 @@ r.post("/balances/initialize", requireAuth, requireRole([ROLES.MANAGER, ROLES.AD
   } catch (error) {
     console.error('Error initializing leave balances:', error);
     res.status(500).json({ error: 'Failed to initialize leave balances', details: error.message });
+  }
+});
+
+// POST /api/leave/balances/recalculate - Recalculate all balances from scratch (manager/admin only)
+r.post("/balances/recalculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
+  try {
+    const { year } = req.body;
+    const currentYear = year ? parseInt(year, 10) : new Date().getFullYear();
+    
+    if (isNaN(currentYear)) {
+      return res.status(400).json({ error: 'Invalid year' });
+    }
+    
+    console.log(`🔄 Recalculating leave balances for year ${currentYear}...`);
+    
+    await q('BEGIN');
+    
+    try {
+      // Get all employees
+      const { rows: employees } = await q('SELECT id FROM employees WHERE status = $1', ['Active']);
+      
+      // Get all leave types
+      const { rows: leaveTypes } = await q('SELECT id FROM leave_types');
+      
+      const results = [];
+      
+      for (const employee of employees) {
+        for (const leaveType of leaveTypes) {
+          // Calculate used_days from approved requests
+          const { rows: usedDaysResult } = await q(`
+            SELECT COALESCE(SUM(total_days), 0) as used_days
+            FROM leave_requests
+            WHERE employee_id = $1
+              AND leave_type_id = $2
+              AND status = 'Approved'
+              AND EXTRACT(YEAR FROM start_date) = $3
+          `, [employee.id, leaveType.id, currentYear]);
+          
+          const usedDays = parseFloat(usedDaysResult[0]?.used_days || 0);
+          
+          // Get or create balance record
+          const { rows: existing } = await q(`
+            SELECT * FROM leave_balances
+            WHERE employee_id = $1 AND leave_type_id = $2 AND year = $3
+          `, [employee.id, leaveType.id, currentYear]);
+          
+          if (existing.length > 0) {
+            // Update existing balance with recalculated used_days
+            const { rows } = await q(`
+              UPDATE leave_balances
+              SET used_days = $1
+              WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
+              RETURNING *
+            `, [usedDays, employee.id, leaveType.id, currentYear]);
+            
+            results.push({
+              employee_id: employee.id,
+              leave_type_id: leaveType.id,
+              year: currentYear,
+              success: true,
+              used_days: usedDays,
+              balance: rows[0]
+            });
+          } else {
+            // Create new balance if doesn't exist
+            const { rows: leaveTypeInfo } = await q(`
+              SELECT default_annual_entitlement FROM leave_types WHERE id = $1
+            `, [leaveType.id]);
+            
+            const defaultEntitlement = parseFloat(leaveTypeInfo[0]?.default_annual_entitlement || 0);
+            
+            const { rows } = await q(`
+              INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
+              VALUES ($1, $2, $3, $4, $5, 0)
+              RETURNING *
+            `, [employee.id, leaveType.id, currentYear, defaultEntitlement, usedDays]);
+            
+            results.push({
+              employee_id: employee.id,
+              leave_type_id: leaveType.id,
+              year: currentYear,
+              success: true,
+              used_days: usedDays,
+              balance: rows[0]
+            });
+          }
+        }
+      }
+      
+      await q('COMMIT');
+      
+      const successCount = results.filter(r => r.success).length;
+      console.log(`✅ Recalculated ${successCount} leave balances`);
+      
+      res.json({
+        message: `Recalculated ${successCount} leave balances for year ${currentYear}`,
+        year: currentYear,
+        recalculated: successCount,
+        results
+      });
+    } catch (error) {
+      await q('ROLLBACK');
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error recalculating leave balances:', error);
+    res.status(500).json({ error: 'Failed to recalculate leave balances', details: error.message });
   }
 });
 

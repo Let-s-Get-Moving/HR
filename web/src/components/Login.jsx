@@ -271,7 +271,6 @@ export default function Login({ onLogin }) {
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold mb-2 text-tahoe-text-primary">{t('login.title')}</h1>
             <p className="text-tahoe-text-secondary">{t('login.subtitle')}</p>
-            <p className="text-xs text-tahoe-text-tertiary mt-2">{t('login.developer')}</p>
           </div>
 
           {/* Password Change Screen */}

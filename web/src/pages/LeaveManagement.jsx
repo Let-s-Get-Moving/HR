@@ -806,10 +806,14 @@ export default function LeaveManagement() {
                     </div>
                     <div className="text-right">
                       <p className="text-violet-100 text-sm font-medium">{t('leave.balances.accrualRate')}</p>
-                      <p className="text-4xl font-bold tracking-tight">2.5</p>
+                      <p className="text-4xl font-bold tracking-tight">
+                        {balances.length > 0 
+                          ? (balances.reduce((sum, b) => sum + (b.accrual_rate || 0), 0) / balances.length).toFixed(1)
+                          : '0.0'}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-violet-100 text-sm font-medium">days per month</p>
+                  <p className="text-violet-100 text-sm font-medium">avg days/month</p>
               </div>
               
               <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-6 text-white shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105">
@@ -821,10 +825,20 @@ export default function LeaveManagement() {
                     </div>
                     <div className="text-right">
                       <p className="text-amber-100 text-sm font-medium">{t('leave.balances.expiringSoon')}</p>
-                      <p className="text-4xl font-bold tracking-tight">5</p>
+                      <p className="text-4xl font-bold tracking-tight">
+                        {(() => {
+                          const thirtyDaysFromNow = new Date();
+                          thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+                          return balances.filter(b => {
+                            if (!b.expiry_date) return false;
+                            const expiry = new Date(b.expiry_date);
+                            return expiry >= new Date() && expiry <= thirtyDaysFromNow;
+                          }).length;
+                        })()}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-amber-100 text-sm font-medium">days in 30 days</p>
+                  <p className="text-amber-100 text-sm font-medium">types expiring soon</p>
               </div>
             </div>
 
@@ -899,9 +913,28 @@ export default function LeaveManagement() {
               ) : (
                 <div className="space-y-4">
                   {balances.map((balance) => {
-                    const totalDays = (balance.available_days || 0) + (balance.used_days || 0);
-                    const usedPercentage = totalDays > 0 ? ((balance.used_days || 0) / totalDays) * 100 : 0;
+                    // Calculate total days: entitled + carried_over (not available + used, since available = entitled + carried_over - used)
+                    const totalDays = (balance.entitled_days || 0) + (balance.carried_over_days || 0);
+                    const usedDays = balance.used_days || 0;
+                    const availableDays = balance.available_days || 0;
+                    const usedPercentage = totalDays > 0 ? (usedDays / totalDays) * 100 : 0;
                     const availablePercentage = 100 - usedPercentage;
+                    
+                    // Format accrual rate display
+                    const accrualRate = balance.accrual_rate || 0;
+                    const accrualFreq = balance.accrual_frequency || 'monthly';
+                    const accrualDisplay = accrualRate > 0 
+                      ? `${accrualRate} days/${accrualFreq === 'monthly' ? 'month' : accrualFreq === 'biweekly' ? '2 weeks' : accrualFreq === 'quarterly' ? 'quarter' : 'year'}`
+                      : 'No accrual';
+                    
+                    // Format expiry date
+                    let expiryDisplay = 'Never';
+                    if (balance.expiry_date) {
+                      const expiryDate = new Date(balance.expiry_date);
+                      if (!isNaN(expiryDate.getTime())) {
+                        expiryDisplay = `Expires ${expiryDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+                      }
+                    }
                     
                     return (
                       <div key={balance.id} className="p-4 border border-tahoe-border-primary rounded-tahoe-input hover:shadow-md transition-shadow bg-tahoe-card-bg">
@@ -910,25 +943,28 @@ export default function LeaveManagement() {
                             <div className="text-2xl">
                               {balance.leave_type_name === 'Vacation' ? '🏖️' :
                                balance.leave_type_name === 'Sick Leave' ? '🤒' :
-                               balance.leave_type_name === 'Personal Leave' ? '🎯' : '📋'}
+                               balance.leave_type_name === 'Personal Leave' ? '🎯' :
+                               balance.leave_type_name === 'Bereavement' ? '💐' :
+                               balance.leave_type_name === 'Jury Duty' ? '⚖️' :
+                               balance.leave_type_name === 'Parental Leave' ? '👶' : '📋'}
                             </div>
                             <div>
                               <h4 className="font-semibold text-lg text-white">{balance.leave_type_name}</h4>
                               <p className="text-sm text-tahoe-text-muted">
-                                {balance.accrual_rate || 2.5} days/month • Expires {balance.expiry_date || 'Never'}
+                                {accrualDisplay} • {expiryDisplay}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-blue-400">{balance.available_days || 0}</div>
+                            <div className="text-2xl font-bold text-blue-400">{availableDays.toFixed(1)}</div>
                             <div className="text-sm text-tahoe-text-muted">available</div>
                           </div>
                         </div>
                         
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span className="text-tahoe-text-primary">{t('leave.balances.used', { days: balance.used_days || 0 })}</span>
-                            <span className="text-tahoe-text-primary">{t('leave.balances.available', { days: balance.available_days || 0 })}</span>
+                            <span className="text-tahoe-text-primary">{t('leave.balances.used', { days: usedDays.toFixed(1) })}</span>
+                            <span className="text-tahoe-text-primary">{t('leave.balances.available', { days: availableDays.toFixed(1) })}</span>
                           </div>
                           
                           <div className="w-full bg-tahoe-bg-quaternary rounded-full h-3 overflow-hidden">
