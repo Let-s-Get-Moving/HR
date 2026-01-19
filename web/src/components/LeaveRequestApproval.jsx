@@ -31,9 +31,6 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
   const [showEditModal, setShowEditModal] = useState(false);
   const [employees, setEmployees] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
-  const [editingLeave, setEditingLeave] = useState(null);
-  const [deletingLeaveId, setDeletingLeaveId] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     loadRequests();
