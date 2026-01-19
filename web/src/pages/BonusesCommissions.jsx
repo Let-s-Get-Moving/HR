@@ -1791,10 +1791,10 @@ export default function BonusesCommissions() {
                   <button
                     key={idx}
                     onClick={() => goToPeriod(idx)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    className={`w-3 h-3 rounded-full transition-all ${
                       idx === currentIndex 
                         ? 'bg-tahoe-accent scale-125' 
-                        : 'bg-tahoe-bg-secondary hover:bg-tahoe-accent/50'
+                        : 'bg-tahoe-accent/50 hover:bg-tahoe-accent/70'
                     }`}
                     title={`${formatPeriodDate(period.period_start)} - ${formatPeriodDate(period.period_end)}`}
                   />
