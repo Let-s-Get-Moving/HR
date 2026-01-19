@@ -26,7 +26,7 @@ export default function Settings() {
   const locationInputRefs = useRef({ name: null, region: null }); // Refs for location inputs
   const leaveTypeInputRefs = useRef({ name: null, default_annual_entitlement: null, description: null, color: null }); // Refs for leave type inputs
   const holidayInputRefs = useRef({ date: null, description: null }); // Refs for holiday inputs
-  const jobTitleInputRefs = useRef({ name: null, description: null, department_id: null, level_grade: null, reports_to_id: null, min_salary: null, max_salary: null }); // Refs for job title inputs
+  const jobTitleInputRefs = useRef({ name: null, description: null, department_id: null }); // Refs for job title inputs
   const benefitsPackageInputRefs = useRef({ name: null, description: null }); // Refs for benefits package inputs
   const workScheduleInputRefs = useRef({ name: null, description: null, start_time: null, end_time: null, hours_per_week: null, break_duration: null }); // Refs for work schedule inputs
   const overtimePolicyInputRefs = useRef({ name: null, description: null, threshold_hours: null, multiplier: null }); // Refs for overtime policy inputs
@@ -150,11 +150,7 @@ export default function Settings() {
   const [newJobTitle, setNewJobTitle] = useState({
     name: '',
     description: '',
-    department_id: null,
-    level_grade: '',
-    reports_to_id: null,
-    min_salary: '',
-    max_salary: ''
+    department_id: null
   });
   const [editingJobTitle, setEditingJobTitle] = useState(null);
   const [editingJobTitleData, setEditingJobTitleData] = useState(null);
@@ -1427,10 +1423,6 @@ export default function Settings() {
     const name = jobTitleInputRefs.current.name?.value?.trim() || '';
     const description = jobTitleInputRefs.current.description?.value?.trim() || '';
     const department_id = jobTitleInputRefs.current.department_id?.value ? parseInt(jobTitleInputRefs.current.department_id.value, 10) : null;
-    const level_grade = jobTitleInputRefs.current.level_grade?.value?.trim() || '';
-    const reports_to_id = jobTitleInputRefs.current.reports_to_id?.value ? parseInt(jobTitleInputRefs.current.reports_to_id.value, 10) : null;
-    const min_salary = jobTitleInputRefs.current.min_salary?.value ? parseFloat(jobTitleInputRefs.current.min_salary.value) : null;
-    const max_salary = jobTitleInputRefs.current.max_salary?.value ? parseFloat(jobTitleInputRefs.current.max_salary.value) : null;
     
     if (!name) {
       setJobTitleError(t('settings.jobTitles.nameRequired'));
@@ -1446,11 +1438,7 @@ export default function Settings() {
         body: JSON.stringify({
           name,
           description: description || null,
-          department_id,
-          level_grade: level_grade || null,
-          reports_to_id,
-          min_salary,
-          max_salary
+          department_id
         })
       });
 
@@ -1458,10 +1446,6 @@ export default function Settings() {
       if (jobTitleInputRefs.current.name) jobTitleInputRefs.current.name.value = '';
       if (jobTitleInputRefs.current.description) jobTitleInputRefs.current.description.value = '';
       if (jobTitleInputRefs.current.department_id) jobTitleInputRefs.current.department_id.value = '';
-      if (jobTitleInputRefs.current.level_grade) jobTitleInputRefs.current.level_grade.value = '';
-      if (jobTitleInputRefs.current.reports_to_id) jobTitleInputRefs.current.reports_to_id.value = '';
-      if (jobTitleInputRefs.current.min_salary) jobTitleInputRefs.current.min_salary.value = '';
-      if (jobTitleInputRefs.current.max_salary) jobTitleInputRefs.current.max_salary.value = '';
       await loadJobTitles();
     } catch (error) {
       console.error("Error adding job title:", error);
@@ -1483,11 +1467,7 @@ export default function Settings() {
         body: JSON.stringify({
           name: editingJobTitleData.name.trim(),
           description: editingJobTitleData.description || null,
-          department_id: editingJobTitleData.department_id || null,
-          level_grade: editingJobTitleData.level_grade || null,
-          reports_to_id: editingJobTitleData.reports_to_id || null,
-          min_salary: editingJobTitleData.min_salary || null,
-          max_salary: editingJobTitleData.max_salary || null
+          department_id: editingJobTitleData.department_id || null
         })
       });
 
@@ -3587,63 +3567,6 @@ export default function Settings() {
                           rows="2"
                         />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.levelGrade')}</label>
-                          <input
-                            type="text"
-                            value={editingJobTitleData?.level_grade ?? ''}
-                            onChange={(e) => {
-                              setEditingJobTitleData({...editingJobTitleData, level_grade: e.target.value});
-                            }}
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.reportsTo')}</label>
-                          <select
-                            value={editingJobTitleData?.reports_to_id ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value ? parseInt(e.target.value, 10) : null;
-                              setEditingJobTitleData({...editingJobTitleData, reports_to_id: val});
-                            }}
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          >
-                            <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
-                            {editingJobTitleData?.id ? jobTitles.filter(jt => jt.id !== editingJobTitleData.id).map(jt => (
-                              <option key={jt.id} value={jt.id}>{jt.name}</option>
-                            )) : null}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.minSalary')}</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={editingJobTitleData?.min_salary ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value ? parseFloat(e.target.value) : null;
-                              setEditingJobTitleData({...editingJobTitleData, min_salary: val});
-                            }}
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.maxSalary')}</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={editingJobTitleData?.max_salary ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value ? parseFloat(e.target.value) : null;
-                              setEditingJobTitleData({...editingJobTitleData, max_salary: val});
-                            }}
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          />
-                        </div>
-                      </div>
                     </>
                   ) : (
                     // Add new mode - uncontrolled inputs
@@ -3681,52 +3604,6 @@ export default function Settings() {
                           className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                           rows="2"
                         />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.levelGrade')}</label>
-                          <input
-                            ref={(el) => jobTitleInputRefs.current.level_grade = el}
-                            type="text"
-                            defaultValue=""
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.reportsTo')}</label>
-                          <select
-                            ref={(el) => jobTitleInputRefs.current.reports_to_id = el}
-                            defaultValue=""
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          >
-                            <option value="">{t('settings.jobTitles.selectJobTitle')}</option>
-                            {jobTitles.map(jt => (
-                              <option key={jt.id} value={jt.id}>{jt.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.minSalary')}</label>
-                          <input
-                            ref={(el) => jobTitleInputRefs.current.min_salary = el}
-                            type="number"
-                            step="0.01"
-                            defaultValue=""
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-2">{t('settings.jobTitles.maxSalary')}</label>
-                          <input
-                            ref={(el) => jobTitleInputRefs.current.max_salary = el}
-                            type="number"
-                            step="0.01"
-                            defaultValue=""
-                            className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                          />
-                        </div>
                       </div>
                     </>
                   )}

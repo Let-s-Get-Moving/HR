@@ -607,17 +607,17 @@ r.get("/job-titles", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), asy
 
 r.post("/job-titles", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
-    const { name, description, department_id, level_grade, reports_to_id, min_salary, max_salary } = req.body;
+    const { name, description, department_id } = req.body;
     
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return res.status(400).json({ error: 'Job title name is required' });
     }
     
     const result = await q(`
-      INSERT INTO job_titles (name, description, department_id, level_grade, reports_to_id, min_salary, max_salary)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO job_titles (name, description, department_id)
+      VALUES ($1, $2, $3)
       RETURNING *
-    `, [name.trim(), description || null, department_id || null, level_grade || null, reports_to_id || null, min_salary || null, max_salary || null]);
+    `, [name.trim(), description || null, department_id || null]);
     
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -632,7 +632,7 @@ r.post("/job-titles", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), as
 r.put("/job-titles/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { name, description, department_id, level_grade, reports_to_id, min_salary, max_salary } = req.body;
+    const { name, description, department_id } = req.body;
     
     if (isNaN(id)) {
       return res.status(400).json({ error: 'Invalid job title ID' });
@@ -640,10 +640,10 @@ r.put("/job-titles/:id", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]),
     
     const result = await q(`
       UPDATE job_titles
-      SET name = $1, description = $2, department_id = $3, level_grade = $4, reports_to_id = $5, min_salary = $6, max_salary = $7
-      WHERE id = $8
+      SET name = $1, description = $2, department_id = $3
+      WHERE id = $4
       RETURNING *
-    `, [name, description || null, department_id || null, level_grade || null, reports_to_id || null, min_salary || null, max_salary || null, id]);
+    `, [name, description || null, department_id || null, id]);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Job title not found' });
