@@ -1090,10 +1090,16 @@ export default function LeaveManagement() {
                     return (
                       <div
                         key={index}
-                        onClick={() => day.isCurrentMonth && setSelectedDate(day.date)}
+                        onClick={() => {
+                          // If clicking a day from a different month, switch to that month
+                          if (!day.isCurrentMonth) {
+                            setCurrentMonth(new Date(day.date.getFullYear(), day.date.getMonth(), 1));
+                          }
+                          setSelectedDate(day.date);
+                        }}
                         className={`
                           relative p-2 min-h-[60px] cursor-pointer transition-colors border border-transparent
-                          ${day.isCurrentMonth ? 'hover:bg-tahoe-bg-hover' : 'text-tahoe-text-muted'}
+                          ${day.isCurrentMonth ? '' : 'text-tahoe-text-muted'} hover:bg-tahoe-bg-hover
                           ${isSelected ? 'bg-tahoe-primary-bg text-tahoe-primary-text' : ''}
                           ${day.isToday ? 'ring-2 ring-indigo-400' : ''}
                         `}
