@@ -1706,6 +1706,42 @@ export default function BonusesCommissions() {
         </div>
       )}
       
+      {/* Period Selector for Sales Users */}
+      {userRole === 'user' && salesRole && salesCommissionPeriods.length > 0 && (
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <span>📅</span> Select Period
+          </h3>
+          <div className="flex flex-wrap gap-2">
+            {salesCommissionPeriods.map((period, idx) => (
+              <button
+                key={idx}
+                onClick={() => setSelectedSalesPeriod({ start: period.period_start, end: period.period_end })}
+                className={`px-4 py-2 text-sm rounded-lg transition-colors ${
+                  selectedSalesPeriod.start === period.period_start && selectedSalesPeriod.end === period.period_end
+                    ? 'bg-tahoe-accent text-white'
+                    : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-secondary/80 text-tahoe-text-secondary'
+                }`}
+              >
+                {period.label || `${period.period_start} - ${period.period_end}`}
+              </button>
+            ))}
+          </div>
+          {selectedSalesPeriod.start && (
+            <p className="text-sm text-tahoe-text-muted mt-3">
+              Showing commissions for: {selectedSalesPeriod.start} to {selectedSalesPeriod.end}
+            </p>
+          )}
+        </div>
+      )}
+      
+      {/* Empty state when no periods exist for sales users */}
+      {userRole === 'user' && salesRole && salesCommissionPeriods.length === 0 && (
+        <div className="card p-6 text-center">
+          <p className="text-tahoe-text-muted">No commission periods available yet.</p>
+        </div>
+      )}
+      
       {/* Period Selection and Calculate Section - Admin/Manager only */}
       {userRole !== 'user' && (
       <div className="card p-6">
