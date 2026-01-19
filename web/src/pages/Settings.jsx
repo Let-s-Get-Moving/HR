@@ -5055,8 +5055,8 @@ export default function Settings() {
     selectedUserId,
     userPasswordError,
     userPasswordSuccess,
-    savingPassword,
-    showPassword
+    savingPassword
+    // Note: showPassword is intentionally excluded to prevent input from being recreated when toggling visibility
   ]);
 
   return (
