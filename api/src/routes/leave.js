@@ -641,6 +641,12 @@ r.post("/requests", async (req, res) => {
       console.log(`🔒 [RBAC] Forcing leave status to Pending for user`);
     }
     
+    // Auto-set approved_by for manager/admin creating Approved leaves
+    if (data.status === 'Approved' && !data.approved_by && req.employeeId) {
+      data.approved_by = req.employeeId;
+      console.log(`📝 [Leave] Auto-setting approved_by to ${req.employeeId} for manager/admin created Approved leave`);
+    }
+    
     // Start transaction
     await q('BEGIN');
     
@@ -826,6 +832,180 @@ r.put("/requests/:id/status", async (req, res) => {
   } catch (error) {
     await q('ROLLBACK');
     console.error('Error updating leave request status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update leave request (full edit) - Manager/Admin only
+r.put("/requests/:id", async (req, res) => {
+  const { id } = req.params;
+  const { employee_id, leave_type_id, start_date, end_date, total_days, reason, notes, request_method } = req.body;
+  
+  // RBAC: Only managers/admins can edit leave requests
+  if (req.userScope === 'own') {
+    console.log(`🚫 [RBAC] User role cannot edit leave requests`);
+    return res.status(403).json({ error: 'Only managers can edit leave requests' });
+  }
+  
+  try {
+    await q('BEGIN');
+    
+    // Get the existing leave request
+    const { rows: existingRows } = await q('SELECT * FROM leave_requests WHERE id = $1', [id]);
+    if (existingRows.length === 0) {
+      await q('ROLLBACK');
+      return res.status(404).json({ error: "Leave request not found" });
+    }
+    
+    const existing = existingRows[0];
+    const wasApproved = existing.status === 'Approved';
+    const oldYear = new Date(existing.start_date).getFullYear();
+    const newYear = new Date(start_date || existing.start_date).getFullYear();
+    
+    // If leave was approved, we need to adjust balances
+    if (wasApproved) {
+      // Subtract old days from old balance
+      await q(`
+        UPDATE leave_balances
+        SET used_days = GREATEST(0, used_days - $1)
+        WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
+      `, [existing.total_days, existing.employee_id, existing.leave_type_id, oldYear]);
+      
+      // Delete old leaves record
+      await q(`
+        DELETE FROM leaves 
+        WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
+      `, [existing.employee_id, existing.start_date, existing.end_date]);
+    }
+    
+    // Update the leave request
+    const { rows } = await q(`
+      UPDATE leave_requests 
+      SET 
+        employee_id = COALESCE($1, employee_id),
+        leave_type_id = COALESCE($2, leave_type_id),
+        start_date = COALESCE($3, start_date),
+        end_date = COALESCE($4, end_date),
+        total_days = COALESCE($5, total_days),
+        reason = COALESCE($6, reason),
+        notes = COALESCE($7, notes),
+        request_method = COALESCE($8, request_method)
+      WHERE id = $9
+      RETURNING *
+    `, [
+      employee_id || null,
+      leave_type_id || null,
+      start_date || null,
+      end_date || null,
+      total_days || null,
+      reason !== undefined ? reason : null,
+      notes !== undefined ? notes : null,
+      request_method || null,
+      id
+    ]);
+    
+    const updated = rows[0];
+    
+    // If leave is approved, add new days to balance
+    if (updated.status === 'Approved') {
+      await q(`
+        INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
+        VALUES ($1, $2, $3, 
+                (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
+                $4, 0)
+        ON CONFLICT (employee_id, leave_type_id, year)
+        DO UPDATE SET used_days = leave_balances.used_days + $4
+      `, [updated.employee_id, updated.leave_type_id, newYear, updated.total_days]);
+      
+      // Map leave type names to match leaves table constraint
+      const leaveTypeMap = {
+        'Vacation': 'Vacation',
+        'Sick Leave': 'Sick',
+        'Personal Leave': 'Other',
+        'Bereavement': 'Bereavement',
+        'Parental Leave': 'Parental',
+        'Jury Duty': 'Other',
+        'Military Leave': 'Other'
+      };
+      
+      // Get leave type name and map it
+      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [updated.leave_type_id])).rows[0]?.name || 'Other';
+      const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
+      
+      // Create new leaves record
+      await q(`
+        INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT DO NOTHING
+      `, [
+        updated.employee_id, 
+        mappedLeaveType,
+        updated.start_date, 
+        updated.end_date,
+        'HR',
+        updated.notes
+      ]);
+    }
+    
+    await q('COMMIT');
+    
+    console.log(`✅ [Leave] Updated leave request ${id}`);
+    res.json(updated);
+  } catch (error) {
+    await q('ROLLBACK');
+    console.error('Error updating leave request:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete leave request - Manager/Admin only
+r.delete("/requests/:id", async (req, res) => {
+  const { id } = req.params;
+  
+  // RBAC: Only managers/admins can delete leave requests
+  if (req.userScope === 'own') {
+    console.log(`🚫 [RBAC] User role cannot delete leave requests`);
+    return res.status(403).json({ error: 'Only managers can delete leave requests' });
+  }
+  
+  try {
+    await q('BEGIN');
+    
+    // Get the existing leave request
+    const { rows: existingRows } = await q('SELECT * FROM leave_requests WHERE id = $1', [id]);
+    if (existingRows.length === 0) {
+      await q('ROLLBACK');
+      return res.status(404).json({ error: "Leave request not found" });
+    }
+    
+    const existing = existingRows[0];
+    const year = new Date(existing.start_date).getFullYear();
+    
+    // If leave was approved, subtract from balances
+    if (existing.status === 'Approved') {
+      await q(`
+        UPDATE leave_balances
+        SET used_days = GREATEST(0, used_days - $1)
+        WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
+      `, [existing.total_days, existing.employee_id, existing.leave_type_id, year]);
+      
+      // Delete leaves record
+      await q(`
+        DELETE FROM leaves 
+        WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
+      `, [existing.employee_id, existing.start_date, existing.end_date]);
+    }
+    
+    // Delete the leave request
+    await q('DELETE FROM leave_requests WHERE id = $1', [id]);
+    
+    await q('COMMIT');
+    
+    console.log(`✅ [Leave] Deleted leave request ${id}`);
+    res.json({ message: 'Leave request deleted successfully' });
+  } catch (error) {
+    await q('ROLLBACK');
+    console.error('Error deleting leave request:', error);
     res.status(500).json({ error: error.message });
   }
 });

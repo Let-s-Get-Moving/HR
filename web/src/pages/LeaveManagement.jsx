@@ -6,6 +6,7 @@ import LeaveRequestForm from '../components/LeaveRequestForm.jsx';
 import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
 import LeaveRequestApproval from '../components/LeaveRequestApproval.jsx';
 import LeaveConfigModal from '../components/LeaveConfigModal.jsx';
+import ManualLeaveCreateModal from '../components/ManualLeaveCreateModal.jsx';
 
 import { API } from '../config/api.js';
 import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
@@ -25,6 +26,10 @@ export default function LeaveManagement() {
   const [historyCurrentPage, setHistoryCurrentPage] = useState(1);
   const [historyRecordsPerPage] = useState(20);
   const [showManagePolicies, setShowManagePolicies] = useState(false);
+  const [showManualLeaveCreate, setShowManualLeaveCreate] = useState(false);
+  const [manualCreatePrefillDate, setManualCreatePrefillDate] = useState(null);
+  const [editingLeave, setEditingLeave] = useState(null);
+  const [deletingLeaveId, setDeletingLeaveId] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [selectedEmployeeBalance, setSelectedEmployeeBalance] = useState(null);
@@ -218,6 +223,29 @@ export default function LeaveManagement() {
       loadData();
     } catch (error) {
       console.error("Error updating status:", error);
+    }
+  };
+
+  // Handle delete leave request (Manager/Admin only)
+  const handleDeleteLeave = async (leaveId) => {
+    if (!window.confirm(t('leave.confirmDelete') || 'Are you sure you want to delete this leave entry? This action cannot be undone.')) {
+      return;
+    }
+    
+    setDeletingLeaveId(leaveId);
+    try {
+      await API(`/api/leave/requests/${leaveId}`, {
+        method: "DELETE"
+      });
+      
+      // Refresh all data
+      await refreshData();
+      setRefreshTrigger(prev => prev + 1);
+    } catch (error) {
+      console.error("Error deleting leave:", error);
+      alert(t('leave.deleteError') || 'Failed to delete leave entry: ' + (error.message || 'Unknown error'));
+    } finally {
+      setDeletingLeaveId(null);
     }
   };
 
@@ -1185,27 +1213,84 @@ export default function LeaveManagement() {
                               {holidays.length > 0 && <h5 className="text-sm font-semibold text-tahoe-text-primary mb-2">{t('leave.calendar.leaveRequests')}</h5>}
                               {leaveRequests.map((leave, index) => (
                                 <div key={`leave-${index}`} className="border-l-4 border-indigo-400 pl-4 py-2 mb-2">
-                          <div className="font-medium">
-                            {leave.first_name} {leave.last_name}
-                          </div>
-                          <div className="text-sm text-tahoe-text-muted">
-                            {leave.leave_type_name}
-                          </div>
-                          <div className="text-xs text-tahoe-text-muted mt-1">
-                            {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
-                          </div>
-                          {leave.reason && (
-                            <div className="text-xs text-tahoe-text-muted mt-1">
-                              {leave.reason}
-                            </div>
-                          )}
-                        </div>
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <div className="font-medium">
+                                        {leave.first_name} {leave.last_name}
+                                      </div>
+                                      <div className="text-sm text-tahoe-text-muted">
+                                        {leave.leave_type_name}
+                                      </div>
+                                      <div className="text-xs text-tahoe-text-muted mt-1">
+                                        {formatShortDate(leave.start_date)} - {formatShortDate(leave.end_date)}
+                                      </div>
+                                      {leave.reason && (
+                                        <div className="text-xs text-tahoe-text-muted mt-1">
+                                          {leave.reason}
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Edit/Delete buttons for manager/admin */}
+                                    {(userRole === 'manager' || userRole === 'admin') && leave.id && (
+                                      <div className="flex items-center gap-1 ml-2">
+                                        <button
+                                          onClick={() => {
+                                            setEditingLeave(leave);
+                                            setManualCreatePrefillDate(null);
+                                            setShowManualLeaveCreate(true);
+                                          }}
+                                          className="p-1.5 text-tahoe-text-muted hover:text-tahoe-accent hover:bg-tahoe-bg-hover rounded transition-all duration-tahoe"
+                                          title={t('common.edit') || 'Edit'}
+                                        >
+                                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                          </svg>
+                                        </button>
+                                        <button
+                                          onClick={() => handleDeleteLeave(leave.id)}
+                                          disabled={deletingLeaveId === leave.id}
+                                          className="p-1.5 text-tahoe-text-muted hover:text-red-400 hover:bg-red-500/10 rounded transition-all duration-tahoe disabled:opacity-50"
+                                          title={t('common.delete') || 'Delete'}
+                                        >
+                                          {deletingLeaveId === leave.id ? (
+                                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                          ) : (
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                          )}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                               ))}
                             </div>
                     )}
                         </>
                       );
                     })()}
+                    
+                    {/* Manager/Admin action to manually create leave */}
+                    {(userRole === 'manager' || userRole === 'admin') && (
+                      <div className="pt-4 border-t border-tahoe-border-primary">
+                        <button
+                          onClick={() => {
+                            setEditingLeave(null);
+                            setManualCreatePrefillDate(selectedDate);
+                            setShowManualLeaveCreate(true);
+                          }}
+                          className="w-full py-2.5 px-4 rounded-tahoe-pill font-medium transition-all duration-tahoe flex items-center justify-center bg-tahoe-accent hover:bg-tahoe-accent-hover text-white"
+                        >
+                          <span className="mr-2">📝</span>
+                          {t('leave.recordLeaveEntry')}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-tahoe-text-muted text-sm">{t('leave.calendar.clickDayPrompt')}</p>
@@ -1249,6 +1334,24 @@ export default function LeaveManagement() {
         isOpen={showManagePolicies}
         onClose={() => setShowManagePolicies(false)}
         initialTab="policies"
+      />
+
+      {/* Manual Leave Create/Edit Modal (Manager/Admin only) */}
+      <ManualLeaveCreateModal
+        isOpen={showManualLeaveCreate}
+        onClose={() => {
+          setShowManualLeaveCreate(false);
+          setManualCreatePrefillDate(null);
+          setEditingLeave(null);
+        }}
+        defaultDate={manualCreatePrefillDate}
+        employees={employees}
+        leaveTypes={leaveTypes}
+        editingLeave={editingLeave}
+        onCreated={() => {
+          refreshData();
+          setRefreshTrigger(prev => prev + 1);
+        }}
       />
     </div>
   );
