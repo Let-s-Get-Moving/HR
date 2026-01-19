@@ -1,12 +1,17 @@
--- Add standard departments
--- This migration seeds the 6 required departments: Sales, Operations, Finance, IT, Marketing, HR
+-- Add all standard departments for business operations
+-- Updated 2026-01-19 to include all required departments
 
 INSERT INTO departments (name) VALUES 
-('Sales'),
-('Operations'),
+('Accounting'),
+('Customer Support'),
 ('Finance'),
+('Franchise Sales'),
+('Franchise Support'),
+('HR'),
 ('IT'),
+('Lead Admin'),
 ('Marketing'),
-('HR')
+('Operations'),
+('Sales')
 ON CONFLICT (name) DO NOTHING;
 
