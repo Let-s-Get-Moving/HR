@@ -1395,25 +1395,27 @@ export default function BonusesCommissions() {
     }
     
     if (availablePeriods.length === 0) {
+      // For sales users, just show the legend - they should use My Commissions tab
+      if (userRole === 'user' && salesRole) {
+        return (
+          <div className="space-y-6">
+            <CommissionLegend />
+          </div>
+        );
+      }
+      
       return (
         <div className="space-y-6">
           <div className="text-center py-8">
-            <div className="text-tahoe-text-muted">{t('bonuses.noCommissionDataAvailable')}</div>
-            {userRole === 'user' && salesRole ? (
-              <div className="text-sm text-tahoe-text-muted mt-2">
-                View your commissions in the <button 
-                  onClick={() => setActiveTab('sales-commissions')}
-                  className="text-tahoe-accent hover:underline"
-                >My Commissions</button> tab.
-              </div>
-            ) : userRole === 'user' ? (
-              <div className="text-sm text-tahoe-text-muted mt-2">No commission data available for your account.</div>
+            {userRole === 'user' ? (
+              <div className="text-tahoe-text-muted">No commission data available for your account.</div>
             ) : (
-              <div className="text-sm text-tahoe-text-muted mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
+              <>
+                <div className="text-tahoe-text-muted">{t('bonuses.noCommissionDataAvailable')}</div>
+                <div className="text-sm text-tahoe-text-muted mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
+              </>
             )}
           </div>
-          
-          {/* Commission Structure Legend - Always visible */}
           <CommissionLegend />
         </div>
       );
