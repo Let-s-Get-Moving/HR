@@ -1706,34 +1706,104 @@ export default function BonusesCommissions() {
         </div>
       )}
       
-      {/* Period Selector for Sales Users */}
-      {userRole === 'user' && salesRole && salesCommissionPeriods.length > 0 && (
-        <div className="card p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <span>📅</span> Select Period
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {salesCommissionPeriods.map((period, idx) => (
+      {/* Period Selector for Sales Users - Carousel Style */}
+      {userRole === 'user' && salesRole && salesCommissionPeriods.length > 0 && (() => {
+        // Sort periods chronologically (earliest first)
+        const sortedPeriods = [...salesCommissionPeriods].sort((a, b) => 
+          new Date(a.period_start) - new Date(b.period_start)
+        );
+        
+        // Find current period index
+        const currentIndex = sortedPeriods.findIndex(p => 
+          p.period_start === selectedSalesPeriod.start && p.period_end === selectedSalesPeriod.end
+        );
+        
+        const canGoPrev = currentIndex > 0;
+        const canGoNext = currentIndex < sortedPeriods.length - 1;
+        
+        const goToPeriod = (index) => {
+          const period = sortedPeriods[index];
+          setSelectedSalesPeriod({ start: period.period_start, end: period.period_end });
+        };
+        
+        // Format date helper - handles string dates properly
+        const formatPeriodDate = (dateStr) => {
+          if (!dateStr) return '';
+          const d = new Date(dateStr);
+          return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        };
+        
+        return (
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <span>📅</span> Select Period
+            </h3>
+            
+            {/* Carousel Navigation */}
+            <div className="flex items-center justify-center gap-4">
+              {/* Previous Arrow */}
               <button
-                key={idx}
-                onClick={() => setSelectedSalesPeriod({ start: period.period_start, end: period.period_end })}
-                className={`px-4 py-2 text-sm rounded-lg transition-colors ${
-                  selectedSalesPeriod.start === period.period_start && selectedSalesPeriod.end === period.period_end
-                    ? 'bg-tahoe-accent text-white'
-                    : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-secondary/80 text-tahoe-text-secondary'
+                onClick={() => canGoPrev && goToPeriod(currentIndex - 1)}
+                disabled={!canGoPrev}
+                className={`p-3 rounded-full transition-all ${
+                  canGoPrev 
+                    ? 'bg-tahoe-bg-secondary hover:bg-tahoe-accent hover:text-white cursor-pointer' 
+                    : 'bg-tahoe-bg-secondary/30 text-tahoe-text-muted/30 cursor-not-allowed'
                 }`}
               >
-                {formatShortDate(period.period_start)} - {formatShortDate(period.period_end)}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
               </button>
-            ))}
+              
+              {/* Current Period Display */}
+              <div className="flex-1 max-w-md">
+                <div className="bg-tahoe-accent text-white px-6 py-4 rounded-xl text-center">
+                  <div className="text-lg font-semibold">
+                    {formatPeriodDate(selectedSalesPeriod.start)} - {formatPeriodDate(selectedSalesPeriod.end)}
+                  </div>
+                  <div className="text-sm opacity-80 mt-1">
+                    Period {currentIndex + 1} of {sortedPeriods.length}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Next Arrow */}
+              <button
+                onClick={() => canGoNext && goToPeriod(currentIndex + 1)}
+                disabled={!canGoNext}
+                className={`p-3 rounded-full transition-all ${
+                  canGoNext 
+                    ? 'bg-tahoe-bg-secondary hover:bg-tahoe-accent hover:text-white cursor-pointer' 
+                    : 'bg-tahoe-bg-secondary/30 text-tahoe-text-muted/30 cursor-not-allowed'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Period Dots Indicator */}
+            {sortedPeriods.length > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                {sortedPeriods.map((period, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => goToPeriod(idx)}
+                    className={`w-2.5 h-2.5 rounded-full transition-all ${
+                      idx === currentIndex 
+                        ? 'bg-tahoe-accent scale-125' 
+                        : 'bg-tahoe-bg-secondary hover:bg-tahoe-accent/50'
+                    }`}
+                    title={`${formatPeriodDate(period.period_start)} - ${formatPeriodDate(period.period_end)}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          {selectedSalesPeriod.start && (
-            <p className="text-sm text-tahoe-text-muted mt-3">
-              Showing commissions for: {formatShortDate(selectedSalesPeriod.start)} to {formatShortDate(selectedSalesPeriod.end)}
-            </p>
-          )}
-        </div>
-      )}
+        );
+      })()}
       
       {/* Empty state when no periods exist for sales users */}
       {userRole === 'user' && salesRole && salesCommissionPeriods.length === 0 && (
@@ -1804,11 +1874,20 @@ export default function BonusesCommissions() {
         </div>
         
         {/* Existing periods quick select */}
-        {salesCommissionPeriods.length > 0 && (
+        {salesCommissionPeriods.length > 0 && (() => {
+          const sortedPeriods = [...salesCommissionPeriods].sort((a, b) => 
+            new Date(a.period_start) - new Date(b.period_start)
+          );
+          const formatPeriodDate = (dateStr) => {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+          };
+          return (
           <div className="mt-4 pt-4 border-t border-tahoe-border-primary">
             <label className="block text-sm font-medium mb-2">Or select existing period:</label>
             <div className="flex flex-wrap gap-2">
-              {salesCommissionPeriods.map((period, idx) => (
+              {sortedPeriods.map((period, idx) => (
                 <button
                   key={idx}
                   onClick={() => setSelectedSalesPeriod({ start: period.period_start, end: period.period_end })}
@@ -1818,12 +1897,13 @@ export default function BonusesCommissions() {
                       : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-secondary/80 text-tahoe-text-secondary'
                   }`}
                 >
-                  {formatShortDate(period.period_start)} - {formatShortDate(period.period_end)}
+                  {formatPeriodDate(period.period_start)} - {formatPeriodDate(period.period_end)}
                 </button>
               ))}
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
       )}
       
