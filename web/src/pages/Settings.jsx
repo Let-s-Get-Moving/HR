@@ -34,6 +34,7 @@ export default function Settings() {
   const attendancePolicyInputRefs = useRef({ name: null, description: null, grace_period: null, max_late_count: null, max_absent_count: null, warning_threshold: null, action_threshold: null }); // Refs for attendance policy inputs
   const remoteWorkPolicyInputRefs = useRef({ name: null, description: null, min_days_office: null, max_days_remote: null, approval_required: null }); // Refs for remote work policy inputs
   const userPasswordInputRef = useRef(null); // Ref for user password reset input
+  const userPasswordValueRef = useRef(''); // Ref to preserve password value across re-renders
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -708,6 +709,32 @@ export default function Settings() {
       loadUsersForPasswordReset();
     }
   }, [showUserPasswordsModal]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!showUserDropdown) return;
+    
+    const handleClickOutside = (event) => {
+      const dropdown = document.querySelector('[data-user-dropdown]');
+      const input = document.querySelector('[data-user-search-input]');
+      
+      if (dropdown && input && 
+          !dropdown.contains(event.target) && 
+          !input.contains(event.target)) {
+        setShowUserDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showUserDropdown]);
+
+  // Restore password input value after modal re-renders (for showPassword toggle)
+  useEffect(() => {
+    if (showUserPasswordsModal && userPasswordInputRef.current && userPasswordValueRef.current) {
+      userPasswordInputRef.current.value = userPasswordValueRef.current;
+    }
+  }, [showUserPasswordsModal, showPassword]);
 
   useEffect(() => {
     if (showJobTitlesModal && !jobTitlesLoadedRef.current) {
@@ -4878,7 +4905,8 @@ export default function Settings() {
       setUserSearchQuery('');
       setShowUserDropdown(false);
       setShowPassword(false);
-      // Clear the password input ref
+      // Clear the password input ref and value ref
+      userPasswordValueRef.current = '';
       if (userPasswordInputRef.current) {
         userPasswordInputRef.current.value = '';
       }
@@ -4918,6 +4946,7 @@ export default function Settings() {
                 <label className="block text-sm font-medium mb-2">Search User</label>
                 <div className="relative">
                   <input
+                    data-user-search-input
                     type="text"
                     value={userSearchQuery}
                     onChange={(e) => handleUserSearch(e.target.value)}
@@ -4949,6 +4978,7 @@ export default function Settings() {
                 {/* Dropdown Results */}
                 {showUserDropdown && filteredUsers.length > 0 && (
                   <div 
+                    data-user-dropdown
                     className="absolute z-50 w-full mt-1 rounded-tahoe-input shadow-xl max-h-60 overflow-y-auto"
                     style={{ backgroundColor: 'rgba(22, 22, 24, 0.95)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                   >
@@ -4989,6 +5019,10 @@ export default function Settings() {
                     className="w-full px-4 py-2 pr-12 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
                     minLength={8}
+                    onChange={(e) => {
+                      userPasswordValueRef.current = e.target.value;
+                    }}
+                    defaultValue={userPasswordValueRef.current}
                   />
                   <button
                     type="button"
@@ -5055,8 +5089,8 @@ export default function Settings() {
     selectedUserId,
     userPasswordError,
     userPasswordSuccess,
-    savingPassword
-    // Note: showPassword is intentionally excluded to prevent input from being recreated when toggling visibility
+    savingPassword,
+    showPassword // Re-added with useEffect to restore password value
   ]);
 
   return (
