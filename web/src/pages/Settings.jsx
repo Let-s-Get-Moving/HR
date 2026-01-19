@@ -135,6 +135,10 @@ export default function Settings() {
   // User Passwords Management State
   const [usersForPasswordReset, setUsersForPasswordReset] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedUserName, setSelectedUserName] = useState('');
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [newUserPassword, setNewUserPassword] = useState('');
   const [userPasswordError, setUserPasswordError] = useState('');
   const [userPasswordSuccess, setUserPasswordSuccess] = useState(false);
@@ -597,11 +601,68 @@ export default function Settings() {
   const loadUsersForPasswordReset = async () => {
     try {
       const response = await API("/api/users");
-      setUsersForPasswordReset(response.users || []);
+      const users = response.users || [];
+      setUsersForPasswordReset(users);
+      // Initially show all active users
+      const activeUsers = users
+        .filter(u => u.employee_status === 'Active')
+        .sort((a, b) => {
+          const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
+          const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+      setFilteredUsers(activeUsers);
     } catch (error) {
       console.error("Error loading users:", error);
       setUsersForPasswordReset([]);
+      setFilteredUsers([]);
     }
+  };
+
+  // Handle user search in password reset modal
+  const handleUserSearch = (query) => {
+    setUserSearchQuery(query);
+    setShowUserDropdown(true);
+    setUserPasswordSuccess(false);
+    setUserPasswordError('');
+    
+    if (!query.trim()) {
+      // Show all active users when search is empty
+      const activeUsers = usersForPasswordReset
+        .filter(u => u.employee_status === 'Active')
+        .sort((a, b) => {
+          const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
+          const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+      setFilteredUsers(activeUsers);
+      return;
+    }
+    
+    const searchTerm = query.toLowerCase();
+    const filtered = usersForPasswordReset
+      .filter(u => u.employee_status === 'Active')
+      .filter(user => {
+        const fullName = (user.full_name || `${user.first_name} ${user.last_name}`).toLowerCase();
+        const email = (user.email || '').toLowerCase();
+        return fullName.includes(searchTerm) || email.includes(searchTerm);
+      })
+      .sort((a, b) => {
+        const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
+        const nameB = (b.full_name || `${b.full_name} ${b.last_name}`).toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+    setFilteredUsers(filtered);
+  };
+
+  // Select a user from the dropdown
+  const selectUser = (user) => {
+    setSelectedUserId(user.id);
+    setSelectedUserName(user.full_name || `${user.first_name} ${user.last_name}`);
+    setUserSearchQuery(user.full_name || `${user.first_name} ${user.last_name}`);
+    setShowUserDropdown(false);
+    setUserPasswordSuccess(false);
+    setUserPasswordError('');
   };
 
   // Handle password reset for a user
@@ -4813,6 +4874,9 @@ export default function Settings() {
       setUserPasswordError('');
       setUserPasswordSuccess(false);
       setSelectedUserId('');
+      setSelectedUserName('');
+      setUserSearchQuery('');
+      setShowUserDropdown(false);
       setShowPassword(false);
       // Clear the password input ref
       if (userPasswordInputRef.current) {
@@ -4850,32 +4914,68 @@ export default function Settings() {
 
             <form onSubmit={handleResetUserPassword} className="space-y-4">
               {/* User Selection */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Select User</label>
-                <select
-                  value={selectedUserId}
-                  onChange={(e) => {
-                    setSelectedUserId(e.target.value);
-                    setUserPasswordSuccess(false);
-                    setUserPasswordError('');
-                  }}
-                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
-                >
-                  <option value="">-- Select a user --</option>
-                  {usersForPasswordReset
-                    .filter(u => u.employee_status === 'Active')
-                    .sort((a, b) => {
-                      const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
-                      const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
-                      return nameA.localeCompare(nameB);
-                    })
-                    .map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.full_name || `${user.first_name} ${user.last_name}`} ({user.email})
-                      </option>
+              <div className="relative">
+                <label className="block text-sm font-medium mb-2">Search User</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={userSearchQuery}
+                    onChange={(e) => handleUserSearch(e.target.value)}
+                    onFocus={() => setShowUserDropdown(true)}
+                    placeholder="Type to search employees..."
+                    className="w-full px-4 py-2 pl-10 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+                  />
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  {userSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleUserSearch('');
+                        setSelectedUserId('');
+                        setSelectedUserName('');
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary hover:text-white"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                
+                {/* Dropdown Results */}
+                {showUserDropdown && filteredUsers.length > 0 && (
+                  <div 
+                    className="absolute z-50 w-full mt-1 rounded-tahoe-input shadow-xl max-h-60 overflow-y-auto"
+                    style={{ backgroundColor: 'rgba(22, 22, 24, 0.95)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+                  >
+                    {filteredUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        type="button"
+                        onClick={() => selectUser(user)}
+                        className="w-full px-4 py-3 text-left hover:bg-tahoe-bg-hover transition-colors border-b border-tahoe-border-primary last:border-b-0"
+                      >
+                        <div className="font-medium text-white">
+                          {user.full_name || `${user.first_name} ${user.last_name}`}
+                        </div>
+                        <div className="text-sm text-secondary">{user.email}</div>
+                      </button>
                     ))}
-                </select>
+                  </div>
+                )}
+                
+                {showUserDropdown && filteredUsers.length === 0 && userSearchQuery && (
+                  <div 
+                    className="absolute z-50 w-full mt-1 rounded-tahoe-input shadow-xl px-4 py-3"
+                    style={{ backgroundColor: 'rgba(22, 22, 24, 0.95)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+                  >
+                    <p className="text-secondary text-sm">No employees found matching "{userSearchQuery}"</p>
+                  </div>
+                )}
               </div>
 
               {/* New Password */}
