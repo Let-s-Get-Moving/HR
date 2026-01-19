@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { ButtonProps } from '@/types';
 import LoadingSpinner from './LoadingSpinner';
-import { aria, generateId } from '@/utils/accessibility';
+import { aria, generateId } from '../utils/accessibility';
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   children,

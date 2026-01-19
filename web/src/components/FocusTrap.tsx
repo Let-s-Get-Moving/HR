@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { BaseComponentProps } from '@/types';
-import { FocusManager } from '@/utils/accessibility';
+import { FocusManager } from '../utils/accessibility';
 
 interface FocusTrapProps extends BaseComponentProps {
   active: boolean;

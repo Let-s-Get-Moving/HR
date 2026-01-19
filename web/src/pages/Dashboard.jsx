@@ -435,8 +435,7 @@ export default function Dashboard({ onNavigate, user }) {
                     <div className="w-20 rounded-full h-2" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
                       <div 
                         className="h-2 rounded-full transition-all duration-500"
-                        style={{ backgroundColor: '#818cf8' }} 
-                        style={{ width: `${dept.percentage}%` }}
+                        style={{ backgroundColor: '#818cf8', width: `${dept.percentage}%` }}
                       ></div>
                     </div>
                     <span className="text-sm font-medium text-white w-8 text-right">

@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import { ValidationError } from '@/types';
-import { formAccessibility } from '@/utils/accessibility';
+import { formAccessibility } from '../utils/accessibility';
 
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
