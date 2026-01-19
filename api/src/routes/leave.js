@@ -1843,6 +1843,15 @@ r.get("/calendar", async (req, res) => {
     const startDate = start_date || defaultStart;
     const endDate = end_date || defaultEnd;
     
+    console.log('📅 [Calendar API] Query params:', { 
+      start_date, 
+      end_date, 
+      computed_start: startDate, 
+      computed_end: endDate,
+      employeeId: req.employeeId,
+      scope: req.userScope
+    });
+    
     // Get approved leave requests
     let leaveQuery = `
       SELECT lr.*, e.first_name, e.last_name, lt.name as leave_type_name, lt.color,
@@ -1921,6 +1930,13 @@ r.get("/calendar", async (req, res) => {
       const dateA = new Date(a.date || a.start_date);
       const dateB = new Date(b.date || b.start_date);
       return dateA - dateB;
+    });
+    
+    console.log('📅 [Calendar API] Returning results:', {
+      leaveRequests: leaveRows.rows.length,
+      holidays: holidayRows.rows.length,
+      total: allEvents.length,
+      dateRange: `${startDate} to ${endDate}`
     });
     
     res.json(allEvents);

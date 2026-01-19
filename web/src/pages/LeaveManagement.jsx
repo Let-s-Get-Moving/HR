@@ -52,10 +52,16 @@ export default function LeaveManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
+      
+      // Calculate date range for calendar (1 year back, 1 year forward)
+      const now = new Date();
+      const startDate = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0]; // Jan 1 last year
+      const endDate = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0]; // Dec 31 next year
+      
       const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),
-        API("/api/leave/calendar"),
+        API(`/api/leave/calendar?start_date=${startDate}&end_date=${endDate}`),
         API("/api/leave/analytics"),
         API("/api/employees"),
         API("/api/leave/types")
@@ -100,10 +106,16 @@ export default function LeaveManagement() {
   const refreshData = async () => {
     try {
       console.log('🔄 Silently refreshing leave data...');
+      
+      // Calculate date range for calendar (1 year back, 1 year forward)
+      const now = new Date();
+      const startDate = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0]; // Jan 1 last year
+      const endDate = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0]; // Dec 31 next year
+      
       const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),
-        API("/api/leave/calendar"),
+        API(`/api/leave/calendar?start_date=${startDate}&end_date=${endDate}`),
         API("/api/leave/analytics"),
         API("/api/employees"),
         API("/api/leave/types")
