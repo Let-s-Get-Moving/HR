@@ -9,7 +9,7 @@ import CommissionLegend from '../components/CommissionLegend.jsx';
 
 export default function BonusesCommissions() {
   const { t } = useTranslation();
-  const { userRole } = useUserRole();
+  const { userRole, salesRole } = useUserRole();
   
   // Helper to format currency for display
   const formatCurrencyDisplay = (value) => {
@@ -30,7 +30,8 @@ export default function BonusesCommissions() {
     if (isNaN(num)) return '0%';
     return `${num.toFixed(1)}%`;
   };
-  const [activeTab, setActiveTab] = useState("analytics");
+  // Default to sales-commissions for users with sales_role, otherwise analytics
+  const [activeTab, setActiveTab] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [bonuses, setBonuses] = useState([]);
@@ -156,9 +157,25 @@ export default function BonusesCommissions() {
     // Hide import tab for user role
     ...(userRole !== 'user' ? [{ id: "import", name: t('bonuses.excelImport'), icon: "📥" }] : []),
     { id: "analytics", name: t('bonuses.analytics'), icon: "📊" },
-    // Sales Commissions tab - only for managers/admins
-    ...(userRole !== 'user' ? [{ id: "sales-commissions", name: "Sales Commissions", icon: "💰" }] : [])
+    // Sales Commissions tab - for managers/admins OR users with sales_role
+    ...((userRole !== 'user' || salesRole) ? [{ 
+      id: "sales-commissions", 
+      name: userRole === 'user' ? "My Commissions" : "Sales Commissions", 
+      icon: "💰" 
+    }] : [])
   ];
+
+  // Set default tab based on role
+  useEffect(() => {
+    if (activeTab === null && userRole !== null) {
+      // For users with sales_role, default to sales-commissions tab
+      if (userRole === 'user' && salesRole) {
+        setActiveTab('sales-commissions');
+      } else {
+        setActiveTab('analytics');
+      }
+    }
+  }, [userRole, salesRole, activeTab]);
 
   useEffect(() => {
     loadAvailablePeriods();
@@ -401,12 +418,12 @@ export default function BonusesCommissions() {
     }
   };
   
-  // Load sales commission periods on mount
+  // Load sales commission periods on mount (for admins/managers or users with sales_role)
   useEffect(() => {
-    if (userRole !== 'user') {
+    if (userRole !== 'user' || salesRole) {
       loadSalesCommissionPeriods();
     }
-  }, [userRole]);
+  }, [userRole, salesRole]);
   
   // Load data when period changes
   useEffect(() => {
@@ -1382,7 +1399,18 @@ export default function BonusesCommissions() {
         <div className="space-y-6">
           <div className="text-center py-8">
             <div className="text-tahoe-text-muted">{t('bonuses.noCommissionDataAvailable')}</div>
-            <div className="text-sm text-tahoe-text-muted mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
+            {userRole === 'user' && salesRole ? (
+              <div className="text-sm text-tahoe-text-muted mt-2">
+                View your commissions in the <button 
+                  onClick={() => setActiveTab('sales-commissions')}
+                  className="text-tahoe-accent hover:underline"
+                >My Commissions</button> tab.
+              </div>
+            ) : userRole === 'user' ? (
+              <div className="text-sm text-tahoe-text-muted mt-2">No commission data available for your account.</div>
+            ) : (
+              <div className="text-sm text-tahoe-text-muted mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
+            )}
           </div>
           
           {/* Commission Structure Legend - Always visible */}
@@ -1681,7 +1709,22 @@ export default function BonusesCommissions() {
   // ============================================================================
   const renderSalesCommissions = () => (
     <div className="space-y-6">
-      {/* Period Selection and Calculate Section */}
+      {/* Title for users */}
+      {userRole === 'user' && salesRole && (
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <span>💰</span> My Commission Details
+          </h3>
+          <p className="text-tahoe-text-muted mt-2">
+            {salesRole === 'agent' 
+              ? 'Your sales agent commission based on your booking percentage and revenue performance.'
+              : 'Your sales manager commission based on team performance.'}
+          </p>
+        </div>
+      )}
+      
+      {/* Period Selection and Calculate Section - Admin/Manager only */}
+      {userRole !== 'user' && (
       <div className="card p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <span>⚙️</span> Calculate Sales Commissions
@@ -1763,9 +1806,10 @@ export default function BonusesCommissions() {
           </div>
         )}
       </div>
+      )}
       
-      {/* Calculation Result */}
-      {salesCalcResult && (
+      {/* Calculation Result - Admin/Manager only */}
+      {userRole !== 'user' && salesCalcResult && (
         <div className="card p-6 border-l-4 border-green-500">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <span>✅</span> Calculation Result {salesCalcResult.summary?.dry_run && '(Preview)'}
@@ -1833,8 +1877,8 @@ export default function BonusesCommissions() {
         </div>
       )}
       
-      {/* Summary Card */}
-      {salesCommissionSummary && salesCommissionSummary.agent_count > 0 && (
+      {/* Summary Card - Admin/Manager only */}
+      {userRole !== 'user' && salesCommissionSummary && salesCommissionSummary.agent_count > 0 && (
         <div className="card p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <span>📊</span> Period Summary
@@ -1873,10 +1917,11 @@ export default function BonusesCommissions() {
         </div>
       )}
       
-      {/* Agent Commissions Table */}
+      {/* Agent Commissions Table - Show for admins/managers or users with sales_role='agent' */}
+      {(userRole !== 'user' || salesRole === 'agent') && (
       <div className="card p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span>👤</span> Agent Commissions
+          <span>👤</span> {userRole === 'user' ? 'My Agent Commission' : 'Agent Commissions'}
         </h3>
         
         {salesAgentCommissions.length > 0 ? (
@@ -1939,16 +1984,20 @@ export default function BonusesCommissions() {
         ) : (
           <div className="text-center py-8 text-tahoe-text-muted">
             <span className="text-4xl mb-2 block">📭</span>
-            No agent commissions for selected period.
-            {!selectedSalesPeriod.start && <span className="block text-sm mt-1">Select a period or calculate commissions.</span>}
+            {userRole === 'user' 
+              ? 'No commission data available for the current period.'
+              : 'No agent commissions for selected period.'}
+            {userRole !== 'user' && !selectedSalesPeriod.start && <span className="block text-sm mt-1">Select a period or calculate commissions.</span>}
           </div>
         )}
       </div>
+      )}
       
-      {/* Manager Commissions Table */}
+      {/* Manager Commissions Table - Show for admins/managers or users with sales_role='manager' */}
+      {(userRole !== 'user' || salesRole === 'manager') && (
       <div className="card p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <span>👔</span> Manager Commissions
+          <span>👔</span> {userRole === 'user' ? 'My Manager Commission' : 'Manager Commissions'}
         </h3>
         
         {salesManagerCommissions.length > 0 ? (
@@ -1994,10 +2043,13 @@ export default function BonusesCommissions() {
         ) : (
           <div className="text-center py-8 text-tahoe-text-muted">
             <span className="text-4xl mb-2 block">📭</span>
-            No manager commissions for selected period.
+            {userRole === 'user' 
+              ? 'No commission data available for the current period.'
+              : 'No manager commissions for selected period.'}
           </div>
         )}
       </div>
+      )}
     </div>
   );
 
@@ -2055,7 +2107,7 @@ export default function BonusesCommissions() {
       <div className="space-y-6">
         {userRole !== 'user' && activeTab === "import" && renderImport()}
         {activeTab === "analytics" && renderAnalytics()}
-        {userRole !== 'user' && activeTab === "sales-commissions" && renderSalesCommissions()}
+        {(userRole !== 'user' || salesRole) && activeTab === "sales-commissions" && renderSalesCommissions()}
       </div>
 
       {/* Add Bonus Modal */}

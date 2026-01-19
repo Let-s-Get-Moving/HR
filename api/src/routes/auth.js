@@ -23,9 +23,12 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     const userResult = await q(`
       SELECT u.id, u.email, u.username, u.password_hash, u.is_active,
              COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
-             COALESCE(r.role_name, 'user') as role
+             COALESCE(r.role_name, 'user') as role,
+             u.employee_id,
+             e.sales_role
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       WHERE (u.username = $1 OR u.email = $1) AND u.is_active = true
       LIMIT 1
     `, [username]);
@@ -106,7 +109,9 @@ r.post("/login", checkAccountLockout, async (req, res) => {
         username: user.username,
         full_name: user.full_name,
         email: user.email,
-        role: user.role 
+        role: user.role,
+        employee_id: user.employee_id,
+        sales_role: user.sales_role
       },
       sessionId,
       csrfToken // CSRF token for secure state-changing operations
@@ -157,10 +162,13 @@ r.get("/session", async (req, res) => {
     const sessionResult = await q(`
       SELECT s.id, s.user_id, s.expires_at, u.email, u.username,
              COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
-             COALESCE(r.role_name, 'user') as role
+             COALESCE(r.role_name, 'user') as role,
+             u.employee_id,
+             e.sales_role
       FROM user_sessions s
       JOIN users u ON s.user_id = u.id
       LEFT JOIN hr_roles r ON u.role_id = r.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       WHERE s.id = $1 AND s.expires_at > NOW()
     `, [sessionId]);
     
@@ -183,7 +191,9 @@ r.get("/session", async (req, res) => {
         username: session.username,
         full_name: session.full_name,
         email: session.email,
-        role: session.role
+        role: session.role,
+        employee_id: session.employee_id,
+        sales_role: session.sales_role
       }
     });
   } catch (error) {

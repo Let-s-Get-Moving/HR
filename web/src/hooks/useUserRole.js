@@ -5,16 +5,20 @@ import { sessionManager } from '../utils/sessionManager.js';
 export function useUserRole() {
   const [userRole, setUserRole] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+  const [salesRole, setSalesRole] = useState(null);
+  const [employeeId, setEmployeeId] = useState(null);
   
   useEffect(() => {
     const user = sessionManager.getUser();
     if (user) {
       setUserRole(user.role || 'user'); // Default to 'user' if no role
       setUserInfo(user);
+      setSalesRole(user.sales_role || null);
+      setEmployeeId(user.employee_id || null);
     }
   }, []);
   
-  return { userRole, userInfo };
+  return { userRole, userInfo, salesRole, employeeId };
 }
 
 // Helper functions
@@ -32,6 +36,19 @@ export function isUser(role) {
 
 export function hasFullAccess(role) {
   return role === 'admin' || role === 'manager';
+}
+
+// Sales role helper functions
+export function isSalesAgent(salesRole) {
+  return salesRole === 'agent';
+}
+
+export function isSalesManager(salesRole) {
+  return salesRole === 'manager';
+}
+
+export function hasSalesRole(salesRole) {
+  return salesRole === 'agent' || salesRole === 'manager';
 }
 
 export function canApproveLeave(role) {
