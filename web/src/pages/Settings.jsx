@@ -4865,8 +4865,8 @@ export default function Settings() {
     );
   };
 
-  // User Passwords Modal
-  const UserPasswordsModal = () => {
+  // User Passwords Modal (memoized to prevent re-creation on every render)
+  const UserPasswordsModal = useMemo(() => {
     if (!showUserPasswordsModal) return null;
 
     const handleClose = () => {
@@ -5047,7 +5047,17 @@ export default function Settings() {
         </div>
       </div>
     );
-  };
+  }, [
+    showUserPasswordsModal,
+    userSearchQuery,
+    filteredUsers,
+    showUserDropdown,
+    selectedUserId,
+    userPasswordError,
+    userPasswordSuccess,
+    savingPassword,
+    showPassword
+  ]);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -5401,7 +5411,7 @@ export default function Settings() {
       <AttendancePoliciesModal />
       <RemoteWorkPoliciesModal />
       <CommissionStructuresModal />
-      <UserPasswordsModal />
+      {UserPasswordsModal}
     </div>
   );
 }
