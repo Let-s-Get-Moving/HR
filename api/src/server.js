@@ -29,6 +29,7 @@ import health from "./routes/health.js";
 import termination from "./routes/termination.js";
 import bonuses from "./routes/bonuses.js";
 import commissions from "./routes/commissions.js";
+import salesCommissions from "./routes/sales-commissions.js";
 import imports from "./routes/imports.js";
 import admin from "./routes/admin.js";
 import timecards from "./routes/timecards.js";
@@ -298,6 +299,7 @@ app.use("/api/trusted-devices", trustedDevices); // Has own auth (login flow)
 app.use("/api/termination", requireAuth, termination);
 app.use("/api/bonuses", requireAuth, bonuses);
 app.use("/api/commissions", requireAuth, commissions);
+app.use("/api/sales-commissions", requireAuth, salesCommissions);
 app.use("/api/imports", requireAuth, imports);
 app.use("/api/admin", requireAuth, admin);
 app.use("/api/timecards", requireAuth, timecards);

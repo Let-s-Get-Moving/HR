@@ -282,7 +282,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       work_schedule_id: employee.work_schedule_id || null,
       overtime_policy_id: employee.overtime_policy_id || null,
       attendance_policy_id: employee.attendance_policy_id || null,
-      remote_work_policy_id: employee.remote_work_policy_id || null
+      remote_work_policy_id: employee.remote_work_policy_id || null,
+      // Sales commission config
+      sales_role: employee.sales_role || null,
+      sales_commission_enabled: employee.sales_commission_enabled || false,
+      sales_manager_fixed_pct: employee.sales_manager_fixed_pct || null
     });
     setIsEditing(true);
   };
@@ -1046,6 +1050,95 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
               </div>
             </div>
+
+            {/* Sales Commission Configuration - Only shown for Sales department */}
+            {employee.department_name && employee.department_name.toLowerCase().includes('sales') && hasFullAccess(userRole) && (
+              <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+                <h3 className="text-lg font-semibold mb-4 flex items-center text-tahoe-text-primary">
+                  <span className="mr-2">💰</span> Sales Commission Configuration
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-tahoe-text-muted">Commission Enabled:</span>
+                    {isEditing ? (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editData.sales_commission_enabled || false}
+                          onChange={(e) => setEditData({...editData, sales_commission_enabled: e.target.checked})}
+                          className="w-4 h-4 bg-tahoe-bg-secondary border-tahoe-border-primary rounded"
+                        />
+                        <span className="text-sm">Enabled</span>
+                      </label>
+                    ) : (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        employee.sales_commission_enabled 
+                          ? 'bg-green-900/50 text-green-300' 
+                          : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
+                      }`}>
+                        {employee.sales_commission_enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-tahoe-text-muted">Sales Role:</span>
+                    {isEditing ? (
+                      <select
+                        value={editData.sales_role || ''}
+                        onChange={(e) => setEditData({...editData, sales_role: e.target.value || null})}
+                        className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[150px]"
+                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                      >
+                        <option value="">Not Set</option>
+                        <option value="agent">Sales Agent</option>
+                        <option value="manager">Sales Manager</option>
+                      </select>
+                    ) : (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        employee.sales_role === 'manager' 
+                          ? 'bg-purple-900/50 text-purple-300' 
+                          : employee.sales_role === 'agent'
+                          ? 'bg-blue-900/50 text-blue-300'
+                          : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
+                      }`}>
+                        {employee.sales_role === 'manager' ? 'Sales Manager' : employee.sales_role === 'agent' ? 'Sales Agent' : 'Not Set'}
+                      </span>
+                    )}
+                  </div>
+                  {(editData.sales_role === 'manager' || employee.sales_role === 'manager') && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-tahoe-text-muted">Fixed Commission %:</span>
+                      {isEditing ? (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="0.001"
+                            min="0"
+                            max="10"
+                            value={editData.sales_manager_fixed_pct || ''}
+                            onChange={(e) => setEditData({...editData, sales_manager_fixed_pct: e.target.value ? parseFloat(e.target.value) : null})}
+                            className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 w-24 text-right"
+                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                            placeholder="e.g., 0.7"
+                          />
+                          <span className="text-tahoe-text-muted">%</span>
+                        </div>
+                      ) : (
+                        <span className="text-tahoe-text-primary">
+                          {employee.sales_manager_fixed_pct ? `${employee.sales_manager_fixed_pct}%` : <span className="text-tahoe-text-muted italic">Not set (uses bucket-sum)</span>}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <div className="mt-4 p-3 rounded-lg bg-tahoe-bg-secondary/50 text-xs text-tahoe-text-muted">
+                    <strong>Note:</strong> Nickname must match the name in imported sales data for commission calculations to work.
+                    {employee.nickname && (
+                      <span className="block mt-1 text-green-400">Current nickname: "{employee.nickname}"</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-6">

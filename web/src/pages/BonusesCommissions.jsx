@@ -89,6 +89,16 @@ export default function BonusesCommissions() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   
+  // Sales Commissions state
+  const [salesCommissionPeriods, setSalesCommissionPeriods] = useState([]);
+  const [selectedSalesPeriod, setSelectedSalesPeriod] = useState({ start: '', end: '' });
+  const [salesAgentCommissions, setSalesAgentCommissions] = useState([]);
+  const [salesManagerCommissions, setSalesManagerCommissions] = useState([]);
+  const [salesCommissionSummary, setSalesCommissionSummary] = useState(null);
+  const [salesCalcLoading, setSalesCalcLoading] = useState(false);
+  const [salesCalcResult, setSalesCalcResult] = useState(null);
+  const [salesDryRun, setSalesDryRun] = useState(false);
+  
   // Form data states
   const [newBonus, setNewBonus] = useState({
     employee_id: "",
@@ -121,7 +131,8 @@ export default function BonusesCommissions() {
   // Import-related state variables
   const [importFile, setImportFile] = useState(null);
   const [importStatus, setImportStatus] = useState(null);
-  const [manualPeriod, setManualPeriod] = useState(''); // For manual month/year selection
+  const [periodStart, setPeriodStart] = useState(''); // Required: period start date (YYYY-MM-DD)
+  const [periodEnd, setPeriodEnd] = useState(''); // Required: period end date (YYYY-MM-DD)
   const [monthlyCommissions, setMonthlyCommissions] = useState([]);
   
   // Analytics data
@@ -144,7 +155,9 @@ export default function BonusesCommissions() {
   const tabs = [
     // Hide import tab for user role
     ...(userRole !== 'user' ? [{ id: "import", name: t('bonuses.excelImport'), icon: "📥" }] : []),
-    { id: "analytics", name: t('bonuses.analytics'), icon: "📊" }
+    { id: "analytics", name: t('bonuses.analytics'), icon: "📊" },
+    // Sales Commissions tab - only for managers/admins
+    ...(userRole !== 'user' ? [{ id: "sales-commissions", name: "Sales Commissions", icon: "💰" }] : [])
   ];
 
   useEffect(() => {
@@ -300,6 +313,108 @@ export default function BonusesCommissions() {
     }
   };
 
+  // ============================================================================
+  // Sales Commission Functions
+  // ============================================================================
+  
+  // Load available sales commission periods
+  const loadSalesCommissionPeriods = async () => {
+    try {
+      const periods = await API('/api/sales-commissions/periods').catch(() => []);
+      setSalesCommissionPeriods(periods || []);
+      
+      // Auto-select most recent period if available
+      if (periods && periods.length > 0 && !selectedSalesPeriod.start) {
+        setSelectedSalesPeriod({
+          start: periods[0].period_start,
+          end: periods[0].period_end
+        });
+      }
+    } catch (error) {
+      console.error("Error loading sales commission periods:", error);
+      setSalesCommissionPeriods([]);
+    }
+  };
+  
+  // Load sales commission data for selected period
+  const loadSalesCommissionData = async () => {
+    if (!selectedSalesPeriod.start || !selectedSalesPeriod.end) return;
+    
+    try {
+      setLoading(true);
+      
+      const [agents, managers, summary] = await Promise.all([
+        API(`/api/sales-commissions/agents?period_start=${selectedSalesPeriod.start}&period_end=${selectedSalesPeriod.end}`).catch(() => []),
+        API(`/api/sales-commissions/managers?period_start=${selectedSalesPeriod.start}&period_end=${selectedSalesPeriod.end}`).catch(() => []),
+        API(`/api/sales-commissions/summary?period_start=${selectedSalesPeriod.start}&period_end=${selectedSalesPeriod.end}`).catch(() => null)
+      ]);
+      
+      setSalesAgentCommissions(agents || []);
+      setSalesManagerCommissions(managers || []);
+      setSalesCommissionSummary(summary);
+    } catch (error) {
+      console.error("Error loading sales commission data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Trigger sales commission calculation
+  const handleCalculateSalesCommissions = async () => {
+    if (!selectedSalesPeriod.start || !selectedSalesPeriod.end) {
+      setErrorMessage("Please select a period to calculate");
+      setShowErrorMessage(true);
+      return;
+    }
+    
+    setSalesCalcLoading(true);
+    setSalesCalcResult(null);
+    
+    try {
+      const result = await API('/api/sales-commissions/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          period_start: selectedSalesPeriod.start,
+          period_end: selectedSalesPeriod.end,
+          dry_run: salesDryRun
+        })
+      });
+      
+      setSalesCalcResult(result);
+      setSuccessMessage(salesDryRun 
+        ? "Dry run completed - no data saved" 
+        : "Sales commissions calculated successfully!");
+      setShowSuccessMessage(true);
+      
+      // Refresh data if not dry run
+      if (!salesDryRun) {
+        await loadSalesCommissionData();
+        await loadSalesCommissionPeriods();
+      }
+    } catch (error) {
+      console.error("Error calculating sales commissions:", error);
+      setErrorMessage(error.message || "Failed to calculate sales commissions");
+      setShowErrorMessage(true);
+    } finally {
+      setSalesCalcLoading(false);
+    }
+  };
+  
+  // Load sales commission periods on mount
+  useEffect(() => {
+    if (userRole !== 'user') {
+      loadSalesCommissionPeriods();
+    }
+  }, [userRole]);
+  
+  // Load data when period changes
+  useEffect(() => {
+    if (selectedSalesPeriod.start && selectedSalesPeriod.end) {
+      loadSalesCommissionData();
+    }
+  }, [selectedSalesPeriod]);
+
   // Excel Import Functions
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -313,16 +428,20 @@ export default function BonusesCommissions() {
       return;
     }
 
-    setImportStatus({ status: "processing", message: "Processing Excel file..." });
+    // Require timerange
+    if (!periodStart || !periodEnd) {
+      setErrorMessage("Please select both period start and end dates");
+      setShowErrorMessage(true);
+      return;
+    }
+
+    setImportStatus({ status: "processing", message: "Processing sales performance file..." });
     
     try {
       const formData = new FormData();
       formData.append('excel_file', importFile);
-      
-      // Add manual period if specified
-      if (manualPeriod) {
-        formData.append('period_month', manualPeriod);
-      }
+      formData.append('period_start', periodStart);
+      formData.append('period_end', periodEnd);
       
       const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
       const sessionId = localStorage.getItem('sessionId');
@@ -344,21 +463,10 @@ export default function BonusesCommissions() {
       
       setImportStatus({
         status: "success",
-        message: `Import completed! Main: ${result.summary.main.inserted} inserted, ${result.summary.main.updated} updated. Agents US: ${result.summary.agents_us.inserted} inserted, ${result.summary.agents_us.updated} updated. Hourly: ${result.summary.hourly.inserted} inserted, ${result.summary.hourly.updated} updated.`
+        message: `Import completed! ${result.summary.inserted} inserted, ${result.summary.updated} updated, ${result.summary.skipped} skipped. Period: ${result.summary.period_start} to ${result.summary.period_end}`
       });
       
-      // Show debug logs in console for troubleshooting
-      if (result.summary && result.summary.debug_logs) {
-        console.log('🔍 IMPORT DEBUG LOGS:');
-        result.summary.debug_logs.forEach(log => console.log(log));
-      }
-      
-      if (result.summary && result.summary.warnings) {
-        console.log('⚠️ IMPORT WARNINGS:');
-        result.summary.warnings.forEach(warning => console.log(warning));
-      }
-      
-      setSuccessMessage("Commission data imported successfully!");
+      setSuccessMessage("Sales performance data imported successfully!");
       setShowSuccessMessage(true);
       
       // Reload data
@@ -880,47 +988,42 @@ export default function BonusesCommissions() {
               <label htmlFor="excel-upload" className="cursor-pointer">
                 <div className="text-4xl mb-2">📊</div>
                 <p className="text-tahoe-text-muted">
-                  {importFile ? importFile.name : t('bonuses.clickToUploadExcelFile')}
+                  {importFile ? importFile.name : 'Click to upload sales-person-performance.xlsx'}
                 </p>
                 <p className="text-xs text-tahoe-text-muted mt-1">
-                  {t('bonuses.supportsFormats')}
+                  Supports .xlsx format with Name, Leads, Booked, Lost columns
                 </p>
               </label>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">{t('bonuses.periodMonthOptional')}</label>
-            <select
-              value={manualPeriod}
-              onChange={(e) => setManualPeriod(e.target.value)}
-              className="w-full rounded-tahoe-input px-4 py-2 text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-            >
-              <option value="">{t('bonuses.autoDetectFromSheetName')}</option>
-              {(() => {
-                // Generate last 12 months dynamically
-                const months = ['January', 'February', 'March', 'April', 'May', 'June', 
-                               'July', 'August', 'September', 'October', 'November', 'December'];
-                const today = new Date();
-                const options = [];
-                
-                for (let i = 0; i < 12; i++) {
-                  const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                  const monthName = months[date.getMonth()];
-                  const year = date.getFullYear();
-                  const value = `${year}-${String(date.getMonth() + 1).padStart(2, '0')}-01`;
-                  const label = `${monthName} ${year}`;
-                  options.push(<option key={value} value={value}>{label}</option>);
-                }
-                
-                return options;
-              })()}
-            </select>
-            <p className="text-xs text-tahoe-text-muted mt-1">
-              {t('bonuses.autoDetectHelper')}
-            </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Period Start *</label>
+              <input
+                type="date"
+                value={periodStart}
+                onChange={(e) => setPeriodStart(e.target.value)}
+                className="w-full rounded-tahoe-input px-4 py-2 text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Period End *</label>
+              <input
+                type="date"
+                value={periodEnd}
+                onChange={(e) => setPeriodEnd(e.target.value)}
+                className="w-full rounded-tahoe-input px-4 py-2 text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                required
+              />
+            </div>
           </div>
+          <p className="text-xs text-tahoe-text-muted mt-1">
+            Select the date range covered by the sales performance data
+          </p>
 
           {importStatus && (
             <div className={`p-4 rounded-tahoe-input ${
@@ -935,16 +1038,18 @@ export default function BonusesCommissions() {
           <div className="flex space-x-3">
             <button
               onClick={handleImport}
-              disabled={!importFile}
+              disabled={!importFile || !periodStart || !periodEnd}
               className="flex-1 px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe disabled:cursor-not-allowed"
-              style={{ backgroundColor: !importFile ? 'rgba(255, 255, 255, 0.12)' : '#0A84FF', color: '#ffffff' }}
+              style={{ backgroundColor: (!importFile || !periodStart || !periodEnd) ? 'rgba(255, 255, 255, 0.12)' : '#0A84FF', color: '#ffffff' }}
             >
-              {t('bonuses.importCommissionData')}
+              Import Sales Performance
             </button>
             <button
               onClick={() => {
                 setImportFile(null);
                 setImportStatus(null);
+                setPeriodStart('');
+                setPeriodEnd('');
               }}
               className="px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
@@ -1571,6 +1676,331 @@ export default function BonusesCommissions() {
   );
   };
 
+  // ============================================================================
+  // Sales Commissions Tab Content
+  // ============================================================================
+  const renderSalesCommissions = () => (
+    <div className="space-y-6">
+      {/* Period Selection and Calculate Section */}
+      <div className="card p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <span>⚙️</span> Calculate Sales Commissions
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Period Start</label>
+            <input
+              type="date"
+              value={selectedSalesPeriod.start}
+              onChange={(e) => setSelectedSalesPeriod({ ...selectedSalesPeriod, start: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary focus:ring-2 focus:ring-tahoe-accent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Period End</label>
+            <input
+              type="date"
+              value={selectedSalesPeriod.end}
+              onChange={(e) => setSelectedSalesPeriod({ ...selectedSalesPeriod, end: e.target.value })}
+              className="w-full px-3 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary focus:ring-2 focus:ring-tahoe-accent"
+            />
+          </div>
+          <div className="flex flex-col justify-end">
+            <label className="flex items-center gap-2 mb-2 text-sm">
+              <input
+                type="checkbox"
+                checked={salesDryRun}
+                onChange={(e) => setSalesDryRun(e.target.checked)}
+                className="w-4 h-4 rounded"
+              />
+              Dry Run (preview only)
+            </label>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleCalculateSalesCommissions}
+              disabled={!selectedSalesPeriod.start || !selectedSalesPeriod.end || salesCalcLoading}
+              className="btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {salesCalcLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Calculating...
+                </>
+              ) : (
+                <>
+                  <span>🧮</span>
+                  {salesDryRun ? 'Preview Calculation' : 'Calculate Commissions'}
+                </>
+              )}
+            </motion.button>
+          </div>
+        </div>
+        
+        {/* Existing periods quick select */}
+        {salesCommissionPeriods.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-tahoe-border-primary">
+            <label className="block text-sm font-medium mb-2">Or select existing period:</label>
+            <div className="flex flex-wrap gap-2">
+              {salesCommissionPeriods.map((period, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedSalesPeriod({ start: period.period_start, end: period.period_end })}
+                  className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                    selectedSalesPeriod.start === period.period_start && selectedSalesPeriod.end === period.period_end
+                      ? 'bg-tahoe-accent text-white'
+                      : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-secondary/80 text-tahoe-text-secondary'
+                  }`}
+                >
+                  {period.label || `${period.period_start} - ${period.period_end}`}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Calculation Result */}
+      {salesCalcResult && (
+        <div className="card p-6 border-l-4 border-green-500">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <span>✅</span> Calculation Result {salesCalcResult.summary?.dry_run && '(Preview)'}
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg">
+              <div className="text-2xl font-bold text-green-400">
+                {salesCalcResult.summary?.matched_agents || 0}
+                {salesCalcResult.summary?.unmatched_count > 0 && (
+                  <span className="text-sm text-yellow-400 ml-1">+{salesCalcResult.summary.unmatched_count}</span>
+                )}
+              </div>
+              <div className="text-xs text-tahoe-text-muted">
+                Matched{salesCalcResult.summary?.unmatched_count > 0 && ' + Unmatched'} Agents
+              </div>
+            </div>
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg">
+              <div className="text-2xl font-bold text-cyan-400">
+                {formatCurrencyDisplay(salesCalcResult.summary?.total_staging_revenue)}
+              </div>
+              <div className="text-xs text-tahoe-text-muted">Total Pool (for managers)</div>
+            </div>
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg">
+              <div className="text-2xl font-bold text-blue-400">
+                {formatCurrencyDisplay(salesCalcResult.summary?.total_agent_commission)}
+              </div>
+              <div className="text-xs text-tahoe-text-muted">Agent Commission</div>
+            </div>
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg">
+              <div className="text-2xl font-bold text-purple-400">
+                {formatCurrencyDisplay(salesCalcResult.summary?.total_manager_commission)}
+              </div>
+              <div className="text-xs text-tahoe-text-muted">Manager Commission</div>
+            </div>
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg">
+              <div className="text-2xl font-bold text-yellow-400">
+                {formatCurrencyDisplay(salesCalcResult.summary?.total_vacation_awards)}
+              </div>
+              <div className="text-xs text-tahoe-text-muted">Vacation Awards</div>
+            </div>
+          </div>
+          
+          {/* Unmatched names warning */}
+          {salesCalcResult.summary?.unmatched_names?.length > 0 && (
+            <div className="mt-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
+              <div className="font-medium text-yellow-400 mb-2 flex items-center gap-2">
+                <span>⚠️</span> Unmatched Names ({salesCalcResult.summary.unmatched_names.length})
+              </div>
+              <div className="text-sm text-yellow-300/80">
+                The following names could not be matched to employees (no personal commission), 
+                but their revenue <strong className="text-yellow-200">IS included</strong> in manager commission calculations:
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {salesCalcResult.summary.unmatched_names.map((name, idx) => (
+                  <span key={idx} className="px-2 py-1 bg-yellow-900/50 text-yellow-300 text-xs rounded">
+                    {name}
+                  </span>
+                ))}
+              </div>
+              <div className="text-xs text-yellow-400/60 mt-2">
+                To assign personal commissions to these agents, ensure their employee nicknames match exactly with imported data names.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Summary Card */}
+      {salesCommissionSummary && salesCommissionSummary.agent_count > 0 && (
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <span>📊</span> Period Summary
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="p-4 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-3xl font-bold text-tahoe-accent">{salesCommissionSummary.agent_count}</div>
+              <div className="text-sm text-tahoe-text-muted mt-1">Agents</div>
+            </div>
+            <div className="p-4 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-3xl font-bold text-green-400">{salesCommissionSummary.total_agent_commission_formatted}</div>
+              <div className="text-sm text-tahoe-text-muted mt-1">Agent Commission</div>
+            </div>
+            <div className="p-4 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-3xl font-bold text-purple-400">{salesCommissionSummary.total_manager_commission_formatted}</div>
+              <div className="text-sm text-tahoe-text-muted mt-1">Manager Commission</div>
+            </div>
+            <div className="p-4 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-3xl font-bold text-yellow-400">{formatCurrencyDisplay(salesCommissionSummary.total_vacation_awards)}</div>
+              <div className="text-sm text-tahoe-text-muted mt-1">Vacation Awards</div>
+            </div>
+            <div className="p-4 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-3xl font-bold text-blue-400">{salesCommissionSummary.total_commission_formatted}</div>
+              <div className="text-sm text-tahoe-text-muted mt-1">Total Commission</div>
+            </div>
+          </div>
+          
+          {/* Unmatched names in summary */}
+          {salesCommissionSummary.unmatched_names && salesCommissionSummary.unmatched_names.length > 0 && (
+            <div className="mt-4 p-3 bg-orange-900/20 border border-orange-600/30 rounded-lg">
+              <div className="text-sm text-orange-400 font-medium">
+                {salesCommissionSummary.unmatched_names.length} name(s) couldn't be matched
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* Agent Commissions Table */}
+      <div className="card p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <span>👤</span> Agent Commissions
+        </h3>
+        
+        {salesAgentCommissions.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-sm text-tahoe-text-muted border-b border-tahoe-border-primary">
+                  <th className="pb-3 font-medium">Agent</th>
+                  <th className="pb-3 font-medium text-right">Booking %</th>
+                  <th className="pb-3 font-medium text-right">Revenue</th>
+                  <th className="pb-3 font-medium text-right">Rate</th>
+                  <th className="pb-3 font-medium text-right">Commission</th>
+                  <th className="pb-3 font-medium text-right">Vacation</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesAgentCommissions.map((agent, idx) => (
+                  <tr key={idx} className="border-b border-tahoe-border-primary/50 hover:bg-tahoe-bg-secondary/30">
+                    <td className="py-3">
+                      <div className="font-medium">{agent.employee_name}</div>
+                      <div className="text-xs text-tahoe-text-muted">{agent.nickname}</div>
+                    </td>
+                    <td className="py-3 text-right">
+                      <span className={`px-2 py-1 rounded text-sm font-medium ${
+                        parseFloat(agent.booking_pct) >= 40 ? 'bg-green-900/50 text-green-300' :
+                        parseFloat(agent.booking_pct) >= 30 ? 'bg-yellow-900/50 text-yellow-300' :
+                        'bg-red-900/50 text-red-300'
+                      }`}>
+                        {formatPercentageDisplay(agent.booking_pct)}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right font-mono">{agent.revenue_formatted}</td>
+                    <td className="py-3 text-right font-mono text-tahoe-accent">{agent.commission_pct}%</td>
+                    <td className="py-3 text-right font-mono text-green-400 font-semibold">{agent.commission_amount_formatted}</td>
+                    <td className="py-3 text-right">
+                      {agent.vacation_award_value > 0 ? (
+                        <span className="px-2 py-1 bg-yellow-900/50 text-yellow-300 rounded text-sm">
+                          🎉 {agent.vacation_award_formatted}
+                        </span>
+                      ) : (
+                        <span className="text-tahoe-text-muted">-</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="font-semibold bg-tahoe-bg-secondary/50">
+                  <td className="py-3" colSpan="4">Total</td>
+                  <td className="py-3 text-right text-green-400">
+                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.commission_amount || 0), 0))}
+                  </td>
+                  <td className="py-3 text-right text-yellow-400">
+                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.vacation_award_value || 0), 0))}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-8 text-tahoe-text-muted">
+            <span className="text-4xl mb-2 block">📭</span>
+            No agent commissions for selected period.
+            {!selectedSalesPeriod.start && <span className="block text-sm mt-1">Select a period or calculate commissions.</span>}
+          </div>
+        )}
+      </div>
+      
+      {/* Manager Commissions Table */}
+      <div className="card p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+          <span>👔</span> Manager Commissions
+        </h3>
+        
+        {salesManagerCommissions.length > 0 ? (
+          <div className="space-y-4">
+            {salesManagerCommissions.map((manager, idx) => (
+              <div key={idx} className="p-4 bg-tahoe-bg-secondary rounded-lg">
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <div className="font-semibold text-lg">{manager.employee_name}</div>
+                    <div className="text-sm text-tahoe-text-muted">
+                      {manager.calculation_method === 'fixed_override' ? (
+                        <span className="text-purple-400">Fixed Rate: {manager.commission_pct_override}%</span>
+                      ) : (
+                        <span>Bucket-Sum Calculation</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-purple-400">{manager.commission_amount_formatted}</div>
+                    <div className="text-xs text-tahoe-text-muted">from {manager.pooled_revenue_formatted} pooled</div>
+                  </div>
+                </div>
+                
+                {/* Bucket breakdown for bucket-sum method */}
+                {manager.calculation_method === 'bucket_sum' && manager.breakdown && manager.breakdown.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-tahoe-border-primary">
+                    <div className="text-sm font-medium mb-2 text-tahoe-text-muted">Bucket Breakdown:</div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                      {manager.breakdown.map((bucket, bidx) => (
+                        <div key={bidx} className="p-2 bg-tahoe-bg-primary rounded text-center">
+                          <div className="text-xs text-tahoe-text-muted">{bucket.bucket_label}</div>
+                          <div className="text-xs text-tahoe-accent">{bucket.bucket_rate_pct}% rate</div>
+                          <div className="text-sm font-medium">{bucket.agent_count} agents</div>
+                          <div className="text-xs text-green-400">{bucket.bucket_commission_formatted}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-tahoe-text-muted">
+            <span className="text-4xl mb-2 block">📭</span>
+            No manager commissions for selected period.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -1625,6 +2055,7 @@ export default function BonusesCommissions() {
       <div className="space-y-6">
         {userRole !== 'user' && activeTab === "import" && renderImport()}
         {activeTab === "analytics" && renderAnalytics()}
+        {userRole !== 'user' && activeTab === "sales-commissions" && renderSalesCommissions()}
       </div>
 
       {/* Add Bonus Modal */}

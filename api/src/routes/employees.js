@@ -389,7 +389,11 @@ const employeeSchema = z.object({
   bank_transit_number: z.string().nullable().optional(),
   emergency_contact_name: z.string().nullable().optional(),
   emergency_contact_phone: z.string().nullable().optional(),
-  nickname: z.string().nullable().optional()
+  nickname: z.string().nullable().optional(),
+  // Sales commission config (Sales dept only)
+  sales_role: z.enum(['agent', 'manager']).nullable().optional(),
+  sales_commission_enabled: z.boolean().nullable().optional(),
+  sales_manager_fixed_pct: z.number().nullable().optional()
 });
 
 r.post("/", async (req, res) => {
@@ -557,7 +561,11 @@ r.put("/:id", async (req, res) => {
       contract_status: data.contract_status !== undefined ? (data.contract_status || null) : existing.contract_status,
       contract_signed_date: data.contract_signed_date !== undefined ? (data.contract_signed_date || null) : existing.contract_signed_date,
       gift_card_sent: data.gift_card_sent !== undefined ? data.gift_card_sent : (existing.gift_card_sent || false),
-      nickname: data.nickname !== undefined ? nullIfEmpty(data.nickname) : existing.nickname
+      nickname: data.nickname !== undefined ? nullIfEmpty(data.nickname) : existing.nickname,
+      // Sales commission config (restricted to manager/admin roles)
+      sales_role: req.userRole === 'user' ? existing.sales_role : (data.sales_role !== undefined ? nullIfEmpty(data.sales_role) : existing.sales_role),
+      sales_commission_enabled: req.userRole === 'user' ? existing.sales_commission_enabled : (data.sales_commission_enabled !== undefined ? (data.sales_commission_enabled ?? false) : (existing.sales_commission_enabled ?? false)),
+      sales_manager_fixed_pct: req.userRole === 'user' ? existing.sales_manager_fixed_pct : (data.sales_manager_fixed_pct !== undefined ? (data.sales_manager_fixed_pct || null) : existing.sales_manager_fixed_pct)
     };
     
     const { rows } = await q(
@@ -572,8 +580,9 @@ r.put("/:id", async (req, res) => {
            sin_number = $25, sin_expiry_date = $26, bank_name = $27,
            bank_transit_number = $28, bank_account_number = $29,
            contract_status = $30, contract_signed_date = $31, gift_card_sent = $32,
-           nickname = $33
-       WHERE id = $34
+           nickname = $33,
+           sales_role = $34, sales_commission_enabled = $35, sales_manager_fixed_pct = $36
+       WHERE id = $37
        RETURNING *`,
       [
         mergedData.first_name,
@@ -609,6 +618,9 @@ r.put("/:id", async (req, res) => {
         mergedData.contract_signed_date,
         mergedData.gift_card_sent,
         mergedData.nickname,
+        mergedData.sales_role,
+        mergedData.sales_commission_enabled,
+        mergedData.sales_manager_fixed_pct,
         id
       ]
     );

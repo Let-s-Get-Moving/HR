@@ -3,7 +3,8 @@ import multer from "multer";
 import { q } from "../db.js";
 import { z } from "zod";
 import { formatCurrency, formatNumber } from "../utils/formatting.js";
-import { importCommissionsFromExcel } from "../utils/commissionImporter.js";
+import { importSalesPerformanceFromExcel, detectSalesPerformanceHeaders } from "../utils/salesPerformanceImporter.js";
+import { loadExcelWorkbook, getWorksheetData } from "../utils/excelParser.js";
 import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
 import { createValidationMiddleware } from "../middleware/validation.js";
@@ -95,7 +96,9 @@ r.post("/debug-headers", upload.single('excel_file'), async (req, res) => {
   }
 });
 
-// Excel import endpoint with comprehensive file validation
+// Excel import endpoint - Sales Performance file ingestion
+// Requires: period_start (YYYY-MM-DD), period_end (YYYY-MM-DD)
+// Accepts: sales-person-performance.xlsx format only (old commission format removed)
 r.post("/import", upload.single('excel_file'), async (req, res) => {
   try {
     if (!req.file) {
@@ -104,13 +107,18 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
 
     console.log(`🔍 [COMMISSIONS] Starting file validation for: ${req.file.originalname}`);
     
-    // 1. COMPREHENSIVE FILE CONTENT VALIDATION
-    // Determine file type based on extension
+    // 1. Validate file type (Excel only for this format)
     let fileType = 'excel';
     if (req.file.originalname.endsWith('.csv')) {
-      fileType = 'csv';
-    } else if (req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls')) {
-      fileType = 'excel';
+      return res.status(400).json({
+        error: "CSV format not supported",
+        details: "Please upload an Excel (.xlsx) file in sales-person-performance format"
+      });
+    } else if (!req.file.originalname.endsWith('.xlsx') && !req.file.originalname.endsWith('.xls')) {
+      return res.status(400).json({
+        error: "Invalid file type",
+        details: "Please upload an Excel (.xlsx) file"
+      });
     }
     
     const fileValidation = await validateFileContent(req.file, fileType);
@@ -125,36 +133,84 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
     
     console.log(`✅ [COMMISSIONS] File validation passed:`, fileValidation.details);
 
-    const { sheet_name, period_month } = req.body;
+    // 2. Require timerange (period_start + period_end)
+    const { sheet_name, period_start, period_end } = req.body;
     
-    console.log(`📊 [COMMISSIONS] Starting commission import for validated file: ${req.file.originalname}`);
-    if (period_month) {
-      console.log(`📅 [COMMISSIONS] Using manual period override: ${period_month}`);
+    if (!period_start || !period_end) {
+      return res.status(400).json({
+        error: "Missing required timerange",
+        details: "Both period_start and period_end (YYYY-MM-DD) are required for commission imports"
+      });
     }
     
-    const summary = await importCommissionsFromExcel(
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(period_start) || !dateRegex.test(period_end)) {
+      return res.status(400).json({
+        error: "Invalid date format",
+        details: "period_start and period_end must be in YYYY-MM-DD format"
+      });
+    }
+    
+    console.log(`📊 [COMMISSIONS] Starting sales performance import for: ${req.file.originalname}`);
+    console.log(`📅 [COMMISSIONS] Period: ${period_start} to ${period_end}`);
+    
+    // 3. Detect file schema by reading headers
+    const workbook = loadExcelWorkbook(req.file.buffer, req.file.originalname);
+    const actualSheetName = sheet_name || workbook.SheetNames[0];
+    const data = getWorksheetData(workbook, actualSheetName);
+    
+    if (!data || data.length < 2) {
+      return res.status(400).json({
+        error: "File contains no data",
+        details: "The uploaded file has no data rows"
+      });
+    }
+    
+    // Check if this is the expected sales performance format
+    const headerRow = data[0];
+    if (!detectSalesPerformanceHeaders(headerRow)) {
+      console.log(`❌ [COMMISSIONS] Header mismatch. Got:`, headerRow);
+      return res.status(400).json({
+        error: "Unsupported file format",
+        details: "The old commission import format has been removed. Please upload a sales-person-performance.xlsx file with headers: Name, # Leads Received, Bad, % Bad, Sent, % Sent, Pending, % Pending, Booked, % Booked, Lost, % Lost, Cancelled, % Cancelled, Booked Total, Average Booking"
+      });
+    }
+    
+    // 4. Import the file
+    const summary = await importSalesPerformanceFromExcel(
       req.file.buffer, 
       req.file.originalname,
-      sheet_name,
-      period_month // Pass optional manual period
+      period_start,
+      period_end,
+      sheet_name
     );
     
-    console.log(`✅ [COMMISSIONS] Commission import completed:`, summary);
+    console.log(`✅ [COMMISSIONS] Sales performance import completed:`, summary);
     
     res.json({
-      message: "Commission import completed successfully",
-      summary: summary,
+      message: "Sales performance data imported successfully",
+      summary: {
+        file: summary.file,
+        sheet: summary.sheet,
+        period_start: summary.period_start,
+        period_end: summary.period_end,
+        inserted: summary.inserted,
+        updated: summary.updated,
+        skipped: summary.skipped,
+        errors: summary.errors.length > 0 ? summary.errors.slice(0, 10) : [] // Limit errors returned
+      },
       fileValidation: {
         validated: true,
         fileSize: req.file.size,
-        fileType: fileValidation.details?.type || 'excel'
+        fileType: 'excel'
       }
     });
     
   } catch (error) {
-    console.error("❌ [COMMISSIONS] Commission import failed:", error);
+    console.error("❌ [COMMISSIONS] Sales performance import failed:", error);
     res.status(500).json({ 
-      error: "Commission import failed", 
+      error: "Import failed", 
       details: error.message 
     });
   }
