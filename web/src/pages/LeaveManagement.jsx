@@ -467,7 +467,7 @@ export default function LeaveManagement() {
                     <div className="flex justify-between">
                       <span className="text-tahoe-text-muted">{t('leave.availableDays')}</span>
                       <span className="text-green-400 font-semibold">
-                        {(selectedEmployeeBalance.entitled_days + selectedEmployeeBalance.carried_over_days - selectedEmployeeBalance.used_days).toFixed(1)} days
+                        {((parseFloat(selectedEmployeeBalance.entitled_days) || 0) + (parseFloat(selectedEmployeeBalance.carried_over_days) || 0) - (parseFloat(selectedEmployeeBalance.used_days) || 0)).toFixed(1)} days
                       </span>
                     </div>
                   </div>
@@ -836,7 +836,7 @@ export default function LeaveManagement() {
                       <p className="text-violet-100 text-sm font-medium">{t('leave.balances.accrualRate')}</p>
                       <p className="text-4xl font-bold tracking-tight">
                         {balances.length > 0 
-                          ? (balances.reduce((sum, b) => sum + (b.accrual_rate || 0), 0) / balances.length).toFixed(1)
+                          ? (balances.reduce((sum, b) => sum + (parseFloat(b.accrual_rate) || 0), 0) / balances.length).toFixed(1)
                           : '0.0'}
                       </p>
                     </div>
@@ -942,9 +942,10 @@ export default function LeaveManagement() {
                 <div className="space-y-4">
                   {balances.map((balance) => {
                     // Calculate total days: entitled + carried_over (not available + used, since available = entitled + carried_over - used)
-                    const totalDays = (balance.entitled_days || 0) + (balance.carried_over_days || 0);
-                    const usedDays = balance.used_days || 0;
-                    const availableDays = balance.available_days || 0;
+                    // Use parseFloat to handle string values from database
+                    const totalDays = (parseFloat(balance.entitled_days) || 0) + (parseFloat(balance.carried_over_days) || 0);
+                    const usedDays = parseFloat(balance.used_days) || 0;
+                    const availableDays = parseFloat(balance.available_days) || 0;
                     const usedPercentage = totalDays > 0 ? (usedDays / totalDays) * 100 : 0;
                     const availablePercentage = 100 - usedPercentage;
                     

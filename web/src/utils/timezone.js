@@ -25,12 +25,33 @@ export function parseLocalDate(dateInput) {
   
   // If string, parse it
   if (typeof dateInput === 'string') {
-    // Handle YYYY-MM-DD format
+    // Handle YYYY-MM-DD format (most common from DB)
     const ymdMatch = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (ymdMatch) {
       const [, year, month, day] = ymdMatch.map(Number);
       if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
         return new Date(year, month - 1, day);
+      }
+    }
+    
+    // Handle MM/DD/YYYY format
+    const mdyMatch = dateInput.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (mdyMatch) {
+      const [, month, day, year] = mdyMatch.map(Number);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        return new Date(year, month - 1, day);
+      }
+    }
+    
+    // Handle "Mon Dec 28 2025" or similar format (from Date.toString())
+    const dateStrMatch = dateInput.match(/^\w{3}\s+(\w{3})\s+(\d{1,2})\s+(\d{4})/);
+    if (dateStrMatch) {
+      const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+      const monthName = dateStrMatch[1];
+      const day = parseInt(dateStrMatch[2], 10);
+      const year = parseInt(dateStrMatch[3], 10);
+      if (months[monthName] !== undefined && !isNaN(day) && !isNaN(year)) {
+        return new Date(year, months[monthName], day);
       }
     }
     
