@@ -1395,27 +1395,8 @@ export default function BonusesCommissions() {
     }
     
     if (availablePeriods.length === 0) {
-      // For sales users, just show the legend - they should use My Commissions tab
-      if (userRole === 'user' && salesRole) {
-        return (
-          <div className="space-y-6">
-            <CommissionLegend />
-          </div>
-        );
-      }
-      
       return (
         <div className="space-y-6">
-          <div className="text-center py-8">
-            {userRole === 'user' ? (
-              <div className="text-tahoe-text-muted">No commission data available for your account.</div>
-            ) : (
-              <>
-                <div className="text-tahoe-text-muted">{t('bonuses.noCommissionDataAvailable')}</div>
-                <div className="text-sm text-tahoe-text-muted mt-2">{t('bonuses.importExcelDataToSeeAnalytics')}</div>
-              </>
-            )}
-          </div>
           <CommissionLegend />
         </div>
       );
