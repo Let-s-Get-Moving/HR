@@ -4885,7 +4885,6 @@ export default function Settings() {
                   <input
                     ref={userPasswordInputRef}
                     type={showPassword ? "text" : "password"}
-                    defaultValue=""
                     placeholder="Enter new password (min 8 characters)"
                     className="w-full px-4 py-2 pr-12 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
