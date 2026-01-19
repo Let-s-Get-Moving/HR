@@ -1723,13 +1723,13 @@ export default function BonusesCommissions() {
                     : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-secondary/80 text-tahoe-text-secondary'
                 }`}
               >
-                {period.label || `${period.period_start} - ${period.period_end}`}
+                {formatShortDate(period.period_start)} - {formatShortDate(period.period_end)}
               </button>
             ))}
           </div>
           {selectedSalesPeriod.start && (
             <p className="text-sm text-tahoe-text-muted mt-3">
-              Showing commissions for: {selectedSalesPeriod.start} to {selectedSalesPeriod.end}
+              Showing commissions for: {formatShortDate(selectedSalesPeriod.start)} to {formatShortDate(selectedSalesPeriod.end)}
             </p>
           )}
         </div>
@@ -1818,7 +1818,7 @@ export default function BonusesCommissions() {
                       : 'bg-tahoe-bg-secondary hover:bg-tahoe-bg-secondary/80 text-tahoe-text-secondary'
                   }`}
                 >
-                  {period.label || `${period.period_start} - ${period.period_end}`}
+                  {formatShortDate(period.period_start)} - {formatShortDate(period.period_end)}
                 </button>
               ))}
             </div>
