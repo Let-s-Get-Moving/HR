@@ -50,10 +50,13 @@ export class UserManagementService {
         u.is_active,
         u.last_login,
         u.created_at,
+        u.employee_id,
         r.role_name,
-        r.display_name as role_display_name
+        r.display_name as role_display_name,
+        e.status as employee_status
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       ORDER BY u.created_at DESC
     `);
 

@@ -4853,7 +4853,7 @@ export default function Settings() {
                 >
                   <option value="">-- Select a user --</option>
                   {usersForPasswordReset
-                    .filter(u => u.is_active)
+                    .filter(u => u.employee_status === 'Active')
                     .sort((a, b) => {
                       const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
                       const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
