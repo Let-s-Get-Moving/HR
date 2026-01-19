@@ -33,9 +33,11 @@ r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), a
     const userResult = await q(`
       SELECT u.id, u.email, u.full_name, u.password_hash, u.is_active, u.employee_id,
              r.role_name, r.display_name as role_display_name,
-             r.permissions->>'scope' as scope
+             r.permissions->>'scope' as scope,
+             e.sales_role
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       WHERE (u.username = $1 OR u.full_name = $1 OR u.email = $1) AND u.is_active = true
       LIMIT 1
     `, [username]);
@@ -242,7 +244,8 @@ r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), a
         role: user.role_name,
         roleDisplayName: user.role_display_name,
         scope: user.scope || 'own',
-        employeeId: user.employee_id
+        employeeId: user.employee_id,
+        salesRole: user.sales_role || null
       },
       sessionId,
       csrfToken
@@ -365,9 +368,11 @@ r.post("/verify-mfa", async (req, res) => {
     const userResult = await q(`
       SELECT u.id, u.email, u.full_name, u.employee_id,
              r.role_name, r.display_name as role_display_name,
-             r.permissions->>'scope' as scope
+             r.permissions->>'scope' as scope,
+             e.sales_role
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       WHERE u.id = $1
     `, [userId]);
     
@@ -430,7 +435,8 @@ r.post("/verify-mfa", async (req, res) => {
         role: user.role_name,
         roleDisplayName: user.role_display_name,
         scope: user.scope || 'own',
-        employeeId: user.employee_id
+        employeeId: user.employee_id,
+        salesRole: user.sales_role || null
       },
       sessionId,
       csrfToken
@@ -746,10 +752,12 @@ r.get("/session", async (req, res) => {
     const sessionResult = await q(`
       SELECT s.id, s.user_id, s.expires_at, u.email, u.full_name, u.employee_id,
              r.role_name, r.display_name as role_display_name,
-             r.permissions->>'scope' as scope
+             r.permissions->>'scope' as scope,
+             e.sales_role
       FROM user_sessions s
       JOIN users u ON s.user_id = u.id
       LEFT JOIN hr_roles r ON u.role_id = r.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       WHERE s.id = $1 AND s.expires_at > NOW()
     `, [sessionId]);
     
@@ -769,7 +777,8 @@ r.get("/session", async (req, res) => {
         role: session.role_name,
         roleDisplayName: session.role_display_name,
         scope: session.scope || 'own',
-        employeeId: session.employee_id
+        employeeId: session.employee_id,
+        salesRole: session.sales_role || null
       }
     });
   } catch (error) {
