@@ -489,9 +489,9 @@ export default function Settings() {
     const buttons = document.querySelectorAll('[data-tab-button]');
     buttons.forEach(btn => {
       if (btn.dataset.tabId === tabId) {
-        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors bg-primary text-white";
+        btn.className = "flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors bg-primary text-white";
       } else {
-        btn.className = "flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors text-secondary hover:text-white hover:bg-tertiary";
+        btn.className = "flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors text-secondary hover:text-white hover:bg-tertiary";
       }
     });
     // Update content visibility with CSS
