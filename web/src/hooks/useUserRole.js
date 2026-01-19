@@ -13,8 +13,9 @@ export function useUserRole() {
     if (user) {
       setUserRole(user.role || 'user'); // Default to 'user' if no role
       setUserInfo(user);
-      setSalesRole(user.sales_role || null);
-      setEmployeeId(user.employee_id || null);
+      // Backend returns camelCase: salesRole, employeeId
+      setSalesRole(user.salesRole || null);
+      setEmployeeId(user.employeeId || null);
     }
   }, []);
   
