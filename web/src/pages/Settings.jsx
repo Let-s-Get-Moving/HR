@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
@@ -33,6 +33,7 @@ export default function Settings() {
   const overtimePolicyInputRefs = useRef({ name: null, description: null, threshold_hours: null, multiplier: null }); // Refs for overtime policy inputs
   const attendancePolicyInputRefs = useRef({ name: null, description: null, grace_period: null, max_late_count: null, max_absent_count: null, warning_threshold: null, action_threshold: null }); // Refs for attendance policy inputs
   const remoteWorkPolicyInputRefs = useRef({ name: null, description: null, min_days_office: null, max_days_remote: null, approval_required: null }); // Refs for remote work policy inputs
+  const userPasswordInputRef = useRef(null); // Ref for user password reset input
   const isLoadingRef = useRef(false);
   
   // Commission Structures State
@@ -608,12 +609,14 @@ export default function Settings() {
     setUserPasswordError('');
     setUserPasswordSuccess(false);
     
-    if (!selectedUserId || !newUserPassword) {
+    const passwordValue = userPasswordInputRef.current?.value?.trim() || '';
+    
+    if (!selectedUserId || !passwordValue) {
       setUserPasswordError('Please select a user and enter a new password');
       return;
     }
     
-    if (newUserPassword.length < 8) {
+    if (passwordValue.length < 8) {
       setUserPasswordError('Password must be at least 8 characters');
       return;
     }
@@ -622,10 +625,13 @@ export default function Settings() {
     try {
       await API(`/api/users/${selectedUserId}/password`, {
         method: 'PUT',
-        body: JSON.stringify({ newPassword: newUserPassword })
+        body: JSON.stringify({ newPassword: passwordValue })
       });
       setUserPasswordSuccess(true);
-      setNewUserPassword('');
+      // Clear the password input
+      if (userPasswordInputRef.current) {
+        userPasswordInputRef.current.value = '';
+      }
       // Keep selectedUserId so they can see which user was updated
     } catch (error) {
       setUserPasswordError(error.message || 'Failed to reset password');
@@ -4806,7 +4812,10 @@ export default function Settings() {
       setUserPasswordError('');
       setUserPasswordSuccess(false);
       setSelectedUserId('');
-      setNewUserPassword('');
+      // Clear the password input ref
+      if (userPasswordInputRef.current) {
+        userPasswordInputRef.current.value = '';
+      }
     };
 
     return (
@@ -4871,9 +4880,9 @@ export default function Settings() {
               <div>
                 <label className="block text-sm font-medium mb-2">New Password</label>
                 <input
+                  ref={userPasswordInputRef}
                   type="password"
-                  value={newUserPassword}
-                  onChange={(e) => setNewUserPassword(e.target.value)}
+                  defaultValue=""
                   placeholder="Enter new password (min 8 characters)"
                   className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
@@ -4908,7 +4917,7 @@ export default function Settings() {
                 </button>
                 <button
                   type="submit"
-                  disabled={savingPassword || !selectedUserId || !newUserPassword}
+                  disabled={savingPassword || !selectedUserId}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {savingPassword ? 'Resetting...' : 'Reset Password'}
