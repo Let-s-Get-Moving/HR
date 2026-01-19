@@ -5094,14 +5094,14 @@ export default function Settings() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex flex-wrap gap-1 mb-6 card p-1 rounded-lg">
+      <div className="flex mb-6 card p-1 rounded-lg">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             data-tab-button
             data-tab-id={tab.id}
             onClick={() => handleTabChange(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors ${
+            className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-colors ${
               activeTabRef.current === tab.id
                 ? "bg-primary text-white"
                 : "text-secondary hover:text-white hover:bg-tertiary"
@@ -5127,7 +5127,7 @@ export default function Settings() {
           {renderSettingsSection(notifications, "notifications", t('settings.notificationSettings'))}
         </div>
         
-        <div data-tab-content data-tab-id="security" style={{ display: activeTabRef.current === 'security' ? 'block' : 'none' }}>
+        <div data-tab-content data-tab-id="security" className="space-y-6" style={{ display: activeTabRef.current === 'security' ? 'block' : 'none' }}>
           <div className="card">
             {renderSettingsSection(security, "security", t('settings.securitySettings'))}
           </div>
