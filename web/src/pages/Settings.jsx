@@ -129,6 +129,15 @@ export default function Settings() {
   const [showAttendancePoliciesModal, setShowAttendancePoliciesModal] = useState(false);
   const [showRemoteWorkPoliciesModal, setShowRemoteWorkPoliciesModal] = useState(false);
   const [showCommissionStructuresModal, setShowCommissionStructuresModal] = useState(false);
+  const [showUserPasswordsModal, setShowUserPasswordsModal] = useState(false);
+
+  // User Passwords Management State
+  const [usersForPasswordReset, setUsersForPasswordReset] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [newUserPassword, setNewUserPassword] = useState('');
+  const [userPasswordError, setUserPasswordError] = useState('');
+  const [userPasswordSuccess, setUserPasswordSuccess] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   // Job Titles State
   const [jobTitles, setJobTitles] = useState([]);
@@ -581,6 +590,56 @@ export default function Settings() {
       setEmployees([]);
     }
   };
+
+  // Load users for password reset modal
+  const loadUsersForPasswordReset = async () => {
+    try {
+      const response = await API("/api/users");
+      setUsersForPasswordReset(response.users || []);
+    } catch (error) {
+      console.error("Error loading users:", error);
+      setUsersForPasswordReset([]);
+    }
+  };
+
+  // Handle password reset for a user
+  const handleResetUserPassword = async (e) => {
+    e.preventDefault();
+    setUserPasswordError('');
+    setUserPasswordSuccess(false);
+    
+    if (!selectedUserId || !newUserPassword) {
+      setUserPasswordError('Please select a user and enter a new password');
+      return;
+    }
+    
+    if (newUserPassword.length < 8) {
+      setUserPasswordError('Password must be at least 8 characters');
+      return;
+    }
+    
+    setSavingPassword(true);
+    try {
+      await API(`/api/users/${selectedUserId}/password`, {
+        method: 'PUT',
+        body: JSON.stringify({ newPassword: newUserPassword })
+      });
+      setUserPasswordSuccess(true);
+      setNewUserPassword('');
+      // Keep selectedUserId so they can see which user was updated
+    } catch (error) {
+      setUserPasswordError(error.message || 'Failed to reset password');
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  // Load users when password modal opens
+  useEffect(() => {
+    if (showUserPasswordsModal) {
+      loadUsersForPasswordReset();
+    }
+  }, [showUserPasswordsModal]);
 
   useEffect(() => {
     if (showJobTitlesModal && !jobTitlesLoadedRef.current) {
@@ -2768,6 +2827,16 @@ export default function Settings() {
                 <h4 className="text-lg font-semibold mb-2">Commission Structures</h4>
                 <p className="text-sm text-secondary">Configure commission percentages and thresholds for Sales Agents and Sales Managers</p>
               </button>
+
+              {/* User Passwords Button */}
+              <button
+                onClick={() => setShowUserPasswordsModal(true)}
+                className="card p-6 text-left hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
+              >
+                <div className="text-3xl mb-3">🔑</div>
+                <h4 className="text-lg font-semibold mb-2">User Passwords</h4>
+                <p className="text-sm text-secondary">Reset passwords for users who forgot their credentials.</p>
+              </button>
             </div>
           )}
 
@@ -4728,6 +4797,125 @@ export default function Settings() {
     );
   };
 
+  // User Passwords Modal
+  const UserPasswordsModal = () => {
+    if (!showUserPasswordsModal) return null;
+
+    const handleClose = () => {
+      setShowUserPasswordsModal(false);
+      setUserPasswordError('');
+      setUserPasswordSuccess(false);
+      setSelectedUserId('');
+      setNewUserPassword('');
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}>
+        <div className="bg-black/50 absolute inset-0" />
+        <div
+          className="relative rounded-tahoe-input shadow-xl backdrop-blur-lg max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b">
+            <h2 className="text-2xl font-semibold">User Passwords</h2>
+            <button
+              onClick={handleClose}
+              className="text-secondary hover:text-white transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 overflow-y-auto flex-1">
+            <p className="text-sm text-secondary mb-6">
+              Reset passwords for users who have forgotten their credentials. Select a user and set a new password.
+            </p>
+
+            <form onSubmit={handleResetUserPassword} className="space-y-4">
+              {/* User Selection */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Select User</label>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => {
+                    setSelectedUserId(e.target.value);
+                    setUserPasswordSuccess(false);
+                    setUserPasswordError('');
+                  }}
+                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+                >
+                  <option value="">-- Select a user --</option>
+                  {usersForPasswordReset
+                    .filter(u => u.is_active)
+                    .map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.full_name || `${user.first_name} ${user.last_name}`} ({user.email})
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-medium mb-2">New Password</label>
+                <input
+                  type="password"
+                  value={newUserPassword}
+                  onChange={(e) => setNewUserPassword(e.target.value)}
+                  placeholder="Enter new password (min 8 characters)"
+                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+                  minLength={8}
+                />
+                <p className="text-xs text-secondary mt-1">Password must be at least 8 characters long</p>
+              </div>
+
+              {/* Error Message */}
+              {userPasswordError && (
+                <div className="bg-red-900/20 border border-red-600 p-3 rounded-lg">
+                  <p className="text-red-400 text-sm">{userPasswordError}</p>
+                </div>
+              )}
+
+              {/* Success Message */}
+              {userPasswordSuccess && (
+                <div className="bg-green-900/20 border border-green-600 p-3 rounded-lg">
+                  <p className="text-green-400 text-sm">Password has been reset successfully.</p>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="px-4 py-2 rounded-tahoe-input hover:bg-tahoe-bg-hover transition-colors"
+                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPassword || !selectedUserId || !newUserPassword}
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingPassword ? 'Resetting...' : 'Reset Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
@@ -5080,6 +5268,7 @@ export default function Settings() {
       <AttendancePoliciesModal />
       <RemoteWorkPoliciesModal />
       <CommissionStructuresModal />
+      <UserPasswordsModal />
     </div>
   );
 }

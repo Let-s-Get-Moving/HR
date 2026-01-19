@@ -26,9 +26,16 @@ const requireAdmin = async (req, res, next) => {
   next();
 };
 
-// Get all users (admin only)
-r.get("/", requireAuth, requireAdmin, async (req, res) => {
+// Get all users (admin or manager)
+r.get("/", requireAuth, async (req, res) => {
   try {
+    // Check if user is admin or manager
+    const currentUser = await UserManagementService.getUserById(req.user.id);
+    const canAccess = ['hr_admin', 'hr_manager', 'admin', 'manager'].includes(currentUser?.role_name);
+    if (!canAccess) {
+      return res.status(403).json({ error: 'Manager or admin access required' });
+    }
+    
     const users = await UserManagementService.getAllUsers();
     res.json({ users });
   } catch (error) {
