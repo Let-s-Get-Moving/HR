@@ -618,8 +618,8 @@ const leaveRequestSchema = z.object({
   start_date: z.string(),
   end_date: z.string(),
   total_days: z.number().positive(),
-  reason: z.string().optional(),
-  notes: z.string().optional(),
+  reason: z.string().nullish(),
+  notes: z.string().nullish(),
   status: z.enum(['Pending', 'Approved', 'Rejected', 'Cancelled']).default('Pending'),
   request_method: z.enum(['Email', 'Phone', 'In-Person', 'Slack', 'Written', 'Other']).optional(),
   approved_by: z.number().int().optional()
