@@ -64,18 +64,28 @@ export default function ManualLeaveCreateModal({
   // Format Date to YYYY-MM-DD string
   function formatDateToYYYYMMDD(date) {
     if (!date) return '';
+    
+    // If already a YYYY-MM-DD string, return as is (avoids timezone conversion)
+    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)) {
+      return date.split('T')[0]; // Handle both "YYYY-MM-DD" and "YYYY-MM-DDTHH:MM:SS"
+    }
+    
+    // Otherwise convert Date object to YYYY-MM-DD using UTC to avoid timezone shifts
     const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    const year = d.getUTCFullYear();
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
   
   // Calculate total days between two dates (inclusive)
   function calculateTotalDays(start, end) {
     if (!start || !end) return 0;
-    const startD = new Date(start);
-    const endD = new Date(end);
+    // Parse dates as YYYY-MM-DD without timezone conversion
+    const [startYear, startMonth, startDay] = start.split('-').map(Number);
+    const [endYear, endMonth, endDay] = end.split('-').map(Number);
+    const startD = new Date(startYear, startMonth - 1, startDay);
+    const endD = new Date(endYear, endMonth - 1, endDay);
     const diffTime = Math.abs(endD - startD);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   }
