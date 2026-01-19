@@ -19,7 +19,6 @@ export default function Settings() {
   const [userPreferences, setUserPreferences] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [security, setSecurity] = useState([]);
-  const [maintenance, setMaintenance] = useState([]);
   const [saving, setSaving] = useState({});
   const [settingsEdits, setSettingsEdits] = useState({}); // Track unsaved edits for ALL categories: { [category]: { [key]: value } }
   const systemSettingsRefs = useRef({}); // Store refs for system settings inputs: { [key]: ref }
@@ -256,8 +255,7 @@ export default function Settings() {
     { id: "system", name: t('settings.system'), icon: "⚙️" },
     { id: "preferences", name: t('settings.preferences'), icon: "👤" },
     { id: "notifications", name: t('settings.notifications'), icon: "🔔" },
-    { id: "security", name: t('settings.security'), icon: "🔒" },
-    { id: "maintenance", name: t('settings.maintenance'), icon: "🛠️" }
+    { id: "security", name: t('settings.security'), icon: "🔒" }
   ];
 
   // Track if component is mounted (avoid double-loading on first render)
@@ -279,7 +277,6 @@ export default function Settings() {
   const preferencesLoadedRef = useRef(false);
   const notificationsLoadedRef = useRef(false);
   const securityLoadedRef = useRef(false);
-  const maintenanceLoadedRef = useRef(false);
 
   // Mapping of setting keys to their options arrays (for select-type settings)
   // This ensures select dropdowns always have their options, even when loaded from database
@@ -446,8 +443,7 @@ export default function Settings() {
     const tabConfig = {
       preferences: { ref: preferencesLoadedRef, setState: setUserPreferences },
       notifications: { ref: notificationsLoadedRef, setState: setNotifications },
-      security: { ref: securityLoadedRef, setState: setSecurity },
-      maintenance: { ref: maintenanceLoadedRef, setState: setMaintenance }
+      security: { ref: securityLoadedRef, setState: setSecurity }
     };
     
     const config = tabConfig[category];
@@ -2103,9 +2099,6 @@ export default function Settings() {
         break;
       case "security":
         updateState(security, setSecurity);
-        break;
-      case "maintenance":
-        updateState(maintenance, setMaintenance);
         break;
     }
     
@@ -5245,12 +5238,6 @@ export default function Settings() {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-        
-        <div data-tab-content data-tab-id="maintenance" style={{ display: activeTabRef.current === 'maintenance' ? 'block' : 'none' }}>
-          <div className="card">
-            {renderSettingsSection(maintenance, "maintenance", t('settings.maintenanceAndBackup'))}
           </div>
         </div>
       </div>

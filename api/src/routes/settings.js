@@ -172,6 +172,7 @@ r.put("/preferences/:key", requireAuth, async (req, res) => {
 });
 
 // Get notification settings (from database) - per-user settings with system defaults fallback
+// NOTE: Only functional notifications are returned. Removed: push_notifications, sms_notifications (not implemented)
 r.get("/notifications", optionalAuth, async (req, res) => {
   try {
     const userId = req.user?.id || null;
@@ -203,11 +204,13 @@ r.get("/notifications", optionalAuth, async (req, res) => {
     // If no settings exist at all, return hardcoded defaults
     if (rows.length === 0) {
       rows = [
-        { key: 'email_notifications', value: 'true', type: 'boolean', description: 'Enable email notifications' },
-        { key: 'push_notifications', value: 'false', type: 'boolean', description: 'Enable push notifications' },
-        { key: 'sms_notifications', value: 'false', type: 'boolean', description: 'Enable SMS notifications' }
+        { key: 'email_notifications', value: 'true', type: 'boolean', description: 'Enable email notifications' }
       ];
     }
+    
+    // Filter out non-functional notification settings
+    const functionalNotifications = ['email_notifications'];
+    rows = rows.filter(setting => functionalNotifications.includes(setting.key));
     
     res.json(rows);
   } catch (error) {
@@ -275,6 +278,12 @@ r.put("/notifications/:key", requireAuth, async (req, res) => {
 });
 
 // Get security settings (from database, requires auth to see MFA status)
+// NOTE: Only returns settings that are actually enforced by the backend.
+// Removed non-functional settings that were hardcoded:
+// - session_timeout_minutes (hardcoded to 8 hours in auth.js:71)
+// - max_login_attempts/login_attempts_limit (hardcoded to 5 in account-lockout.js:13)
+// - lockout_duration_minutes (hardcoded to 30 min in account-lockout.js:14)
+// - password_min_length (hardcoded to 8 chars in auth-mfa.js:612)
 r.get("/security", requireAuth, async (req, res) => {
   try {
     console.log('🔍 [SETTINGS] GET /security called');
@@ -305,6 +314,10 @@ r.get("/security", requireAuth, async (req, res) => {
     const userSettingsMap = new Map(userRows.rows.map(s => [s.key, s]));
     const rows = systemRows.rows.map(s => userSettingsMap.get(s.key) || s);
     
+    // Filter out non-functional security settings (hardcoded values that UI can't actually change)
+    const functionalSecuritySettings = ['two_factor_auth', 'password_expiry_days'];
+    let filteredRows = rows.filter(setting => functionalSecuritySettings.includes(setting.key));
+    
     // ALWAYS check actual MFA status from database (user is authenticated via requireAuth)
     try {
       const { MFAService } = await import('../services/mfa.js');
@@ -313,7 +326,7 @@ r.get("/security", requireAuth, async (req, res) => {
       console.log('🔍 [SETTINGS] MFA Status from database:', mfaEnabled);
       
       // Update the two_factor_auth value with actual status
-      const mfaSetting = rows.find(r => r.key === 'two_factor_auth');
+      const mfaSetting = filteredRows.find(r => r.key === 'two_factor_auth');
       if (mfaSetting) {
         mfaSetting.value = mfaEnabled ? 'true' : 'false';
         console.log('✅ [SETTINGS] Updated MFA toggle to:', mfaSetting.value);
@@ -323,19 +336,15 @@ r.get("/security", requireAuth, async (req, res) => {
       // Continue with default value if check fails
     }
     
-    res.json(rows);
+    res.json(filteredRows);
   } catch (error) {
     console.error("Error fetching security settings:", error);
     
-    // If table doesn't exist, return default security settings
+    // If table doesn't exist, return default security settings (only functional ones)
     if (error.message.includes('relation "application_settings" does not exist')) {
       console.log("📋 Settings table not found, returning default security settings");
       res.json([
-        { key: 'session_timeout_minutes', value: '60', type: 'number', description: 'Session timeout in minutes' },
-        { key: 'password_min_length', value: '8', type: 'number', description: 'Minimum password length' },
-        { key: 'two_factor_auth', value: 'false', type: 'boolean', description: 'Enable two-factor authentication' },
-        { key: 'login_attempts_limit', value: '5', type: 'number', description: 'Maximum login attempts before lockout' },
-        { key: 'lockout_duration_minutes', value: '30', type: 'number', description: 'Account lockout duration in minutes' }
+        { key: 'two_factor_auth', value: 'false', type: 'boolean', description: 'Enable two-factor authentication' }
       ]);
     } else {
       res.status(500).json({ error: "Failed to fetch security settings" });
@@ -445,108 +454,18 @@ r.put("/security/:key", requireAuth, async (req, res) => {
   }
 });
 
-// Get backup and maintenance settings (from database) - per-user settings with system defaults fallback
-r.get("/maintenance", optionalAuth, async (req, res) => {
-  try {
-    const userId = req.user?.id || null;
-    
-    // Get system defaults (user_id IS NULL)
-    const systemDefaults = await q(`
-      SELECT key, value, type, description
-      FROM application_settings
-      WHERE category = 'maintenance' AND user_id IS NULL
-      ORDER BY key
-    `).catch(() => ({ rows: [] }));
-    
-    let rows = systemDefaults.rows;
-    
-    // If user is logged in, get their overrides and merge with system defaults
-    if (userId) {
-      const userOverrides = await q(`
-        SELECT key, value, type, description
-        FROM application_settings
-        WHERE category = 'maintenance' AND user_id = $1
-        ORDER BY key
-      `, [userId]).catch(() => ({ rows: [] }));
-      
-      // Merge: user-specific settings override system defaults
-      const userSettingsMap = new Map(userOverrides.rows.map(s => [s.key, s]));
-      rows = systemDefaults.rows.map(s => userSettingsMap.get(s.key) || s);
-    }
-    
-    // If no settings exist at all, return hardcoded defaults
-    if (rows.length === 0) {
-      rows = [
-        { key: 'auto_backup', value: 'true', type: 'boolean', description: 'Enable automatic backups' },
-        { key: 'backup_frequency', value: 'daily', type: 'select', description: 'Backup frequency' },
-        { key: 'maintenance_mode', value: 'false', type: 'boolean', description: 'Enable maintenance mode' }
-      ];
-    }
-    
-    res.json(rows);
-  } catch (error) {
-    console.error("Error fetching maintenance settings:", error);
-    res.status(500).json({ error: "Failed to fetch maintenance settings" });
-  }
-});
-
-// Update maintenance setting (saves to database) - per-user settings
-r.put("/maintenance/:key", requireAuth, async (req, res) => {
-  const { key } = req.params;
-  const { value } = req.body;
-  const userId = req.user?.id;
-  
-  if (!userId) {
-    return res.status(401).json({ error: "Authentication required" });
-  }
-  
-  try {
-    console.log(`💾 Updating maintenance setting ${key} = ${value} for user ${userId}`);
-    console.log(`📊 User ID type: ${typeof userId}, value: ${userId}`);
-    
-    // Get the setting type and description from defaults
-    const defaultSetting = await q(`
-      SELECT type, description, category
-      FROM application_settings
-      WHERE key = $1 AND category = 'maintenance' AND user_id IS NULL
-      LIMIT 1
-    `, [key]).catch(() => ({ rows: [] }));
-    
-    console.log(`📊 Default setting found: ${defaultSetting.rows.length > 0}`);
-    
-    const settingType = defaultSetting.rows[0]?.type || 'boolean';
-    const description = defaultSetting.rows[0]?.description || '';
-    
-    console.log(`📊 Type: ${settingType}, Description: ${description}`);
-    
-    // Use INSERT ... ON CONFLICT to create or update per-user setting
-    // ON CONFLICT must match the partial unique index with WHERE clause
-    const result = await q(`
-      INSERT INTO application_settings (key, value, type, category, description, user_id, updated_at)
-      VALUES ($1, $2, $3, 'maintenance', $4, $5, NOW())
-      ON CONFLICT (key, user_id) WHERE user_id IS NOT NULL
-      DO UPDATE SET 
-        value = EXCLUDED.value,
-        updated_at = NOW()
-      RETURNING *
-    `, [key, value, settingType, description, userId]);
-    
-    console.log(`✅ Maintenance setting ${key} saved successfully for user ${userId}`);
-    
-    res.json({ 
-      message: "Maintenance setting updated successfully",
-      setting: result.rows[0]
-    });
-  } catch (error) {
-    console.error("❌ Error updating maintenance setting:", error);
-    console.error("❌ Error details:", error.message);
-    console.error("❌ Stack:", error.stack);
-    res.status(500).json({ 
-      error: "Failed to update maintenance setting",
-      details: error.message 
-    });
-  }
-});
+// ============================================================================
+// MAINTENANCE ENDPOINTS REMOVED (2026-01-19)
+// ============================================================================
+// The maintenance tab and all its settings were non-functional UI placeholders:
+// - backup_enabled: no backup system exists
+// - backup_frequency_days: no scheduled backups
+// - cleanup_enabled: no cleanup jobs
+// - retention_days: nothing checks this value
+// - maintenance_mode: no access blocking when "enabled"
+//
+// These settings were stored in the database but never read or enforced by any code.
+// ============================================================================
 
 // MFA Setup - Generate QR Code
 r.post("/security/mfa/setup", requireAuth, async (req, res) => {
@@ -640,20 +559,18 @@ r.get("/security/mfa/status", requireAuth, async (req, res) => {
 // Export settings
 r.get("/export", requireAuth, async (req, res) => {
   try {
-    const [systemSettings, userPreferences, notifications, security, maintenance] = await Promise.all([
+    const [systemSettings, userPreferences, notifications, security] = await Promise.all([
       q(`SELECT 'company_name' as key, 'C&C Logistics' as value, 'system' as category`),
       q(`SELECT 'theme' as key, 'dark' as value, 'preference' as category`),
-      q(`SELECT 'new_employee_notification' as key, 'true' as value, 'notification' as category`),
-      q(`SELECT 'session_timeout_minutes' as key, '30' as value, 'security' as category`),
-      q(`SELECT 'backup_frequency_days' as key, '7' as value, 'maintenance' as category`)
+      q(`SELECT 'email_notifications' as key, 'true' as value, 'notification' as category`),
+      q(`SELECT 'two_factor_auth' as key, 'false' as value, 'security' as category`)
     ]);
     
     const allSettings = [
       ...systemSettings.rows,
       ...userPreferences.rows,
       ...notifications.rows,
-      ...security.rows,
-      ...maintenance.rows
+      ...security.rows
     ];
     
     const csvData = 'Category,Key,Value\n' + 
