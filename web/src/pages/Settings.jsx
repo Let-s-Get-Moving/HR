@@ -4854,6 +4854,11 @@ export default function Settings() {
                   <option value="">-- Select a user --</option>
                   {usersForPasswordReset
                     .filter(u => u.is_active)
+                    .sort((a, b) => {
+                      const nameA = (a.full_name || `${a.first_name} ${a.last_name}`).toLowerCase();
+                      const nameB = (b.full_name || `${b.first_name} ${b.last_name}`).toLowerCase();
+                      return nameA.localeCompare(nameB);
+                    })
                     .map((user) => (
                       <option key={user.id} value={user.id}>
                         {user.full_name || `${user.first_name} ${user.last_name}`} ({user.email})
