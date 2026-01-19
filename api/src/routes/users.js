@@ -138,7 +138,7 @@ r.put("/:id", requireAuth, async (req, res) => {
   }
 });
 
-// Update password (self or admin)
+// Update password (self, admin, or manager)
 r.put("/:id/password", requireAuth, async (req, res) => {
   try {
     const targetUserId = parseInt(req.params.id);
@@ -149,8 +149,9 @@ r.put("/:id/password", requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'New password required' });
     }
     
-    // Only admin can change other users' passwords
-    if (targetUserId !== req.user.id && currentUser.role_name !== 'hr_admin') {
+    // Admin and manager can change other users' passwords
+    const canChangeOthersPassword = ['hr_admin', 'hr_manager', 'admin', 'manager'].includes(currentUser.role_name);
+    if (targetUserId !== req.user.id && !canChangeOthersPassword) {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
     
