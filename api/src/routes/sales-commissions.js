@@ -2,12 +2,16 @@
  * Sales Commissions API Routes
  * 
  * Endpoints for calculating and querying sales agent and manager commissions.
+ * Also includes Lead Status and Booked Opportunities import endpoints for
+ * commission adjustments (revenue add-ons, deductions, booking bonuses).
  * 
  * Calculation endpoint: admin/manager only
  * Read endpoints: agents can see own, managers/admin can see all
+ * Import endpoints: admin/manager only
  */
 
 import { Router } from "express";
+import multer from "multer";
 import { q } from "../db.js";
 import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
@@ -20,8 +24,44 @@ import {
     computeManagerBucketRate,
     MANAGER_BUCKETS
 } from "../utils/salesCommissionCalculator.js";
+import { importLeadStatusFromExcel } from "../utils/leadStatusImporter.js";
+import { importBookedOpportunitiesFromExcel } from "../utils/bookedOpportunitiesImporter.js";
+import { 
+    getAdjustmentsByPeriod, 
+    getEmptyAdjustments,
+    getUnmatchedNamesReport,
+    getImportStatus
+} from "../utils/commissionAdjustmentsAggregator.js";
+import { validateFileContent } from '../utils/fileValidation.js';
 
 const r = Router();
+
+// Configure multer for file uploads (memory storage for Excel files)
+const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+        const isExcel = file.mimetype.includes('sheet') || 
+                        file.originalname.endsWith('.xlsx') || 
+                        file.originalname.endsWith('.xls');
+        const isCSV = file.mimetype === 'text/csv' || 
+                      file.mimetype === 'application/csv' ||
+                      file.originalname.endsWith('.csv');
+        if (isExcel || isCSV) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only Excel or CSV files are allowed'), false);
+        }
+    }
+});
+
+/**
+ * Helper: Format currency for display
+ */
+function formatCurrency(value) {
+    const num = parseFloat(value) || 0;
+    return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 // Apply scope filter to all routes
 r.use(applyScopeFilter);
@@ -110,6 +150,12 @@ r.post("/calculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), asy
  * Get agent commissions for a period.
  * Agents can see their own; managers/admin can see all.
  * 
+ * Now includes 4 adjustment columns from Lead Status/Booked Opportunities imports:
+ *   - revenue_add_ons: Amount received from splits/transfers
+ *   - revenue_deductions: Amount deducted for splits/transfers to others
+ *   - booking_bonus_plus: Booking bonus received
+ *   - booking_bonus_minus: Booking bonus deducted
+ * 
  * Query: ?period_start=YYYY-MM-DD&period_end=YYYY-MM-DD&employee_id=123 (optional)
  */
 r.get("/agents", async (req, res) => {
@@ -133,13 +179,36 @@ r.get("/agents", async (req, res) => {
         
         const commissions = await getAgentCommissions(period_start, period_end, filterEmployeeId);
         
-        // Format currency values for response
-        const formatted = commissions.map(c => ({
-            ...c,
-            revenue_formatted: `$${parseFloat(c.revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            commission_amount_formatted: `$${parseFloat(c.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            vacation_award_formatted: c.vacation_award_value > 0 ? `$${c.vacation_award_value.toLocaleString('en-US')}` : null
-        }));
+        // Get adjustments for all employees in this period
+        let adjustmentsMap = new Map();
+        try {
+            adjustmentsMap = await getAdjustmentsByPeriod(period_start, period_end);
+        } catch (adjError) {
+            // If adjustment tables don't exist yet, continue with empty adjustments
+            console.log(`[SALES-COMM] Adjustment tables may not exist yet: ${adjError.message}`);
+        }
+        
+        // Format currency values for response and merge adjustments
+        const formatted = commissions.map(c => {
+            const adj = adjustmentsMap.get(c.employee_id) || getEmptyAdjustments();
+            
+            return {
+                ...c,
+                revenue_formatted: formatCurrency(c.revenue),
+                commission_amount_formatted: formatCurrency(c.commission_amount),
+                vacation_award_formatted: c.vacation_award_value > 0 ? `$${c.vacation_award_value.toLocaleString('en-US')}` : null,
+                // Raw adjustment values
+                revenue_add_ons: adj.revenue_add_ons,
+                revenue_deductions: adj.revenue_deductions,
+                booking_bonus_plus: adj.booking_bonus_plus,
+                booking_bonus_minus: adj.booking_bonus_minus,
+                // Formatted adjustment values
+                revenue_add_ons_formatted: formatCurrency(adj.revenue_add_ons),
+                revenue_deductions_formatted: formatCurrency(adj.revenue_deductions),
+                booking_bonus_plus_formatted: formatCurrency(adj.booking_bonus_plus),
+                booking_bonus_minus_formatted: formatCurrency(adj.booking_bonus_minus)
+            };
+        });
         
         res.json(formatted);
         
@@ -160,6 +229,12 @@ r.get("/agents", async (req, res) => {
  * GET /api/sales-commissions/managers
  * Get manager commissions for a period.
  * Managers can see their own; admin can see all.
+ * 
+ * Now includes 4 adjustment columns from Lead Status/Booked Opportunities imports:
+ *   - revenue_add_ons: Amount received from splits/transfers
+ *   - revenue_deductions: Amount deducted for splits/transfers to others
+ *   - booking_bonus_plus: Booking bonus received
+ *   - booking_bonus_minus: Booking bonus deducted
  * 
  * Query: ?period_start=YYYY-MM-DD&period_end=YYYY-MM-DD&employee_id=123 (optional)
  */
@@ -184,17 +259,40 @@ r.get("/managers", async (req, res) => {
         
         const commissions = await getManagerCommissions(period_start, period_end, filterEmployeeId);
         
-        // Format currency values for response
-        const formatted = commissions.map(c => ({
-            ...c,
-            pooled_revenue_formatted: `$${parseFloat(c.pooled_revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            commission_amount_formatted: `$${parseFloat(c.commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-            breakdown: c.breakdown?.map(b => ({
-                ...b,
-                bucket_revenue_formatted: `$${parseFloat(b.bucket_revenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-                bucket_commission_formatted: `$${parseFloat(b.bucket_commission || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            }))
-        }));
+        // Get adjustments for all employees in this period
+        let adjustmentsMap = new Map();
+        try {
+            adjustmentsMap = await getAdjustmentsByPeriod(period_start, period_end);
+        } catch (adjError) {
+            // If adjustment tables don't exist yet, continue with empty adjustments
+            console.log(`[SALES-COMM] Adjustment tables may not exist yet: ${adjError.message}`);
+        }
+        
+        // Format currency values for response and merge adjustments
+        const formatted = commissions.map(c => {
+            const adj = adjustmentsMap.get(c.employee_id) || getEmptyAdjustments();
+            
+            return {
+                ...c,
+                pooled_revenue_formatted: formatCurrency(c.pooled_revenue),
+                commission_amount_formatted: formatCurrency(c.commission_amount),
+                breakdown: c.breakdown?.map(b => ({
+                    ...b,
+                    bucket_revenue_formatted: formatCurrency(b.bucket_revenue),
+                    bucket_commission_formatted: formatCurrency(b.bucket_commission)
+                })),
+                // Raw adjustment values
+                revenue_add_ons: adj.revenue_add_ons,
+                revenue_deductions: adj.revenue_deductions,
+                booking_bonus_plus: adj.booking_bonus_plus,
+                booking_bonus_minus: adj.booking_bonus_minus,
+                // Formatted adjustment values
+                revenue_add_ons_formatted: formatCurrency(adj.revenue_add_ons),
+                revenue_deductions_formatted: formatCurrency(adj.revenue_deductions),
+                booking_bonus_plus_formatted: formatCurrency(adj.booking_bonus_plus),
+                booking_bonus_minus_formatted: formatCurrency(adj.booking_bonus_minus)
+            };
+        });
         
         res.json(formatted);
         
@@ -377,6 +475,224 @@ r.get("/rules", async (req, res) => {
             note: "Fixed override available for specific managers (e.g., Sam Lopka: 0.7%)"
         }
     });
+});
+
+// ============================================================================
+// Lead Status and Booked Opportunities Import Endpoints
+// ============================================================================
+
+/**
+ * POST /api/sales-commissions/import/lead-status
+ * Import Lead Status Report Excel file.
+ * Admin/Manager only.
+ * 
+ * Expected columns: Quote #, Branch Name, Status, Lead Status, Service Type, etc.
+ * Upserts by quote_id.
+ */
+r.post("/import/lead-status", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), upload.single('excel_file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+        
+        console.log(`📥 [SALES-COMM] Starting Lead Status import: ${req.file.originalname}`);
+        
+        // Validate file type
+        const isExcel = req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls');
+        const isCSV = req.file.originalname.endsWith('.csv');
+        
+        if (!isExcel && !isCSV) {
+            return res.status(400).json({
+                error: "Invalid file type",
+                details: "Please upload an Excel (.xlsx, .xls) or CSV file"
+            });
+        }
+        
+        // Validate file content
+        const fileType = isCSV ? 'csv' : 'excel';
+        const fileValidation = await validateFileContent(req.file, fileType);
+        if (!fileValidation.valid) {
+            return res.status(400).json({
+                error: "File validation failed",
+                details: fileValidation.message
+            });
+        }
+        
+        // Import the file
+        const { sheet_name } = req.body;
+        const summary = await importLeadStatusFromExcel(
+            req.file.buffer,
+            req.file.originalname,
+            sheet_name
+        );
+        
+        console.log(`✅ [SALES-COMM] Lead Status import complete: ${summary.inserted} inserted, ${summary.updated} updated, ${summary.skipped} skipped`);
+        
+        res.json({
+            message: "Lead Status data imported successfully",
+            summary: {
+                file: summary.file,
+                sheet: summary.sheet,
+                inserted: summary.inserted,
+                updated: summary.updated,
+                skipped: summary.skipped,
+                errors: summary.errors.length > 0 ? summary.errors.slice(0, 10) : [],
+                warnings: summary.warnings
+            }
+        });
+        
+    } catch (error) {
+        console.error("❌ [SALES-COMM] Lead Status import failed:", error);
+        res.status(500).json({
+            error: "Lead Status import failed",
+            details: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/sales-commissions/import/booked-opportunities
+ * Import Booked Opportunities by Service Date Report Excel file.
+ * Admin/Manager only.
+ * 
+ * Expected columns: Quote #, Status, Customer Name, Service Date, Invoiced Amount, etc.
+ * Upserts by quote_id.
+ */
+r.post("/import/booked-opportunities", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), upload.single('excel_file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file uploaded" });
+        }
+        
+        console.log(`📥 [SALES-COMM] Starting Booked Opportunities import: ${req.file.originalname}`);
+        
+        // Validate file type
+        const isExcel = req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls');
+        const isCSV = req.file.originalname.endsWith('.csv');
+        
+        if (!isExcel && !isCSV) {
+            return res.status(400).json({
+                error: "Invalid file type",
+                details: "Please upload an Excel (.xlsx, .xls) or CSV file"
+            });
+        }
+        
+        // Validate file content
+        const fileType = isCSV ? 'csv' : 'excel';
+        const fileValidation = await validateFileContent(req.file, fileType);
+        if (!fileValidation.valid) {
+            return res.status(400).json({
+                error: "File validation failed",
+                details: fileValidation.message
+            });
+        }
+        
+        // Import the file
+        const { sheet_name } = req.body;
+        const summary = await importBookedOpportunitiesFromExcel(
+            req.file.buffer,
+            req.file.originalname,
+            sheet_name
+        );
+        
+        console.log(`✅ [SALES-COMM] Booked Opportunities import complete: ${summary.inserted} inserted, ${summary.updated} updated, ${summary.skipped} skipped`);
+        
+        res.json({
+            message: "Booked Opportunities data imported successfully",
+            summary: {
+                file: summary.file,
+                sheet: summary.sheet,
+                inserted: summary.inserted,
+                updated: summary.updated,
+                skipped: summary.skipped,
+                errors: summary.errors.length > 0 ? summary.errors.slice(0, 10) : [],
+                warnings: summary.warnings
+            }
+        });
+        
+    } catch (error) {
+        console.error("❌ [SALES-COMM] Booked Opportunities import failed:", error);
+        res.status(500).json({
+            error: "Booked Opportunities import failed",
+            details: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/sales-commissions/adjustment-status
+ * Get status of lead status and booked opportunities imports.
+ * Shows how many quotes are ready vs pending invoiced amount.
+ */
+r.get("/adjustment-status", async (req, res) => {
+    try {
+        const status = await getImportStatus();
+        
+        res.json({
+            total_lead_status_quotes: parseInt(status.total_lead_status_quotes) || 0,
+            total_booked_opportunities_quotes: parseInt(status.total_booked_opportunities_quotes) || 0,
+            pending_invoiced_amount: parseInt(status.pending_invoiced_amount) || 0,
+            ready_for_calculation: parseInt(status.ready_for_calculation) || 0
+        });
+        
+    } catch (error) {
+        console.error("❌ [SALES-COMM] Failed to get adjustment status:", error);
+        
+        // If tables don't exist yet, return zeros
+        if (error.message.includes('does not exist')) {
+            return res.json({
+                total_lead_status_quotes: 0,
+                total_booked_opportunities_quotes: 0,
+                pending_invoiced_amount: 0,
+                ready_for_calculation: 0
+            });
+        }
+        
+        res.status(500).json({
+            error: "Failed to get adjustment status",
+            details: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/sales-commissions/unmatched-names
+ * Get names from lead status that don't match any employee nickname.
+ * Useful for identifying data quality issues.
+ * 
+ * Query: ?period_start=YYYY-MM-DD&period_end=YYYY-MM-DD
+ */
+r.get("/unmatched-names", async (req, res) => {
+    try {
+        const { period_start, period_end } = req.query;
+        
+        if (!period_start || !period_end) {
+            return res.status(400).json({
+                error: "Missing required query parameters",
+                details: "period_start and period_end are required"
+            });
+        }
+        
+        const unmatched = await getUnmatchedNamesReport(period_start, period_end);
+        
+        res.json(unmatched);
+        
+    } catch (error) {
+        console.error("❌ [SALES-COMM] Failed to get unmatched names:", error);
+        
+        // If tables don't exist yet, return empty lists
+        if (error.message.includes('does not exist')) {
+            return res.json({
+                original_agents: [],
+                targets: []
+            });
+        }
+        
+        res.status(500).json({
+            error: "Failed to get unmatched names",
+            details: error.message
+        });
+    }
 });
 
 export default r;

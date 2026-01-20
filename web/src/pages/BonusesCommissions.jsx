@@ -136,6 +136,13 @@ export default function BonusesCommissions() {
   const [periodEnd, setPeriodEnd] = useState(''); // Required: period end date (YYYY-MM-DD)
   const [monthlyCommissions, setMonthlyCommissions] = useState([]);
   
+  // Lead Status and Booked Opportunities import state
+  const [leadStatusFile, setLeadStatusFile] = useState(null);
+  const [leadStatusImportStatus, setLeadStatusImportStatus] = useState(null);
+  const [bookedOpportunitiesFile, setBookedOpportunitiesFile] = useState(null);
+  const [bookedOpportunitiesImportStatus, setBookedOpportunitiesImportStatus] = useState(null);
+  const [adjustmentImportStatus, setAdjustmentImportStatus] = useState(null);
+  
   // Analytics data
   const [analyticsData, setAnalyticsData] = useState(null);
   const [availablePeriods, setAvailablePeriods] = useState([]);
@@ -499,6 +506,161 @@ export default function BonusesCommissions() {
       setShowErrorMessage(true);
     }
   };
+
+  // Lead Status Import Handler
+  const handleLeadStatusFileUpload = (event) => {
+    const file = event.target.files[0];
+    setLeadStatusFile(file);
+  };
+
+  const handleLeadStatusImport = async () => {
+    if (!leadStatusFile) {
+      setErrorMessage("Please select a Lead Status Excel file to import");
+      setShowErrorMessage(true);
+      return;
+    }
+
+    setLeadStatusImportStatus({ status: "processing", message: "Processing Lead Status file..." });
+    
+    try {
+      const formData = new FormData();
+      formData.append('excel_file', leadStatusFile);
+      
+      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
+      const sessionId = localStorage.getItem('sessionId');
+      
+      const response = await fetch(`${API_BASE_URL}/api/sales-commissions/import/lead-status`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        headers: {
+          ...(sessionId && { 'x-session-id': sessionId }),
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.details || result.error);
+      }
+      
+      setLeadStatusImportStatus({
+        status: "success",
+        message: `Import completed! ${result.summary.inserted} inserted, ${result.summary.updated} updated, ${result.summary.skipped} skipped.`
+      });
+      
+      setSuccessMessage("Lead Status data imported successfully!");
+      setShowSuccessMessage(true);
+      
+      // Refresh adjustment status
+      loadAdjustmentImportStatus();
+      
+      // Reload commission data if period is selected
+      if (selectedSalesPeriod.start && selectedSalesPeriod.end) {
+        loadSalesCommissionData();
+      }
+      
+    } catch (error) {
+      console.error("Error importing Lead Status:", error);
+      setLeadStatusImportStatus({
+        status: "error",
+        message: `Import failed: ${error.message}`
+      });
+      setErrorMessage(`Lead Status import failed: ${error.message}`);
+      setShowErrorMessage(true);
+    }
+  };
+
+  // Booked Opportunities Import Handler
+  const handleBookedOpportunitiesFileUpload = (event) => {
+    const file = event.target.files[0];
+    setBookedOpportunitiesFile(file);
+  };
+
+  const handleBookedOpportunitiesImport = async () => {
+    if (!bookedOpportunitiesFile) {
+      setErrorMessage("Please select a Booked Opportunities Excel file to import");
+      setShowErrorMessage(true);
+      return;
+    }
+
+    setBookedOpportunitiesImportStatus({ status: "processing", message: "Processing Booked Opportunities file..." });
+    
+    try {
+      const formData = new FormData();
+      formData.append('excel_file', bookedOpportunitiesFile);
+      
+      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
+      const sessionId = localStorage.getItem('sessionId');
+      
+      const response = await fetch(`${API_BASE_URL}/api/sales-commissions/import/booked-opportunities`, {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+        headers: {
+          ...(sessionId && { 'x-session-id': sessionId }),
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.details || result.error);
+      }
+      
+      setBookedOpportunitiesImportStatus({
+        status: "success",
+        message: `Import completed! ${result.summary.inserted} inserted, ${result.summary.updated} updated, ${result.summary.skipped} skipped.`
+      });
+      
+      setSuccessMessage("Booked Opportunities data imported successfully!");
+      setShowSuccessMessage(true);
+      
+      // Refresh adjustment status
+      loadAdjustmentImportStatus();
+      
+      // Reload commission data if period is selected
+      if (selectedSalesPeriod.start && selectedSalesPeriod.end) {
+        loadSalesCommissionData();
+      }
+      
+    } catch (error) {
+      console.error("Error importing Booked Opportunities:", error);
+      setBookedOpportunitiesImportStatus({
+        status: "error",
+        message: `Import failed: ${error.message}`
+      });
+      setErrorMessage(`Booked Opportunities import failed: ${error.message}`);
+      setShowErrorMessage(true);
+    }
+  };
+
+  // Load adjustment import status
+  const loadAdjustmentImportStatus = async () => {
+    try {
+      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
+      const sessionId = localStorage.getItem('sessionId');
+      
+      const response = await fetch(`${API_BASE_URL}/api/sales-commissions/adjustment-status`, {
+        credentials: 'include',
+        headers: {
+          ...(sessionId && { 'x-session-id': sessionId }),
+        }
+      });
+      
+      if (response.ok) {
+        const status = await response.json();
+        setAdjustmentImportStatus(status);
+      }
+    } catch (error) {
+      console.error("Error loading adjustment status:", error);
+    }
+  };
+
+  // Load adjustment status on mount
+  useEffect(() => {
+    loadAdjustmentImportStatus();
+  }, []);
 
   // Handler functions for bonus actions
   const handleEditBonus = (bonus) => {
@@ -1076,6 +1238,167 @@ export default function BonusesCommissions() {
           </div>
         </div>
       </div>
+
+      {/* Lead Status Import Section */}
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-4">Lead Status Report Import</h3>
+        <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+          <div className="space-y-4">
+            <div className="bg-blue-900/20 border border-blue-700/30 p-3 rounded-tahoe-input">
+              <p className="text-xs text-blue-200">
+                Upload Lead Status Report to import revenue splits, bonuses, and deductions. 
+                Required columns: Quote #, Branch Name, Status, Lead Status, Service Type, Sales Person
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Upload Lead Status Excel</label>
+              <div className="border-2 border-dashed rounded-tahoe-input p-6 text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleLeadStatusFileUpload}
+                  className="hidden"
+                  id="lead-status-upload"
+                />
+                <label htmlFor="lead-status-upload" className="cursor-pointer">
+                  <div className="text-4xl mb-2">📋</div>
+                  <p className="text-tahoe-text-muted">
+                    {leadStatusFile ? leadStatusFile.name : 'Click to upload Lead Status Report'}
+                  </p>
+                  <p className="text-xs text-tahoe-text-muted mt-1">
+                    Supports .xlsx, .xls, .csv formats
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {leadStatusImportStatus && (
+              <div className={`p-4 rounded-tahoe-input ${
+                leadStatusImportStatus.status === 'success' ? 'bg-green-900 text-green-300' :
+                leadStatusImportStatus.status === 'error' ? 'bg-red-900 text-red-300' :
+                'bg-blue-900 text-blue-300'
+              }`}>
+                {leadStatusImportStatus.message}
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleLeadStatusImport}
+                disabled={!leadStatusFile}
+                className="flex-1 px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe disabled:cursor-not-allowed"
+                style={{ backgroundColor: !leadStatusFile ? 'rgba(255, 255, 255, 0.12)' : '#0A84FF', color: '#ffffff' }}
+              >
+                Import Lead Status
+              </button>
+              <button
+                onClick={() => {
+                  setLeadStatusFile(null);
+                  setLeadStatusImportStatus(null);
+                }}
+                className="px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Booked Opportunities Import Section */}
+      <div className="mt-6">
+        <h3 className="text-lg font-semibold mb-4">Booked Opportunities by Service Date Import</h3>
+        <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+          <div className="space-y-4">
+            <div className="bg-purple-900/20 border border-purple-700/30 p-3 rounded-tahoe-input">
+              <p className="text-xs text-purple-200">
+                Upload Booked Opportunities Report to provide Invoiced Amount for adjustment calculations.
+                Required columns: Quote #, Status, Service Date, Invoiced Amount
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Upload Booked Opportunities Excel</label>
+              <div className="border-2 border-dashed rounded-tahoe-input p-6 text-center" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleBookedOpportunitiesFileUpload}
+                  className="hidden"
+                  id="booked-opportunities-upload"
+                />
+                <label htmlFor="booked-opportunities-upload" className="cursor-pointer">
+                  <div className="text-4xl mb-2">📅</div>
+                  <p className="text-tahoe-text-muted">
+                    {bookedOpportunitiesFile ? bookedOpportunitiesFile.name : 'Click to upload Booked Opportunities Report'}
+                  </p>
+                  <p className="text-xs text-tahoe-text-muted mt-1">
+                    Supports .xlsx, .xls, .csv formats
+                  </p>
+                </label>
+              </div>
+            </div>
+
+            {bookedOpportunitiesImportStatus && (
+              <div className={`p-4 rounded-tahoe-input ${
+                bookedOpportunitiesImportStatus.status === 'success' ? 'bg-green-900 text-green-300' :
+                bookedOpportunitiesImportStatus.status === 'error' ? 'bg-red-900 text-red-300' :
+                'bg-blue-900 text-blue-300'
+              }`}>
+                {bookedOpportunitiesImportStatus.message}
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button
+                onClick={handleBookedOpportunitiesImport}
+                disabled={!bookedOpportunitiesFile}
+                className="flex-1 px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe disabled:cursor-not-allowed"
+                style={{ backgroundColor: !bookedOpportunitiesFile ? 'rgba(255, 255, 255, 0.12)' : '#0A84FF', color: '#ffffff' }}
+              >
+                Import Booked Opportunities
+              </button>
+              <button
+                onClick={() => {
+                  setBookedOpportunitiesFile(null);
+                  setBookedOpportunitiesImportStatus(null);
+                }}
+                className="px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe"
+                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Adjustment Import Status */}
+      {adjustmentImportStatus && (
+        <div className="mt-6 p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+          <h4 className="text-sm font-semibold mb-3">Adjustment Data Status</h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-2xl font-bold text-blue-400">{adjustmentImportStatus.total_lead_status_quotes || 0}</div>
+              <div className="text-xs text-tahoe-text-muted">Lead Status Quotes</div>
+            </div>
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-2xl font-bold text-purple-400">{adjustmentImportStatus.total_booked_opportunities_quotes || 0}</div>
+              <div className="text-xs text-tahoe-text-muted">Booked Opportunities</div>
+            </div>
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-2xl font-bold text-yellow-400">{adjustmentImportStatus.pending_invoiced_amount || 0}</div>
+              <div className="text-xs text-tahoe-text-muted">Pending Invoiced Amount</div>
+            </div>
+            <div className="p-3 bg-tahoe-bg-secondary rounded-lg text-center">
+              <div className="text-2xl font-bold text-green-400">{adjustmentImportStatus.ready_for_calculation || 0}</div>
+              <div className="text-xs text-tahoe-text-muted">Ready for Calculation</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -2093,6 +2416,10 @@ export default function BonusesCommissions() {
                   <th className="pb-3 font-medium text-right">Revenue</th>
                   <th className="pb-3 font-medium text-right">Rate</th>
                   <th className="pb-3 font-medium text-right">Commission</th>
+                  <th className="pb-3 font-medium text-right text-cyan-400">Rev Add Ons</th>
+                  <th className="pb-3 font-medium text-right text-orange-400">Rev Deductions</th>
+                  <th className="pb-3 font-medium text-right text-emerald-400">Booking Bonus</th>
+                  <th className="pb-3 font-medium text-right text-rose-400">Booking Ded.</th>
                   <th className="pb-3 font-medium text-right">Vacation</th>
                 </tr>
               </thead>
@@ -2115,6 +2442,18 @@ export default function BonusesCommissions() {
                     <td className="py-3 text-right font-mono">{agent.revenue_formatted}</td>
                     <td className="py-3 text-right font-mono text-tahoe-accent">{agent.commission_pct}%</td>
                     <td className="py-3 text-right font-mono text-green-400 font-semibold">{agent.commission_amount_formatted}</td>
+                    <td className="py-3 text-right font-mono text-cyan-400">
+                      {parseFloat(agent.revenue_add_ons || 0) > 0 ? agent.revenue_add_ons_formatted : '-'}
+                    </td>
+                    <td className="py-3 text-right font-mono text-orange-400">
+                      {parseFloat(agent.revenue_deductions || 0) > 0 ? agent.revenue_deductions_formatted : '-'}
+                    </td>
+                    <td className="py-3 text-right font-mono text-emerald-400">
+                      {parseFloat(agent.booking_bonus_plus || 0) > 0 ? agent.booking_bonus_plus_formatted : '-'}
+                    </td>
+                    <td className="py-3 text-right font-mono text-rose-400">
+                      {parseFloat(agent.booking_bonus_minus || 0) > 0 ? agent.booking_bonus_minus_formatted : '-'}
+                    </td>
                     <td className="py-3 text-right">
                       {agent.vacation_award_value > 0 ? (
                         <span className="px-2 py-1 bg-yellow-900/50 text-yellow-300 rounded text-sm">
@@ -2132,6 +2471,18 @@ export default function BonusesCommissions() {
                   <td className="py-3" colSpan="4">Total</td>
                   <td className="py-3 text-right text-green-400">
                     {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.commission_amount || 0), 0))}
+                  </td>
+                  <td className="py-3 text-right text-cyan-400">
+                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.revenue_add_ons || 0), 0))}
+                  </td>
+                  <td className="py-3 text-right text-orange-400">
+                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.revenue_deductions || 0), 0))}
+                  </td>
+                  <td className="py-3 text-right text-emerald-400">
+                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.booking_bonus_plus || 0), 0))}
+                  </td>
+                  <td className="py-3 text-right text-rose-400">
+                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.booking_bonus_minus || 0), 0))}
                   </td>
                   <td className="py-3 text-right text-yellow-400">
                     {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.vacation_award_value || 0), 0))}
@@ -2177,6 +2528,34 @@ export default function BonusesCommissions() {
                   <div className="text-right">
                     <div className="text-2xl font-bold text-purple-400">{manager.commission_amount_formatted}</div>
                     <div className="text-xs text-tahoe-text-muted">from {manager.pooled_revenue_formatted} pooled</div>
+                  </div>
+                </div>
+                
+                {/* Adjustment columns for managers */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t border-tahoe-border-primary">
+                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
+                    <div className="text-xs text-tahoe-text-muted">Rev Add Ons</div>
+                    <div className="text-sm font-medium text-cyan-400">
+                      {parseFloat(manager.revenue_add_ons || 0) > 0 ? manager.revenue_add_ons_formatted : '-'}
+                    </div>
+                  </div>
+                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
+                    <div className="text-xs text-tahoe-text-muted">Rev Deductions</div>
+                    <div className="text-sm font-medium text-orange-400">
+                      {parseFloat(manager.revenue_deductions || 0) > 0 ? manager.revenue_deductions_formatted : '-'}
+                    </div>
+                  </div>
+                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
+                    <div className="text-xs text-tahoe-text-muted">Booking Bonus</div>
+                    <div className="text-sm font-medium text-emerald-400">
+                      {parseFloat(manager.booking_bonus_plus || 0) > 0 ? manager.booking_bonus_plus_formatted : '-'}
+                    </div>
+                  </div>
+                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
+                    <div className="text-xs text-tahoe-text-muted">Booking Ded.</div>
+                    <div className="text-sm font-medium text-rose-400">
+                      {parseFloat(manager.booking_bonus_minus || 0) > 0 ? manager.booking_bonus_minus_formatted : '-'}
+                    </div>
                   </div>
                 </div>
                 
