@@ -245,14 +245,15 @@ export default function DateRangePicker({
                 head_cell: 'text-tahoe-text-muted rounded-md w-9 font-normal text-xs',
                 row: 'flex w-full mt-1',
                 cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
-                day: 'h-9 w-9 p-0 font-normal rounded-lg hover:bg-tahoe-bg-hover transition-all cursor-pointer',
-                day_selected: 'bg-tahoe-accent text-white hover:bg-tahoe-accent-hover',
-                day_today: 'border border-tahoe-accent text-tahoe-accent font-semibold',
-                day_outside: 'text-tahoe-text-muted/50',
-                day_disabled: 'text-tahoe-text-muted/30 cursor-not-allowed',
-                day_range_start: 'bg-tahoe-accent text-white rounded-l-lg rounded-r-none',
-                day_range_end: 'bg-tahoe-accent text-white rounded-r-lg rounded-l-none',
-                day_range_middle: 'bg-tahoe-accent/30 text-tahoe-text-primary rounded-none'
+                day: 'h-9 w-9 p-0 font-normal transition-all cursor-pointer',
+                // Range selection classes - visual styling handled by CSS in index.css
+                day_selected: '',
+                day_today: '',
+                day_outside: 'opacity-40',
+                day_disabled: 'opacity-30 cursor-not-allowed',
+                day_range_start: '',
+                day_range_end: '',
+                day_range_middle: ''
               }}
             />
           </div>

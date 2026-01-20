@@ -1159,23 +1159,23 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .date-range-picker-calendar .rdp-day {
   border-radius: 8px;
   transition: all 150ms cubic-bezier(0.25, 0.8, 0.25, 1);
+  color: var(--text-primary);
 }
 
-.date-range-picker-calendar .rdp-day:hover:not(.rdp-day_selected):not(.rdp-day_disabled) {
+.date-range-picker-calendar .rdp-day:hover:not(.rdp-day_selected):not(.rdp-day_disabled):not(.rdp-day_range_middle):not(.rdp-day_range_start):not(.rdp-day_range_end) {
   background-color: var(--tahoe-bg-hover, rgba(255, 255, 255, 0.12));
 }
 
+/* ===== RANGE SELECTION: Start & End caps ===== */
 .date-range-picker-calendar .rdp-day_selected,
 .date-range-picker-calendar .rdp-day_range_start,
 .date-range-picker-calendar .rdp-day_range_end {
   background-color: var(--tahoe-accent, #0A84FF);
-  color: white;
-  font-weight: 500;
-}
-
-.date-range-picker-calendar .rdp-day_range_middle {
-  background-color: rgba(10, 132, 255, 0.2);
-  border-radius: 0;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 
+    0 4px 12px rgba(10, 132, 255, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 .date-range-picker-calendar .rdp-day_range_start {
@@ -1192,21 +1192,83 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   border-bottom-left-radius: 0;
 }
 
-.date-range-picker-calendar .rdp-day_today:not(.rdp-day_selected) {
-  border: 1px solid var(--tahoe-accent, #0A84FF);
+/* When start and end are the same day */
+.date-range-picker-calendar .rdp-day_range_start.rdp-day_range_end {
+  border-radius: 8px;
+}
+
+/* ===== RANGE SELECTION: Middle days (the "band") ===== */
+.date-range-picker-calendar .rdp-day_range_middle {
+  background-color: rgba(10, 132, 255, 0.35);
+  border-radius: 0;
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 500;
+  box-shadow: 
+    inset 0 1px 0 rgba(10, 132, 255, 0.25),
+    inset 0 -1px 0 rgba(10, 132, 255, 0.20);
+  position: relative;
+}
+
+/* Subtle top/bottom borders for the band effect */
+.date-range-picker-calendar .rdp-day_range_middle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(10, 132, 255, 0.3), rgba(10, 132, 255, 0.5), rgba(10, 132, 255, 0.3));
+}
+
+.date-range-picker-calendar .rdp-day_range_middle::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(10, 132, 255, 0.2), rgba(10, 132, 255, 0.4), rgba(10, 132, 255, 0.2));
+}
+
+/* Hover on middle days */
+.date-range-picker-calendar .rdp-day_range_middle:hover {
+  background-color: rgba(10, 132, 255, 0.45);
+}
+
+/* ===== TODAY indicator ===== */
+.date-range-picker-calendar .rdp-day_today:not(.rdp-day_selected):not(.rdp-day_range_start):not(.rdp-day_range_end):not(.rdp-day_range_middle) {
+  border: 2px solid var(--tahoe-accent, #0A84FF);
   color: var(--tahoe-accent, #0A84FF);
   font-weight: 600;
 }
 
-.date-range-picker-calendar .rdp-day_outside {
-  color: var(--text-muted);
-  opacity: 0.5;
+/* Today when part of selection */
+.date-range-picker-calendar .rdp-day_today.rdp-day_range_middle {
+  border: 2px solid rgba(255, 255, 255, 0.5);
 }
 
+/* ===== Outside days (prev/next month) ===== */
+.date-range-picker-calendar .rdp-day_outside {
+  color: var(--text-muted);
+  opacity: 0.4;
+}
+
+.date-range-picker-calendar .rdp-day_outside.rdp-day_range_middle {
+  opacity: 0.7;
+}
+
+/* ===== Disabled days ===== */
 .date-range-picker-calendar .rdp-day_disabled {
   color: var(--text-muted);
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+/* ===== Focus states for keyboard navigation ===== */
+.date-range-picker-calendar .rdp-day:focus-visible {
+  outline: 2px solid var(--tahoe-accent, #0A84FF);
+  outline-offset: 2px;
+  z-index: 10;
 }
 
 .date-range-picker-calendar .rdp-nav button {
