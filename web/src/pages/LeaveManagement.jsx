@@ -816,7 +816,7 @@ export default function LeaveManagement() {
                     </div>
                     <div className="text-right">
                       <p className="text-blue-100 text-sm font-medium">{t('leave.balances.totalAvailable')}</p>
-                      <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.available_days || 0), 0)}</p>
+                      <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (parseFloat(b.available_days) || 0), 0)}</p>
                     </div>
                   </div>
                   <p className="text-blue-100 text-sm font-medium">days remaining</p>
@@ -831,7 +831,7 @@ export default function LeaveManagement() {
                     </div>
                     <div className="text-right">
                       <p className="text-emerald-100 text-sm font-medium">{t('leave.balances.thisYearUsed')}</p>
-                      <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (b.used_days || 0), 0)}</p>
+                      <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (parseFloat(b.used_days) || 0), 0)}</p>
                     </div>
                   </div>
                   <p className="text-emerald-100 text-sm font-medium">days taken</p>
