@@ -4,8 +4,72 @@ import { z } from "zod";
 import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
 import { notificationService } from "../services/notifications.js";
+import { calculateScheduledWorkdays, previewLeaveWorkdays } from "../utils/workdayCalculator.js";
 
 const r = Router();
+
+// Map leave type names to match leaves table constraint
+const LEAVE_TYPE_MAP = {
+  'Vacation': 'Vacation',
+  'Sick Leave': 'Sick',
+  'Personal Leave': 'Other',
+  'Bereavement': 'Bereavement',
+  'Parental Leave': 'Parental',
+  'Jury Duty': 'Other',
+  'Military Leave': 'Other'
+};
+
+/**
+ * Update leave balances for an approved leave request, allocating days per year
+ * @param {number} employeeId 
+ * @param {number} leaveTypeId 
+ * @param {Record<number, number>} workdaysByYear - { year: days }
+ * @param {'add'|'subtract'} operation 
+ */
+async function updateBalancesByYear(employeeId, leaveTypeId, workdaysByYear, operation = 'add') {
+  for (const [yearStr, days] of Object.entries(workdaysByYear)) {
+    const year = parseInt(yearStr, 10);
+    if (days <= 0) continue;
+    
+    if (operation === 'add') {
+      await q(`
+        INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
+        VALUES ($1, $2, $3, 
+                (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
+                $4, 0)
+        ON CONFLICT (employee_id, leave_type_id, year)
+        DO UPDATE SET used_days = leave_balances.used_days + $4
+      `, [employeeId, leaveTypeId, year, days]);
+    } else {
+      await q(`
+        UPDATE leave_balances
+        SET used_days = GREATEST(0, used_days - $1)
+        WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
+      `, [days, employeeId, leaveTypeId, year]);
+    }
+  }
+}
+
+/**
+ * Create or delete leaves table record for backwards compatibility
+ */
+async function syncLeavesTable(employeeId, leaveTypeId, startDate, endDate, notes, operation = 'add') {
+  const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [leaveTypeId])).rows[0]?.name || 'Other';
+  const mappedLeaveType = LEAVE_TYPE_MAP[leaveTypeName] || 'Other';
+  
+  if (operation === 'add') {
+    await q(`
+      INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT DO NOTHING
+    `, [employeeId, mappedLeaveType, startDate, endDate, 'HR', notes || null]);
+  } else {
+    await q(`
+      DELETE FROM leaves 
+      WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
+    `, [employeeId, startDate, endDate]);
+  }
+}
 
 // Apply scope filter to all leave routes (adds role info, doesn't block)
 r.use(applyScopeFilter);
@@ -504,48 +568,89 @@ r.post("/balances/initialize", requireAuth, requireRole([ROLES.MANAGER, ROLES.AD
   }
 });
 
-// POST /api/leave/balances/recalculate - Recalculate all balances from scratch (manager/admin only)
+// POST /api/leave/balances/recalculate - Recalculate all balances from scratch using schedule-based workdays (manager/admin only)
 r.post("/balances/recalculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const { year } = req.body;
-    const currentYear = year ? parseInt(year, 10) : new Date().getFullYear();
+    const targetYear = year ? parseInt(year, 10) : new Date().getFullYear();
     
-    if (isNaN(currentYear)) {
+    if (isNaN(targetYear)) {
       return res.status(400).json({ error: 'Invalid year' });
     }
     
-    console.log(`🔄 Recalculating leave balances for year ${currentYear}...`);
+    console.log(`🔄 Recalculating leave balances for year ${targetYear} using schedule-based workdays...`);
     
     await q('BEGIN');
     
     try {
-      // Get all employees
+      // Get all active employees
       const { rows: employees } = await q('SELECT id FROM employees WHERE status = $1', ['Active']);
       
       // Get all leave types
-      const { rows: leaveTypes } = await q('SELECT id FROM leave_types');
+      const { rows: leaveTypes } = await q('SELECT id, default_annual_entitlement FROM leave_types');
+      
+      // Build a map to accumulate used_days per employee/leave_type for the target year
+      // Key: `${employee_id}-${leave_type_id}`, Value: number
+      const usedDaysMap = new Map();
+      const requestsProcessed = [];
+      const requestsFailed = [];
+      
+      // Get all approved requests that could have workdays in target year
+      // (requests where start_date or end_date falls in target year, or spans across it)
+      const { rows: approvedRequests } = await q(`
+        SELECT id, employee_id, leave_type_id, start_date, end_date, total_days
+        FROM leave_requests
+        WHERE status = 'Approved'
+          AND (
+            EXTRACT(YEAR FROM start_date) = $1
+            OR EXTRACT(YEAR FROM end_date) = $1
+            OR (EXTRACT(YEAR FROM start_date) < $1 AND EXTRACT(YEAR FROM end_date) > $1)
+          )
+      `, [targetYear]);
+      
+      // Process each approved request and calculate schedule-based workdays
+      for (const lr of approvedRequests) {
+        try {
+          const workdays = await calculateScheduledWorkdays(lr.employee_id, lr.start_date, lr.end_date);
+          
+          // Get workdays specifically for target year
+          const yearWorkdays = workdays.workdaysByYear[targetYear] || 0;
+          
+          if (yearWorkdays > 0) {
+            const key = `${lr.employee_id}-${lr.leave_type_id}`;
+            usedDaysMap.set(key, (usedDaysMap.get(key) || 0) + yearWorkdays);
+          }
+          
+          // Also update the request's total_days if it changed (normalize legacy data)
+          if (Math.abs(parseFloat(lr.total_days) - workdays.totalWorkdays) > 0.001) {
+            await q('UPDATE leave_requests SET total_days = $1 WHERE id = $2', [workdays.totalWorkdays, lr.id]);
+            requestsProcessed.push({ id: lr.id, old_total: lr.total_days, new_total: workdays.totalWorkdays });
+          }
+        } catch (calcError) {
+          // If calculation fails (e.g., employee has no schedule), log but continue
+          console.log(`⚠️ [Recalculate] Could not calculate workdays for request ${lr.id}: ${calcError.message}`);
+          requestsFailed.push({ id: lr.id, error: calcError.message });
+          // Fallback: use stored total_days allocated to start_date year
+          if (new Date(lr.start_date).getFullYear() === targetYear) {
+            const key = `${lr.employee_id}-${lr.leave_type_id}`;
+            usedDaysMap.set(key, (usedDaysMap.get(key) || 0) + parseFloat(lr.total_days || 0));
+          }
+        }
+      }
       
       const results = [];
       
+      // Update or create balance records for all employees/leave types
       for (const employee of employees) {
         for (const leaveType of leaveTypes) {
-          // Calculate used_days from approved requests
-          const { rows: usedDaysResult } = await q(`
-            SELECT COALESCE(SUM(total_days), 0) as used_days
-            FROM leave_requests
-            WHERE employee_id = $1
-              AND leave_type_id = $2
-              AND status = 'Approved'
-              AND EXTRACT(YEAR FROM start_date) = $3
-          `, [employee.id, leaveType.id, currentYear]);
-          
-          const usedDays = parseFloat(usedDaysResult[0]?.used_days || 0);
+          const key = `${employee.id}-${leaveType.id}`;
+          const usedDays = usedDaysMap.get(key) || 0;
           
           // Get or create balance record
           const { rows: existing } = await q(`
             SELECT * FROM leave_balances
             WHERE employee_id = $1 AND leave_type_id = $2 AND year = $3
-          `, [employee.id, leaveType.id, currentYear]);
+          `, [employee.id, leaveType.id, targetYear]);
           
           if (existing.length > 0) {
             // Update existing balance with recalculated used_days
@@ -554,34 +659,30 @@ r.post("/balances/recalculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.A
               SET used_days = $1
               WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
               RETURNING *
-            `, [usedDays, employee.id, leaveType.id, currentYear]);
+            `, [usedDays, employee.id, leaveType.id, targetYear]);
             
             results.push({
               employee_id: employee.id,
               leave_type_id: leaveType.id,
-              year: currentYear,
+              year: targetYear,
               success: true,
               used_days: usedDays,
               balance: rows[0]
             });
           } else {
-            // Create new balance if doesn't exist
-            const { rows: leaveTypeInfo } = await q(`
-              SELECT default_annual_entitlement FROM leave_types WHERE id = $1
-            `, [leaveType.id]);
-            
-            const defaultEntitlement = parseFloat(leaveTypeInfo[0]?.default_annual_entitlement || 0);
+            // Create new balance
+            const defaultEntitlement = parseFloat(leaveType.default_annual_entitlement || 0);
             
             const { rows } = await q(`
               INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
               VALUES ($1, $2, $3, $4, $5, 0)
               RETURNING *
-            `, [employee.id, leaveType.id, currentYear, defaultEntitlement, usedDays]);
+            `, [employee.id, leaveType.id, targetYear, defaultEntitlement, usedDays]);
             
             results.push({
               employee_id: employee.id,
               leave_type_id: leaveType.id,
-              year: currentYear,
+              year: targetYear,
               success: true,
               used_days: usedDays,
               balance: rows[0]
@@ -593,12 +694,14 @@ r.post("/balances/recalculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.A
       await q('COMMIT');
       
       const successCount = results.filter(r => r.success).length;
-      console.log(`✅ Recalculated ${successCount} leave balances`);
+      console.log(`✅ Recalculated ${successCount} leave balances using schedule-based workdays`);
       
       res.json({
-        message: `Recalculated ${successCount} leave balances for year ${currentYear}`,
-        year: currentYear,
+        message: `Recalculated ${successCount} leave balances for year ${targetYear}`,
+        year: targetYear,
         recalculated: successCount,
+        requests_normalized: requestsProcessed.length,
+        requests_failed: requestsFailed.length,
         results
       });
     } catch (error) {
@@ -611,13 +714,119 @@ r.post("/balances/recalculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.A
   }
 });
 
+// GET /api/leave/balances/coverage - Get coverage info for leave balances (how complete the data is)
+r.get("/balances/coverage", async (req, res) => {
+  try {
+    const { year } = req.query;
+    const targetYear = year ? parseInt(year, 10) : new Date().getFullYear();
+    
+    if (isNaN(targetYear)) {
+      return res.status(400).json({ error: 'Invalid year' });
+    }
+    
+    // Get all active employees with their schedule info
+    const { rows: employees } = await q(`
+      SELECT 
+        e.id,
+        e.first_name,
+        e.last_name,
+        e.department_id,
+        e.work_schedule_id,
+        ws.name as schedule_name,
+        ws.days_of_week
+      FROM employees e
+      LEFT JOIN work_schedules ws ON e.work_schedule_id = ws.id
+      WHERE e.status = 'Active'
+    `);
+    
+    // Get all leave types
+    const { rows: leaveTypes } = await q('SELECT id, name FROM leave_types');
+    
+    // Get all balance records for target year
+    const { rows: balances } = await q(`
+      SELECT DISTINCT employee_id, leave_type_id
+      FROM leave_balances
+      WHERE year = $1
+    `, [targetYear]);
+    
+    // Build sets for analysis
+    const activeEmployeeIds = new Set(employees.map(e => e.id));
+    const employeesWithSchedule = employees.filter(e => e.work_schedule_id !== null);
+    const employeesWithoutSchedule = employees.filter(e => e.work_schedule_id === null);
+    
+    // Build a map of which employees have balances initialized
+    // Key: employee_id, Value: Set of leave_type_ids
+    const balanceMap = new Map();
+    for (const b of balances) {
+      if (!balanceMap.has(b.employee_id)) {
+        balanceMap.set(b.employee_id, new Set());
+      }
+      balanceMap.get(b.employee_id).add(b.leave_type_id);
+    }
+    
+    // Employees with any balance for target year
+    const employeesWithBalances = employees.filter(e => balanceMap.has(e.id));
+    const employeesWithoutBalances = employees.filter(e => !balanceMap.has(e.id));
+    
+    // Employees with complete balances (all leave types)
+    const leaveTypeIds = new Set(leaveTypes.map(lt => lt.id));
+    const employeesWithCompleteBalances = employees.filter(e => {
+      const empBalances = balanceMap.get(e.id);
+      if (!empBalances) return false;
+      return leaveTypeIds.size === empBalances.size && [...leaveTypeIds].every(lt => empBalances.has(lt));
+    });
+    
+    res.json({
+      year: targetYear,
+      active_employees: employees.length,
+      employees_with_schedule: employeesWithSchedule.length,
+      employees_without_schedule: employeesWithoutSchedule.length,
+      employees_with_balances: employeesWithBalances.length,
+      employees_without_balances: employeesWithoutBalances.length,
+      employees_with_complete_balances: employeesWithCompleteBalances.length,
+      leave_types_count: leaveTypes.length,
+      missing_schedule_employees: employeesWithoutSchedule.map(e => ({
+        id: e.id,
+        name: `${e.first_name} ${e.last_name}`,
+        department_id: e.department_id
+      })),
+      missing_balance_employees: employeesWithoutBalances.map(e => ({
+        id: e.id,
+        name: `${e.first_name} ${e.last_name}`,
+        department_id: e.department_id,
+        has_schedule: e.work_schedule_id !== null
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting leave balance coverage:', error);
+    res.status(500).json({ error: 'Failed to get coverage info', details: error.message });
+  }
+});
+
+// Preview workdays for a leave request (before creating)
+r.get("/requests/preview", async (req, res) => {
+  try {
+    const { employee_id, start_date, end_date } = req.query;
+    
+    if (!employee_id || !start_date || !end_date) {
+      return res.status(400).json({ error: 'Missing required params: employee_id, start_date, end_date' });
+    }
+    
+    const result = await previewLeaveWorkdays(parseInt(employee_id, 10), start_date, end_date);
+    res.json(result);
+  } catch (error) {
+    console.error('Error previewing leave workdays:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Create leave request
 const leaveRequestSchema = z.object({
   employee_id: z.number().int(),
   leave_type_id: z.number().int(),
   start_date: z.string(),
   end_date: z.string(),
-  total_days: z.number().positive(),
+  total_days: z.number().positive().optional(), // Optional: server computes authoritative value
   reason: z.string().nullish(),
   notes: z.string().nullish(),
   status: z.enum(['Pending', 'Approved', 'Rejected', 'Cancelled']).default('Pending'),
@@ -628,6 +837,34 @@ const leaveRequestSchema = z.object({
 r.post("/requests", async (req, res) => {
   try {
     const data = leaveRequestSchema.parse(req.body);
+    
+    // Compute authoritative total_days from employee's work schedule (ignores client value)
+    let workdaysResult;
+    try {
+      workdaysResult = await calculateScheduledWorkdays(data.employee_id, data.start_date, data.end_date);
+    } catch (calcError) {
+      return res.status(400).json({ error: `Cannot calculate workdays: ${calcError.message}` });
+    }
+    
+    if (!workdaysResult.hasSchedule) {
+      return res.status(400).json({ 
+        error: 'Employee has no work schedule assigned. Cannot create leave request.',
+        employee_id: data.employee_id
+      });
+    }
+    
+    if (workdaysResult.totalWorkdays === 0) {
+      return res.status(400).json({ 
+        error: 'The selected date range contains no scheduled workdays for this employee.',
+        start_date: data.start_date,
+        end_date: data.end_date,
+        schedule_days: workdaysResult.scheduleDays
+      });
+    }
+    
+    // Use computed workdays
+    data.total_days = workdaysResult.totalWorkdays;
+    const workdaysByYear = workdaysResult.workdaysByYear;
     
     // RBAC: Users can only create leave requests for themselves
     if (req.userScope === 'own' && req.employeeId && data.employee_id !== req.employeeId) {
@@ -672,47 +909,10 @@ r.post("/requests", async (req, res) => {
     
     const leaveRequest = rows[0];
     
-    // If approved, update leave balances automatically
+    // If approved, update leave balances automatically using per-year allocation
     if (data.status === 'Approved') {
-      const year = new Date(data.start_date).getFullYear();
-      
-      // Create or update leave balance
-      await q(`
-        INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
-        VALUES ($1, $2, $3, 
-                (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
-                $4, 0)
-        ON CONFLICT (employee_id, leave_type_id, year)
-        DO UPDATE SET used_days = leave_balances.used_days + $4
-      `, [data.employee_id, data.leave_type_id, year, data.total_days]);
-      
-      // Map leave type names to match leaves table constraint
-      const leaveTypeMap = {
-        'Vacation': 'Vacation',
-        'Sick Leave': 'Sick',
-        'Personal Leave': 'Other',
-        'Bereavement': 'Bereavement',
-        'Parental Leave': 'Parental',
-        'Jury Duty': 'Other',
-        'Military Leave': 'Other'
-      };
-      
-      // Get leave type name and map it
-      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [data.leave_type_id])).rows[0]?.name || 'Other';
-      const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
-      
-      // Also create record in leaves table for backwards compatibility
-      await q(`
-        INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
-        VALUES ($1, $2, $3, $4, $5, $6)
-      `, [
-        data.employee_id, 
-        mappedLeaveType,
-        data.start_date, 
-        data.end_date, 
-        'HR',
-        data.notes || null
-      ]);
+      await updateBalancesByYear(data.employee_id, data.leave_type_id, workdaysByYear, 'add');
+      await syncLeavesTable(data.employee_id, data.leave_type_id, data.start_date, data.end_date, data.notes, 'add');
     }
     
     await q('COMMIT');
@@ -751,73 +951,42 @@ r.put("/requests/:id/status", async (req, res) => {
       return res.status(404).json({ error: "Leave request not found" });
     }
     
-    const oldStatus = lrRows[0].status;
+    const existing = lrRows[0];
+    const oldStatus = existing.status;
     
-    // Update leave request status
+    // Calculate workdays for balance updates (recompute from schedule to ensure accuracy)
+    let workdaysResult;
+    try {
+      workdaysResult = await calculateScheduledWorkdays(existing.employee_id, existing.start_date, existing.end_date);
+    } catch (calcError) {
+      await q('ROLLBACK');
+      return res.status(400).json({ error: `Cannot calculate workdays: ${calcError.message}` });
+    }
+    
+    // Update the stored total_days to the correct schedule-based value
+    const computedTotalDays = workdaysResult.totalWorkdays;
+    
+    // Update leave request status (and fix total_days if needed)
     const { rows } = await q(`
       UPDATE leave_requests 
       SET status = $1, approved_by = $2, approved_at = CASE WHEN $1 = 'Approved' THEN CURRENT_TIMESTAMP ELSE approved_at END, 
-          notes = COALESCE($3, notes)
+          notes = COALESCE($3, notes),
+          total_days = $5
       WHERE id = $4
       RETURNING *
-    `, [status, approved_by, notes, id]);
+    `, [status, approved_by, notes, id, computedTotalDays]);
     
     const lr = rows[0];
-    const year = new Date(lr.start_date).getFullYear();
     
     // Handle status changes and update leave balances accordingly
     if (status === 'Approved' && oldStatus !== 'Approved') {
-      // Add to used days when approving
-      await q(`
-        INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
-        VALUES ($1, $2, $3, 
-                (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
-                $4, 0)
-        ON CONFLICT (employee_id, leave_type_id, year)
-        DO UPDATE SET used_days = leave_balances.used_days + $4
-      `, [lr.employee_id, lr.leave_type_id, year, lr.total_days]);
-      
-      // Map leave type names to match leaves table constraint
-      const leaveTypeMap = {
-        'Vacation': 'Vacation',
-        'Sick Leave': 'Sick',
-        'Personal Leave': 'Other',
-        'Bereavement': 'Bereavement',
-        'Parental Leave': 'Parental',
-        'Jury Duty': 'Other',
-        'Military Leave': 'Other'
-      };
-      
-      // Get leave type name and map it
-      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [lr.leave_type_id])).rows[0]?.name || 'Other';
-      const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
-      
-      // Create leave record
-      await q(`
-        INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT DO NOTHING
-      `, [
-        lr.employee_id, 
-        mappedLeaveType,
-        lr.start_date, 
-        lr.end_date,
-        'HR',
-        lr.notes
-      ]);
+      // Add workdays to balances (allocated per year)
+      await updateBalancesByYear(lr.employee_id, lr.leave_type_id, workdaysResult.workdaysByYear, 'add');
+      await syncLeavesTable(lr.employee_id, lr.leave_type_id, lr.start_date, lr.end_date, lr.notes, 'add');
     } else if (status !== 'Approved' && oldStatus === 'Approved') {
-      // Subtract from used days when un-approving (rejecting or cancelling previously approved leave)
-      await q(`
-        UPDATE leave_balances
-        SET used_days = GREATEST(0, used_days - $1)
-        WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
-      `, [lr.total_days, lr.employee_id, lr.leave_type_id, year]);
-      
-      // Delete leave record
-      await q(`
-        DELETE FROM leaves 
-        WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
-      `, [lr.employee_id, lr.start_date, lr.end_date]);
+      // Subtract workdays from balances when un-approving
+      await updateBalancesByYear(lr.employee_id, lr.leave_type_id, workdaysResult.workdaysByYear, 'subtract');
+      await syncLeavesTable(lr.employee_id, lr.leave_type_id, lr.start_date, lr.end_date, null, 'delete');
     }
     
     await q('COMMIT');
@@ -839,7 +1008,8 @@ r.put("/requests/:id/status", async (req, res) => {
 // Update leave request (full edit) - Manager/Admin only
 r.put("/requests/:id", async (req, res) => {
   const { id } = req.params;
-  const { employee_id, leave_type_id, start_date, end_date, total_days, reason, notes, request_method } = req.body;
+  const { employee_id, leave_type_id, start_date, end_date, reason, notes, request_method } = req.body;
+  // Note: total_days from client is ignored - server computes authoritative value
   
   // RBAC: Only managers/admins can edit leave requests
   if (req.userScope === 'own') {
@@ -859,45 +1029,77 @@ r.put("/requests/:id", async (req, res) => {
     
     const existing = existingRows[0];
     const wasApproved = existing.status === 'Approved';
-    const oldYear = new Date(existing.start_date).getFullYear();
-    const newYear = new Date(start_date || existing.start_date).getFullYear();
     
-    // If leave was approved, we need to adjust balances
+    // Determine final values for the updated request
+    const finalEmployeeId = employee_id || existing.employee_id;
+    const finalLeaveTypeId = leave_type_id || existing.leave_type_id;
+    const finalStartDate = start_date || existing.start_date;
+    const finalEndDate = end_date || existing.end_date;
+    
+    // Calculate workdays for old request (to subtract if was approved)
+    let oldWorkdays = null;
     if (wasApproved) {
-      // Subtract old days from old balance
-      await q(`
-        UPDATE leave_balances
-        SET used_days = GREATEST(0, used_days - $1)
-        WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
-      `, [existing.total_days, existing.employee_id, existing.leave_type_id, oldYear]);
+      try {
+        oldWorkdays = await calculateScheduledWorkdays(existing.employee_id, existing.start_date, existing.end_date);
+      } catch (e) {
+        // If we can't calculate old workdays, use a fallback based on stored total_days
+        // This handles legacy data where employee schedule may have changed
+        console.log(`⚠️ [Leave] Could not recalculate old workdays for request ${id}, using stored total_days`);
+        const oldYear = new Date(existing.start_date).getFullYear();
+        oldWorkdays = { workdaysByYear: { [oldYear]: parseFloat(existing.total_days) || 0 } };
+      }
       
-      // Delete old leaves record
-      await q(`
-        DELETE FROM leaves 
-        WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
-      `, [existing.employee_id, existing.start_date, existing.end_date]);
+      // Subtract old days from old balance
+      await updateBalancesByYear(existing.employee_id, existing.leave_type_id, oldWorkdays.workdaysByYear, 'subtract');
+      await syncLeavesTable(existing.employee_id, existing.leave_type_id, existing.start_date, existing.end_date, null, 'delete');
     }
     
-    // Update the leave request
+    // Calculate workdays for new/updated request
+    let newWorkdays;
+    try {
+      newWorkdays = await calculateScheduledWorkdays(finalEmployeeId, finalStartDate, finalEndDate);
+    } catch (calcError) {
+      await q('ROLLBACK');
+      return res.status(400).json({ error: `Cannot calculate workdays: ${calcError.message}` });
+    }
+    
+    if (!newWorkdays.hasSchedule) {
+      await q('ROLLBACK');
+      return res.status(400).json({ 
+        error: 'Employee has no work schedule assigned. Cannot update leave request.',
+        employee_id: finalEmployeeId
+      });
+    }
+    
+    if (newWorkdays.totalWorkdays === 0) {
+      await q('ROLLBACK');
+      return res.status(400).json({ 
+        error: 'The selected date range contains no scheduled workdays for this employee.',
+        start_date: finalStartDate,
+        end_date: finalEndDate
+      });
+    }
+    
+    // Update the leave request with computed total_days
     const { rows } = await q(`
       UPDATE leave_requests 
       SET 
-        employee_id = COALESCE($1, employee_id),
-        leave_type_id = COALESCE($2, leave_type_id),
-        start_date = COALESCE($3, start_date),
-        end_date = COALESCE($4, end_date),
-        total_days = COALESCE($5, total_days),
+        employee_id = $1,
+        leave_type_id = $2,
+        start_date = $3,
+        end_date = $4,
+        total_days = $5,
         reason = COALESCE($6, reason),
         notes = COALESCE($7, notes),
         request_method = COALESCE($8, request_method)
       WHERE id = $9
       RETURNING *
     `, [
-      employee_id || null,
-      leave_type_id || null,
-      start_date || null,
-      end_date || null,
-      total_days || null,
+      finalEmployeeId,
+      finalLeaveTypeId,
+      finalStartDate,
+      finalEndDate,
+      newWorkdays.totalWorkdays,
       reason !== undefined ? reason : null,
       notes !== undefined ? notes : null,
       request_method || null,
@@ -908,43 +1110,8 @@ r.put("/requests/:id", async (req, res) => {
     
     // If leave is approved, add new days to balance
     if (updated.status === 'Approved') {
-      await q(`
-        INSERT INTO leave_balances (employee_id, leave_type_id, year, entitled_days, used_days, carried_over_days)
-        VALUES ($1, $2, $3, 
-                (SELECT default_annual_entitlement FROM leave_types WHERE id = $2), 
-                $4, 0)
-        ON CONFLICT (employee_id, leave_type_id, year)
-        DO UPDATE SET used_days = leave_balances.used_days + $4
-      `, [updated.employee_id, updated.leave_type_id, newYear, updated.total_days]);
-      
-      // Map leave type names to match leaves table constraint
-      const leaveTypeMap = {
-        'Vacation': 'Vacation',
-        'Sick Leave': 'Sick',
-        'Personal Leave': 'Other',
-        'Bereavement': 'Bereavement',
-        'Parental Leave': 'Parental',
-        'Jury Duty': 'Other',
-        'Military Leave': 'Other'
-      };
-      
-      // Get leave type name and map it
-      const leaveTypeName = (await q('SELECT name FROM leave_types WHERE id = $1', [updated.leave_type_id])).rows[0]?.name || 'Other';
-      const mappedLeaveType = leaveTypeMap[leaveTypeName] || 'Other';
-      
-      // Create new leaves record
-      await q(`
-        INSERT INTO leaves (employee_id, leave_type, start_date, end_date, approved_by, notes)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        ON CONFLICT DO NOTHING
-      `, [
-        updated.employee_id, 
-        mappedLeaveType,
-        updated.start_date, 
-        updated.end_date,
-        'HR',
-        updated.notes
-      ]);
+      await updateBalancesByYear(updated.employee_id, updated.leave_type_id, newWorkdays.workdaysByYear, 'add');
+      await syncLeavesTable(updated.employee_id, updated.leave_type_id, updated.start_date, updated.end_date, updated.notes, 'add');
     }
     
     await q('COMMIT');
@@ -979,21 +1146,21 @@ r.delete("/requests/:id", async (req, res) => {
     }
     
     const existing = existingRows[0];
-    const year = new Date(existing.start_date).getFullYear();
     
-    // If leave was approved, subtract from balances
+    // If leave was approved, subtract from balances using schedule-based calculation
     if (existing.status === 'Approved') {
-      await q(`
-        UPDATE leave_balances
-        SET used_days = GREATEST(0, used_days - $1)
-        WHERE employee_id = $2 AND leave_type_id = $3 AND year = $4
-      `, [existing.total_days, existing.employee_id, existing.leave_type_id, year]);
+      let workdays;
+      try {
+        workdays = await calculateScheduledWorkdays(existing.employee_id, existing.start_date, existing.end_date);
+      } catch (e) {
+        // Fallback to stored total_days if schedule calculation fails
+        console.log(`⚠️ [Leave] Could not recalculate workdays for request ${id}, using stored total_days`);
+        const year = new Date(existing.start_date).getFullYear();
+        workdays = { workdaysByYear: { [year]: parseFloat(existing.total_days) || 0 } };
+      }
       
-      // Delete leaves record
-      await q(`
-        DELETE FROM leaves 
-        WHERE employee_id = $1 AND start_date = $2 AND end_date = $3
-      `, [existing.employee_id, existing.start_date, existing.end_date]);
+      await updateBalancesByYear(existing.employee_id, existing.leave_type_id, workdays.workdaysByYear, 'subtract');
+      await syncLeavesTable(existing.employee_id, existing.leave_type_id, existing.start_date, existing.end_date, null, 'delete');
     }
     
     // Delete the leave request

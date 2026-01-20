@@ -34,6 +34,12 @@ export default function LeaveManagement() {
   const [leaveTypes, setLeaveTypes] = useState([]);
   const [selectedEmployeeBalance, setSelectedEmployeeBalance] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  // Leave balances tab state
+  const [balanceCoverage, setBalanceCoverage] = useState(null);
+  const [balanceYear, setBalanceYear] = useState(new Date().getFullYear());
+  const [balanceFilter, setBalanceFilter] = useState({ department: '', search: '', showMissing: false });
+  const [balanceSortBy, setBalanceSortBy] = useState('name');
+  const [balanceSortDir, setBalanceSortDir] = useState('asc');
   const [newRequest, setNewRequest] = useState({
     employee_id: "",
     leave_type_id: "",
@@ -58,13 +64,15 @@ export default function LeaveManagement() {
       const startDate = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0]; // Jan 1 last year
       const endDate = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0]; // Dec 31 next year
       
-      const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData] = await Promise.all([
+      const currentYear = new Date().getFullYear();
+      const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData, coverageData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),
         API(`/api/leave/calendar?start_date=${startDate}&end_date=${endDate}`),
         API("/api/leave/analytics"),
         API("/api/employees"),
-        API("/api/leave/types")
+        API("/api/leave/types"),
+        API(`/api/leave/balances/coverage?year=${currentYear}`).catch(() => null)
       ]);
       
       console.log('📊 Leave data loaded:', {
@@ -73,7 +81,8 @@ export default function LeaveManagement() {
         calendar: calendarData.length,
         analytics: analyticsData,
         employees: employeesData.length,
-        leaveTypes: leaveTypesData.length
+        leaveTypes: leaveTypesData.length,
+        coverage: coverageData
       });
       
       setRequests(requestsData);
@@ -83,6 +92,7 @@ export default function LeaveManagement() {
       setAnalytics(analyticsData);
       setEmployees(employeesData);
       setLeaveTypes(leaveTypesData || []);
+      setBalanceCoverage(coverageData);
     } catch (error) {
       console.error("Error loading leave data:", error);
       // Set empty arrays on error to prevent UI issues
@@ -112,13 +122,15 @@ export default function LeaveManagement() {
       const startDate = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0]; // Jan 1 last year
       const endDate = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0]; // Dec 31 next year
       
-      const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData] = await Promise.all([
+      const currentYear = new Date().getFullYear();
+      const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData, coverageData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),
         API(`/api/leave/calendar?start_date=${startDate}&end_date=${endDate}`),
         API("/api/leave/analytics"),
         API("/api/employees"),
-        API("/api/leave/types")
+        API("/api/leave/types"),
+        API(`/api/leave/balances/coverage?year=${currentYear}`).catch(() => null)
       ]);
       
       console.log('✅ Leave data refreshed:', {
@@ -127,7 +139,8 @@ export default function LeaveManagement() {
         calendar: calendarData.length,
         analytics: analyticsData,
         employees: employeesData.length,
-        leaveTypes: leaveTypesData.length
+        leaveTypes: leaveTypesData.length,
+        coverage: coverageData
       });
       
       // Update state immediately - React will re-render automatically
@@ -138,6 +151,7 @@ export default function LeaveManagement() {
       setAnalytics(analyticsData);
       setEmployees(employeesData);
       setLeaveTypes(leaveTypesData || []);
+      setBalanceCoverage(coverageData);
     } catch (error) {
       console.error("Error refreshing leave data:", error);
       // Don't block UI on error - just log it
@@ -804,235 +818,418 @@ export default function LeaveManagement() {
       {/* Leave Balances Tab */}
       {activeTab === "balances" && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="space-y-6">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 p-6 text-white shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-blue-400 rounded-xl">
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-blue-100 text-sm font-medium">{t('leave.balances.totalAvailable')}</p>
-                      <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (parseFloat(b.available_days) || 0), 0)}</p>
-                    </div>
+          {/* Company-wide view for HR/Manager/Admin */}
+          {userRole !== 'user' ? (
+            <div className="space-y-6">
+              {/* Coverage + Action Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                {/* Coverage Widget */}
+                <div className="lg:col-span-2 card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold text-tahoe-text-muted uppercase tracking-wide">Data Coverage</h3>
+                    <select
+                      value={balanceYear}
+                      onChange={(e) => {
+                        const newYear = parseInt(e.target.value, 10);
+                        setBalanceYear(newYear);
+                        API(`/api/leave/balances/coverage?year=${newYear}`).then(setBalanceCoverage).catch(() => {});
+                      }}
+                      className="text-sm border rounded-lg px-2 py-1 bg-tahoe-bg-tertiary text-tahoe-text-primary"
+                    >
+                      {[...Array(5)].map((_, i) => {
+                        const y = new Date().getFullYear() - 2 + i;
+                        return <option key={y} value={y}>{y}</option>;
+                      })}
+                    </select>
                   </div>
-                  <p className="text-blue-100 text-sm font-medium">days remaining</p>
-              </div>
-              
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700 p-6 text-white shadow-2xl hover:shadow-emerald-500/25 transition-all duration-300 hover:scale-105">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-emerald-400 rounded-xl">
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
+                  {balanceCoverage ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-tahoe-text-secondary text-sm">Employees with balances</span>
+                        <span className="font-semibold text-white">
+                          {balanceCoverage.employees_with_balances} / {balanceCoverage.active_employees}
+                        </span>
+                      </div>
+                      <div className="w-full bg-tahoe-bg-quaternary rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full transition-all" 
+                          style={{ width: `${balanceCoverage.active_employees > 0 ? (balanceCoverage.employees_with_balances / balanceCoverage.active_employees * 100) : 0}%` }}
+                        />
+                      </div>
+                      {balanceCoverage.employees_without_schedule > 0 && (
+                        <div className="flex items-center gap-2 text-amber-400 text-sm">
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                          {balanceCoverage.employees_without_schedule} employees missing work schedule
+                        </div>
+                      )}
                     </div>
-                    <div className="text-right">
-                      <p className="text-emerald-100 text-sm font-medium">{t('leave.balances.thisYearUsed')}</p>
-                      <p className="text-4xl font-bold tracking-tight">{balances.reduce((sum, b) => sum + (parseFloat(b.used_days) || 0), 0)}</p>
-                    </div>
-                  </div>
-                  <p className="text-emerald-100 text-sm font-medium">days taken</p>
-              </div>
-              
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-500 via-violet-600 to-violet-700 p-6 text-white shadow-2xl hover:shadow-violet-500/25 transition-all duration-300 hover:scale-105">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-violet-400 rounded-xl">
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-violet-100 text-sm font-medium">{t('leave.balances.accrualRate')}</p>
-                      <p className="text-4xl font-bold tracking-tight">
-                        {balances.length > 0 
-                          ? (balances.reduce((sum, b) => sum + (parseFloat(b.accrual_rate) || 0), 0) / balances.length).toFixed(1)
-                          : '0.0'}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-violet-100 text-sm font-medium">avg days/month</p>
-              </div>
-              
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 p-6 text-white shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 hover:scale-105">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="p-3 bg-amber-400 rounded-xl">
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-amber-100 text-sm font-medium">{t('leave.balances.expiringSoon')}</p>
-                      <p className="text-4xl font-bold tracking-tight">
-                        {(() => {
-                          const thirtyDaysFromNow = new Date();
-                          thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-                          return balances.filter(b => {
-                            if (!b.expiry_date) return false;
-                            const expiry = new Date(b.expiry_date);
-                            return expiry >= new Date() && expiry <= thirtyDaysFromNow;
-                          }).length;
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-amber-100 text-sm font-medium">types expiring soon</p>
-              </div>
-            </div>
+                  ) : (
+                    <div className="text-tahoe-text-muted text-sm">Loading coverage data...</div>
+                  )}
+                </div>
 
-            {/* HR Management Actions - Only visible to managers/admins */}
-            {userRole !== 'user' && (
-              <div className="card p-6">
-                <h3 className="text-lg font-semibold mb-4 text-white">{t('leave.hrManagement.title')}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <button 
-                    onClick={() => setActiveTab("requests")}
-                    className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
-                  >
-                    <div className="text-2xl mb-2">📋</div>
-                    <h4 className="font-medium text-white">{t('leave.hrManagement.reviewRequests')}</h4>
-                    <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.reviewRequestsDesc')}</p>
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab("analytics")}
-                    className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left"
-                  >
-                    <div className="text-2xl mb-2">📊</div>
-                    <h4 className="font-medium text-white">{t('leave.hrManagement.viewAnalytics')}</h4>
-                    <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.viewAnalyticsDesc')}</p>
-                  </button>
-                  <button 
-                    onClick={() => setShowManagePolicies(true)}
-                    className="p-4 border rounded-tahoe-input hover:bg-tahoe-bg-hover transition-all duration-tahoe text-left hover:border-tahoe-accent hover:shadow-lg hover:shadow-tahoe-accent/20"
-                  >
-                    <div className="text-2xl mb-2">⚙️</div>
-                    <h4 className="font-medium text-white">{t('leave.hrManagement.managePolicies')}</h4>
-                    <p className="text-sm text-tahoe-text-muted">{t('leave.hrManagement.managePoliciesDesc')}</p>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Leave Types Breakdown */}
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold">{t('leave.balances.breakdown')}</h3>
-                <div className="flex items-center space-x-2 text-sm text-tahoe-text-muted">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span>{t('leave.balances.available')}</span>
-                  <div className="w-3 h-3 bg-tahoe-text-muted rounded-full ml-4"></div>
-                  <span>{t('leave.balances.used')}</span>
-                </div>
-              </div>
-              
-              {balances.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="text-6xl mb-4">📊</div>
-                  <h4 className="text-xl font-semibold mb-2 text-white">{t('leave.balances.noDataTitle')}</h4>
-                  <p className="text-tahoe-text-muted mb-6">{t('leave.balances.noDataDescription')}</p>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                    <div className="p-4 border rounded-tahoe-input">
-                      <div className="text-2xl mb-2">🏖️</div>
-                      <h5 className="font-medium text-white">{t('leave.types.vacation')}</h5>
-                      <p className="text-sm text-tahoe-text-muted">20 days/year</p>
-                    </div>
-                    <div className="p-4 border rounded-tahoe-input">
-                      <div className="text-2xl mb-2">🤒</div>
-                      <h5 className="font-medium text-white">{t('leave.types.sickLeave')}</h5>
-                      <p className="text-sm text-tahoe-text-muted">10 days/year</p>
-                    </div>
-                    <div className="p-4 border rounded-tahoe-input">
-                      <div className="text-2xl mb-2">🎯</div>
-                      <h5 className="font-medium text-white">{t('leave.types.personalLeave')}</h5>
-                      <p className="text-sm text-tahoe-text-muted">5 days/year</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {balances.map((balance) => {
-                    // Calculate total days: entitled + carried_over (not available + used, since available = entitled + carried_over - used)
-                    // Use parseFloat to handle string values from database
-                    const totalDays = (parseFloat(balance.entitled_days) || 0) + (parseFloat(balance.carried_over_days) || 0);
-                    const usedDays = parseFloat(balance.used_days) || 0;
-                    const availableDays = parseFloat(balance.available_days) || 0;
-                    const usedPercentage = totalDays > 0 ? (usedDays / totalDays) * 100 : 0;
-                    const availablePercentage = 100 - usedPercentage;
-                    
-                    // Format accrual rate display
-                    const accrualRate = balance.accrual_rate || 0;
-                    const accrualFreq = balance.accrual_frequency || 'monthly';
-                    const accrualDisplay = accrualRate > 0 
-                      ? `${accrualRate} days/${accrualFreq === 'monthly' ? 'month' : accrualFreq === 'biweekly' ? '2 weeks' : accrualFreq === 'quarterly' ? 'quarter' : 'year'}`
-                      : 'No accrual';
-                    
-                    // Format expiry date
-                    let expiryDisplay = 'Never';
-                    if (balance.expiry_date) {
-                      const expiryDate = new Date(balance.expiry_date);
-                      if (!isNaN(expiryDate.getTime())) {
-                        expiryDisplay = `Expires ${expiryDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
-                      }
-                    }
-                    
+                {/* Low Vacation Widget */}
+                <div className="card p-5">
+                  <h3 className="text-sm font-semibold text-tahoe-text-muted uppercase tracking-wide mb-3">Low Vacation</h3>
+                  {(() => {
+                    const vacationBalances = balances.filter(b => b.leave_type_name === 'Vacation');
+                    const lowVacation = vacationBalances.filter(b => (parseFloat(b.available_days) || 0) < 5);
                     return (
-                      <div key={balance.id} className="p-4 border border-tahoe-border-primary rounded-tahoe-input hover:shadow-md transition-shadow bg-tahoe-card-bg">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <div className="text-2xl">
-                              {balance.leave_type_name === 'Vacation' ? '🏖️' :
-                               balance.leave_type_name === 'Sick Leave' ? '🤒' :
-                               balance.leave_type_name === 'Personal Leave' ? '🎯' :
-                               balance.leave_type_name === 'Bereavement' ? '💐' :
-                               balance.leave_type_name === 'Jury Duty' ? '⚖️' :
-                               balance.leave_type_name === 'Parental Leave' ? '👶' : '📋'}
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-lg text-white">{balance.leave_type_name}</h4>
-                              <p className="text-sm text-tahoe-text-muted">
-                                {accrualDisplay} • {expiryDisplay}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-blue-400">{availableDays.toFixed(1)}</div>
-                            <div className="text-sm text-tahoe-text-muted">available</div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-tahoe-text-primary">{t('leave.balances.used', { days: usedDays.toFixed(1) })}</span>
-                            <span className="text-tahoe-text-primary">{t('leave.balances.available', { days: availableDays.toFixed(1) })}</span>
-                          </div>
-                          
-                          <div className="w-full bg-tahoe-bg-quaternary rounded-full h-3 overflow-hidden">
-                            <div className="flex h-full">
-                              <div 
-                                className="bg-tahoe-text-muted transition-all duration-500"
-                                style={{ width: `${usedPercentage}%` }}
-                              ></div>
-                              <div 
-                                className="bg-blue-500 transition-all duration-500"
-                                style={{ width: `${availablePercentage}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex justify-between text-xs text-tahoe-text-muted">
-                            <span>{usedPercentage.toFixed(1)}% used</span>
-                            <span>{availablePercentage.toFixed(1)}% available</span>
-                          </div>
-                        </div>
+                      <div>
+                        <div className="text-3xl font-bold text-amber-400">{lowVacation.length}</div>
+                        <div className="text-sm text-tahoe-text-muted">employees with &lt;5 days</div>
                       </div>
                     );
-                  })}
+                  })()}
                 </div>
-              )}
+
+                {/* High Sick Usage Widget */}
+                <div className="card p-5">
+                  <h3 className="text-sm font-semibold text-tahoe-text-muted uppercase tracking-wide mb-3">High Sick Usage</h3>
+                  {(() => {
+                    const sickBalances = balances.filter(b => b.leave_type_name === 'Sick Leave');
+                    const highSick = sickBalances.filter(b => (parseFloat(b.used_days) || 0) >= 5);
+                    return (
+                      <div>
+                        <div className="text-3xl font-bold text-red-400">{highSick.length}</div>
+                        <div className="text-sm text-tahoe-text-muted">employees with 5+ sick days</div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* HR Quick Actions */}
+              <div className="flex flex-wrap gap-3">
+                <button 
+                  onClick={async () => {
+                    if (confirm('This will recalculate all leave balances using schedule-based workday counting. Continue?')) {
+                      try {
+                        await API('/api/leave/balances/recalculate', { method: 'POST', body: JSON.stringify({ year: balanceYear }) });
+                        await refreshData();
+                        alert('Balances recalculated successfully');
+                      } catch (e) { alert('Error: ' + e.message); }
+                    }
+                  }}
+                  className="px-4 py-2 text-sm border rounded-lg hover:bg-tahoe-bg-hover transition-all text-tahoe-text-primary"
+                >
+                  Recalculate Balances
+                </button>
+                <button 
+                  onClick={async () => {
+                    if (confirm('This will initialize leave balances for employees who are missing them. Continue?')) {
+                      try {
+                        await API('/api/leave/balances/initialize', { method: 'POST', body: JSON.stringify({ year: balanceYear }) });
+                        await refreshData();
+                        alert('Balances initialized successfully');
+                      } catch (e) { alert('Error: ' + e.message); }
+                    }
+                  }}
+                  className="px-4 py-2 text-sm border rounded-lg hover:bg-tahoe-bg-hover transition-all text-tahoe-text-primary"
+                >
+                  Initialize Missing Balances
+                </button>
+                <button 
+                  onClick={() => setShowManagePolicies(true)}
+                  className="px-4 py-2 text-sm border rounded-lg hover:bg-tahoe-bg-hover transition-all text-tahoe-text-primary"
+                >
+                  Manage Policies
+                </button>
+              </div>
+
+              {/* Employee Balances Table */}
+              <div className="card">
+                <div className="p-4 border-b border-tahoe-border-primary">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <h3 className="text-lg font-semibold text-white">Employee Leave Balances</h3>
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        type="text"
+                        placeholder="Search employee..."
+                        value={balanceFilter.search}
+                        onChange={(e) => setBalanceFilter({...balanceFilter, search: e.target.value})}
+                        className="px-3 py-1.5 text-sm border rounded-lg bg-tahoe-bg-tertiary text-tahoe-text-primary w-48"
+                      />
+                      <label className="flex items-center gap-2 text-sm text-tahoe-text-secondary">
+                        <input
+                          type="checkbox"
+                          checked={balanceFilter.showMissing}
+                          onChange={(e) => setBalanceFilter({...balanceFilter, showMissing: e.target.checked})}
+                          className="rounded"
+                        />
+                        Missing data only
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-tahoe-border-primary text-left text-sm text-tahoe-text-muted">
+                        <th className="px-4 py-3 font-medium cursor-pointer hover:text-white" onClick={() => {
+                          setBalanceSortBy('name');
+                          setBalanceSortDir(balanceSortBy === 'name' && balanceSortDir === 'asc' ? 'desc' : 'asc');
+                        }}>
+                          Employee {balanceSortBy === 'name' && (balanceSortDir === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th className="px-4 py-3 font-medium text-center cursor-pointer hover:text-white" onClick={() => {
+                          setBalanceSortBy('vacation_available');
+                          setBalanceSortDir(balanceSortBy === 'vacation_available' && balanceSortDir === 'asc' ? 'desc' : 'asc');
+                        }}>
+                          Vacation {balanceSortBy === 'vacation_available' && (balanceSortDir === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th className="px-4 py-3 font-medium text-center cursor-pointer hover:text-white" onClick={() => {
+                          setBalanceSortBy('sick_used');
+                          setBalanceSortDir(balanceSortBy === 'sick_used' && balanceSortDir === 'asc' ? 'desc' : 'asc');
+                        }}>
+                          Sick Used {balanceSortBy === 'sick_used' && (balanceSortDir === 'asc' ? '↑' : '↓')}
+                        </th>
+                        <th className="px-4 py-3 font-medium text-center">Personal</th>
+                        <th className="px-4 py-3 font-medium text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        // Build employee data with their balances
+                        const employeeBalanceData = employees
+                          .filter(emp => emp.status === 'Active')
+                          .map(emp => {
+                            const empBalances = balances.filter(b => b.employee_id === emp.id);
+                            const vacation = empBalances.find(b => b.leave_type_name === 'Vacation');
+                            const sick = empBalances.find(b => b.leave_type_name === 'Sick Leave');
+                            const personal = empBalances.find(b => b.leave_type_name === 'Personal Leave');
+                            const hasSchedule = emp.work_schedule_id != null;
+                            const hasBalances = empBalances.length > 0;
+                            
+                            return {
+                              ...emp,
+                              vacation_available: vacation ? parseFloat(vacation.available_days) || 0 : null,
+                              vacation_used: vacation ? parseFloat(vacation.used_days) || 0 : null,
+                              sick_used: sick ? parseFloat(sick.used_days) || 0 : null,
+                              personal_available: personal ? parseFloat(personal.available_days) || 0 : null,
+                              hasSchedule,
+                              hasBalances,
+                              name: `${emp.first_name} ${emp.last_name}`
+                            };
+                          })
+                          .filter(emp => {
+                            // Apply search filter
+                            if (balanceFilter.search) {
+                              const search = balanceFilter.search.toLowerCase();
+                              if (!emp.name.toLowerCase().includes(search)) return false;
+                            }
+                            // Apply missing filter
+                            if (balanceFilter.showMissing) {
+                              return !emp.hasSchedule || !emp.hasBalances;
+                            }
+                            return true;
+                          })
+                          .sort((a, b) => {
+                            let aVal, bVal;
+                            switch (balanceSortBy) {
+                              case 'vacation_available':
+                                aVal = a.vacation_available ?? -1;
+                                bVal = b.vacation_available ?? -1;
+                                break;
+                              case 'sick_used':
+                                aVal = a.sick_used ?? -1;
+                                bVal = b.sick_used ?? -1;
+                                break;
+                              default:
+                                aVal = a.name.toLowerCase();
+                                bVal = b.name.toLowerCase();
+                            }
+                            if (aVal < bVal) return balanceSortDir === 'asc' ? -1 : 1;
+                            if (aVal > bVal) return balanceSortDir === 'asc' ? 1 : -1;
+                            return 0;
+                          });
+
+                        if (employeeBalanceData.length === 0) {
+                          return (
+                            <tr>
+                              <td colSpan="5" className="px-4 py-8 text-center text-tahoe-text-muted">
+                                No employees match the current filters.
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return employeeBalanceData.map(emp => (
+                          <tr key={emp.id} className="border-b border-tahoe-border-primary hover:bg-tahoe-bg-hover transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-white">{emp.name}</div>
+                              <div className="text-xs text-tahoe-text-muted">{emp.email}</div>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {emp.vacation_available !== null ? (
+                                <div>
+                                  <span className={`font-semibold ${emp.vacation_available < 5 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                    {emp.vacation_available.toFixed(1)}
+                                  </span>
+                                  <span className="text-tahoe-text-muted text-xs ml-1">avail</span>
+                                  {emp.vacation_used !== null && emp.vacation_used > 0 && (
+                                    <div className="text-xs text-tahoe-text-muted">{emp.vacation_used.toFixed(1)} used</div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-tahoe-text-muted">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {emp.sick_used !== null ? (
+                                <span className={`font-semibold ${emp.sick_used >= 5 ? 'text-red-400' : 'text-tahoe-text-primary'}`}>
+                                  {emp.sick_used.toFixed(1)}
+                                </span>
+                              ) : (
+                                <span className="text-tahoe-text-muted">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {emp.personal_available !== null ? (
+                                <span className="text-tahoe-text-primary">{emp.personal_available.toFixed(1)}</span>
+                              ) : (
+                                <span className="text-tahoe-text-muted">-</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {!emp.hasSchedule ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400">
+                                  No Schedule
+                                </span>
+                              ) : !emp.hasBalances ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
+                                  No Balances
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/20 text-emerald-400">
+                                  OK
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ));
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* Personal view for regular users */
+            <div className="space-y-6">
+              {/* Personal Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {(() => {
+                  const vacation = balances.find(b => b.leave_type_name === 'Vacation');
+                  const sick = balances.find(b => b.leave_type_name === 'Sick Leave');
+                  const personal = balances.find(b => b.leave_type_name === 'Personal Leave');
+                  
+                  return (
+                    <>
+                      <div className="card p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="text-2xl">🏖️</div>
+                          <h3 className="font-semibold text-white">Vacation</h3>
+                        </div>
+                        <div className="text-3xl font-bold text-blue-400 mb-1">
+                          {vacation ? (parseFloat(vacation.available_days) || 0).toFixed(1) : '0.0'}
+                        </div>
+                        <div className="text-sm text-tahoe-text-muted">days available</div>
+                        {vacation && (parseFloat(vacation.used_days) || 0) > 0 && (
+                          <div className="text-xs text-tahoe-text-muted mt-2">
+                            {(parseFloat(vacation.used_days) || 0).toFixed(1)} days used this year
+                          </div>
+                        )}
+                      </div>
+                      <div className="card p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="text-2xl">🤒</div>
+                          <h3 className="font-semibold text-white">Sick Leave</h3>
+                        </div>
+                        <div className="text-3xl font-bold text-emerald-400 mb-1">
+                          {sick ? (parseFloat(sick.available_days) || 0).toFixed(1) : '0.0'}
+                        </div>
+                        <div className="text-sm text-tahoe-text-muted">days available</div>
+                        {sick && (parseFloat(sick.used_days) || 0) > 0 && (
+                          <div className="text-xs text-tahoe-text-muted mt-2">
+                            {(parseFloat(sick.used_days) || 0).toFixed(1)} days used this year
+                          </div>
+                        )}
+                      </div>
+                      <div className="card p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="text-2xl">🎯</div>
+                          <h3 className="font-semibold text-white">Personal</h3>
+                        </div>
+                        <div className="text-3xl font-bold text-violet-400 mb-1">
+                          {personal ? (parseFloat(personal.available_days) || 0).toFixed(1) : '0.0'}
+                        </div>
+                        <div className="text-sm text-tahoe-text-muted">days available</div>
+                        {personal && (parseFloat(personal.used_days) || 0) > 0 && (
+                          <div className="text-xs text-tahoe-text-muted mt-2">
+                            {(parseFloat(personal.used_days) || 0).toFixed(1)} days used this year
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* All Balance Types Detail */}
+              <div className="card p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">All Leave Balances</h3>
+                {balances.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-3">📊</div>
+                    <p className="text-tahoe-text-muted">No leave balances found for your account.</p>
+                    <p className="text-sm text-tahoe-text-muted mt-1">Contact HR if you believe this is an error.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {balances.map((balance) => {
+                      const totalDays = (parseFloat(balance.entitled_days) || 0) + (parseFloat(balance.carried_over_days) || 0);
+                      const usedDays = parseFloat(balance.used_days) || 0;
+                      const availableDays = parseFloat(balance.available_days) || 0;
+                      const usedPercentage = totalDays > 0 ? (usedDays / totalDays) * 100 : 0;
+                      
+                      return (
+                        <div key={balance.id} className="p-4 border border-tahoe-border-primary rounded-lg bg-tahoe-bg-tertiary">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="text-xl">
+                                {balance.leave_type_name === 'Vacation' ? '🏖️' :
+                                 balance.leave_type_name === 'Sick Leave' ? '🤒' :
+                                 balance.leave_type_name === 'Personal Leave' ? '🎯' :
+                                 balance.leave_type_name === 'Bereavement' ? '💐' :
+                                 balance.leave_type_name === 'Parental Leave' ? '👶' : '📋'}
+                              </span>
+                              <span className="font-medium text-white">{balance.leave_type_name}</span>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-blue-400">{availableDays.toFixed(1)}</div>
+                              <div className="text-xs text-tahoe-text-muted">available</div>
+                            </div>
+                          </div>
+                          <div className="w-full bg-tahoe-bg-quaternary rounded-full h-2">
+                            <div className="flex h-full rounded-full overflow-hidden">
+                              <div className="bg-tahoe-text-muted" style={{ width: `${usedPercentage}%` }}></div>
+                              <div className="bg-blue-500" style={{ width: `${100 - usedPercentage}%` }}></div>
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-xs text-tahoe-text-muted mt-1">
+                            <span>{usedDays.toFixed(1)} used</span>
+                            <span>{totalDays.toFixed(1)} total entitlement</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
 
