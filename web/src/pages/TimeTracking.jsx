@@ -825,13 +825,6 @@ const formatHoursAsTime = (decimalHours) => {
   return `${hours}:${minutes.toString().padStart(2, '0')}`;
 };
 
-// Format date to short format (e.g., "Jan 15, 2024")
-const formatShortDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
 // Individual Timecard View Component
 function IndividualView({ timecard, onBack, t }) {
   if (!timecard) {
