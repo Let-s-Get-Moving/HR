@@ -276,6 +276,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       contract_signed_date: employee.contract_signed_date ? employee.contract_signed_date.split('T')[0] : '',
       gift_card_sent: employee.gift_card_sent || false,
       nickname: employee.nickname || '',
+      nickname_2: employee.nickname_2 || '',
+      nickname_3: employee.nickname_3 || '',
       // Settings
       job_title_id: employee.job_title_id || null,
       benefits_package_id: employee.benefits_package_id || null,
@@ -303,6 +305,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error updating employee:", error);
+      
+      // Check for nickname conflict error
+      if (error.code === 'NICKNAME_CONFLICT' || (error.error && error.error.includes('ickname'))) {
+        alert(`Could not save: ${error.error || 'This nickname is already used by another employee.'}`);
+      } else {
+        alert(`Failed to save changes: ${error.error || error.message || 'Unknown error'}`);
+      }
     }
   };
 
@@ -786,23 +795,64 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   )}
                 </div>
                 {hasFullAccess(userRole) && (
-                  <div className="flex justify-between">
-                    <span className="text-tahoe-text-muted">Nickname:</span>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editData.nickname || ''}
-                        onChange={(e) => setEditData({...editData, nickname: e.target.value})}
-                        className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 text-right"
-                        placeholder="e.g., Dmytro Benz"
-                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                      />
-                    ) : (
-                      <span className="text-tahoe-text-primary">
-                        {employee.nickname || <span className="text-tahoe-text-muted italic">Not set</span>}
-                      </span>
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-tahoe-text-muted">Nickname 1:</span>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editData.nickname || ''}
+                          onChange={(e) => setEditData({...editData, nickname: e.target.value})}
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 text-right"
+                          placeholder="e.g., Sam L"
+                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                        />
+                      ) : (
+                        <span className="text-tahoe-text-primary">
+                          {employee.nickname || <span className="text-tahoe-text-muted italic">Not set</span>}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-tahoe-text-muted">Nickname 2:</span>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editData.nickname_2 || ''}
+                          onChange={(e) => setEditData({...editData, nickname_2: e.target.value})}
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 text-right"
+                          placeholder="e.g., Sam"
+                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                        />
+                      ) : (
+                        <span className="text-tahoe-text-primary">
+                          {employee.nickname_2 || <span className="text-tahoe-text-muted italic">Not set</span>}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-tahoe-text-muted">Nickname 3:</span>
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editData.nickname_3 || ''}
+                          onChange={(e) => setEditData({...editData, nickname_3: e.target.value})}
+                          className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 text-right"
+                          placeholder="Optional"
+                          style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                        />
+                      ) : (
+                        <span className="text-tahoe-text-primary">
+                          {employee.nickname_3 || <span className="text-tahoe-text-muted italic">Not set</span>}
+                        </span>
+                      )}
+                    </div>
+                    {isEditing && (
+                      <p className="text-xs text-tahoe-text-muted mt-1 col-span-2 text-right">
+                        Reports may use short names like "Sam"; add those as Nickname 2 or 3.
+                      </p>
                     )}
-                  </div>
+                  </>
                 )}
                 <div className="flex justify-between">
                   <span className="text-tahoe-text-muted">{t('employeeProfile.gender')}:</span>
@@ -1131,9 +1181,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     </div>
                   )}
                   <div className="mt-4 p-3 rounded-lg bg-tahoe-bg-secondary/50 text-xs text-tahoe-text-muted">
-                    <strong>Note:</strong> Nickname must match the name in imported sales data for commission calculations to work.
-                    {employee.nickname && (
-                      <span className="block mt-1 text-green-400">Current nickname: "{employee.nickname}"</span>
+                    <strong>Note:</strong> Any of the 3 nicknames must match the name in imported sales data for commission calculations to work. Use Nickname 2/3 for short names used in reports.
+                    {(employee.nickname || employee.nickname_2 || employee.nickname_3) && (
+                      <span className="block mt-1 text-green-400">
+                        Current nicknames: {[employee.nickname, employee.nickname_2, employee.nickname_3].filter(Boolean).map(n => `"${n}"`).join(', ')}
+                      </span>
                     )}
                   </div>
                 </div>

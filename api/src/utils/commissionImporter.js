@@ -142,7 +142,7 @@ async function findEmployeeOnly(nameRaw, queryFn) {
     
     // Try to find by normalized name
     // SQL applies same normalization: lowercase, trim, collapse spaces, remove special chars
-    // Also check nickname field for alternative name matching
+    // Also check all 3 nickname fields for alternative name matching
     const existingResult = await queryFn(`
         SELECT id, first_name, last_name
         FROM employees 
@@ -153,13 +153,9 @@ async function findEmployeeOnly(nameRaw, queryFn) {
             ),
             '\\s+', ' ', 'g'
         )) = $1
-        OR (nickname IS NOT NULL AND TRIM(REGEXP_REPLACE(
-            REGEXP_REPLACE(
-                LOWER(TRIM(nickname)),
-                '[^a-z0-9\\s-]', '', 'g'
-            ),
-            '\\s+', ' ', 'g'
-        )) = $1)
+        OR normalize_nickname(nickname) = $1
+        OR normalize_nickname(nickname_2) = $1
+        OR normalize_nickname(nickname_3) = $1
         LIMIT 1
     `, [nameKey]);
     

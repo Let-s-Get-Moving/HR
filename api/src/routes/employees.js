@@ -389,12 +389,39 @@ const employeeSchema = z.object({
   bank_transit_number: z.string().nullable().optional(),
   emergency_contact_name: z.string().nullable().optional(),
   emergency_contact_phone: z.string().nullable().optional(),
+  // Nicknames for matching (up to 3)
   nickname: z.string().nullable().optional(),
+  nickname_2: z.string().nullable().optional(),
+  nickname_3: z.string().nullable().optional(),
   // Sales commission config (Sales dept only)
   sales_role: z.enum(['agent', 'manager']).nullable().optional(),
   sales_commission_enabled: z.boolean().nullable().optional(),
   sales_manager_fixed_pct: z.number().nullable().optional()
 });
+
+/**
+ * Parse nickname conflict error from PostgreSQL trigger
+ * Returns user-friendly error message or null if not a nickname error
+ */
+function parseNicknameConflictError(error) {
+  if (error.code === '23505' || (error.message && error.message.includes('NICKNAME_'))) {
+    const msg = error.message || '';
+    
+    if (msg.includes('NICKNAME_DUPLICATE_SELF')) {
+      return 'Cannot use the same nickname in multiple fields';
+    }
+    
+    if (msg.includes('NICKNAME_CONFLICT')) {
+      // Extract details from: NICKNAME_CONFLICT: Nickname "Sam" (normalized: "sam") is already used by employee 602 (Sam Lopka)
+      const match = msg.match(/Nickname "([^"]+)".*already used by employee \d+ \(([^)]+)\)/);
+      if (match) {
+        return `Nickname "${match[1]}" is already used by ${match[2]}`;
+      }
+      return 'This nickname is already used by another employee';
+    }
+  }
+  return null;
+}
 
 r.post("/", async (req, res) => {
   try {
@@ -438,10 +465,13 @@ r.post("/", async (req, res) => {
       }
     }
     
+    // Helper function to convert empty strings to null
+    const nullIfEmpty = (value) => (value === '' || value === undefined) ? null : value;
+    
     const { rows } = await q(
       `INSERT INTO employees
-       (first_name,last_name,work_email,email,phone,gender,birth_date,hire_date,employment_type,department_id,location_id,role_title,probation_end,hourly_rate,job_title_id,benefits_package_id,work_schedule_id,overtime_policy_id,attendance_policy_id,remote_work_policy_id,full_address,sin_number,sin_expiry_date,bank_name,bank_account_number,bank_transit_number,emergency_contact_name,emergency_contact_phone)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28)
+       (first_name,last_name,work_email,email,phone,gender,birth_date,hire_date,employment_type,department_id,location_id,role_title,probation_end,hourly_rate,job_title_id,benefits_package_id,work_schedule_id,overtime_policy_id,attendance_policy_id,remote_work_policy_id,full_address,sin_number,sin_expiry_date,bank_name,bank_account_number,bank_transit_number,emergency_contact_name,emergency_contact_phone,nickname,nickname_2,nickname_3)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31)
        RETURNING *`,
       [
         data.first_name, data.last_name, data.work_email, data.email ?? null,
@@ -452,13 +482,21 @@ r.post("/", async (req, res) => {
         data.overtime_policy_id ?? null, data.attendance_policy_id ?? null, data.remote_work_policy_id ?? null,
         data.full_address ?? null, data.sin_number ?? null, data.sin_expiry_date ?? null,
         data.bank_name ?? null, data.bank_account_number ?? null, data.bank_transit_number ?? null,
-        data.emergency_contact_name ?? null, data.emergency_contact_phone ?? null
+        data.emergency_contact_name ?? null, data.emergency_contact_phone ?? null,
+        nullIfEmpty(data.nickname), nullIfEmpty(data.nickname_2), nullIfEmpty(data.nickname_3)
       ]
     );
     console.log('✅ [API] Employee created:', rows[0]);
     res.status(201).json(rows[0]);
   } catch (error) {
     console.error('❌ [API] Error creating employee:', error);
+    
+    // Check for nickname conflict error
+    const nicknameError = parseNicknameConflictError(error);
+    if (nicknameError) {
+      return res.status(409).json({ error: nicknameError, code: 'NICKNAME_CONFLICT' });
+    }
+    
     res.status(500).json({ error: 'Failed to create employee', details: error.message });
   }
 });
@@ -475,6 +513,13 @@ r.put("/:id", async (req, res) => {
   
   // Helper function to convert empty strings to null
   const nullIfEmpty = (value) => (value === '' || value === undefined) ? null : value;
+  
+  // Helper to trim nicknames (preserve spaces within but not leading/trailing)
+  const trimNickname = (value) => {
+    if (value === null || value === undefined || value === '') return null;
+    const trimmed = String(value).trim();
+    return trimmed === '' ? null : trimmed;
+  };
   
   try {
     // First, get the existing employee to preserve required fields if not provided
@@ -561,7 +606,9 @@ r.put("/:id", async (req, res) => {
       contract_status: data.contract_status !== undefined ? (data.contract_status || null) : existing.contract_status,
       contract_signed_date: data.contract_signed_date !== undefined ? (data.contract_signed_date || null) : existing.contract_signed_date,
       gift_card_sent: data.gift_card_sent !== undefined ? data.gift_card_sent : (existing.gift_card_sent || false),
-      nickname: data.nickname !== undefined ? nullIfEmpty(data.nickname) : existing.nickname,
+      nickname: data.nickname !== undefined ? trimNickname(data.nickname) : existing.nickname,
+      nickname_2: data.nickname_2 !== undefined ? trimNickname(data.nickname_2) : existing.nickname_2,
+      nickname_3: data.nickname_3 !== undefined ? trimNickname(data.nickname_3) : existing.nickname_3,
       // Sales commission config (restricted to manager/admin roles)
       sales_role: req.userRole === 'user' ? existing.sales_role : (data.sales_role !== undefined ? nullIfEmpty(data.sales_role) : existing.sales_role),
       sales_commission_enabled: req.userRole === 'user' ? existing.sales_commission_enabled : (data.sales_commission_enabled !== undefined ? (data.sales_commission_enabled ?? false) : (existing.sales_commission_enabled ?? false)),
@@ -580,9 +627,9 @@ r.put("/:id", async (req, res) => {
            sin_number = $25, sin_expiry_date = $26, bank_name = $27,
            bank_transit_number = $28, bank_account_number = $29,
            contract_status = $30, contract_signed_date = $31, gift_card_sent = $32,
-           nickname = $33,
-           sales_role = $34, sales_commission_enabled = $35, sales_manager_fixed_pct = $36
-       WHERE id = $37
+           nickname = $33, nickname_2 = $34, nickname_3 = $35,
+           sales_role = $36, sales_commission_enabled = $37, sales_manager_fixed_pct = $38
+       WHERE id = $39
        RETURNING *`,
       [
         mergedData.first_name,
@@ -618,6 +665,8 @@ r.put("/:id", async (req, res) => {
         mergedData.contract_signed_date,
         mergedData.gift_card_sent,
         mergedData.nickname,
+        mergedData.nickname_2,
+        mergedData.nickname_3,
         mergedData.sales_role,
         mergedData.sales_commission_enabled,
         mergedData.sales_manager_fixed_pct,
@@ -633,6 +682,13 @@ r.put("/:id", async (req, res) => {
   } catch (error) {
     console.error("Error updating employee:", error);
     console.error("Error details:", error.message);
+    
+    // Check for nickname conflict error
+    const nicknameError = parseNicknameConflictError(error);
+    if (nicknameError) {
+      return res.status(409).json({ error: nicknameError, code: 'NICKNAME_CONFLICT' });
+    }
+    
     res.status(500).json({ error: "Failed to update employee", details: error.message });
   }
 });

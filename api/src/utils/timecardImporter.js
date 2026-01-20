@@ -104,21 +104,25 @@ async function findOrCreateEmployee(name, client, summary) {
     
     const nameLower = name.trim().toLowerCase();
     
-    // Try exact match (check full name and nickname)
+    // Try exact match (check full name and all 3 nickname columns)
     let result = await client.query(
         `SELECT id FROM employees 
          WHERE LOWER(CONCAT(first_name, ' ', last_name)) = $1 
-            OR (nickname IS NOT NULL AND LOWER(TRIM(nickname)) = $1)
+            OR normalize_nickname(nickname) = $1
+            OR normalize_nickname(nickname_2) = $1
+            OR normalize_nickname(nickname_3) = $1
          LIMIT 1`,
         [nameLower]
     );
     if (result.rows.length > 0) return result.rows[0].id;
     
-    // Try fuzzy match (check full name and nickname)
+    // Try fuzzy match (check full name and all 3 nickname columns)
     result = await client.query(
         `SELECT id FROM employees 
          WHERE LOWER(CONCAT(first_name, ' ', last_name)) LIKE $1 
             OR (nickname IS NOT NULL AND LOWER(TRIM(nickname)) LIKE $1)
+            OR (nickname_2 IS NOT NULL AND LOWER(TRIM(nickname_2)) LIKE $1)
+            OR (nickname_3 IS NOT NULL AND LOWER(TRIM(nickname_3)) LIKE $1)
          LIMIT 1`,
         [`%${nameLower}%`]
     );

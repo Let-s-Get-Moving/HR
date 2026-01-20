@@ -205,20 +205,17 @@ export async function findExistingEmployee(employeeData, queryFn) {
     }
   }
   
-  // Strategy 2: Nickname match (if nickname provided)
+  // Strategy 2: Nickname match (check all 3 nickname columns)
   const fullNameKey = name ? normalizeName(name) : (firstName && lastName ? normalizeName(`${firstName} ${lastName}`) : normalizeName(firstName));
   if (fullNameKey) {
     const nicknameMatch = await queryFn(
       `SELECT * FROM employees 
-       WHERE nickname IS NOT NULL 
-       AND TRIM(REGEXP_REPLACE(
-         REGEXP_REPLACE(
-           LOWER(TRIM(nickname)),
-           '[^a-z0-9\\s-]', '', 'g'
-         ),
-         '\\s+', ' ', 'g'
-       )) = $1
-       AND status <> 'Terminated'
+       WHERE status <> 'Terminated'
+         AND (
+           normalize_nickname(nickname) = $1 OR
+           normalize_nickname(nickname_2) = $1 OR
+           normalize_nickname(nickname_3) = $1
+         )
        LIMIT 1`,
       [fullNameKey]
     );

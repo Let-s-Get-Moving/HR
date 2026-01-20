@@ -113,12 +113,12 @@ export function computeManagerBucketRate(bookingPct) {
 // ============================================================================
 
 /**
- * Match staging rows to employees by nickname.
+ * Match staging rows to employees by any of their 3 nicknames.
  * Only matches employees with:
  * - Sales department
  * - sales_commission_enabled = true
  * - sales_role = 'agent'
- * - normalized(nickname) == staging.name_key
+ * - Any of (nickname, nickname_2, nickname_3) normalized matches staging.name_key
  * 
  * @param {Object} client - Database client
  * @param {string} periodStart - Period start date (YYYY-MM-DD)
@@ -135,32 +135,35 @@ async function matchAgentsToStaging(client, periodStart, periodEnd) {
     
     const stagingRows = stagingResult.rows;
     
-    // Get all enabled sales agents with their normalized nicknames
+    // Get all enabled sales agents with their normalized nicknames (all 3)
     const agentsResult = await client.query(`
-        SELECT e.id, e.first_name, e.last_name, e.nickname,
-               TRIM(REGEXP_REPLACE(
-                   REGEXP_REPLACE(
-                       LOWER(TRIM(e.nickname)),
-                       '[^a-z0-9\\s-]', '', 'g'
-                   ),
-                   '\\s+', ' ', 'g'
-               )) AS nickname_key
+        SELECT e.id, e.first_name, e.last_name, 
+               e.nickname, e.nickname_2, e.nickname_3,
+               normalize_nickname(e.nickname) AS nickname_key_1,
+               normalize_nickname(e.nickname_2) AS nickname_key_2,
+               normalize_nickname(e.nickname_3) AS nickname_key_3
         FROM employees e
         JOIN departments d ON e.department_id = d.id
         WHERE d.name ILIKE '%sales%'
           AND e.sales_commission_enabled = true
           AND e.sales_role = 'agent'
-          AND e.nickname IS NOT NULL
+          AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
           AND e.status <> 'Terminated'
     `);
     
     const agents = agentsResult.rows;
     
-    // Create nickname -> employee map
+    // Create nickname -> employee map (map all 3 keys to the same employee)
     const nicknameToEmployee = new Map();
     for (const agent of agents) {
-        if (agent.nickname_key) {
-            nicknameToEmployee.set(agent.nickname_key, agent);
+        if (agent.nickname_key_1) {
+            nicknameToEmployee.set(agent.nickname_key_1, agent);
+        }
+        if (agent.nickname_key_2) {
+            nicknameToEmployee.set(agent.nickname_key_2, agent);
+        }
+        if (agent.nickname_key_3) {
+            nicknameToEmployee.set(agent.nickname_key_3, agent);
         }
     }
     

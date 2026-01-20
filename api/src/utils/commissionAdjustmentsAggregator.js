@@ -46,35 +46,31 @@ export async function getAdjustmentsByPeriod(periodStart, periodEnd) {
               AND ls.directive_type IS NOT NULL
               AND ls.directive_type <> 'none'
         ),
-        -- Match original sales person to employee by nickname
+        -- Match original sales person to employee by any of their 3 nicknames
         original_employee AS (
-            SELECT 
+            SELECT DISTINCT
                 eq.quote_id,
                 e.id AS employee_id
             FROM eligible_quotes eq
-            INNER JOIN employees e ON TRIM(REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                    LOWER(TRIM(e.nickname)),
-                    '[^a-z0-9\\s-]', '', 'g'
-                ),
-                '\\s+', ' ', 'g'
-            )) = eq.sales_person_key
-            WHERE e.nickname IS NOT NULL
+            INNER JOIN employees e ON (
+                normalize_nickname(e.nickname) = eq.sales_person_key OR
+                normalize_nickname(e.nickname_2) = eq.sales_person_key OR
+                normalize_nickname(e.nickname_3) = eq.sales_person_key
+            )
+            WHERE e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL
         ),
-        -- Match target person to employee by nickname
+        -- Match target person to employee by any of their 3 nicknames
         target_employee AS (
-            SELECT 
+            SELECT DISTINCT
                 eq.quote_id,
                 e.id AS employee_id
             FROM eligible_quotes eq
-            INNER JOIN employees e ON TRIM(REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                    LOWER(TRIM(e.nickname)),
-                    '[^a-z0-9\\s-]', '', 'g'
-                ),
-                '\\s+', ' ', 'g'
-            )) = eq.target_name_key
-            WHERE e.nickname IS NOT NULL
+            INNER JOIN employees e ON (
+                normalize_nickname(e.nickname) = eq.target_name_key OR
+                normalize_nickname(e.nickname_2) = eq.target_name_key OR
+                normalize_nickname(e.nickname_3) = eq.target_name_key
+            )
+            WHERE e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL
         ),
         -- Calculate transfer amounts per quote
         transfers AS (
@@ -152,22 +148,31 @@ export async function getAdjustmentsByPeriod(periodStart, periodEnd) {
  * @returns {Promise<object>} Breakdown of adjustments
  */
 export async function getAdjustmentDetailsForEmployee(periodStart, periodEnd, employeeId) {
-    // Get employee's nickname
+    // Get employee's all nicknames
     const empResult = await pool.query(`
-        SELECT nickname FROM employees WHERE id = $1
+        SELECT nickname, nickname_2, nickname_3,
+               normalize_nickname(nickname) AS key1,
+               normalize_nickname(nickname_2) AS key2,
+               normalize_nickname(nickname_3) AS key3
+        FROM employees WHERE id = $1
     `, [employeeId]);
     
-    if (empResult.rows.length === 0 || !empResult.rows[0].nickname) {
+    if (empResult.rows.length === 0) {
         return { add_ons: [], deductions: [], totals: getEmptyAdjustments() };
     }
     
-    const nickname = empResult.rows[0].nickname;
-    const nicknameKey = nickname.trim().toLowerCase()
-        .replace(/[^\w\s-]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
+    const emp = empResult.rows[0];
+    
+    // Build array of all nickname keys (non-null)
+    const nicknameKeys = [emp.key1, emp.key2, emp.key3].filter(k => k && k !== '');
+    
+    // If no nickname keys, return empty
+    if (nicknameKeys.length === 0) {
+        return { add_ons: [], deductions: [], totals: getEmptyAdjustments() };
+    }
     
     // Get quotes where this employee is the target (receives add-ons)
+    // Use ANY() to match against all nickname keys
     const addOnsQuery = `
         SELECT 
             ls.quote_id,
@@ -191,7 +196,7 @@ export async function getAdjustmentDetailsForEmployee(periodStart, periodEnd, em
           AND bo.service_date >= $1
           AND bo.service_date <= $2
           AND bo.invoiced_amount IS NOT NULL
-          AND ls.target_name_key = $3
+          AND ls.target_name_key = ANY($3)
         ORDER BY bo.service_date DESC
     `;
     
@@ -219,15 +224,15 @@ export async function getAdjustmentDetailsForEmployee(periodStart, periodEnd, em
           AND bo.service_date >= $1
           AND bo.service_date <= $2
           AND bo.invoiced_amount IS NOT NULL
-          AND ls.sales_person_key = $3
+          AND ls.sales_person_key = ANY($3)
           AND ls.directive_type IS NOT NULL
           AND ls.directive_type <> 'none'
         ORDER BY bo.service_date DESC
     `;
     
     const [addOnsResult, deductionsResult] = await Promise.all([
-        pool.query(addOnsQuery, [periodStart, periodEnd, nicknameKey]),
-        pool.query(deductionsQuery, [periodStart, periodEnd, nicknameKey])
+        pool.query(addOnsQuery, [periodStart, periodEnd, nicknameKeys]),
+        pool.query(deductionsQuery, [periodStart, periodEnd, nicknameKeys])
     ]);
     
     // Calculate totals
@@ -297,15 +302,18 @@ export async function getUnmatchedNamesReport(periodStart, periodEnd) {
               AND ls.directive_type <> 'none'
         ),
         all_employee_nicknames AS (
-            SELECT TRIM(REGEXP_REPLACE(
-                REGEXP_REPLACE(
-                    LOWER(TRIM(nickname)),
-                    '[^a-z0-9\\s-]', '', 'g'
-                ),
-                '\\s+', ' ', 'g'
-            )) AS nickname_key
+            -- Collect all 3 nickname columns (normalized) for all employees
+            SELECT normalize_nickname(nickname) AS nickname_key
             FROM employees
-            WHERE nickname IS NOT NULL
+            WHERE nickname IS NOT NULL AND nickname != ''
+            UNION
+            SELECT normalize_nickname(nickname_2) AS nickname_key
+            FROM employees
+            WHERE nickname_2 IS NOT NULL AND nickname_2 != ''
+            UNION
+            SELECT normalize_nickname(nickname_3) AS nickname_key
+            FROM employees
+            WHERE nickname_3 IS NOT NULL AND nickname_3 != ''
         ),
         unmatched_originals AS (
             SELECT DISTINCT 
@@ -314,7 +322,7 @@ export async function getUnmatchedNamesReport(periodStart, periodEnd) {
                 'original_agent' AS role
             FROM eligible_quotes eq
             WHERE eq.sales_person_key IS NOT NULL
-              AND eq.sales_person_key NOT IN (SELECT nickname_key FROM all_employee_nicknames)
+              AND eq.sales_person_key NOT IN (SELECT nickname_key FROM all_employee_nicknames WHERE nickname_key IS NOT NULL)
         ),
         unmatched_targets AS (
             SELECT DISTINCT 
@@ -323,7 +331,7 @@ export async function getUnmatchedNamesReport(periodStart, periodEnd) {
                 'target' AS role
             FROM eligible_quotes eq
             WHERE eq.target_name_key IS NOT NULL
-              AND eq.target_name_key NOT IN (SELECT nickname_key FROM all_employee_nicknames)
+              AND eq.target_name_key NOT IN (SELECT nickname_key FROM all_employee_nicknames WHERE nickname_key IS NOT NULL)
         )
         SELECT * FROM unmatched_originals
         UNION ALL
