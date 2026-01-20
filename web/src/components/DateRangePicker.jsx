@@ -246,14 +246,10 @@ export default function DateRangePicker({
                 row: 'flex w-full mt-1',
                 cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
                 day: 'h-9 w-9 p-0 font-normal transition-all cursor-pointer',
-                // Range selection classes - visual styling handled by CSS in index.css
-                day_selected: '',
-                day_today: '',
                 day_outside: 'opacity-40',
-                day_disabled: 'opacity-30 cursor-not-allowed',
-                day_range_start: '',
-                day_range_end: '',
-                day_range_middle: ''
+                day_disabled: 'opacity-30 cursor-not-allowed'
+                // Range selection classes (day_selected, day_today, day_range_*) 
+                // use react-day-picker defaults - styled via CSS in index.css
               }}
             />
           </div>
