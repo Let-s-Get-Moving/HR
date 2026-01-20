@@ -1,10 +1,108 @@
 import { format, toZonedTime } from 'date-fns-tz';
 
 /**
+ * Default timezone for all date-only business operations (Toronto, Canada)
+ */
+export const DEFAULT_TIMEZONE = 'America/Toronto';
+
+/**
  * Get user's selected timezone from localStorage
+ * Defaults to America/Toronto for date-only business operations
  */
 export function getUserTimezone() {
-  return localStorage.getItem('user_timezone') || 'UTC';
+  return localStorage.getItem('user_timezone') || DEFAULT_TIMEZONE;
+}
+
+// ============================================================================
+// Date-only helpers (YYYY-MM-DD) - safe for Toronto business dates
+// ============================================================================
+
+/**
+ * Normalize any date input to YYYY-MM-DD string (date-only, no time/timezone)
+ * Strips T...Z from ISO strings, extracts date part from Date objects
+ * @param {string|Date|null|undefined} input - Date input
+ * @returns {string} YYYY-MM-DD string or empty string if invalid
+ */
+export function normalizeYMD(input) {
+  if (!input) return '';
+  
+  // If it's a Date object, use toYMD
+  if (input instanceof Date) {
+    return toYMD(input);
+  }
+  
+  // If string, extract YYYY-MM-DD portion
+  if (typeof input === 'string') {
+    const match = input.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : '';
+  }
+  
+  return '';
+}
+
+/**
+ * Format a YYYY-MM-DD string for display without going through new Date(ymd) parsing
+ * This avoids the timezone-shift bug where "2025-12-29" becomes "Dec 28, 2025"
+ * @param {string} ymd - Date string in YYYY-MM-DD format
+ * @param {string} formatStr - date-fns format string (default: 'MMM dd, yyyy')
+ * @returns {string} Formatted date string
+ */
+export function formatYMD(ymd, formatStr = 'MMM dd, yyyy') {
+  if (!ymd || typeof ymd !== 'string') return '';
+  
+  // Parse YYYY-MM-DD manually to avoid UTC interpretation
+  const match = ymd.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return '';
+  
+  const [, yearStr, monthStr, dayStr] = match;
+  const year = parseInt(yearStr, 10);
+  const month = parseInt(monthStr, 10) - 1; // JS months are 0-indexed
+  const day = parseInt(dayStr, 10);
+  
+  if (isNaN(year) || isNaN(month) || isNaN(day)) return '';
+  
+  // Create date at local midnight (not UTC)
+  const date = new Date(year, month, day, 12, 0, 0, 0); // noon to avoid DST edge cases
+  
+  try {
+    return format(date, formatStr);
+  } catch (e) {
+    console.error('Error in formatYMD:', e, ymd);
+    return '';
+  }
+}
+
+/**
+ * Convert a Date object to YYYY-MM-DD string in Toronto timezone
+ * Use this instead of toISOString().split('T')[0] which uses UTC
+ * @param {Date|null|undefined} dateObj - Date object
+ * @returns {string} YYYY-MM-DD string in Toronto timezone, or empty string
+ */
+export function toYMD(dateObj) {
+  if (!dateObj || !(dateObj instanceof Date) || isNaN(dateObj.getTime())) {
+    return '';
+  }
+  
+  const timezone = getUserTimezone();
+  
+  try {
+    const zonedDate = toZonedTime(dateObj, timezone);
+    return format(zonedDate, 'yyyy-MM-dd', { timeZone: timezone });
+  } catch (e) {
+    // Fallback: use local timezone (which is usually correct for Toronto users)
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}
+
+/**
+ * Get today's date as YYYY-MM-DD in Toronto timezone
+ * @returns {string} Today's date as YYYY-MM-DD
+ */
+export function getTodayYMD() {
+  return toYMD(new Date());
 }
 
 /**

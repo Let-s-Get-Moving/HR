@@ -9,7 +9,7 @@ import LeaveConfigModal from '../components/LeaveConfigModal.jsx';
 import ManualLeaveCreateModal from '../components/ManualLeaveCreateModal.jsx';
 
 import { API } from '../config/api.js';
-import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
+import { formatShortDate, parseLocalDate, toYMD } from '../utils/timezone.js';
 
 export default function LeaveManagement() {
   const { t } = useTranslation();
@@ -60,11 +60,12 @@ export default function LeaveManagement() {
       setLoading(true);
       
       // Calculate date range for calendar (1 year back, 1 year forward)
+      // Use toYMD for Toronto-safe date formatting
       const now = new Date();
-      const startDate = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0]; // Jan 1 last year
-      const endDate = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0]; // Dec 31 next year
+      const startDate = toYMD(new Date(now.getFullYear() - 1, 0, 1)); // Jan 1 last year
+      const endDate = toYMD(new Date(now.getFullYear() + 1, 11, 31)); // Dec 31 next year
       
-      const currentYear = new Date().getFullYear();
+      const currentYear = now.getFullYear();
       const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData, coverageData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),
@@ -118,11 +119,12 @@ export default function LeaveManagement() {
       console.log('🔄 Silently refreshing leave data...');
       
       // Calculate date range for calendar (1 year back, 1 year forward)
+      // Use toYMD for Toronto-safe date formatting
       const now = new Date();
-      const startDate = new Date(now.getFullYear() - 1, 0, 1).toISOString().split('T')[0]; // Jan 1 last year
-      const endDate = new Date(now.getFullYear() + 1, 11, 31).toISOString().split('T')[0]; // Dec 31 next year
+      const startDate = toYMD(new Date(now.getFullYear() - 1, 0, 1)); // Jan 1 last year
+      const endDate = toYMD(new Date(now.getFullYear() + 1, 11, 31)); // Dec 31 next year
       
-      const currentYear = new Date().getFullYear();
+      const currentYear = now.getFullYear();
       const [requestsData, balancesData, calendarData, analyticsData, employeesData, leaveTypesData, coverageData] = await Promise.all([
         API("/api/leave/requests"),
         API("/api/leave/balances"),

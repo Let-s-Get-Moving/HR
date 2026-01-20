@@ -8,6 +8,21 @@
  * - Example: Dec 29, 2025 - Jan 11, 2026 → Jan 16, 2026 payday
  */
 
+import { toYMD, parseLocalDate, formatYMD } from './timezone.js';
+
+/**
+ * Convert a Date object to YYYY-MM-DD string in local timezone
+ * Use this instead of toISOString().split('T')[0] which shifts dates due to UTC conversion
+ * @param {Date} dateObj 
+ * @returns {string} YYYY-MM-DD
+ */
+function dateToYMD(dateObj) {
+  const year = dateObj.getFullYear();
+  const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 /**
  * Calculate the pay period for a given pay date
  * @param {Date} payDate - The Friday pay date
@@ -22,10 +37,11 @@ function getPeriodForPayDate(payDate) {
   const periodStart = new Date(periodEnd);
   periodStart.setDate(periodEnd.getDate() - 13);
   
+  // Use local date formatting to avoid UTC shift
   return {
-    start_date: periodStart.toISOString().split('T')[0],
-    end_date: periodEnd.toISOString().split('T')[0],
-    pay_date: payDate.toISOString().split('T')[0]
+    start_date: dateToYMD(periodStart),
+    end_date: dateToYMD(periodEnd),
+    pay_date: dateToYMD(payDate)
   };
 }
 
@@ -147,12 +163,18 @@ export function getNextPeriod(referencePayDate = "2025-09-26") {
 
 /**
  * Format period display name with proper date ranges
+ * Uses parseLocalDate to avoid timezone shift when parsing YYYY-MM-DD strings
  * @param {Object} period - The period object with start_date and end_date
  * @returns {string} Formatted period name (e.g., "Dec 29 - Jan 11, 2026")
  */
 export function formatPeriodName(period) {
-  const startDate = new Date(period.start_date);
-  const endDate = new Date(period.end_date);
+  // Use parseLocalDate to avoid the new Date('YYYY-MM-DD') UTC parsing bug
+  const startDate = parseLocalDate(period.start_date);
+  const endDate = parseLocalDate(period.end_date);
+  
+  if (!startDate || !endDate) {
+    return `${period.start_date} - ${period.end_date}`;
+  }
   
   const startMonth = startDate.toLocaleDateString('en-US', { month: 'short' });
   const startDay = startDate.getDate();

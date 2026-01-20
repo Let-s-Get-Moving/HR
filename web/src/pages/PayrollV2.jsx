@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { API } from '../config/api.js';
-import { formatShortDate } from '../utils/timezone.js';
+import { formatShortDate, toYMD } from '../utils/timezone.js';
 
 export default function PayrollV2() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -84,7 +84,7 @@ export default function PayrollV2() {
         body: JSON.stringify({
           employee_id: selectedEmployee.employee_id,
           vacation_hours_paid: parseFloat(vacationHoursToPay),
-          payout_date: new Date().toISOString().split('T')[0],
+          payout_date: toYMD(new Date()),
         }),
       });
 

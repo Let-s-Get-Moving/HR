@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
-import { formatShortDate } from '../utils/timezone.js';
+import { formatShortDate, formatYMD, normalizeYMD } from '../utils/timezone.js';
 import CommissionLegend from '../components/CommissionLegend.jsx';
+import DateRangePicker from '../components/DateRangePicker.jsx';
 
 export default function BonusesCommissions() {
   const { t } = useTranslation();
@@ -38,7 +39,8 @@ export default function BonusesCommissions() {
   const [commissions, setCommissions] = useState([]);
   const [bonusStructures, setBonusStructures] = useState([]);
   const [commissionStructures, setCommissionStructures] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [salesLoading, setSalesLoading] = useState(false);
   const [showAddBonus, setShowAddBonus] = useState(false);
   const [showAddCommission, setShowAddCommission] = useState(false);
   const [showAddStructure, setShowAddStructure] = useState(false);
@@ -241,7 +243,7 @@ export default function BonusesCommissions() {
 
   const loadAvailablePeriods = async () => {
     try {
-      setLoading(true);
+      setInitialLoading(true);
       const periods = await API('/api/commissions/periods');
       setAvailablePeriods(periods);
       
@@ -268,12 +270,12 @@ export default function BonusesCommissions() {
       } else {
         // No periods available - stop loading
         console.log('📊 [Commissions] No periods available');
-        setLoading(false);
+        setInitialLoading(false);
       }
     } catch (error) {
       console.error("Error loading periods:", error);
       setAvailablePeriods([]);
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -281,7 +283,7 @@ export default function BonusesCommissions() {
     if (!selectedPeriod) return;
     
     try {
-      setLoading(true);
+      setInitialLoading(true);
       console.log('\n═══════════════════════════════════════════════════════════');
       console.log(`💰 [Frontend Commissions] LOADING ANALYTICS for period: ${selectedPeriod}`);
       console.log(`💰 [Frontend Commissions] Time: ${new Date().toISOString()}`);
@@ -317,7 +319,7 @@ export default function BonusesCommissions() {
       setAnalyticsData(null);
       setAnalyticsMonthly([]);
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -347,12 +349,31 @@ export default function BonusesCommissions() {
       const periods = await API('/api/sales-commissions/periods').catch(() => []);
       setSalesCommissionPeriods(periods || []);
       
-      // Auto-select most recent period if available
+      // Auto-select most recent period if available and fetch its data
       if (periods && periods.length > 0 && !selectedSalesPeriod.start) {
-        setSelectedSalesPeriod({
-          start: periods[0].period_start,
-          end: periods[0].period_end
-        });
+        const firstPeriod = periods[0];
+        const startYmd = normalizeYMD(firstPeriod.period_start);
+        const endYmd = normalizeYMD(firstPeriod.period_end);
+        
+        // Set state and fetch data
+        setSelectedSalesPeriod({ start: startYmd, end: endYmd });
+        
+        // Fetch data for this period
+        try {
+          setSalesLoading(true);
+          const [agents, managers, summary] = await Promise.all([
+            API(`/api/sales-commissions/agents?period_start=${startYmd}&period_end=${endYmd}`).catch(() => []),
+            API(`/api/sales-commissions/managers?period_start=${startYmd}&period_end=${endYmd}`).catch(() => []),
+            API(`/api/sales-commissions/summary?period_start=${startYmd}&period_end=${endYmd}`).catch(() => null)
+          ]);
+          setSalesAgentCommissions(agents || []);
+          setSalesManagerCommissions(managers || []);
+          setSalesCommissionSummary(summary);
+        } catch (err) {
+          console.error("Error loading initial sales commission data:", err);
+        } finally {
+          setSalesLoading(false);
+        }
       }
     } catch (error) {
       console.error("Error loading sales commission periods:", error);
@@ -365,7 +386,7 @@ export default function BonusesCommissions() {
     if (!selectedSalesPeriod.start || !selectedSalesPeriod.end) return;
     
     try {
-      setLoading(true);
+      setSalesLoading(true);
       
       const [agents, managers, summary] = await Promise.all([
         API(`/api/sales-commissions/agents?period_start=${selectedSalesPeriod.start}&period_end=${selectedSalesPeriod.end}`).catch(() => []),
@@ -379,7 +400,7 @@ export default function BonusesCommissions() {
     } catch (error) {
       console.error("Error loading sales commission data:", error);
     } finally {
-      setLoading(false);
+      setSalesLoading(false);
     }
   };
   
@@ -432,12 +453,47 @@ export default function BonusesCommissions() {
     }
   }, [userRole, salesRole]);
   
-  // Load data when period changes
-  useEffect(() => {
-    if (selectedSalesPeriod.start && selectedSalesPeriod.end) {
-      loadSalesCommissionData();
+  // Handler for Apply button on DateRangePicker - fetches data for selected period
+  const handleApplyPeriod = ({ startYmd, endYmd }) => {
+    if (!startYmd || !endYmd) return;
+    
+    // Validate start <= end
+    if (startYmd > endYmd) {
+      setErrorMessage("Start date must be before end date");
+      setShowErrorMessage(true);
+      return;
     }
-  }, [selectedSalesPeriod]);
+    
+    // Update selected period and fetch data
+    setSelectedSalesPeriod({ start: startYmd, end: endYmd });
+    
+    // Fetch data immediately (don't rely on useEffect)
+    (async () => {
+      try {
+        setSalesLoading(true);
+        const [agents, managers, summary] = await Promise.all([
+          API(`/api/sales-commissions/agents?period_start=${startYmd}&period_end=${endYmd}`).catch(() => []),
+          API(`/api/sales-commissions/managers?period_start=${startYmd}&period_end=${endYmd}`).catch(() => []),
+          API(`/api/sales-commissions/summary?period_start=${startYmd}&period_end=${endYmd}`).catch(() => null)
+        ]);
+        setSalesAgentCommissions(agents || []);
+        setSalesManagerCommissions(managers || []);
+        setSalesCommissionSummary(summary);
+      } catch (error) {
+        console.error("Error loading sales commission data:", error);
+      } finally {
+        setSalesLoading(false);
+      }
+    })();
+  };
+  
+  // Handler for Clear button on DateRangePicker
+  const handleClearPeriod = () => {
+    setSelectedSalesPeriod({ start: '', end: '' });
+    setSalesAgentCommissions([]);
+    setSalesManagerCommissions([]);
+    setSalesCommissionSummary(null);
+  };
 
   // Excel Import Functions
   const handleFileUpload = (event) => {
@@ -1713,7 +1769,7 @@ export default function BonusesCommissions() {
   };
 
   const renderAnalytics = () => {
-    if (loading) {
+    if (initialLoading) {
       return <div className="text-center py-8">{t('bonuses.loadingAnalytics')}</div>;
     }
     
@@ -2038,7 +2094,8 @@ export default function BonusesCommissions() {
         
         // Find current period index
         const currentIndex = sortedPeriods.findIndex(p => 
-          p.period_start === selectedSalesPeriod.start && p.period_end === selectedSalesPeriod.end
+          normalizeYMD(p.period_start) === normalizeYMD(selectedSalesPeriod.start) && 
+          normalizeYMD(p.period_end) === normalizeYMD(selectedSalesPeriod.end)
         );
         
         const canGoPrev = currentIndex > 0;
@@ -2046,14 +2103,11 @@ export default function BonusesCommissions() {
         
         const goToPeriod = (index) => {
           const period = sortedPeriods[index];
-          setSelectedSalesPeriod({ start: period.period_start, end: period.period_end });
-        };
-        
-        // Format date helper - handles string dates properly
-        const formatPeriodDate = (dateStr) => {
-          if (!dateStr) return '';
-          const d = new Date(dateStr);
-          return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+          // Use handleApplyPeriod to also fetch data
+          handleApplyPeriod({ 
+            startYmd: normalizeYMD(period.period_start), 
+            endYmd: normalizeYMD(period.period_end) 
+          });
         };
         
         return (
@@ -2067,9 +2121,9 @@ export default function BonusesCommissions() {
               {/* Previous Arrow */}
               <button
                 onClick={() => canGoPrev && goToPeriod(currentIndex - 1)}
-                disabled={!canGoPrev}
+                disabled={!canGoPrev || salesLoading}
                 className={`p-3 rounded-full transition-all ${
-                  canGoPrev 
+                  canGoPrev && !salesLoading
                     ? 'bg-tahoe-bg-secondary hover:bg-tahoe-accent hover:text-white cursor-pointer' 
                     : 'bg-tahoe-bg-secondary/30 text-tahoe-text-muted/30 cursor-not-allowed'
                 }`}
@@ -2083,10 +2137,10 @@ export default function BonusesCommissions() {
               <div className="flex-1 max-w-md">
                 <div className="bg-tahoe-accent text-white px-6 py-4 rounded-xl text-center">
                   <div className="text-lg font-semibold">
-                    {formatPeriodDate(selectedSalesPeriod.start)} - {formatPeriodDate(selectedSalesPeriod.end)}
+                    {formatYMD(normalizeYMD(selectedSalesPeriod.start))} - {formatYMD(normalizeYMD(selectedSalesPeriod.end))}
                   </div>
                   <div className="text-sm opacity-80 mt-1">
-                    Period {currentIndex + 1} of {sortedPeriods.length}
+                    {salesLoading ? 'Loading...' : `Period ${currentIndex + 1} of ${sortedPeriods.length}`}
                   </div>
                 </div>
               </div>
@@ -2094,9 +2148,9 @@ export default function BonusesCommissions() {
               {/* Next Arrow */}
               <button
                 onClick={() => canGoNext && goToPeriod(currentIndex + 1)}
-                disabled={!canGoNext}
+                disabled={!canGoNext || salesLoading}
                 className={`p-3 rounded-full transition-all ${
-                  canGoNext 
+                  canGoNext && !salesLoading
                     ? 'bg-tahoe-bg-secondary hover:bg-tahoe-accent hover:text-white cursor-pointer' 
                     : 'bg-tahoe-bg-secondary/30 text-tahoe-text-muted/30 cursor-not-allowed'
                 }`}
@@ -2114,12 +2168,13 @@ export default function BonusesCommissions() {
                   <button
                     key={idx}
                     onClick={() => goToPeriod(idx)}
+                    disabled={salesLoading}
                     className={`w-3 h-3 rounded-full transition-all ${
                       idx === currentIndex 
                         ? 'bg-tahoe-accent scale-125' 
                         : 'bg-tahoe-accent/50 hover:bg-tahoe-accent/70'
-                    }`}
-                    title={`${formatPeriodDate(period.period_start)} - ${formatPeriodDate(period.period_end)}`}
+                    } ${salesLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+                    title={`${formatYMD(normalizeYMD(period.period_start))} - ${formatYMD(normalizeYMD(period.period_end))}`}
                   />
                 ))}
               </div>
@@ -2142,24 +2197,26 @@ export default function BonusesCommissions() {
           <span>⚙️</span> Calculate Sales Commissions
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Period Start</label>
-            <input
-              type="date"
-              value={selectedSalesPeriod.start}
-              onChange={(e) => setSelectedSalesPeriod({ ...selectedSalesPeriod, start: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary focus:ring-2 focus:ring-tahoe-accent"
+            <label className="block text-sm font-medium mb-2">Select Period</label>
+            <DateRangePicker
+              startYmd={normalizeYMD(selectedSalesPeriod.start)}
+              endYmd={normalizeYMD(selectedSalesPeriod.end)}
+              onApply={handleApplyPeriod}
+              onClear={handleClearPeriod}
+              placeholder="Select start and end dates"
+              disabled={salesLoading}
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Period End</label>
-            <input
-              type="date"
-              value={selectedSalesPeriod.end}
-              onChange={(e) => setSelectedSalesPeriod({ ...selectedSalesPeriod, end: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary focus:ring-2 focus:ring-tahoe-accent"
-            />
+            {salesLoading && (
+              <div className="mt-2 text-sm text-tahoe-text-muted flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Loading commission data...
+              </div>
+            )}
           </div>
           <div className="flex flex-col justify-end">
             <label className="flex items-center gap-2 mb-2 text-sm">
@@ -2201,21 +2258,21 @@ export default function BonusesCommissions() {
           const sortedPeriods = [...salesCommissionPeriods].sort((a, b) => 
             new Date(a.period_start) - new Date(b.period_start)
           );
-          const formatPeriodDate = (dateStr) => {
-            if (!dateStr) return '';
-            const d = new Date(dateStr);
-            return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-          };
           
           const currentIndex = sortedPeriods.findIndex(p => 
-            p.period_start === selectedSalesPeriod.start && p.period_end === selectedSalesPeriod.end
+            normalizeYMD(p.period_start) === normalizeYMD(selectedSalesPeriod.start) && 
+            normalizeYMD(p.period_end) === normalizeYMD(selectedSalesPeriod.end)
           );
           const canGoPrev = currentIndex > 0;
           const canGoNext = currentIndex < sortedPeriods.length - 1;
           
           const goToPeriod = (index) => {
             const period = sortedPeriods[index];
-            setSelectedSalesPeriod({ start: period.period_start, end: period.period_end });
+            // Use handleApplyPeriod to also fetch data
+            handleApplyPeriod({ 
+              startYmd: normalizeYMD(period.period_start), 
+              endYmd: normalizeYMD(period.period_end) 
+            });
           };
           
           return (
@@ -2245,7 +2302,7 @@ export default function BonusesCommissions() {
                   currentIndex >= 0 ? 'bg-tahoe-accent text-white' : 'bg-tahoe-bg-secondary'
                 }`}>
                   {currentIndex >= 0 
-                    ? `${formatPeriodDate(selectedSalesPeriod.start)} - ${formatPeriodDate(selectedSalesPeriod.end)}`
+                    ? `${formatYMD(normalizeYMD(selectedSalesPeriod.start))} - ${formatYMD(normalizeYMD(selectedSalesPeriod.end))}`
                     : 'Select a period'
                   }
                 </div>
@@ -2279,7 +2336,7 @@ export default function BonusesCommissions() {
                         ? 'bg-tahoe-accent scale-125' 
                         : 'bg-tahoe-accent/50 hover:bg-tahoe-accent/70'
                     }`}
-                    title={`${formatPeriodDate(period.period_start)} - ${formatPeriodDate(period.period_end)}`}
+                    title={`${formatYMD(normalizeYMD(period.period_start))} - ${formatYMD(normalizeYMD(period.period_end))}`}
                   />
                 ))}
               </div>
@@ -2591,7 +2648,7 @@ export default function BonusesCommissions() {
     </div>
   );
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-lg">Loading bonuses and commissions data...</div>

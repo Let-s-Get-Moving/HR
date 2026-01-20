@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { useUserRole } from '../hooks/useUserRole.js';
+import { normalizeYMD, formatShortDate } from '../utils/timezone.js';
 import { 
   UploadsListView, 
   UploadDetailView, 
@@ -156,21 +157,9 @@ export default function TimeTracking() {
       console.log("🔄 [TimeTracking] Loading timecards for period:", selectedPeriod.period_label);
       setLoading(true);
       
-      // Format dates to YYYY-MM-DD strings to ensure proper comparison
-      const formatDate = (date) => {
-        if (typeof date === 'string') {
-          // Already a string, extract YYYY-MM-DD part
-          return date.split('T')[0];
-        }
-        if (date instanceof Date) {
-          // Convert Date object to YYYY-MM-DD
-          return date.toISOString().split('T')[0];
-        }
-        return date;
-      };
-      
-      const startDate = formatDate(selectedPeriod.pay_period_start);
-      const endDate = formatDate(selectedPeriod.pay_period_end);
+      // Use normalizeYMD to ensure YYYY-MM-DD format (Toronto-safe)
+      const startDate = normalizeYMD(selectedPeriod.pay_period_start);
+      const endDate = normalizeYMD(selectedPeriod.pay_period_end);
       
       console.log(`📅 [TimeTracking] Querying with dates: ${startDate} to ${endDate}`);
       
@@ -342,15 +331,9 @@ export default function TimeTracking() {
     try {
       console.log("👤 [TimeTracking] Loading individual timecard for employee:", employeeId);
       
-      // Format dates consistently
-      const formatDate = (date) => {
-        if (typeof date === 'string') return date.split('T')[0];
-        if (date instanceof Date) return date.toISOString().split('T')[0];
-        return date;
-      };
-      
-      const startDate = formatDate(selectedPeriod.pay_period_start);
-      const endDate = formatDate(selectedPeriod.pay_period_end);
+      // Use normalizeYMD to ensure YYYY-MM-DD format (Toronto-safe)
+      const startDate = normalizeYMD(selectedPeriod.pay_period_start);
+      const endDate = normalizeYMD(selectedPeriod.pay_period_end);
       
       const data = await API(
         `/api/timecards/employee/${employeeId}/period?pay_period_start=${startDate}&pay_period_end=${endDate}`

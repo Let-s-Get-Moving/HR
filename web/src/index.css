@@ -1129,3 +1129,96 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 ::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* ============================================================================
+   DateRangePicker Component Styles (react-day-picker overrides)
+   ============================================================================ */
+.date-range-picker-calendar {
+  --rdp-accent-color: var(--tahoe-accent, #0A84FF);
+  --rdp-background-color: var(--tahoe-bg-secondary, rgba(255, 255, 255, 0.08));
+}
+
+.date-range-picker-calendar .rdp-root {
+  --rdp-cell-size: 36px;
+  --rdp-accent-color: var(--tahoe-accent, #0A84FF);
+  --rdp-accent-background-color: var(--tahoe-accent, #0A84FF);
+  color: var(--text-primary);
+}
+
+.date-range-picker-calendar .rdp-month_caption {
+  font-weight: 500;
+  padding: 0 0.5rem 0.75rem;
+}
+
+.date-range-picker-calendar .rdp-weekday {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.date-range-picker-calendar .rdp-day {
+  border-radius: 8px;
+  transition: all 150ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.date-range-picker-calendar .rdp-day:hover:not(.rdp-day_selected):not(.rdp-day_disabled) {
+  background-color: var(--tahoe-bg-hover, rgba(255, 255, 255, 0.12));
+}
+
+.date-range-picker-calendar .rdp-day_selected,
+.date-range-picker-calendar .rdp-day_range_start,
+.date-range-picker-calendar .rdp-day_range_end {
+  background-color: var(--tahoe-accent, #0A84FF);
+  color: white;
+  font-weight: 500;
+}
+
+.date-range-picker-calendar .rdp-day_range_middle {
+  background-color: rgba(10, 132, 255, 0.2);
+  border-radius: 0;
+}
+
+.date-range-picker-calendar .rdp-day_range_start {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.date-range-picker-calendar .rdp-day_range_end {
+  border-top-right-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.date-range-picker-calendar .rdp-day_today:not(.rdp-day_selected) {
+  border: 1px solid var(--tahoe-accent, #0A84FF);
+  color: var(--tahoe-accent, #0A84FF);
+  font-weight: 600;
+}
+
+.date-range-picker-calendar .rdp-day_outside {
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.date-range-picker-calendar .rdp-day_disabled {
+  color: var(--text-muted);
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.date-range-picker-calendar .rdp-nav button {
+  color: var(--text-primary);
+  border-radius: 8px;
+  transition: all 150ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.date-range-picker-calendar .rdp-nav button:hover {
+  background-color: var(--tahoe-bg-hover, rgba(255, 255, 255, 0.12));
+}
+
+.date-range-picker-calendar .rdp-chevron {
+  fill: var(--text-primary);
+}

@@ -1,5 +1,6 @@
 // Test setup configuration
 import '@testing-library/jest-dom';
+import { vi, beforeAll, afterAll, afterEach } from 'vitest';
 
 // Mock environment variables
 process.env.VITE_API_URL = 'http://localhost:3000';
@@ -7,15 +8,15 @@ process.env.VITE_API_URL = 'http://localhost:3000';
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });
 
@@ -40,27 +41,27 @@ Object.defineProperty(global, 'crypto', {
   value: {
     getRandomValues: (arr: any) => arr.map(() => Math.floor(Math.random() * 256)),
     subtle: {
-      importKey: jest.fn(),
-      deriveKey: jest.fn(),
-      encrypt: jest.fn(),
-      decrypt: jest.fn(),
+      importKey: vi.fn(),
+      deriveKey: vi.fn(),
+      encrypt: vi.fn(),
+      decrypt: vi.fn(),
     },
   },
 });
 
 // Mock localStorage
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
 // Mock fetch
-global.fetch = jest.fn();
+global.fetch = vi.fn() as any;
 
 // Mock console methods to reduce noise in tests
 const originalConsoleError = console.error;
@@ -96,6 +97,6 @@ afterAll(() => {
 
 // Clean up after each test
 afterEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   localStorageMock.clear();
 });

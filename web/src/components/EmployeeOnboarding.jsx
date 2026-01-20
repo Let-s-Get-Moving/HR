@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
+import { toYMD, parseLocalDate } from '../utils/timezone.js';
 
 export default function EmployeeOnboarding({ onClose, onSuccess }) {
   const { t } = useTranslation();
@@ -293,14 +294,15 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   value={formData.hire_date}
                   onChange={(e) => {
                     const hireDate = e.target.value;
-                    const probationEnd = hireDate ? new Date(hireDate) : null;
+                    // Use parseLocalDate to avoid UTC interpretation bug
+                    const probationEnd = hireDate ? parseLocalDate(hireDate) : null;
                     if (probationEnd) {
                       probationEnd.setMonth(probationEnd.getMonth() + 3);
                     }
                     setFormData({
                       ...formData, 
                       hire_date: hireDate,
-                      probation_end: probationEnd ? probationEnd.toISOString().split('T')[0] : ""
+                      probation_end: probationEnd ? toYMD(probationEnd) : ""
                     });
                   }}
                   className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
