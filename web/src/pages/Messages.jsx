@@ -15,6 +15,7 @@ export default function Messages({ pageParams = {} }) {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [showSidebar, setShowSidebar] = useState(true);
   const [threads, setThreads] = useState([]);
+  const [newlyCreatedThread, setNewlyCreatedThread] = useState(null);
 
   // New thread modal state
   const [threadMode, setThreadMode] = useState('direct'); // 'direct' | 'group'
@@ -88,6 +89,7 @@ export default function Messages({ pageParams = {} }) {
         });
 
         setSelectedThread(response.thread);
+        setNewlyCreatedThread(response.thread);
         setShowNewThreadModal(false);
         resetModalState();
       } catch (error) {
@@ -121,6 +123,7 @@ export default function Messages({ pageParams = {} }) {
         });
 
         setSelectedThread(response.thread);
+        setNewlyCreatedThread(response.thread);
         setShowNewThreadModal(false);
         resetModalState();
       } catch (error) {
@@ -221,6 +224,7 @@ export default function Messages({ pageParams = {} }) {
                 }
               }}
               onNewThread={handleNewThread}
+              newlyCreatedThread={newlyCreatedThread}
             />
           </div>
         )}

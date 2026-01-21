@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { API } from '../../config/api.js';
 import { useWebSocket } from '../../hooks/useWebSocket.js';
 
-export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThread }) {
+export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThread, newlyCreatedThread }) {
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,6 +46,23 @@ export default function ChatSidebar({ selectedThreadId, onSelectThread, onNewThr
   useEffect(() => {
     loadThreads();
   }, [loadThreads]);
+
+  // Handle newly created thread from parent
+  useEffect(() => {
+    if (newlyCreatedThread) {
+      setThreads(prev => {
+        // Check if thread already exists
+        if (prev.some(t => t.id === newlyCreatedThread.id)) {
+          return prev;
+        }
+        // Add to top of list
+        const updated = [newlyCreatedThread, ...prev];
+        return updated.sort((a, b) => 
+          new Date(b.last_message_at || b.created_at || 0) - new Date(a.last_message_at || a.created_at || 0)
+        );
+      });
+    }
+  }, [newlyCreatedThread]);
 
   // Subscribe to thread updates via WebSocket
   useEffect(() => {
