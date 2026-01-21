@@ -471,12 +471,12 @@ r.get("/summary", async (req, res) => {
       return res.json({
         period_month,
         total_employees: 0,
-        total_commission_earned: '$0.00',
-        total_due: '$0.00',
-        total_revenue: '$0.00',
-        total_amount_paid: '$0.00',
-        total_remaining: '$0.00',
-        avg_commission_rate: '0.00'
+        total_commission_earned: 0,
+        total_due: 0,
+        total_revenue: 0,
+        total_amount_paid: 0,
+        total_remaining: 0,
+        avg_commission_rate: 0
       });
     }
     res.status(500).json({ error: "Failed to fetch commission summary" });
