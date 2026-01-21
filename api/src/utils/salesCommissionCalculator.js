@@ -379,7 +379,7 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
                 }
                 
                 // Assign each agent to their bucket (ALL agents, not just matched)
-                for (const agent of allStagingAgents) {
+                for (const agent of allStagingRows) {
                     const { bucket } = computeManagerBucketRate(agent.booking_pct);
                     const totals = bucketTotals.get(bucket.label);
                     totals.revenue += agent.revenue;
