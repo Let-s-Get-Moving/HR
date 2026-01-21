@@ -2659,25 +2659,29 @@ export default function BonusesCommissions() {
                     </div>
                   </div>
                 </div>
-                
-                {/* Bucket breakdown for bucket-sum method */}
-                {manager.calculation_method === 'bucket_sum' && manager.breakdown && manager.breakdown.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-tahoe-border-primary">
-                    <div className="text-sm font-medium mb-2 text-tahoe-text-muted">Bucket Breakdown:</div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                      {manager.breakdown.map((bucket, bidx) => (
-                        <div key={bidx} className="p-2 bg-tahoe-bg-primary rounded text-center">
-                          <div className="text-xs text-tahoe-text-muted">{bucket.bucket_label}</div>
-                          <div className="text-xs text-tahoe-accent">{bucket.bucket_rate_pct}% rate</div>
-                          <div className="text-sm font-medium">{bucket.agent_count} agents</div>
-                          <div className="text-xs text-green-400">{bucket.bucket_commission_formatted}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
+            
+            {/* Bucket breakdown - shared across all managers using bucket-sum method */}
+            {(() => {
+              const bucketManager = salesManagerCommissions.find(m => m.calculation_method === 'bucket_sum' && m.breakdown && m.breakdown.length > 0);
+              if (!bucketManager) return null;
+              return (
+                <div className="mt-4 p-4 bg-tahoe-bg-secondary rounded-lg">
+                  <div className="text-sm font-medium mb-3 text-tahoe-text-muted">Bucket Breakdown (Non-Fixed Rate Agents):</div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {bucketManager.breakdown.map((bucket, bidx) => (
+                      <div key={bidx} className="p-2 bg-tahoe-bg-primary rounded text-center">
+                        <div className="text-xs text-tahoe-text-muted">{bucket.bucket_label}</div>
+                        <div className="text-xs text-tahoe-accent">{bucket.bucket_rate_pct}% rate</div>
+                        <div className="text-sm font-medium">{bucket.agent_count} agents</div>
+                        <div className="text-xs text-green-400">{bucket.bucket_commission_formatted}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         ) : (
           <div className="text-center py-8 text-tahoe-text-muted">
