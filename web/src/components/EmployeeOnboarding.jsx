@@ -17,6 +17,7 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
   const [overtimePolicies, setOvertimePolicies] = useState([]);
   const [attendancePolicies, setAttendancePolicies] = useState([]);
   const [remoteWorkPolicies, setRemoteWorkPolicies] = useState([]);
+  const [validationErrors, setValidationErrors] = useState([]);
   const [formData, setFormData] = useState({
     // Step 1: Basic Information
     first_name: "",
@@ -93,10 +94,35 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
   };
 
   const handleSubmit = async () => {
+    // Clear previous validation errors
+    setValidationErrors([]);
+    
+    // Client-side validation for required fields
+    const errors = [];
+    if (!formData.first_name?.trim()) {
+      errors.push({ field: 'first_name', message: 'First name is required' });
+    }
+    if (!formData.last_name?.trim()) {
+      errors.push({ field: 'last_name', message: 'Last name is required' });
+    }
+    if (!formData.work_email?.trim()) {
+      errors.push({ field: 'work_email', message: 'Work email is required' });
+    }
+    if (!formData.hire_date || !/^\d{4}-\d{2}-\d{2}$/.test(formData.hire_date)) {
+      errors.push({ field: 'hire_date', message: 'Hire date is required (YYYY-MM-DD)' });
+    }
+    
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      console.error('❌ [Onboarding] Client validation failed:', errors);
+      return;
+    }
+    
     try {
       console.log('📤 [Onboarding] Creating employee with data:', formData);
       
       // Create employee with all collected data
+      // Send null for optional date fields instead of empty string
       const employeeResponse = await API("/api/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -105,13 +131,13 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
           last_name: formData.last_name,
           work_email: formData.work_email,
           email: formData.email || null,
-          phone: formData.phone,
-          gender: formData.gender,
-          birth_date: formData.birth_date,
+          phone: formData.phone || null,
+          gender: formData.gender || null,
+          birth_date: formData.birth_date || null,
           hire_date: formData.hire_date,
           employment_type: formData.employment_type,
           department_id: formData.department_id || null,
-          probation_end: formData.probation_end,
+          probation_end: formData.probation_end || null,
           hourly_rate: formData.hourly_rate,
           // Settings
           job_title_id: formData.job_title_id || null,
@@ -121,14 +147,14 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
           attendance_policy_id: formData.attendance_policy_id || null,
           remote_work_policy_id: formData.remote_work_policy_id || null,
           // Step 3 data
-          full_address: formData.full_address,
-          sin_number: formData.sin_number,
+          full_address: formData.full_address || null,
+          sin_number: formData.sin_number || null,
           sin_expiry_date: formData.sin_expiry_date || null,
-          bank_name: formData.bank_name,
-          bank_account_number: formData.bank_account_number,
-          bank_transit_number: formData.bank_transit_number,
-          emergency_contact_name: formData.emergency_contact_name,
-          emergency_contact_phone: formData.emergency_contact_phone
+          bank_name: formData.bank_name || null,
+          bank_account_number: formData.bank_account_number || null,
+          bank_transit_number: formData.bank_transit_number || null,
+          emergency_contact_name: formData.emergency_contact_name || null,
+          emergency_contact_phone: formData.emergency_contact_phone || null
         })
       });
 
@@ -171,6 +197,18 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
       onClose();
     } catch (error) {
       console.error("❌ [Onboarding] Error creating employee:", error);
+      
+      // Try to parse backend validation errors from 400 response
+      try {
+        const errorData = JSON.parse(error.message.replace(/^HTTP \d+: /, ''));
+        if (errorData.details && Array.isArray(errorData.details)) {
+          setValidationErrors(errorData.details);
+          return;
+        }
+      } catch (parseErr) {
+        // Not a JSON error, fall through to generic handling
+      }
+      
       alert(t('employeeOnboarding.failedToCreate', { error: error.message || t('common.unknownError') }));
     }
   };
@@ -695,6 +733,20 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               </div>
             ))}
           </div>
+
+          {/* Validation Errors */}
+          {validationErrors.length > 0 && (
+            <div className="mb-6 p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 59, 48, 0.15)', border: '1px solid rgba(255, 59, 48, 0.3)' }}>
+              <h4 className="font-medium mb-2" style={{ color: '#FF3B30' }}>Please fix the following errors:</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm" style={{ color: '#FF6961' }}>
+                {validationErrors.map((err, idx) => (
+                  <li key={idx}>
+                    <strong>{err.field}:</strong> {err.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Step Content */}
           <AnimatePresence mode="wait">

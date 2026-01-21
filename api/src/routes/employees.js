@@ -358,6 +358,23 @@ r.get("/time-entries", async (_req, res) => {
   res.json(rows);
 });
 
+// Strict YYYY-MM-DD date validator (required)
+const dateStringRequired = z.string()
+  .min(1, 'Date is required')
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format');
+
+// Optional date: accepts null/undefined, rejects "", validates YYYY-MM-DD when provided
+const dateStringOptional = z
+  .union([
+    z.null(),
+    z.undefined(),
+    z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+  ])
+  .transform(val => (val === '' || val === undefined) ? null : val)
+  .refine(val => val === null || /^\d{4}-\d{2}-\d{2}$/.test(val), {
+    message: 'Date must be in YYYY-MM-DD format or null'
+  });
+
 const employeeSchema = z.object({
   first_name: z.string().min(1),
   last_name: z.string().min(1),
@@ -365,13 +382,13 @@ const employeeSchema = z.object({
   email: z.string().email().nullable().optional(),
   phone: z.string().nullable().optional(),
   gender: z.string().nullable().optional(),
-  birth_date: z.string().nullable().optional(),
-  hire_date: z.string(),
+  birth_date: dateStringOptional,
+  hire_date: dateStringRequired,
   employment_type: z.enum(["Full-time","Part-time","Contract"]),
   department_id: z.number().int().nullable().optional(),
   location_id: z.number().int().nullable().optional(),
   role_title: z.string().nullable().optional(),
-  probation_end: z.string().nullable().optional(),
+  probation_end: dateStringOptional,
   hourly_rate: z.number().min(0).optional(),
   // Settings foreign keys
   job_title_id: z.number().int().nullable().optional(),
@@ -383,7 +400,7 @@ const employeeSchema = z.object({
   // Personal details from onboarding
   full_address: z.string().nullable().optional(),
   sin_number: z.string().nullable().optional(),
-  sin_expiry_date: z.string().nullable().optional(),
+  sin_expiry_date: dateStringOptional,
   bank_name: z.string().nullable().optional(),
   bank_account_number: z.string().nullable().optional(),
   bank_transit_number: z.string().nullable().optional(),
@@ -424,8 +441,22 @@ function parseNicknameConflictError(error) {
 }
 
 r.post("/", async (req, res) => {
+  // Parse and validate input with Zod
+  const parseResult = employeeSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    const fieldErrors = parseResult.error.errors.map(err => ({
+      field: err.path.join('.'),
+      message: err.message
+    }));
+    console.error('❌ [API] Validation failed:', fieldErrors);
+    return res.status(400).json({ 
+      error: 'Validation failed', 
+      details: fieldErrors 
+    });
+  }
+  
   try {
-    const data = employeeSchema.parse(req.body);
+    const data = parseResult.data;
     
     // Validate foreign keys exist if provided
     if (data.job_title_id) {
