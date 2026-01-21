@@ -11,12 +11,29 @@ export default function Testing() {
   const tests = [
     {
       id: "authentication",
-      name: "Authentication & MFA",
+      name: "🔐 Authentication & MFA",
       description: "Login, sessions, MFA, trusted devices",
       endpoints: [
         { url: "/api/auth/session", name: "Session Check" },
         { url: "/api/trusted-devices", name: "Trusted Devices" },
         { url: "/api/users/me", name: "User Profile" }
+      ]
+    },
+    {
+      id: "auth-extended",
+      name: "🔑 Auth Extended",
+      description: "MFA trusted devices, security tokens",
+      endpoints: [
+        { url: "/api/auth/mfa/trusted-devices", name: "MFA Trusted Devices" },
+      ]
+    },
+    {
+      id: "user-management",
+      name: "👤 User Management",
+      description: "User accounts, roles, permissions",
+      endpoints: [
+        { url: "/api/users", name: "Users List" },
+        { url: "/api/users/roles/list", name: "Available Roles" },
       ]
     },
     {
@@ -47,12 +64,39 @@ export default function Testing() {
       ]
     },
     {
+      id: "settings-extended",
+      name: "⚙️ Settings Extended",
+      description: "User preferences, security, HR policies configuration",
+      endpoints: [
+        { url: "/api/settings/preferences", name: "User Preferences" },
+        { url: "/api/settings/security", name: "Security Settings" },
+        { url: "/api/settings/security/mfa/status", name: "MFA Status" },
+        { url: "/api/settings/job-titles", name: "Job Titles" },
+        { url: "/api/settings/benefits-packages", name: "Benefits Packages" },
+        { url: "/api/settings/work-schedules", name: "Work Schedules" },
+        { url: "/api/settings/overtime-policies", name: "Overtime Policies" },
+        { url: "/api/settings/attendance-policies", name: "Attendance Policies" },
+        { url: "/api/settings/remote-work-policies", name: "Remote Work Policies" },
+      ]
+    },
+    {
       id: "employees",
       name: "👥 Employee Management",
       description: "Employee CRUD, departments, profiles",
       endpoints: [
         { url: "/api/employees", name: "Employee List" },
         { url: "/api/employees/departments", name: "Departments" },
+      ]
+    },
+    {
+      id: "employees-extended",
+      name: "👥 Employees Extended",
+      description: "Terminated employees, locations, documents, training, HR details",
+      endpoints: [
+        { url: "/api/employees/terminated", name: "Terminated Employees" },
+        { url: "/api/employees/locations", name: "Locations" },
+        { url: "/api/employees/locations?all=true", name: "All Locations" },
+        { url: "/api/employees/time-entries", name: "All Time Entries" },
       ]
     },
     {
@@ -71,6 +115,17 @@ export default function Testing() {
         { url: "/api/leave/requests", name: "Leave Requests" },
         { url: "/api/leave/analytics", name: "Leave Analytics" },
         { url: "/api/leave/types", name: "Leave Types" },
+      ]
+    },
+    {
+      id: "leave-extended",
+      name: "🏖️ Leave Extended",
+      description: "Leave balances, policies, holidays, calendar",
+      endpoints: [
+        { url: "/api/leave/balances", name: "Leave Balances" },
+        { url: "/api/leave/policies", name: "Leave Policies" },
+        { url: "/api/leave/holidays", name: "Company Holidays" },
+        { url: "/api/leave/calendar", name: "Leave Calendar" },
       ]
     },
     {
@@ -93,6 +148,29 @@ export default function Testing() {
       ]
     },
     {
+      id: "commissions-extended",
+      name: "💵 Commissions Extended",
+      description: "Monthly commissions, periods, summary",
+      endpoints: [
+        { url: "/api/commissions/monthly", name: "Monthly Commissions" },
+        { url: "/api/commissions/periods", name: "Commission Periods" },
+        { url: "/api/commissions/summary", name: "Commission Summary" },
+      ]
+    },
+    {
+      id: "sales-commissions",
+      name: "💰 Sales Commissions",
+      description: "Sales agents, managers, commission rules and calculations",
+      endpoints: [
+        { url: "/api/sales-commissions/agents", name: "Sales Agents" },
+        { url: "/api/sales-commissions/managers", name: "Sales Managers" },
+        { url: "/api/sales-commissions/periods", name: "Commission Periods" },
+        { url: "/api/sales-commissions/summary", name: "Commission Summary" },
+        { url: "/api/sales-commissions/rules", name: "Commission Rules" },
+        { url: "/api/sales-commissions/adjustment-status", name: "Adjustment Status" },
+      ]
+    },
+    {
       id: "compliance",
       name: "✅ Compliance",
       description: "Compliance dashboard, alerts, training",
@@ -100,6 +178,8 @@ export default function Testing() {
         { url: "/api/compliance/dashboard", name: "Dashboard" },
         { url: "/api/compliance/alerts", name: "Alerts" },
         { url: "/api/compliance/trainings", name: "Training Records" },
+        { url: "/api/compliance/training-records", name: "All Training Records" },
+        { url: "/api/compliance/documents", name: "Compliance Documents" },
       ]
     },
     {
@@ -117,8 +197,10 @@ export default function Testing() {
       description: "System analytics, metrics, dashboards",
       endpoints: [
         { url: "/api/analytics/dashboard", name: "Dashboard Analytics" },
+        { url: "/api/analytics/recent-activity", name: "Recent Activity" },
         { url: "/api/metrics/workforce", name: "Workforce Metrics" },
         { url: "/api/metrics/attendance", name: "Attendance Metrics" },
+        { url: "/api/metrics/compliance", name: "Compliance Metrics" },
       ]
     },
     {
@@ -464,15 +546,21 @@ export default function Testing() {
         <h3 className="text-lg font-semibold text-white mb-4">System Modules</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
-            { icon: "👥", name: "Employee Management", desc: "CRUD, profiles, departments" },
+            { icon: "🔐", name: "Authentication & Security", desc: "Login, MFA, sessions, trusted devices" },
+            { icon: "👤", name: "User Management", desc: "Accounts, roles, permissions" },
+            { icon: "👥", name: "Employee Management", desc: "CRUD, profiles, departments, locations" },
             { icon: "💰", name: "Payroll & Compensation", desc: "Automated calculations" },
             { icon: "💬", name: "Chat & Messaging", desc: "Real-time communication" },
             { icon: "🔔", name: "Notifications", desc: "Real-time alerts" },
-            { icon: "⚙️", name: "Settings", desc: "System configuration" },
+            { icon: "⚙️", name: "Settings & Policies", desc: "System config, HR policies" },
             { icon: "💵", name: "Bonuses & Commissions", desc: "Compensation management" },
-            { icon: "🏖️", name: "Leave Management", desc: "Request & approval workflow" },
+            { icon: "💰", name: "Sales Commissions", desc: "Agent/manager commissions" },
+            { icon: "🏖️", name: "Leave Management", desc: "Requests, balances, policies" },
             { icon: "⏰", name: "Time & Attendance", desc: "Timecard tracking" },
-            { icon: "✅", name: "Compliance", desc: "Regulatory compliance" },
+            { icon: "✅", name: "Compliance", desc: "Regulatory compliance, training" },
+            { icon: "📊", name: "Analytics & Metrics", desc: "Dashboards, workforce metrics" },
+            { icon: "👋", name: "Termination", desc: "Offboarding, checklists" },
+            { icon: "🔧", name: "System Health", desc: "Health checks, monitoring" },
           ].map((module, idx) => (
             <div key={idx} className="p-4 rounded-xl transition-all duration-tahoe" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
               <div className="flex items-center gap-3 mb-2">
