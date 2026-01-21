@@ -46,6 +46,25 @@ export default function BonusesCommissions() {
     }).format(-Math.abs(num));
   };
   
+  // Helper to handle agent table column sort click
+  const handleAgentSort = (column) => {
+    if (agentSortColumn === column) {
+      setAgentSortDirection(agentSortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setAgentSortColumn(column);
+      setAgentSortDirection('asc');
+    }
+  };
+  
+  // Helper to compute agent total for sorting
+  const computeAgentTotal = (agent) => {
+    return parseFloat(agent.commission_amount || 0) +
+           parseFloat(agent.revenue_add_ons || 0) +
+           parseFloat(agent.booking_bonus_plus || 0) -
+           parseFloat(agent.revenue_deductions || 0) -
+           parseFloat(agent.booking_bonus_minus || 0);
+  };
+  
   // Default to sales-commissions for users with sales_role, otherwise analytics
   const [activeTab, setActiveTab] = useState(null);
   const [employees, setEmployees] = useState([]);
@@ -116,6 +135,10 @@ export default function BonusesCommissions() {
   const [salesCalcLoading, setSalesCalcLoading] = useState(false);
   const [salesCalcResult, setSalesCalcResult] = useState(null);
   const [salesDryRun, setSalesDryRun] = useState(false);
+  
+  // Agent table sorting state
+  const [agentSortColumn, setAgentSortColumn] = useState('employee_name');
+  const [agentSortDirection, setAgentSortDirection] = useState('asc');
   
   // Form data states
   const [newBonus, setNewBonus] = useState({
@@ -2476,21 +2499,58 @@ export default function BonusesCommissions() {
             <table className="w-full">
               <thead>
                 <tr className="text-left text-sm text-tahoe-text-muted border-b border-tahoe-border-primary">
-                  <th className="pb-3 font-medium">Agent</th>
-                  <th className="pb-3 font-medium text-right">Booking %</th>
-                  <th className="pb-3 font-medium text-right">Revenue</th>
-                  <th className="pb-3 font-medium text-right">Rate</th>
-                  <th className="pb-3 font-medium text-right">Commission</th>
-                  <th className="pb-3 font-medium text-right text-cyan-400">Rev Add Ons</th>
-                  <th className="pb-3 font-medium text-right text-orange-400">Rev Deductions</th>
-                  <th className="pb-3 font-medium text-right text-emerald-400">Booking Bonus</th>
-                  <th className="pb-3 font-medium text-right text-rose-400">Booking Ded.</th>
-                  <th className="pb-3 font-medium text-right">Vacation</th>
-                  <th className="pb-3 font-medium text-right text-purple-300">Total</th>
+                  <th className="pb-3 font-medium cursor-pointer hover:text-tahoe-text-primary select-none" onClick={() => handleAgentSort('employee_name')}>
+                    Agent {agentSortColumn === 'employee_name' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right cursor-pointer hover:text-tahoe-text-primary select-none" onClick={() => handleAgentSort('booking_pct')}>
+                    Booking % {agentSortColumn === 'booking_pct' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right cursor-pointer hover:text-tahoe-text-primary select-none" onClick={() => handleAgentSort('revenue')}>
+                    Revenue {agentSortColumn === 'revenue' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right cursor-pointer hover:text-tahoe-text-primary select-none" onClick={() => handleAgentSort('commission_pct')}>
+                    Rate {agentSortColumn === 'commission_pct' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right cursor-pointer hover:text-tahoe-text-primary select-none" onClick={() => handleAgentSort('commission_amount')}>
+                    Commission {agentSortColumn === 'commission_amount' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right text-cyan-400 cursor-pointer hover:text-cyan-300 select-none" onClick={() => handleAgentSort('revenue_add_ons')}>
+                    Rev Add Ons {agentSortColumn === 'revenue_add_ons' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right text-orange-400 cursor-pointer hover:text-orange-300 select-none" onClick={() => handleAgentSort('revenue_deductions')}>
+                    Rev Deductions {agentSortColumn === 'revenue_deductions' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right text-emerald-400 cursor-pointer hover:text-emerald-300 select-none" onClick={() => handleAgentSort('booking_bonus_plus')}>
+                    Booking Bonus {agentSortColumn === 'booking_bonus_plus' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right text-rose-400 cursor-pointer hover:text-rose-300 select-none" onClick={() => handleAgentSort('booking_bonus_minus')}>
+                    Booking Ded. {agentSortColumn === 'booking_bonus_minus' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right cursor-pointer hover:text-tahoe-text-primary select-none" onClick={() => handleAgentSort('vacation_award_value')}>
+                    Vacation {agentSortColumn === 'vacation_award_value' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th className="pb-3 font-medium text-right text-purple-300 cursor-pointer hover:text-purple-200 select-none" onClick={() => handleAgentSort('total')}>
+                    Total {agentSortColumn === 'total' && (agentSortDirection === 'asc' ? '↑' : '↓')}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {salesAgentCommissions.map((agent, idx) => (
+                {[...salesAgentCommissions].sort((a, b) => {
+                  let aVal, bVal;
+                  if (agentSortColumn === 'employee_name') {
+                    aVal = (a.employee_name || '').toLowerCase();
+                    bVal = (b.employee_name || '').toLowerCase();
+                  } else if (agentSortColumn === 'total') {
+                    aVal = computeAgentTotal(a);
+                    bVal = computeAgentTotal(b);
+                  } else {
+                    aVal = parseFloat(a[agentSortColumn] || 0);
+                    bVal = parseFloat(b[agentSortColumn] || 0);
+                  }
+                  if (aVal < bVal) return agentSortDirection === 'asc' ? -1 : 1;
+                  if (aVal > bVal) return agentSortDirection === 'asc' ? 1 : -1;
+                  return 0;
+                }).map((agent, idx) => (
                   <tr key={idx} className="border-b border-tahoe-border-primary/50 hover:bg-tahoe-bg-secondary/30">
                     <td className="py-3">
                       <div className="font-medium">{agent.employee_name}</div>
