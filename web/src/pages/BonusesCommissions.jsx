@@ -32,6 +32,20 @@ export default function BonusesCommissions() {
     if (isNaN(num)) return '0%';
     return `${num.toFixed(1)}%`;
   };
+  
+  // Helper to format deduction values as negative currency (shows '-' for empty/0)
+  const formatDeductionDisplay = (value) => {
+    if (value === null || value === undefined || value === '') return '-';
+    const num = typeof value === 'string' ? parseFloat(value.replace(/[$,]/g, '')) : value;
+    if (isNaN(num) || num <= 0) return '-';
+    // Always display as negative, using -Math.abs to avoid double negatives
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2
+    }).format(-Math.abs(num));
+  };
+  
   // Default to sales-commissions for users with sales_role, otherwise analytics
   const [activeTab, setActiveTab] = useState(null);
   const [employees, setEmployees] = useState([]);
@@ -2472,6 +2486,7 @@ export default function BonusesCommissions() {
                   <th className="pb-3 font-medium text-right text-emerald-400">Booking Bonus</th>
                   <th className="pb-3 font-medium text-right text-rose-400">Booking Ded.</th>
                   <th className="pb-3 font-medium text-right">Vacation</th>
+                  <th className="pb-3 font-medium text-right text-purple-300">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -2497,13 +2512,13 @@ export default function BonusesCommissions() {
                       {parseFloat(agent.revenue_add_ons || 0) > 0 ? agent.revenue_add_ons_formatted : '-'}
                     </td>
                     <td className="py-3 text-right font-mono text-orange-400">
-                      {parseFloat(agent.revenue_deductions || 0) > 0 ? agent.revenue_deductions_formatted : '-'}
+                      {formatDeductionDisplay(agent.revenue_deductions)}
                     </td>
                     <td className="py-3 text-right font-mono text-emerald-400">
                       {parseFloat(agent.booking_bonus_plus || 0) > 0 ? agent.booking_bonus_plus_formatted : '-'}
                     </td>
                     <td className="py-3 text-right font-mono text-rose-400">
-                      {parseFloat(agent.booking_bonus_minus || 0) > 0 ? agent.booking_bonus_minus_formatted : '-'}
+                      {formatDeductionDisplay(agent.booking_bonus_minus)}
                     </td>
                     <td className="py-3 text-right">
                       {agent.vacation_award_value > 0 ? (
@@ -2512,6 +2527,15 @@ export default function BonusesCommissions() {
                         </span>
                       ) : (
                         <span className="text-tahoe-text-muted">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 text-right font-mono text-purple-300 font-semibold">
+                      {formatCurrencyDisplay(
+                        parseFloat(agent.commission_amount || 0) +
+                        parseFloat(agent.revenue_add_ons || 0) +
+                        parseFloat(agent.booking_bonus_plus || 0) -
+                        parseFloat(agent.revenue_deductions || 0) -
+                        parseFloat(agent.booking_bonus_minus || 0)
                       )}
                     </td>
                   </tr>
@@ -2527,16 +2551,28 @@ export default function BonusesCommissions() {
                     {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.revenue_add_ons || 0), 0))}
                   </td>
                   <td className="py-3 text-right text-orange-400">
-                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.revenue_deductions || 0), 0))}
+                    {formatDeductionDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.revenue_deductions || 0), 0))}
                   </td>
                   <td className="py-3 text-right text-emerald-400">
                     {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.booking_bonus_plus || 0), 0))}
                   </td>
                   <td className="py-3 text-right text-rose-400">
-                    {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.booking_bonus_minus || 0), 0))}
+                    {formatDeductionDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.booking_bonus_minus || 0), 0))}
                   </td>
                   <td className="py-3 text-right text-yellow-400">
                     {formatCurrencyDisplay(salesAgentCommissions.reduce((sum, a) => sum + parseFloat(a.vacation_award_value || 0), 0))}
+                  </td>
+                  <td className="py-3 text-right text-purple-300 font-semibold">
+                    {formatCurrencyDisplay(
+                      salesAgentCommissions.reduce((sum, a) => 
+                        sum + 
+                        parseFloat(a.commission_amount || 0) +
+                        parseFloat(a.revenue_add_ons || 0) +
+                        parseFloat(a.booking_bonus_plus || 0) -
+                        parseFloat(a.revenue_deductions || 0) -
+                        parseFloat(a.booking_bonus_minus || 0)
+                      , 0)
+                    )}
                   </td>
                 </tr>
               </tfoot>
@@ -2593,7 +2629,7 @@ export default function BonusesCommissions() {
                   <div className="p-2 bg-tahoe-bg-primary rounded text-center">
                     <div className="text-xs text-tahoe-text-muted">Rev Deductions</div>
                     <div className="text-sm font-medium text-orange-400">
-                      {parseFloat(manager.revenue_deductions || 0) > 0 ? manager.revenue_deductions_formatted : '-'}
+                      {formatDeductionDisplay(manager.revenue_deductions)}
                     </div>
                   </div>
                   <div className="p-2 bg-tahoe-bg-primary rounded text-center">
@@ -2605,7 +2641,7 @@ export default function BonusesCommissions() {
                   <div className="p-2 bg-tahoe-bg-primary rounded text-center">
                     <div className="text-xs text-tahoe-text-muted">Booking Ded.</div>
                     <div className="text-sm font-medium text-rose-400">
-                      {parseFloat(manager.booking_bonus_minus || 0) > 0 ? manager.booking_bonus_minus_formatted : '-'}
+                      {formatDeductionDisplay(manager.booking_bonus_minus)}
                     </div>
                   </div>
                 </div>
