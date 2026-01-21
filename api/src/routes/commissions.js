@@ -466,6 +466,19 @@ r.get("/summary", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching commission summary:", error);
+    // If table doesn't exist or other DB schema error, return default empty summary
+    if (error.message && (error.message.includes('relation') || error.message.includes('does not exist'))) {
+      return res.json({
+        period_month,
+        total_employees: 0,
+        total_commission_earned: '$0.00',
+        total_due: '$0.00',
+        total_revenue: '$0.00',
+        total_amount_paid: '$0.00',
+        total_remaining: '$0.00',
+        avg_commission_rate: '0.00'
+      });
+    }
     res.status(500).json({ error: "Failed to fetch commission summary" });
   }
 });
