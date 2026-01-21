@@ -254,7 +254,6 @@ export default function ManualLeaveCreateModal({
               setEndDate('');
             }}
             placeholder={t('leave.selectDateRange') || 'Select leave dates'}
-            commitMode="instant"
           />
         </div>
         

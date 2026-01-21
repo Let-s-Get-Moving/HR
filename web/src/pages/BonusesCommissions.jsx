@@ -1248,7 +1248,6 @@ export default function BonusesCommissions() {
                 setPeriodEnd('');
               }}
               placeholder="Select date range for import"
-              commitMode="instant"
             />
             <p className="text-xs text-tahoe-text-muted mt-1">
               Select the date range covered by the sales performance data

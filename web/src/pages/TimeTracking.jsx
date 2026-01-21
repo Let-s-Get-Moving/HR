@@ -1008,7 +1008,6 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
                   setManualPeriodEnd('');
                 }}
                 placeholder="Optional: Override detected period"
-                commitMode="instant"
               />
             </div>
 

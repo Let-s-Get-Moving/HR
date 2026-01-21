@@ -513,7 +513,6 @@ export default function LeaveManagement() {
                     onApply={({ startYmd, endYmd }) => setNewRequest({...newRequest, start_date: startYmd, end_date: endYmd})}
                     onClear={() => setNewRequest({...newRequest, start_date: '', end_date: ''})}
                     placeholder={t('leave.selectDateRange') || 'Select leave dates'}
-                    commitMode="instant"
                   />
                 </div>
 

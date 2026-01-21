@@ -160,7 +160,6 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
               onApply={({ startYmd, endYmd }) => setFormData(prev => ({...prev, start_date: startYmd, end_date: endYmd}))}
               onClear={() => setFormData(prev => ({...prev, start_date: '', end_date: ''}))}
               placeholder={t('leave.selectDateRange') || 'Select leave dates'}
-              commitMode="instant"
             />
           </div>
 
