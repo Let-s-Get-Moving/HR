@@ -44,7 +44,7 @@ const ENDPOINTS = {
     { method: 'GET', path: '/api/employees/departments', requiresAuth: true },
   ],
   
-  // Chat (DM + Group Chats)
+  // Chat (DM + Group Chats + Telegram-style features)
   chat: [
     { method: 'GET', path: '/api/chat/available-users', requiresAuth: true },
     { method: 'GET', path: '/api/chat/threads', requiresAuth: true },
@@ -54,10 +54,14 @@ const ENDPOINTS = {
     { method: 'GET', path: '/api/chat/threads/:id/members', requiresAuth: true },
     { method: 'POST', path: '/api/chat/threads/:id/members', requiresAuth: true },
     { method: 'DELETE', path: '/api/chat/threads/:id/members/:userId', requiresAuth: true },
+    { method: 'POST', path: '/api/chat/threads/:id/pin', requiresAuth: true },
+    { method: 'POST', path: '/api/chat/threads/:id/unpin', requiresAuth: true },
+    { method: 'POST', path: '/api/chat/threads/:id/hide', requiresAuth: true },
     { method: 'GET', path: '/api/chat/threads/:id/messages', requiresAuth: true },
     { method: 'POST', path: '/api/chat/threads/:id/messages', requiresAuth: true },
     { method: 'PUT', path: '/api/chat/messages/:id', requiresAuth: true },
     { method: 'DELETE', path: '/api/chat/messages/:id', requiresAuth: true },
+    { method: 'POST', path: '/api/chat/messages/:id/delete-for-me', requiresAuth: true },
     { method: 'POST', path: '/api/chat/messages/:id/attachments', requiresAuth: true },
     { method: 'GET', path: '/api/chat/attachments/:id', requiresAuth: true },
   ],

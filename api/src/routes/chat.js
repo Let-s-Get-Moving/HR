@@ -161,9 +161,14 @@ router.get('/threads', async (req, res) => {
 
     // Get all threads where user is a participant (via participants table)
     // Handles both DMs and groups
+    // Includes pinned_at/hidden_at for Telegram-style filtering/sorting
     const result = await q(`
-      WITH my_threads AS (
-        SELECT DISTINCT p.thread_id
+      WITH my_participation AS (
+        SELECT 
+          p.thread_id,
+          p.pinned_at,
+          p.hidden_at,
+          p.archived_at
         FROM chat_thread_participants p
         WHERE p.user_id = $1
       ),
@@ -179,9 +184,15 @@ router.get('/threads', async (req, res) => {
           t.name as group_name,
           t.created_by,
           t.participant1_id,
-          t.participant2_id
+          t.participant2_id,
+          mp.pinned_at,
+          mp.hidden_at,
+          mp.archived_at
         FROM chat_threads t
-        JOIN my_threads mt ON t.id = mt.thread_id
+        JOIN my_participation mp ON t.id = mp.thread_id
+        -- Filter: exclude hidden threads where last_message_at <= hidden_at (Telegram reappear rule)
+        WHERE mp.hidden_at IS NULL 
+           OR t.last_message_at > mp.hidden_at
       ),
       member_counts AS (
         SELECT thread_id, COUNT(*) as member_count
@@ -224,7 +235,11 @@ router.get('/threads', async (req, res) => {
       LEFT JOIN employees e2 ON u2.employee_id = e2.id
       LEFT JOIN hr_roles r1 ON u1.role_id = r1.id
       LEFT JOIN hr_roles r2 ON u2.role_id = r2.id
-      ORDER BY td.last_message_at DESC NULLS LAST
+      -- Order: pinned first (by pinned_at desc), then unpinned by last_message_at desc
+      ORDER BY 
+        CASE WHEN td.pinned_at IS NOT NULL THEN 0 ELSE 1 END,
+        td.pinned_at DESC NULLS LAST,
+        td.last_message_at DESC NULLS LAST
     `, [userId]);
 
     res.json({ threads: result.rows });
@@ -473,13 +488,12 @@ router.get('/threads/:id', async (req, res) => {
 });
 
 // ============================================================================
-// PUT /threads/:id - Rename group thread
+// PUT /threads/:id - Rename group thread (any member can rename - Telegram-style)
 // ============================================================================
 router.put('/threads/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const userRole = req.userRole || req.user.role || 'user';
     const { name } = req.body;
 
     // Verify thread exists and is a group
@@ -496,10 +510,10 @@ router.put('/threads/:id', async (req, res) => {
       return res.status(400).json({ error: 'Cannot rename a DM thread' });
     }
 
-    // Check permission
-    const canManage = await canManageThread(id, userId, userRole);
-    if (!canManage) {
-      return res.status(403).json({ error: 'Only the group owner or HR can rename the group' });
+    // Any participant can rename (Telegram-style permission)
+    const access = await verifyThreadAccess(id, userId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason });
     }
 
     if (!name || !name.trim()) {
@@ -720,6 +734,105 @@ router.post('/threads/:id/leave', async (req, res) => {
 });
 
 // ============================================================================
+// POST /threads/:id/pin - Pin a thread for current user
+// ============================================================================
+router.post('/threads/:id/pin', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const access = await verifyThreadAccess(id, userId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason });
+    }
+
+    await q(`
+      UPDATE chat_thread_participants
+      SET pinned_at = NOW()
+      WHERE thread_id = $1 AND user_id = $2
+    `, [id, userId]);
+
+    // Emit to user's other devices
+    sendToUser(userId, 'chat:thread:state', {
+      thread_id: parseInt(id),
+      pinned_at: new Date().toISOString(),
+      action: 'pinned'
+    });
+
+    res.json({ success: true, pinned: true });
+  } catch (error) {
+    logger.error('Error pinning thread:', error);
+    res.status(500).json({ error: 'Failed to pin thread' });
+  }
+});
+
+// ============================================================================
+// POST /threads/:id/unpin - Unpin a thread for current user
+// ============================================================================
+router.post('/threads/:id/unpin', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const access = await verifyThreadAccess(id, userId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason });
+    }
+
+    await q(`
+      UPDATE chat_thread_participants
+      SET pinned_at = NULL
+      WHERE thread_id = $1 AND user_id = $2
+    `, [id, userId]);
+
+    // Emit to user's other devices
+    sendToUser(userId, 'chat:thread:state', {
+      thread_id: parseInt(id),
+      pinned_at: null,
+      action: 'unpinned'
+    });
+
+    res.json({ success: true, pinned: false });
+  } catch (error) {
+    logger.error('Error unpinning thread:', error);
+    res.status(500).json({ error: 'Failed to unpin thread' });
+  }
+});
+
+// ============================================================================
+// POST /threads/:id/hide - Hide/delete a thread for current user (Telegram-style)
+// ============================================================================
+router.post('/threads/:id/hide', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    const access = await verifyThreadAccess(id, userId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason });
+    }
+
+    await q(`
+      UPDATE chat_thread_participants
+      SET hidden_at = NOW()
+      WHERE thread_id = $1 AND user_id = $2
+    `, [id, userId]);
+
+    // Emit to user's other devices
+    sendToUser(userId, 'chat:thread:state', {
+      thread_id: parseInt(id),
+      hidden_at: new Date().toISOString(),
+      action: 'hidden'
+    });
+
+    res.json({ success: true, hidden: true });
+  } catch (error) {
+    logger.error('Error hiding thread:', error);
+    res.status(500).json({ error: 'Failed to hide thread' });
+  }
+});
+
+// ============================================================================
 // GET /threads/:id/messages - Get messages in thread
 // ============================================================================
 router.get('/threads/:id/messages', async (req, res) => {
@@ -733,6 +846,7 @@ router.get('/threads/:id/messages', async (req, res) => {
       return res.status(403).json({ error: access.reason });
     }
 
+    // Filter out messages deleted-for-me via chat_message_user_states
     const result = await q(`
       SELECT 
         m.*,
@@ -741,10 +855,12 @@ router.get('/threads/:id/messages', async (req, res) => {
       FROM chat_messages m
       JOIN users u ON m.sender_id = u.id
       LEFT JOIN employees e ON u.employee_id = e.id
+      LEFT JOIN chat_message_user_states mus ON m.id = mus.message_id AND mus.user_id = $2
       WHERE m.thread_id = $1
+        AND mus.deleted_at IS NULL
       ORDER BY m.created_at ASC
-      LIMIT $2 OFFSET $3
-    `, [id, parseInt(limit), parseInt(offset)]);
+      LIMIT $3 OFFSET $4
+    `, [id, userId, parseInt(limit), parseInt(offset)]);
 
     // Get attachments for each message
     const messages = await Promise.all(result.rows.map(async (message) => {
@@ -994,7 +1110,52 @@ router.put('/messages/:id', async (req, res) => {
 });
 
 // ============================================================================
-// DELETE /messages/:id - Delete message
+// POST /messages/:id/delete-for-me - Delete message for current user only (Telegram-style)
+// ============================================================================
+router.post('/messages/:id/delete-for-me', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    // Get message and verify access to thread
+    const messageResult = await q(`
+      SELECT m.id, m.thread_id
+      FROM chat_messages m
+      WHERE m.id = $1
+    `, [id]);
+
+    if (messageResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    const message = messageResult.rows[0];
+    const access = await verifyThreadAccess(message.thread_id, userId);
+    if (!access.allowed) {
+      return res.status(403).json({ error: access.reason });
+    }
+
+    // Upsert into chat_message_user_states
+    await q(`
+      INSERT INTO chat_message_user_states (message_id, user_id, deleted_at)
+      VALUES ($1, $2, NOW())
+      ON CONFLICT (message_id, user_id) DO UPDATE SET deleted_at = NOW()
+    `, [id, userId]);
+
+    // Emit to user's other devices
+    sendToUser(userId, 'chat:message:deleted_for_me', {
+      message_id: parseInt(id),
+      thread_id: message.thread_id
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    logger.error('Error deleting message for user:', error);
+    res.status(500).json({ error: 'Failed to delete message' });
+  }
+});
+
+// ============================================================================
+// DELETE /messages/:id - Delete message (hard delete for sender/HR)
 // ============================================================================
 router.delete('/messages/:id', async (req, res) => {
   try {
