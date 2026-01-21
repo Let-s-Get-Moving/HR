@@ -52,7 +52,7 @@ await test('Manager with nickname is eligible for matching (query structure)', a
         JOIN departments d ON e.department_id = d.id
         WHERE d.name ILIKE '%sales%'
           AND e.sales_commission_enabled = true
-          AND e.sales_role IN ('agent', 'manager')
+          AND e.sales_role IN ('agent', 'manager', 'international_closer')
           AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
     `);
     
@@ -94,7 +94,7 @@ await test('Query does NOT exclude terminated employees', async () => {
         JOIN departments d ON e.department_id = d.id
         WHERE d.name ILIKE '%sales%'
           AND e.sales_commission_enabled = true
-          AND e.sales_role IN ('agent', 'manager')
+          AND e.sales_role IN ('agent', 'manager', 'international_closer')
           AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
           AND e.status = 'Terminated'
     `);
@@ -112,7 +112,7 @@ await test('Both active and terminated employees are in eligible pool', async ()
         JOIN departments d ON e.department_id = d.id
         WHERE d.name ILIKE '%sales%'
           AND e.sales_commission_enabled = true
-          AND e.sales_role IN ('agent', 'manager')
+          AND e.sales_role IN ('agent', 'manager', 'international_closer')
           AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
           AND e.status = 'Active'
     `);
@@ -123,7 +123,7 @@ await test('Both active and terminated employees are in eligible pool', async ()
         JOIN departments d ON e.department_id = d.id
         WHERE d.name ILIKE '%sales%'
           AND e.sales_commission_enabled = true
-          AND e.sales_role IN ('agent', 'manager')
+          AND e.sales_role IN ('agent', 'manager', 'international_closer')
           AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
     `);
     
@@ -207,21 +207,25 @@ console.log('\n--- Agent vs Manager Branching Tests ---\n');
 
 await test('Matched records can be filtered by sales_role', () => {
     // Simulate matched records from the new matching function
+    // international_closer is treated identically to agent for commission purposes
     const matched = [
         { employee_id: 1, employee_name: 'Agent A', sales_role: 'agent', revenue: 100000, booking_pct: 35 },
         { employee_id: 2, employee_name: 'Manager M', sales_role: 'manager', revenue: 80000, booking_pct: 40 },
-        { employee_id: 3, employee_name: 'Agent B', sales_role: 'agent', revenue: 120000, booking_pct: 42 }
+        { employee_id: 3, employee_name: 'Agent B', sales_role: 'agent', revenue: 120000, booking_pct: 42 },
+        { employee_id: 4, employee_name: 'Closer C', sales_role: 'international_closer', revenue: 95000, booking_pct: 38 }
     ];
     
-    const matchedAgents = matched.filter(m => m.sales_role === 'agent');
+    // international_closer is treated as agent for commission purposes
+    const matchedAgents = matched.filter(m => m.sales_role === 'agent' || m.sales_role === 'international_closer');
     const matchedManagers = matched.filter(m => m.sales_role === 'manager');
     
-    assert.strictEqual(matchedAgents.length, 2, 'Should have 2 agents');
+    assert.strictEqual(matchedAgents.length, 3, 'Should have 3 agents (including international_closer)');
     assert.strictEqual(matchedManagers.length, 1, 'Should have 1 manager');
     
-    // Only agents should get personal commissions
+    // Agents and international_closers should get personal commissions
     assert.strictEqual(matchedAgents[0].employee_name, 'Agent A');
     assert.strictEqual(matchedAgents[1].employee_name, 'Agent B');
+    assert.strictEqual(matchedAgents[2].employee_name, 'Closer C');
     
     // Manager should not get agent commission (but still counts in pooled)
     assert.strictEqual(matchedManagers[0].employee_name, 'Manager M');
@@ -262,10 +266,11 @@ await test('Manager in staging is NOT counted as unmatched', () => {
         { name_key: 'unknown', booked_total: '50000' }
     ];
     
-    // Simulate employee nickname map (includes manager)
+    // Simulate employee nickname map (includes manager and international_closer)
     const nicknameToEmployee = new Map([
         ['agent1', { id: 1, sales_role: 'agent' }],
-        ['manager1', { id: 2, sales_role: 'manager' }]
+        ['manager1', { id: 2, sales_role: 'manager' }],
+        ['closer1', { id: 3, sales_role: 'international_closer' }]
     ]);
     
     const matched = [];

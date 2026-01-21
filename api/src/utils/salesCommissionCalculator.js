@@ -7,11 +7,12 @@
  * 
  * Matching:
  *   - Employees must be in Sales department with sales_commission_enabled=true
- *   - sales_role can be 'agent' or 'manager' (both are matched by nickname)
+ *   - sales_role can be 'agent', 'manager', or 'international_closer' (all matched by nickname)
+ *   - international_closer is functionally identical to agent for commission calculations
  *   - Rows with booked_total <= 0 are skipped entirely (no match/unmatch, no pooled revenue)
  * 
  * Agent Rules (personal):
- *   Only employees with sales_role='agent' get personal commissions.
+ *   Employees with sales_role='agent' or 'international_closer' get personal commissions.
  *   Based on individual booking_pct and revenue (booked_total).
  *   Rate: 3.5% - 6% depending on thresholds.
  *   >55% booking + >$250k revenue = 6% + vacation package up to $5000
@@ -158,7 +159,7 @@ async function matchAgentsToStaging(client, periodStart, periodEnd) {
         JOIN departments d ON e.department_id = d.id
         WHERE d.name ILIKE '%sales%'
           AND e.sales_commission_enabled = true
-          AND e.sales_role IN ('agent', 'manager')
+          AND e.sales_role IN ('agent', 'manager', 'international_closer')
           AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
     `);
     
@@ -288,7 +289,8 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
         const { matched, unmatched, skippedZeroRevenue } = await matchAgentsToStaging(client, periodStart, periodEnd);
         
         // Split matched into agents vs managers for different processing
-        const matchedAgents = matched.filter(m => m.sales_role === 'agent');
+        // international_closer is treated identically to agent for commission purposes
+        const matchedAgents = matched.filter(m => m.sales_role === 'agent' || m.sales_role === 'international_closer');
         const matchedManagersInStaging = matched.filter(m => m.sales_role === 'manager');
         
         summary.total_staging_rows = matched.length + unmatched.length; // excludes skipped zero-revenue

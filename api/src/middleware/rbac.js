@@ -290,8 +290,8 @@ export const canAccessBonusesCommissions = (userRole, salesRole) => {
   if (userRole === ROLES.ADMIN || userRole === ROLES.MANAGER) {
     return true;
   }
-  // Users with a sales role (agent or manager) can access
-  if (salesRole === 'agent' || salesRole === 'manager') {
+  // Users with a sales role (agent, international_closer, or manager) can access
+  if (salesRole === 'agent' || salesRole === 'manager' || salesRole === 'international_closer') {
     return true;
   }
   return false;

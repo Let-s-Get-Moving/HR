@@ -41,7 +41,8 @@ export function hasFullAccess(role) {
 
 // Sales role helper functions
 export function isSalesAgent(salesRole) {
-  return salesRole === 'agent';
+  // international_closer is functionally identical to agent
+  return salesRole === 'agent' || salesRole === 'international_closer';
 }
 
 export function isSalesManager(salesRole) {
@@ -49,7 +50,7 @@ export function isSalesManager(salesRole) {
 }
 
 export function hasSalesRole(salesRole) {
-  return salesRole === 'agent' || salesRole === 'manager';
+  return salesRole === 'agent' || salesRole === 'manager' || salesRole === 'international_closer';
 }
 
 export function canApproveLeave(role) {
@@ -73,13 +74,13 @@ export const USER_ALLOWED_PAGES = [
 ];
 
 // Check if user can access Bonuses & Commissions page
-// Allowed: admin, manager, OR any user with salesRole (agent/manager)
+// Allowed: admin, manager, OR any user with salesRole (agent/international_closer/manager)
 export function canAccessBonuses(role, salesRole) {
   // Admin and Manager always have access
   if (hasFullAccess(role)) {
     return true;
   }
-  // Users with a sales role (agent or manager) can access
+  // Users with a sales role (agent, international_closer, or manager) can access
   if (hasSalesRole(salesRole)) {
     return true;
   }

@@ -2072,7 +2072,7 @@ export default function BonusesCommissions() {
             <span>💰</span> My Commission Details
           </h3>
           <p className="text-tahoe-text-muted mt-2">
-            {salesRole === 'agent' 
+            {salesRole === 'agent' || salesRole === 'international_closer'
               ? 'Your sales agent commission based on your booking percentage and revenue performance.'
               : 'Your sales manager commission based on team performance.'}
           </p>
@@ -2450,8 +2450,8 @@ export default function BonusesCommissions() {
         </div>
       )}
       
-      {/* Agent Commissions Table - Show for admins/managers or users with sales_role='agent' */}
-      {(userRole !== 'user' || salesRole === 'agent') && (
+      {/* Agent Commissions Table - Show for admins/managers or users with sales_role='agent' or 'international_closer' */}
+      {(userRole !== 'user' || salesRole === 'agent' || salesRole === 'international_closer') && (
       <div className="card p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <span>👤</span> {userRole === 'user' ? 'My Agent Commission' : 'Agent Commissions'}

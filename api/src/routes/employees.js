@@ -411,7 +411,7 @@ const employeeSchema = z.object({
   nickname_2: z.string().nullable().optional(),
   nickname_3: z.string().nullable().optional(),
   // Sales commission config (Sales dept only)
-  sales_role: z.enum(['agent', 'manager']).nullable().optional(),
+  sales_role: z.enum(['agent', 'manager', 'international_closer']).nullable().optional(),
   sales_commission_enabled: z.boolean().nullable().optional(),
   sales_manager_fixed_pct: z.number().nullable().optional()
 });

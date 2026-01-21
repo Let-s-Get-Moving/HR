@@ -1144,6 +1144,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       >
                         <option value="">Not Set</option>
                         <option value="agent">Sales Agent</option>
+                        <option value="international_closer">International Sales Closer</option>
                         <option value="manager">Sales Manager</option>
                       </select>
                     ) : (
@@ -1152,9 +1153,17 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                           ? 'bg-purple-900/50 text-purple-300' 
                           : employee.sales_role === 'agent'
                           ? 'bg-blue-900/50 text-blue-300'
+                          : employee.sales_role === 'international_closer'
+                          ? 'bg-emerald-900/50 text-emerald-300'
                           : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
                       }`}>
-                        {employee.sales_role === 'manager' ? 'Sales Manager' : employee.sales_role === 'agent' ? 'Sales Agent' : 'Not Set'}
+                        {employee.sales_role === 'manager' 
+                          ? 'Sales Manager' 
+                          : employee.sales_role === 'agent' 
+                          ? 'Sales Agent' 
+                          : employee.sales_role === 'international_closer'
+                          ? 'International Sales Closer'
+                          : 'Not Set'}
                       </span>
                     )}
                   </div>
