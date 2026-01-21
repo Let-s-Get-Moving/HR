@@ -7,8 +7,11 @@ import Donut from "../components/Donut.jsx";
 import SkeletonLoader from "../components/SkeletonLoader.jsx";
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
+import { canAccessBonuses } from '../hooks/useUserRole.js';
 
 export default function Dashboard({ onNavigate, user }) {
+  // Check if user can access bonuses page (for quick action visibility)
+  const userCanAccessBonuses = canAccessBonuses(user?.role, user?.salesRole);
   const { t } = useTranslation();
   const [analytics, setAnalytics] = useState(null);
   const [wf, setWf] = useState(null);
@@ -500,13 +503,15 @@ export default function Dashboard({ onNavigate, user }) {
               <div className="text-2xl mb-2">⏰</div>
               <div className="text-sm font-medium">{t('dashboard.uploadTimecards')}</div>
             </button>
-            <button 
-              onClick={() => handleQuickAction('upload-bonuses')}
-              className="p-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
-            >
-              <div className="text-2xl mb-2">⭐</div>
-              <div className="text-sm font-medium">{t('dashboard.uploadBonuses')}</div>
-            </button>
+            {userCanAccessBonuses && (
+              <button 
+                onClick={() => handleQuickAction('upload-bonuses')}
+                className="p-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
+              >
+                <div className="text-2xl mb-2">⭐</div>
+                <div className="text-sm font-medium">{t('dashboard.uploadBonuses')}</div>
+              </button>
+            )}
             <button 
               onClick={() => handleQuickAction('manage-leave')}
               className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"

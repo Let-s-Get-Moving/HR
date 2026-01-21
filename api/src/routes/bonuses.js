@@ -2,12 +2,14 @@ import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
 import { formatCurrency } from "../utils/formatting.js";
-import { applyScopeFilter } from "../middleware/rbac.js";
+import { applyScopeFilter, requireBonusesCommissionsAccess, requireRole, ROLES } from "../middleware/rbac.js";
 
 const r = Router();
 
-// Apply scope filter to all bonus routes
+// Apply scope filter to all bonus routes (populates userRole, salesRole, employeeId)
 r.use(applyScopeFilter);
+// Require bonuses/commissions access (admin, manager, or salesRole)
+r.use(requireBonusesCommissionsAccess);
 
 // Bonus schema for creation
 const bonusSchema = z.object({
@@ -46,9 +48,20 @@ const bonusUpdateSchema = z.object({
   message: "At least one field must be provided for update"
 });
 
-// Get all bonuses
+// Get all bonuses (own-only for salesRole users, all for admin/manager)
 r.get("/", async (req, res) => {
   try {
+    // Build query with optional employee filter for own-scope users
+    let whereClause = '';
+    const params = [];
+    
+    // SalesRole users (agent/manager) with 'own' scope only see their own bonuses
+    if (req.userScope === 'own' && req.employeeId) {
+      params.push(req.employeeId);
+      whereClause = `WHERE b.employee_id = $${params.length}`;
+      console.log(`🔒 [BONUSES] Filtering bonuses for employee: ${req.employeeId}`);
+    }
+    
     const { rows } = await q(`
       SELECT 
         b.*,
@@ -58,14 +71,16 @@ r.get("/", async (req, res) => {
       FROM bonuses b
       JOIN employees e ON b.employee_id = e.id
       LEFT JOIN departments d ON e.department_id = d.id
+      ${whereClause}
       ORDER BY b.created_at DESC
-    `);
+    `, params);
     
     const formattedRows = rows.map(row => ({
       ...row,
       amount: formatCurrency(row.amount)
     }));
     
+    console.log(`📊 [BONUSES] Returning ${formattedRows.length} bonuses`);
     res.json(formattedRows);
   } catch (error) {
     console.error("Error fetching bonuses:", error);
@@ -73,8 +88,8 @@ r.get("/", async (req, res) => {
   }
 });
 
-// Create new bonus
-r.post("/", async (req, res) => {
+// Create new bonus (admin/manager only)
+r.post("/", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const validatedData = bonusSchema.parse(req.body);
     
@@ -110,8 +125,8 @@ r.post("/", async (req, res) => {
   }
 });
 
-// Update bonus status
-r.put("/:id", async (req, res) => {
+// Update bonus status (admin/manager only)
+r.put("/:id", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const { id } = req.params;
     const validatedData = bonusUpdateSchema.parse(req.body);
@@ -180,8 +195,8 @@ r.get("/structures", async (req, res) => {
   }
 });
 
-// Create bonus structure
-r.post("/structures", async (req, res) => {
+// Create bonus structure (admin/manager only)
+r.post("/structures", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const { name, base_amount, criteria, calculation_method, effective_date, department } = req.body;
     
@@ -205,8 +220,8 @@ r.post("/structures", async (req, res) => {
   }
 });
 
-// Update bonus structure
-r.put("/structures/:id", async (req, res) => {
+// Update bonus structure (admin/manager only)
+r.put("/structures/:id", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const { id } = req.params;
     const { name, base_amount, criteria, calculation_method, effective_date } = req.body;
@@ -252,8 +267,8 @@ r.get("/commission-structures", async (req, res) => {
   }
 });
 
-// Create commission structure
-r.post("/commission-structures", async (req, res) => {
+// Create commission structure (admin/manager only)
+r.post("/commission-structures", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   try {
     const { name, commission_rate, base_amount, criteria, calculation_method, effective_date, department } = req.body;
     
@@ -277,8 +292,8 @@ r.post("/commission-structures", async (req, res) => {
   }
 });
 
-// Fix bonus schema - add missing approval/rejection fields
-r.post("/fix-schema", async (req, res) => {
+// Fix bonus schema - add missing approval/rejection fields (admin only)
+r.post("/fix-schema", requireRole([ROLES.ADMIN]), async (req, res) => {
   try {
     console.log('🔧 Fixing bonus schema...');
     
@@ -351,8 +366,8 @@ r.post("/fix-schema", async (req, res) => {
   }
 });
 
-// Quick fix endpoint - execute SQL directly
-r.get("/quick-fix", async (req, res) => {
+// Quick fix endpoint - execute SQL directly (admin only)
+r.get("/quick-fix", requireRole([ROLES.ADMIN]), async (req, res) => {
   try {
     console.log('🚀 QUICK FIX: Adding missing columns...');
     
@@ -405,8 +420,8 @@ r.get("/quick-fix", async (req, res) => {
   }
 });
 
-// Immediate fix endpoint - execute SQL directly
-r.get("/immediate-fix", async (req, res) => {
+// Immediate fix endpoint - execute SQL directly (admin only)
+r.get("/immediate-fix", requireRole([ROLES.ADMIN]), async (req, res) => {
   try {
     console.log('🚀 IMMEDIATE FIX: Adding missing columns...');
     
@@ -486,8 +501,8 @@ r.get("/immediate-fix", async (req, res) => {
   }
 });
 
-// Fix constraint endpoint - update status constraint to include Rejected
-r.get("/constraint-fix", async (req, res) => {
+// Fix constraint endpoint - update status constraint to include Rejected (admin only)
+r.get("/constraint-fix", requireRole([ROLES.ADMIN]), async (req, res) => {
   try {
     console.log('🔧 CONSTRAINT FIX: Updating status constraint...');
     

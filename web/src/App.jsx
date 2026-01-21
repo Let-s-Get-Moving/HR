@@ -104,6 +104,8 @@ export default function App() {
   
   // Get user role directly from user state (updates immediately on login)
   const userRole = user?.role || null;
+  // Get salesRole for bonuses/commissions access check
+  const salesRole = user?.salesRole || null;
   
   // Navigation handler that supports params
   const handleNavigate = (page, params = {}) => {
@@ -114,24 +116,24 @@ export default function App() {
   // Get pages with translations
   const pages = getPagesConfig(t);
   
-  // Filter pages based on user role
+  // Filter pages based on user role and salesRole
   const allowedPages = useMemo(() => {
     if (!user || !userRole) return pages; // Show all during loading
     
     return Object.fromEntries(
-      Object.entries(pages).filter(([key]) => canAccessPage(userRole, key))
+      Object.entries(pages).filter(([key]) => canAccessPage(userRole, salesRole, key))
     );
-  }, [user, userRole, pages]);
+  }, [user, userRole, salesRole, pages]);
 
   // Redirect to first allowed page if current page is not accessible
   useEffect(() => {
-    if (user && userRole && allowedPages && !canAccessPage(userRole, currentPage)) {
+    if (user && userRole && allowedPages && !canAccessPage(userRole, salesRole, currentPage)) {
       const firstAllowedPage = Object.keys(allowedPages)[0];
       if (firstAllowedPage) {
         setCurrentPage(firstAllowedPage);
       }
     }
-  }, [user, userRole, allowedPages, currentPage]);
+  }, [user, userRole, salesRole, allowedPages, currentPage]);
   const [passwordWarning, setPasswordWarning] = useState(null);
 
   useEffect(() => {

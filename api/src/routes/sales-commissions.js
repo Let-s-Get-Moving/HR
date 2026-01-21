@@ -13,7 +13,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { q } from "../db.js";
-import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
+import { applyScopeFilter, requireRole, ROLES, requireBonusesCommissionsAccess } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
 import {
     calculateSalesCommissions,
@@ -63,8 +63,10 @@ function formatCurrency(value) {
     return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// Apply scope filter to all routes
+// Apply scope filter to all routes (populates userRole, salesRole, employeeId)
 r.use(applyScopeFilter);
+// Require bonuses/commissions access (admin, manager, or salesRole)
+r.use(requireBonusesCommissionsAccess);
 
 // ============================================================================
 // Calculate Commissions

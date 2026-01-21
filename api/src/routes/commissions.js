@@ -5,15 +5,17 @@ import { z } from "zod";
 import { formatCurrency, formatNumber } from "../utils/formatting.js";
 import { importSalesPerformanceFromExcel, detectSalesPerformanceHeaders } from "../utils/salesPerformanceImporter.js";
 import { loadExcelWorkbook, getWorksheetData } from "../utils/excelParser.js";
-import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
+import { applyScopeFilter, requireRole, ROLES, requireBonusesCommissionsAccess } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
 import { createValidationMiddleware } from "../middleware/validation.js";
 import { commissionSchema } from "../schemas/enhancedSchemas.js";
 
 const r = Router();
 
-// Apply scope filter to all commission routes
+// Apply scope filter to all commission routes (populates userRole, salesRole, employeeId)
 r.use(applyScopeFilter);
+// Require bonuses/commissions access (admin, manager, or salesRole)
+r.use(requireBonusesCommissionsAccess);
 
 // Configure multer for file uploads (memory storage for Excel and CSV files)
 const upload = multer({ 

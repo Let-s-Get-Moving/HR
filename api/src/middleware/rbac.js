@@ -100,35 +100,38 @@ export const ROLE_PERMISSIONS = {
   ]
 };
 
-// Get user role and info from database
+// Get user role and info from database (including sales_role)
 export const getUserRole = async (userId) => {
   try {
     const { rows } = await q(`
-      SELECT r.role_name, r.permissions->>'scope' as scope, u.employee_id
+      SELECT r.role_name, r.permissions->>'scope' as scope, u.employee_id, e.sales_role
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
+      LEFT JOIN employees e ON u.employee_id = e.id
       WHERE u.id = $1
     `, [userId]);
     
     if (rows.length === 0) {
       console.log('⚠️ [RBAC] User not found, defaulting to user role');
-      return { role: ROLES.USER, scope: 'own', employeeId: null };
+      return { role: ROLES.USER, scope: 'own', employeeId: null, salesRole: null };
     }
     
     const userRole = rows[0].role_name || ROLES.USER;
     const scope = rows[0].scope || 'own';
     const employeeId = rows[0].employee_id;
+    const salesRole = rows[0].sales_role || null;
     
-    console.log(`✅ [RBAC] User ${userId} has role: ${userRole}, scope: ${scope}, employeeId: ${employeeId}`);
+    console.log(`✅ [RBAC] User ${userId} has role: ${userRole}, scope: ${scope}, employeeId: ${employeeId}, salesRole: ${salesRole}`);
     
     return {
       role: userRole,
       scope: scope,
-      employeeId: employeeId
+      employeeId: employeeId,
+      salesRole: salesRole
     };
   } catch (error) {
     console.error('❌ [RBAC] Error getting user role:', error);
-    return { role: ROLES.USER, scope: 'own', employeeId: null };
+    return { role: ROLES.USER, scope: 'own', employeeId: null, salesRole: null };
   }
 };
 
@@ -174,6 +177,7 @@ export const requirePermission = (permission) => {
       req.userRole = userInfo.role;
       req.userScope = userInfo.scope;
       req.employeeId = userInfo.employeeId;
+      req.salesRole = userInfo.salesRole;
       
       next();
     } catch (error) {
@@ -208,6 +212,7 @@ export const requireAnyPermission = (permissions) => {
       req.userRole = userInfo.role;
       req.userScope = userInfo.scope;
       req.employeeId = userInfo.employeeId;
+      req.salesRole = userInfo.salesRole;
       
       next();
     } catch (error) {
@@ -240,6 +245,7 @@ export const requireRole = (roles) => {
       req.userRole = userInfo.role;
       req.userScope = userInfo.scope;
       req.employeeId = userInfo.employeeId;
+      req.salesRole = userInfo.salesRole;
       
       next();
     } catch (error) {
@@ -265,8 +271,9 @@ export const applyScopeFilter = async (req, res, next) => {
     req.userRole = userInfo.role;
     req.userScope = userInfo.scope;
     req.employeeId = userInfo.employeeId;
+    req.salesRole = userInfo.salesRole;
     
-    console.log(`✅ [RBAC] applyScopeFilter: User ${req.user.id} - Role: ${req.userRole}, Scope: ${req.userScope}`);
+    console.log(`✅ [RBAC] applyScopeFilter: User ${req.user.id} - Role: ${req.userRole}, Scope: ${req.userScope}, SalesRole: ${req.salesRole}`);
     
     next();
   } catch (error) {
@@ -274,6 +281,46 @@ export const applyScopeFilter = async (req, res, next) => {
     // Don't fail the request - just log and continue
     next();
   }
+};
+
+// Check if user can access Bonuses & Commissions
+// Allowed: admin, manager, OR any user with salesRole (agent/manager)
+export const canAccessBonusesCommissions = (userRole, salesRole) => {
+  // Admin and Manager always have access
+  if (userRole === ROLES.ADMIN || userRole === ROLES.MANAGER) {
+    return true;
+  }
+  // Users with a sales role (agent or manager) can access
+  if (salesRole === 'agent' || salesRole === 'manager') {
+    return true;
+  }
+  return false;
+};
+
+// Middleware to require Bonuses & Commissions access
+// Must be used AFTER applyScopeFilter (which populates req.userRole and req.salesRole)
+export const requireBonusesCommissionsAccess = (req, res, next) => {
+  // Ensure we have role info (should be set by applyScopeFilter)
+  if (!req.userRole) {
+    console.log('⚠️ [RBAC] requireBonusesCommissionsAccess: No userRole set, denying access');
+    return res.status(403).json({ 
+      error: 'Access denied',
+      message: 'Bonuses & Commissions requires admin, manager, or sales role'
+    });
+  }
+  
+  if (!canAccessBonusesCommissions(req.userRole, req.salesRole)) {
+    console.log(`❌ [RBAC] requireBonusesCommissionsAccess: User denied - role: ${req.userRole}, salesRole: ${req.salesRole}`);
+    return res.status(403).json({ 
+      error: 'Access denied',
+      message: 'Bonuses & Commissions requires admin, manager, or sales role',
+      userRole: req.userRole,
+      salesRole: req.salesRole || null
+    });
+  }
+  
+  console.log(`✅ [RBAC] requireBonusesCommissionsAccess: Access granted - role: ${req.userRole}, salesRole: ${req.salesRole}`);
+  next();
 };
 
 // Helper to build WHERE clause for scope filtering

@@ -115,15 +115,15 @@ const ENDPOINTS = {
     { method: 'GET', path: '/api/payroll/bonus-structures', requiresAuth: false },
   ],
   
-  // Bonuses
+  // Bonuses - Requires admin/manager role OR salesRole (agent/manager)
   bonuses: [
-    { method: 'GET', path: '/api/bonuses', requiresAuth: true },
-    { method: 'POST', path: '/api/bonuses', requiresAuth: true },
-    { method: 'PUT', path: '/api/bonuses/:id', requiresAuth: true },
-    { method: 'GET', path: '/api/bonuses/structures', requiresAuth: false },
-    { method: 'POST', path: '/api/bonuses/structures', requiresAuth: true },
-    { method: 'GET', path: '/api/bonuses/commission-structures', requiresAuth: false },
-    { method: 'POST', path: '/api/bonuses/commission-structures', requiresAuth: true },
+    { method: 'GET', path: '/api/bonuses', requiresAuth: true, note: 'admin/manager/salesRole only, own-only for salesRole' },
+    { method: 'POST', path: '/api/bonuses', requiresAuth: true, note: 'admin/manager only' },
+    { method: 'PUT', path: '/api/bonuses/:id', requiresAuth: true, note: 'admin/manager only' },
+    { method: 'GET', path: '/api/bonuses/structures', requiresAuth: true, note: 'admin/manager/salesRole only' },
+    { method: 'POST', path: '/api/bonuses/structures', requiresAuth: true, note: 'admin/manager only' },
+    { method: 'GET', path: '/api/bonuses/commission-structures', requiresAuth: true, note: 'admin/manager/salesRole only' },
+    { method: 'POST', path: '/api/bonuses/commission-structures', requiresAuth: true, note: 'admin/manager only' },
   ],
   
   // Recruiting

@@ -61,23 +61,42 @@ export function canViewAllEmployees(role) {
 }
 
 // Pages that users can access (limited role)
-// User role can ONLY see: Employees, Time Tracking, Leave Management, Payroll, Bonuses & Commissions, Messages, Settings
+// User role can ONLY see: Employees, Time Tracking, Leave Management, Payroll, Messages, Settings
+// NOTE: 'bonuses' is NOT included here - it requires admin/manager OR salesRole
 export const USER_ALLOWED_PAGES = [
   'employees',      // Users can see their own employee info
   'timeTracking',   // Time Tracking
   'leave',          // Leave Management  
   'payroll',        // Payroll
-  'bonuses',        // Bonuses & Commissions
   'messages',       // Messages - users can chat with HR
   'settings'        // Settings
 ];
 
-export function canAccessPage(role, pageName) {
+// Check if user can access Bonuses & Commissions page
+// Allowed: admin, manager, OR any user with salesRole (agent/manager)
+export function canAccessBonuses(role, salesRole) {
+  // Admin and Manager always have access
+  if (hasFullAccess(role)) {
+    return true;
+  }
+  // Users with a sales role (agent or manager) can access
+  if (hasSalesRole(salesRole)) {
+    return true;
+  }
+  return false;
+}
+
+export function canAccessPage(role, salesRole, pageName) {
   if (hasFullAccess(role)) {
     return true; // Admin and Manager can access all pages
   }
   
-  // User role - only specific pages
+  // Special case: bonuses page requires salesRole
+  if (pageName === 'bonuses') {
+    return canAccessBonuses(role, salesRole);
+  }
+  
+  // User role - only specific pages (excluding bonuses which is handled above)
   return USER_ALLOWED_PAGES.includes(pageName);
 }
 
