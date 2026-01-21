@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
-import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
+import { formatShortDate, formatDateOnly, normalizeYMD, parseLocalDate } from '../utils/timezone.js';
 import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
 import DatePicker from '../components/DatePicker.jsx';
 
@@ -255,26 +255,26 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       email: employee.email,
       phone: employee.phone,
       gender: employee.gender,
-      birth_date: employee.birth_date ? employee.birth_date.split('T')[0] : '',
+      birth_date: normalizeYMD(employee.birth_date),
       role_title: employee.role_title,
       hourly_rate: employee.hourly_rate || 25,
       employment_type: employee.employment_type,
       department_id: employee.department_id,
       location_id: employee.location_id || null,
-      hire_date: employee.hire_date ? employee.hire_date.split('T')[0] : '',
-      probation_end: employee.probation_end ? employee.probation_end.split('T')[0] : '',
+      hire_date: normalizeYMD(employee.hire_date),
+      probation_end: normalizeYMD(employee.probation_end),
       status: employee.status,
       // New onboarding fields
       full_address: employee.full_address || '',
       emergency_contact_name: employee.emergency_contact_name || '',
       emergency_contact_phone: employee.emergency_contact_phone || '',
       sin_number: employee.sin_number || '',
-      sin_expiry_date: employee.sin_expiry_date ? employee.sin_expiry_date.split('T')[0] : '',
+      sin_expiry_date: normalizeYMD(employee.sin_expiry_date),
       bank_name: employee.bank_name || '',
       bank_transit_number: employee.bank_transit_number || '',
       bank_account_number: employee.bank_account_number || '',
       contract_status: employee.contract_status || 'Not Sent',
-      contract_signed_date: employee.contract_signed_date ? employee.contract_signed_date.split('T')[0] : '',
+      contract_signed_date: normalizeYMD(employee.contract_signed_date),
       gift_card_sent: employee.gift_card_sent || false,
       nickname: employee.nickname || '',
       nickname_2: employee.nickname_2 || '',
@@ -669,7 +669,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 />
               </div>
             ) : (
-              <div className="font-medium text-tahoe-text-primary">{formatShortDate(employee.hire_date)}</div>
+              <div className="font-medium text-tahoe-text-primary">{formatDateOnly(employee.hire_date)}</div>
             )}
           </div>
           <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
@@ -887,18 +887,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   ) : (
                     <span>
                       {employee.birth_date && employee.birth_date !== 'Invalid Date' 
-                        ? (() => {
-                            try {
-                              const dateStr = employee.birth_date.includes('T') 
-                                ? employee.birth_date.split('T')[0] 
-                                : employee.birth_date;
-                              const date = parseLocalDate(dateStr);
-                              return date ? formatShortDate(date) : 'Invalid Date';
-                            } catch (e) {
-                              console.error('❌ [EmployeeProfile] Error parsing birth date:', employee.birth_date, e);
-                              return 'Invalid Date';
-                            }
-                          })()
+                        ? formatDateOnly(employee.birth_date) || t('employeeProfile.notProvided')
                         : t('employeeProfile.notProvided')}
                     </span>
                   )}
@@ -920,7 +909,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       />
                     </div>
                   ) : (
-                    <span>{employee.hire_date ? formatShortDate(employee.hire_date) : t('employeeProfile.notSet')}</span>
+                    <span>{employee.hire_date ? formatDateOnly(employee.hire_date) : t('employeeProfile.notSet')}</span>
                   )}
                 </div>
                 <div className="flex justify-between">
@@ -990,7 +979,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       />
                     </div>
                   ) : (
-                    <span>{employee.probation_end ? formatShortDate(employee.probation_end) : t('employeeProfile.notSet')}</span>
+                    <span>{employee.probation_end ? formatDateOnly(employee.probation_end) : t('employeeProfile.notSet')}</span>
                   )}
                 </div>
                 {/* Settings Section */}
@@ -1247,7 +1236,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         />
                       </div>
                     ) : (
-                      <span>{formatShortDate(employee.contract_signed_date)}</span>
+                      <span>{formatDateOnly(employee.contract_signed_date)}</span>
                     )}
                   </div>
                 )}
@@ -1915,23 +1904,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.sinExpiryDate')}</div>
                 {isEditing ? (
                   <DatePicker
-                    valueYmd={editData.sin_expiry_date ? editData.sin_expiry_date.split('T')[0] : ''}
+                    valueYmd={normalizeYMD(editData.sin_expiry_date)}
                     onChangeYmd={(ymd) => setEditData({...editData, sin_expiry_date: ymd})}
                     placeholder={t('employeeProfile.sinExpiryDate')}
                   />
                 ) : (
                   <div>
-                    {employee.sin_expiry_date ? (() => {
-                      try {
-                        const dateStr = employee.sin_expiry_date.includes('T')
-                          ? employee.sin_expiry_date.split('T')[0] 
-                          : employee.sin_expiry_date;
-                        const date = parseLocalDate(dateStr);
-                        return date ? date.toLocaleDateString() : 'Invalid Date';
-                      } catch (e) {
-                        return 'Invalid';
-                      }
-                    })() : '—'}
+                    {employee.sin_expiry_date ? formatDateOnly(employee.sin_expiry_date) : '—'}
                   </div>
                 )}
               </div>
@@ -2140,7 +2119,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.terminationDate')}</div>
-                <div className="font-medium text-lg">{terminationDetails.termination_date ? formatShortDate(terminationDetails.termination_date) : t('common.n/a')}</div>
+                <div className="font-medium text-lg">{terminationDetails.termination_date ? formatDateOnly(terminationDetails.termination_date) : t('common.n/a')}</div>
               </div>
               <div>
                 <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.terminationType')}</div>
@@ -2172,7 +2151,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <div>
                   <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.lastWorkingDay')}</div>
-                  <div className="font-medium">{terminationDetails.last_working_day ? formatShortDate(terminationDetails.last_working_day) : t('common.n/a')}</div>
+                  <div className="font-medium">{terminationDetails.last_working_day ? formatDateOnly(terminationDetails.last_working_day) : t('common.n/a')}</div>
                 </div>
               </div>
             </div>
@@ -2190,11 +2169,11 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 </div>
                 <div>
                   <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.finalPayDate')}</div>
-                  <div className="font-medium">{terminationDetails.final_pay_date ? formatShortDate(terminationDetails.final_pay_date) : t('common.n/a')}</div>
+                  <div className="font-medium">{terminationDetails.final_pay_date ? formatDateOnly(terminationDetails.final_pay_date) : t('common.n/a')}</div>
                 </div>
                 <div>
                   <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.benefitsEndDate')}</div>
-                  <div className="font-medium">{terminationDetails.benefits_end_date ? formatShortDate(terminationDetails.benefits_end_date) : t('common.n/a')}</div>
+                  <div className="font-medium">{terminationDetails.benefits_end_date ? formatDateOnly(terminationDetails.benefits_end_date) : t('common.n/a')}</div>
                 </div>
               </div>
             </div>
@@ -2214,7 +2193,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
                 <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.interviewDate')}</div>
-                <div className="font-medium">{terminationDetails.exit_interview_date ? formatShortDate(terminationDetails.exit_interview_date) : t('employeeProfile.notConducted')}</div>
+                <div className="font-medium">{terminationDetails.exit_interview_date ? formatDateOnly(terminationDetails.exit_interview_date) : t('employeeProfile.notConducted')}</div>
               </div>
               <div>
                 <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.conductedBy')}</div>
@@ -2241,7 +2220,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {terminationDetails.equipment_return_date && (
                   <div>
                     <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.returnDate')}</div>
-                    <div className="font-medium">{formatShortDate(terminationDetails.equipment_return_date)}</div>
+                    <div className="font-medium">{formatDateOnly(terminationDetails.equipment_return_date)}</div>
                   </div>
                 )}
                 {terminationDetails.equipment_return_notes && (
@@ -2264,7 +2243,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {terminationDetails.access_revoked_date && (
                   <div>
                     <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.revokedDate')}</div>
-                    <div className="font-medium">{formatShortDate(terminationDetails.access_revoked_date)}</div>
+                    <div className="font-medium">{formatDateOnly(terminationDetails.access_revoked_date)}</div>
                   </div>
                 )}
               </div>

@@ -15,6 +15,7 @@ import { q } from "../db.js";
 import { createValidationMiddleware, createFileValidationMiddleware, businessRules, dbConstraints } from "../middleware/validation.js";
 import { requireRole, ROLES } from "../middleware/rbac.js";
 import { enhancedEmployeeSchema } from "../schemas/enhancedSchemas.js";
+import { normalizeEmployeeDates } from "../utils/dateUtils.js";
 import multer from "multer";
 
 const r = Router();
@@ -52,7 +53,8 @@ r.get("/", async (_req, res) => {
        WHERE e.status <> 'Terminated'
        ORDER BY e.first_name, e.last_name
     `);
-    res.json(rows);
+    // Normalize date-only fields to YYYY-MM-DD
+    res.json(rows.map(normalizeEmployeeDates));
   } catch (error) {
     console.error('Error fetching employees:', error);
     res.status(500).json({ error: 'Failed to fetch employees' });
@@ -122,7 +124,7 @@ r.post("/",
       res.status(201).json({
         success: true,
         message: 'Employee created successfully',
-        data: rows[0]
+        data: normalizeEmployeeDates(rows[0])
       });
       
     } catch (error) {
@@ -205,7 +207,7 @@ r.put("/:id",
       res.json({
         success: true,
         message: 'Employee updated successfully',
-        data: rows[0]
+        data: normalizeEmployeeDates(rows[0])
       });
       
     } catch (error) {

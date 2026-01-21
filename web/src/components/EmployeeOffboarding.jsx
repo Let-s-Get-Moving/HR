@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
-import { formatShortDate } from '../utils/timezone.js';
+import { formatShortDate, formatDateOnly, normalizeYMD, parseLocalDate } from '../utils/timezone.js';
 import { useUserRole } from '../hooks/useUserRole.js';
 import DatePicker from './DatePicker.jsx';
 
@@ -270,8 +270,12 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
               <div className="text-sm text-tahoe-text-muted">
                 <div>{t('common.name')}: {employee.first_name} {employee.last_name}</div>
                 <div>{t('employeeOffboarding.department')}: {employee.department_name}</div>
-                <div>{t('employeeOffboarding.hireDate')}: {formatShortDate(employee.hire_date)}</div>
-                <div>{t('employeeOffboarding.yearsOfService')}: {Math.floor((new Date() - new Date(employee.hire_date)) / (1000 * 60 * 60 * 24 * 365))}</div>
+                <div>{t('employeeOffboarding.hireDate')}: {formatDateOnly(employee.hire_date)}</div>
+                <div>{t('employeeOffboarding.yearsOfService')}: {(() => {
+                  const hireDate = parseLocalDate(normalizeYMD(employee.hire_date));
+                  if (!hireDate) return 0;
+                  return Math.floor((new Date() - hireDate) / (1000 * 60 * 60 * 24 * 365));
+                })()}</div>
               </div>
             </div>
 

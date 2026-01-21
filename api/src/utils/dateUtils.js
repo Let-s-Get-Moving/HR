@@ -35,3 +35,63 @@ export function parseLocalDate(dateInput) {
   return null;
 }
 
+/**
+ * Normalize any date input to YYYY-MM-DD string (date-only, no time/timezone)
+ * Strips T...Z from ISO strings, extracts date part from Date objects
+ * @param {string|Date|null|undefined} input - Date input
+ * @returns {string|null} YYYY-MM-DD string or null if invalid/empty
+ */
+export function normalizeYMD(input) {
+  if (!input) return null;
+  
+  // If it's a Date object, extract YYYY-MM-DD
+  if (input instanceof Date) {
+    if (isNaN(input.getTime())) return null;
+    const year = input.getFullYear();
+    const month = String(input.getMonth() + 1).padStart(2, '0');
+    const day = String(input.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+  
+  // If string, extract YYYY-MM-DD portion
+  if (typeof input === 'string') {
+    const match = input.match(/^(\d{4}-\d{2}-\d{2})/);
+    return match ? match[1] : null;
+  }
+  
+  return null;
+}
+
+/**
+ * List of date-only fields in the employees table that should be normalized to YYYY-MM-DD.
+ * These fields store calendar dates (not timestamps) and should never include time/timezone.
+ */
+export const DATE_ONLY_FIELDS = [
+  'hire_date',
+  'birth_date',
+  'probation_end',
+  'termination_date',
+  'sin_expiry_date',
+  'contract_signed_date'
+];
+
+/**
+ * Normalize date-only fields in an employee object to YYYY-MM-DD format.
+ * This ensures clients always receive consistent date-only values without timezone shifts.
+ * @param {Object} employee - Employee object from database
+ * @returns {Object} Employee object with normalized date-only fields
+ */
+export function normalizeEmployeeDates(employee) {
+  if (!employee) return employee;
+  
+  const normalized = { ...employee };
+  
+  for (const field of DATE_ONLY_FIELDS) {
+    if (normalized[field] !== undefined && normalized[field] !== null) {
+      normalized[field] = normalizeYMD(normalized[field]);
+    }
+  }
+  
+  return normalized;
+}
+

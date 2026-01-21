@@ -244,3 +244,26 @@ export function formatDateTime(date) {
 export function formatTime(date) {
   return formatInTimezone(date, 'HH:mm');
 }
+
+/**
+ * Format a date-only field for display (hire_date, birth_date, probation_end, etc.)
+ * This is the CANONICAL way to display date-only fields - it NEVER applies timezone conversion.
+ * 
+ * Use this instead of formatShortDate() for any field that stores a calendar date
+ * (not a timestamp/datetime). This prevents the off-by-one-day bug where
+ * "2026-01-21T00:00:00.000Z" would display as "Jan 20, 2026" in some timezones.
+ * 
+ * @param {string|Date|null|undefined} value - Date value (YYYY-MM-DD, ISO string, or Date object)
+ * @param {string} formatStr - date-fns format string (default: 'MMM dd, yyyy')
+ * @returns {string} Formatted date string showing the exact calendar date stored
+ * 
+ * @example
+ * formatDateOnly('2026-01-21')                    // "Jan 21, 2026"
+ * formatDateOnly('2026-01-21T00:00:00.000Z')      // "Jan 21, 2026" (not Jan 20!)
+ * formatDateOnly(new Date(2026, 0, 21))           // "Jan 21, 2026"
+ */
+export function formatDateOnly(value, formatStr = 'MMM dd, yyyy') {
+  const ymd = normalizeYMD(value);
+  if (!ymd) return '';
+  return formatYMD(ymd, formatStr);
+}

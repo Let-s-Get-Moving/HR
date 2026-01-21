@@ -8,7 +8,8 @@ import {
   getTodayYMD,
   parseLocalDate,
   formatShortDate,
-  formatInTimezone
+  formatInTimezone,
+  formatDateOnly
 } from '../timezone';
 
 // Mock localStorage for testing
@@ -279,6 +280,102 @@ describe('Timezone Utilities', () => {
     it('handles year boundaries correctly', () => {
       expect(formatYMD('2025-12-31')).toBe('Dec 31, 2025');
       expect(formatYMD('2026-01-01')).toBe('Jan 01, 2026');
+    });
+  });
+
+  describe('formatDateOnly', () => {
+    it('formats YYYY-MM-DD string correctly', () => {
+      expect(formatDateOnly('2026-01-21')).toBe('Jan 21, 2026');
+    });
+
+    it('formats ISO datetime string without timezone shift (CRITICAL REGRESSION TEST)', () => {
+      // This is the exact bug that was reported: "2026-01-21T00:00:00.000Z" should show Jan 21, NOT Jan 20
+      expect(formatDateOnly('2026-01-21T00:00:00.000Z')).toBe('Jan 21, 2026');
+    });
+
+    it('formats ISO datetime with non-midnight time correctly', () => {
+      // Even with time component, should extract the date portion
+      expect(formatDateOnly('2026-01-21T15:30:00.000Z')).toBe('Jan 21, 2026');
+    });
+
+    it('formats Date object using local date components', () => {
+      const date = new Date(2026, 0, 21, 12, 0, 0); // Jan 21, 2026 at noon local
+      expect(formatDateOnly(date)).toBe('Jan 21, 2026');
+    });
+
+    it('returns empty string for null', () => {
+      expect(formatDateOnly(null)).toBe('');
+    });
+
+    it('returns empty string for undefined', () => {
+      expect(formatDateOnly(undefined)).toBe('');
+    });
+
+    it('returns empty string for empty string', () => {
+      expect(formatDateOnly('')).toBe('');
+    });
+
+    it('accepts custom format string', () => {
+      expect(formatDateOnly('2026-01-21', 'yyyy-MM-dd')).toBe('2026-01-21');
+    });
+  });
+
+  describe('Date-only field regression tests (hire_date, birth_date, etc.)', () => {
+    // These tests simulate the exact scenario that caused the bug:
+    // Backend sends "2026-01-21T00:00:00.000Z" for a date-only field,
+    // and the frontend must display "Jan 21, 2026" everywhere.
+
+    it('hire_date ISO string displays same day in view and edit mode', () => {
+      const backendValue = '2026-01-21T00:00:00.000Z';
+      
+      // View mode uses formatDateOnly
+      const viewDisplay = formatDateOnly(backendValue);
+      
+      // Edit mode uses normalizeYMD for DatePicker valueYmd
+      const editValue = normalizeYMD(backendValue);
+      const editDisplay = formatYMD(editValue);
+      
+      // Both should show the same date
+      expect(viewDisplay).toBe('Jan 21, 2026');
+      expect(editDisplay).toBe('Jan 21, 2026');
+      expect(editValue).toBe('2026-01-21');
+    });
+
+    it('birth_date pure YYYY-MM-DD string displays correctly', () => {
+      const backendValue = '1990-05-15';
+      expect(formatDateOnly(backendValue)).toBe('May 15, 1990');
+    });
+
+    it('probation_end ISO string does not shift day', () => {
+      const backendValue = '2026-04-21T00:00:00.000Z';
+      expect(formatDateOnly(backendValue)).toBe('Apr 21, 2026');
+      expect(normalizeYMD(backendValue)).toBe('2026-04-21');
+    });
+
+    it('termination_date near year boundary does not shift', () => {
+      // Dec 31 at midnight UTC should still show Dec 31
+      expect(formatDateOnly('2025-12-31T00:00:00.000Z')).toBe('Dec 31, 2025');
+      // Jan 1 at midnight UTC should show Jan 1
+      expect(formatDateOnly('2026-01-01T00:00:00.000Z')).toBe('Jan 01, 2026');
+    });
+
+    it('normalizeYMD extracts date from various ISO formats', () => {
+      expect(normalizeYMD('2026-01-21')).toBe('2026-01-21');
+      expect(normalizeYMD('2026-01-21T00:00:00')).toBe('2026-01-21');
+      expect(normalizeYMD('2026-01-21T00:00:00.000Z')).toBe('2026-01-21');
+      expect(normalizeYMD('2026-01-21T12:30:45.123Z')).toBe('2026-01-21');
+      expect(normalizeYMD('2026-01-21T23:59:59-05:00')).toBe('2026-01-21');
+    });
+
+    it('parseLocalDate does not shift dates when used for calculations', () => {
+      // When calculating years of service, parseLocalDate must return the correct local date
+      const hireDateISO = '2020-01-21T00:00:00.000Z';
+      const normalized = normalizeYMD(hireDateISO);
+      const parsed = parseLocalDate(normalized);
+      
+      expect(parsed.getFullYear()).toBe(2020);
+      expect(parsed.getMonth()).toBe(0); // January
+      expect(parsed.getDate()).toBe(21);
     });
   });
 });

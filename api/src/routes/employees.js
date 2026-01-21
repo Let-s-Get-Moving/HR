@@ -3,6 +3,7 @@ import { q } from "../db.js";
 import { z } from "zod";
 import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
+import { normalizeEmployeeDates } from "../utils/dateUtils.js";
 
 const r = Router();
 
@@ -43,7 +44,8 @@ r.get("/", async (req, res) => {
   query += ` ORDER BY e.first_name, e.last_name`;
   
   const { rows } = await q(query, params);
-  res.json(rows);
+  // Normalize date-only fields to YYYY-MM-DD to prevent timezone shift issues on frontend
+  res.json(rows.map(normalizeEmployeeDates));
 });
 
 r.get("/terminated", async (_req, res) => {
@@ -70,7 +72,8 @@ r.get("/terminated", async (_req, res) => {
      WHERE e.status = 'Terminated'
      ORDER BY e.termination_date DESC NULLS LAST, e.first_name, e.last_name`
   );
-  res.json(rows);
+  // Normalize date-only fields to YYYY-MM-DD
+  res.json(rows.map(normalizeEmployeeDates));
 });
 
 r.get("/departments", async (_req, res) => {
@@ -518,7 +521,8 @@ r.post("/", async (req, res) => {
       ]
     );
     console.log('✅ [API] Employee created:', rows[0]);
-    res.status(201).json(rows[0]);
+    // Normalize date-only fields to YYYY-MM-DD
+    res.status(201).json(normalizeEmployeeDates(rows[0]));
   } catch (error) {
     console.error('❌ [API] Error creating employee:', error);
     
@@ -709,7 +713,8 @@ r.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Employee not found" });
     }
     
-    res.json(rows[0]);
+    // Normalize date-only fields to YYYY-MM-DD
+    res.json(normalizeEmployeeDates(rows[0]));
   } catch (error) {
     console.error("Error updating employee:", error);
     console.error("Error details:", error.message);
@@ -759,7 +764,8 @@ r.get("/:id", async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: "Employee not found" });
     }
-    res.json(rows[0]);
+    // Normalize date-only fields to YYYY-MM-DD
+    res.json(normalizeEmployeeDates(rows[0]));
   } catch (error) {
     console.error('Error fetching employee:', error);
     res.status(500).json({ error: 'Failed to fetch employee', details: error.message });

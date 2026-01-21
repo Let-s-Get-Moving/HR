@@ -7,7 +7,7 @@ import EmployeeProfile from "./EmployeeProfile.jsx";
 import { useUserRole } from '../hooks/useUserRole.js';
 
 import { API } from '../config/api.js';
-import { formatShortDate } from '../utils/timezone.js';
+import { formatDateOnly } from '../utils/timezone.js';
 
 export default function Employees() {
   const { t } = useTranslation();
@@ -305,7 +305,7 @@ export default function Employees() {
                       {employee.employment_type}
                     </span>
                   </td>
-                  <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-sm">{formatShortDate(employee.hire_date)}</td>
+                  <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-sm">{formatDateOnly(employee.hire_date)}</td>
                   <td className="px-3 sm:px-6 py-4">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                       employee.status === 'Active' ? 'bg-green-900 text-green-300' :
@@ -317,7 +317,7 @@ export default function Employees() {
                   </td>
                   {filterStatus === "terminated" && (
                     <td className="hidden lg:table-cell px-3 sm:px-6 py-4 text-sm">
-                      {employee.termination_date ? formatShortDate(employee.termination_date) : '-'}
+                      {employee.termination_date ? formatDateOnly(employee.termination_date) : '-'}
                     </td>
                   )}
                   {filterStatus === "active" && (userRole === 'manager' || userRole === 'admin') && (

@@ -4,6 +4,7 @@ import Modal from './Modal.tsx';
 import Button from './Button.tsx';
 import { API } from '../config/api.js';
 import DateRangePicker from './DateRangePicker.jsx';
+import { normalizeYMD, toYMD } from '../utils/timezone.js';
 
 /**
  * Modal for manager/admin to manually create or edit a leave entry
@@ -62,21 +63,21 @@ export default function ManualLeaveCreateModal({
     }
   }, [isOpen, defaultDate, editingLeave]);
   
-  // Format Date to YYYY-MM-DD string
+  // Format Date to YYYY-MM-DD string (date-only, no timezone shift)
   function formatDateToYYYYMMDD(date) {
     if (!date) return '';
     
-    // If already a YYYY-MM-DD string, return as is (avoids timezone conversion)
-    if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}/.test(date)) {
-      return date.split('T')[0]; // Handle both "YYYY-MM-DD" and "YYYY-MM-DDTHH:MM:SS"
+    // If already a string, normalize to YYYY-MM-DD (strips any T... suffix)
+    if (typeof date === 'string') {
+      return normalizeYMD(date);
     }
     
-    // Otherwise convert Date object to YYYY-MM-DD using UTC to avoid timezone shifts
-    const d = new Date(date);
-    const year = d.getUTCFullYear();
-    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    // If Date object, convert using local timezone (not UTC)
+    if (date instanceof Date) {
+      return toYMD(date);
+    }
+    
+    return '';
   }
   
   // Calculate total days between two dates (inclusive)
