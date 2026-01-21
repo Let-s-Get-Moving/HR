@@ -3,6 +3,23 @@ import { motion } from "framer-motion";
 
 import { API } from '../config/api.js';
 
+// Helper functions for dynamic test parameters
+const getCurrentYearMonth = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const getCurrentMonthStart = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+};
+
+const getCurrentMonthEnd = () => {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${lastDay}`;
+};
+
 export default function Testing() {
   const [testResults, setTestResults] = useState({});
   const [runningTests, setRunningTests] = useState(false);
@@ -154,7 +171,7 @@ export default function Testing() {
       endpoints: [
         { url: "/api/commissions/monthly", name: "Monthly Commissions" },
         { url: "/api/commissions/periods", name: "Commission Periods" },
-        { url: "/api/commissions/summary", name: "Commission Summary" },
+        { url: `/api/commissions/summary?period_month=${getCurrentYearMonth()}`, name: "Commission Summary" },
       ]
     },
     {
@@ -162,10 +179,10 @@ export default function Testing() {
       name: "💰 Sales Commissions",
       description: "Sales agents, managers, commission rules and calculations",
       endpoints: [
-        { url: "/api/sales-commissions/agents", name: "Sales Agents" },
-        { url: "/api/sales-commissions/managers", name: "Sales Managers" },
+        { url: `/api/sales-commissions/agents?period_start=${getCurrentMonthStart()}&period_end=${getCurrentMonthEnd()}`, name: "Sales Agents" },
+        { url: `/api/sales-commissions/managers?period_start=${getCurrentMonthStart()}&period_end=${getCurrentMonthEnd()}`, name: "Sales Managers" },
         { url: "/api/sales-commissions/periods", name: "Commission Periods" },
-        { url: "/api/sales-commissions/summary", name: "Commission Summary" },
+        { url: `/api/sales-commissions/summary?period_start=${getCurrentMonthStart()}&period_end=${getCurrentMonthEnd()}`, name: "Commission Summary" },
         { url: "/api/sales-commissions/rules", name: "Commission Rules" },
         { url: "/api/sales-commissions/adjustment-status", name: "Adjustment Status" },
       ]

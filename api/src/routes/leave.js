@@ -1423,6 +1423,10 @@ r.get("/policies", async (req, res) => {
     res.json(rows);
   } catch (error) {
     console.error('Error fetching leave policies:', error);
+    // If table doesn't exist or other DB schema error, return empty array gracefully
+    if (error.message && (error.message.includes('relation') || error.message.includes('does not exist'))) {
+      return res.json([]);
+    }
     res.status(500).json({ error: 'Failed to fetch leave policies' });
   }
 });

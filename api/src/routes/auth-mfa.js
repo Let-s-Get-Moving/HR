@@ -574,6 +574,10 @@ r.get("/mfa/trusted-devices", requireAuth, async (req, res) => {
     
   } catch (error) {
     console.error('❌ Get trusted devices error:', error);
+    // If table doesn't exist or other DB schema error, return empty array gracefully
+    if (error.message && (error.message.includes('relation') || error.message.includes('does not exist'))) {
+      return res.json({ devices: [] });
+    }
     res.status(500).json({ error: "Failed to get trusted devices: " + error.message });
   }
 });
