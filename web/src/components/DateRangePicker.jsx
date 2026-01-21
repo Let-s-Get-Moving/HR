@@ -1,17 +1,74 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { DayPicker } from 'react-day-picker';
-import { format } from 'date-fns';
+import { format, isBefore, isAfter, isSameDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatYMD, normalizeYMD, parseLocalDate } from '../utils/timezone.js';
 import 'react-day-picker/style.css';
 
 /**
+ * Pure helper: compute next range state based on active edge and clicked date.
+ * Implements Google Ads-like semantics: swap instead of reset, no accidental wipes.
+ * 
+ * @param {{ from: Date|undefined, to: Date|undefined }} currentRange
+ * @param {'start'|'end'} activeEdge
+ * @param {Date} clickedDate
+ * @returns {{ nextRange: { from: Date|undefined, to: Date|undefined }, nextActiveEdge: 'start'|'end' }}
+ */
+function computeNextRange(currentRange, activeEdge, clickedDate) {
+  const { from, to } = currentRange;
+  
+  if (activeEdge === 'start') {
+    // Setting start date
+    let newFrom = clickedDate;
+    let newTo = to;
+    
+    // If clicked date is after existing end, swap them
+    if (to && isAfter(clickedDate, to)) {
+      newFrom = to;
+      newTo = clickedDate;
+    }
+    
+    return {
+      nextRange: { from: newFrom, to: newTo },
+      nextActiveEdge: 'end' // After setting start, switch to end
+    };
+  } else {
+    // Setting end date
+    if (!from) {
+      // No start yet, set this as start and stay on end
+      return {
+        nextRange: { from: clickedDate, to: undefined },
+        nextActiveEdge: 'end'
+      };
+    }
+    
+    let newFrom = from;
+    let newTo = clickedDate;
+    
+    // If clicked date is before start, swap them
+    if (isBefore(clickedDate, from)) {
+      newFrom = clickedDate;
+      newTo = from;
+    }
+    
+    return {
+      nextRange: { from: newFrom, to: newTo },
+      nextActiveEdge: 'end' // Stay on end for subsequent clicks (Google-like)
+    };
+  }
+}
+
+/**
  * DateRangePicker - A Tahoe-styled date range picker component
  * 
- * Behavior:
- * - Click opens a popover calendar
- * - First click selects start date, second click selects end date
+ * Behavior (Google Ads-like gestures):
+ * - Click trigger to open popover calendar
+ * - Click left half of trigger to edit start date, right half for end date
+ * - Clicking a date updates the active edge (start or end)
+ * - Backward clicks swap dates instead of resetting
+ * - Third click updates the active edge instead of wiping selection
+ * - Hover preview shows potential range before clicking
  * - Apply button confirms the selection
  * - Clear button resets the range
  * - Cancel closes without changes
@@ -42,6 +99,8 @@ export default function DateRangePicker({
     from: startYmd ? parseLocalDate(startYmd) : undefined,
     to: endYmd ? parseLocalDate(endYmd) : undefined
   });
+  const [activeEdge, setActiveEdge] = useState('start'); // 'start' | 'end'
+  const [hoverDate, setHoverDate] = useState(undefined); // For preview band
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0, minWidth: 320 });
   
   const triggerRef = useRef(null);
@@ -78,10 +137,16 @@ export default function DateRangePicker({
 
   // Sync pending range when props change (e.g., carousel selection)
   useEffect(() => {
-    setPendingRange({
-      from: startYmd ? parseLocalDate(startYmd) : undefined,
-      to: endYmd ? parseLocalDate(endYmd) : undefined
-    });
+    const newFrom = startYmd ? parseLocalDate(startYmd) : undefined;
+    const newTo = endYmd ? parseLocalDate(endYmd) : undefined;
+    setPendingRange({ from: newFrom, to: newTo });
+    
+    // Reset activeEdge based on current state
+    if (!newFrom) {
+      setActiveEdge('start');
+    } else if (!newTo) {
+      setActiveEdge('end');
+    }
   }, [startYmd, endYmd]);
 
   // Update position when opening and on scroll/resize
@@ -154,17 +219,73 @@ export default function DateRangePicker({
 
   // Get pending display for inside the popover
   const getPendingLabel = () => {
+    const fromStr = pendingRange.from ? format(pendingRange.from, 'MMM dd, yyyy') : '...';
+    const toStr = pendingRange.to ? format(pendingRange.to, 'MMM dd, yyyy') : '...';
+    
     if (pendingRange.from && pendingRange.to) {
-      return `${format(pendingRange.from, 'MMM dd, yyyy')} – ${format(pendingRange.to, 'MMM dd, yyyy')}`;
+      // Both selected - show which edge is active for next click
+      const editingHint = activeEdge === 'start' ? ' (editing start)' : ' (editing end)';
+      return `${fromStr} – ${toStr}${editingHint}`;
     }
     if (pendingRange.from) {
-      return `${format(pendingRange.from, 'MMM dd, yyyy')} – select end date`;
+      return `${fromStr} – select end date`;
     }
     return 'Select start date';
   };
 
-  const handleSelect = (range) => {
-    setPendingRange(range || { from: undefined, to: undefined });
+  /**
+   * Custom selection handler using Google Ads-like gestures.
+   * Uses triggerDate from v9 signature and ignores DayPicker's computed range.
+   */
+  const handleSelect = (selectedRange, triggerDate, modifiers, e) => {
+    // Ignore DayPicker's computed range; use our state machine instead
+    const { nextRange, nextActiveEdge } = computeNextRange(pendingRange, activeEdge, triggerDate);
+    setPendingRange(nextRange);
+    setActiveEdge(nextActiveEdge);
+    setHoverDate(undefined); // Clear hover after selection
+  };
+  
+  /**
+   * Handle hover for preview band
+   */
+  const handleDayMouseEnter = (date) => {
+    // Only show preview if we have a partial selection
+    if (pendingRange.from && !pendingRange.to) {
+      setHoverDate(date);
+    } else if (pendingRange.from && pendingRange.to && activeEdge === 'end') {
+      // Show preview when editing end of complete range
+      setHoverDate(date);
+    } else if (activeEdge === 'start' && pendingRange.to) {
+      // Show preview when editing start of complete range
+      setHoverDate(date);
+    }
+  };
+  
+  const handleDayMouseLeave = () => {
+    setHoverDate(undefined);
+  };
+  
+  /**
+   * Compute preview range for hover effect
+   */
+  const getPreviewRange = () => {
+    if (!hoverDate) return undefined;
+    
+    if (activeEdge === 'start' && pendingRange.to) {
+      // Previewing new start with existing end
+      const previewFrom = isBefore(hoverDate, pendingRange.to) ? hoverDate : pendingRange.to;
+      const previewTo = isAfter(hoverDate, pendingRange.to) ? hoverDate : pendingRange.to;
+      return { from: previewFrom, to: previewTo };
+    }
+    
+    if (pendingRange.from) {
+      // Previewing end (or completing range)
+      const previewFrom = isBefore(hoverDate, pendingRange.from) ? hoverDate : pendingRange.from;
+      const previewTo = isAfter(hoverDate, pendingRange.from) ? hoverDate : pendingRange.from;
+      return { from: previewFrom, to: previewTo };
+    }
+    
+    return undefined;
   };
 
   const handleApply = () => {
@@ -179,6 +300,8 @@ export default function DateRangePicker({
 
   const handleClear = () => {
     setPendingRange({ from: undefined, to: undefined });
+    setActiveEdge('start'); // Reset to start
+    setHoverDate(undefined);
     if (onClear) {
       onClear();
     }
@@ -228,8 +351,13 @@ export default function DateRangePicker({
               mode="range"
               selected={pendingRange}
               onSelect={handleSelect}
+              onDayMouseEnter={handleDayMouseEnter}
+              onDayMouseLeave={handleDayMouseLeave}
               numberOfMonths={2}
               showOutsideDays
+              modifiers={{
+                preview: getPreviewRange() || false
+              }}
               classNames={{
                 root: 'text-tahoe-text-primary',
                 months: 'flex gap-4',
@@ -254,7 +382,8 @@ export default function DateRangePicker({
                 disabled: 'tahoe-disabled',
                 range_start: 'tahoe-range-start',
                 range_middle: 'tahoe-range-middle',
-                range_end: 'tahoe-range-end'
+                range_end: 'tahoe-range-end',
+                preview: 'tahoe-range-preview'
               }}
             />
           </div>
@@ -291,13 +420,42 @@ export default function DateRangePicker({
     </AnimatePresence>
   );
 
+  /**
+   * Handle trigger click: determine which edge to edit based on click position.
+   * Left half of trigger = edit start, right half = edit end.
+   */
+  const handleTriggerClick = (e) => {
+    if (disabled) return;
+    
+    if (!isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const isLeftHalf = clickX < rect.width / 2;
+      
+      // Determine activeEdge based on click position and current state
+      if (!pendingRange.from) {
+        // No start yet, always start
+        setActiveEdge('start');
+      } else if (!pendingRange.to) {
+        // Has start but no end, default to end unless left-half clicked
+        setActiveEdge(isLeftHalf ? 'start' : 'end');
+      } else {
+        // Has both, use click position
+        setActiveEdge(isLeftHalf ? 'start' : 'end');
+      }
+    }
+    
+    setIsOpen(!isOpen);
+    setHoverDate(undefined);
+  };
+
   return (
     <div className="relative">
       {/* Trigger Button */}
       <button
         ref={triggerRef}
         type="button"
-        onClick={() => !disabled && setIsOpen(!isOpen)}
+        onClick={handleTriggerClick}
         disabled={disabled}
         className={`
           w-full px-4 py-2.5 rounded-lg text-left

@@ -1247,6 +1247,35 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   background-color: rgba(10, 132, 255, 0.55) !important;
 }
 
+/* ===== RANGE PREVIEW: Hover preview band (lighter than selection) ===== */
+.date-range-picker-calendar .tahoe-range-preview:not(.tahoe-selected):not(.tahoe-range-start):not(.tahoe-range-end):not(.tahoe-range-middle) .rdp-day_button {
+  background-color: rgba(10, 132, 255, 0.2) !important;
+  border-radius: 0;
+  color: var(--text-primary) !important;
+  position: relative;
+}
+
+/* Preview band top/bottom edges (subtle dashed effect) */
+.date-range-picker-calendar .tahoe-range-preview:not(.tahoe-selected):not(.tahoe-range-start):not(.tahoe-range-end):not(.tahoe-range-middle) .rdp-day_button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(10, 132, 255, 0.4);
+}
+
+.date-range-picker-calendar .tahoe-range-preview:not(.tahoe-selected):not(.tahoe-range-start):not(.tahoe-range-end):not(.tahoe-range-middle) .rdp-day_button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(10, 132, 255, 0.3);
+}
+
 /* ===== TODAY indicator ===== */
 .date-range-picker-calendar .tahoe-today:not(.tahoe-selected):not(.tahoe-range-start):not(.tahoe-range-end):not(.tahoe-range-middle) .rdp-day_button {
   border: 2px solid var(--tahoe-accent, #0A84FF);
