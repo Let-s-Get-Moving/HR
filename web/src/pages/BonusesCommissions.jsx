@@ -165,7 +165,6 @@ export default function BonusesCommissions() {
   const tabs = [
     // Hide import tab for user role
     ...(userRole !== 'user' ? [{ id: "import", name: t('bonuses.excelImport'), icon: "📥" }] : []),
-    { id: "analytics", name: t('bonuses.analytics'), icon: "📊" },
     // Sales Commissions tab - for managers/admins OR users with sales_role
     ...((userRole !== 'user' || salesRole) ? [{ 
       id: "sales-commissions", 
@@ -177,11 +176,13 @@ export default function BonusesCommissions() {
   // Set default tab based on role
   useEffect(() => {
     if (activeTab === null && userRole !== null) {
-      // For users with sales_role, default to sales-commissions tab
+      // Default to sales-commissions for users with sales_role, import for others
       if (userRole === 'user' && salesRole) {
         setActiveTab('sales-commissions');
+      } else if (userRole !== 'user') {
+        setActiveTab('import');
       } else {
-        setActiveTab('analytics');
+        setActiveTab('sales-commissions');
       }
     }
   }, [userRole, salesRole, activeTab]);
@@ -2701,7 +2702,6 @@ export default function BonusesCommissions() {
       {/* Tab Content */}
       <div className="space-y-6">
         {userRole !== 'user' && activeTab === "import" && renderImport()}
-        {activeTab === "analytics" && renderAnalytics()}
         {(userRole !== 'user' || salesRole) && activeTab === "sales-commissions" && renderSalesCommissions()}
       </div>
 
