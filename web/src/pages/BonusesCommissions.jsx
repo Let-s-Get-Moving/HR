@@ -7,6 +7,7 @@ import { API } from '../config/api.js';
 import { formatShortDate, formatYMD, normalizeYMD } from '../utils/timezone.js';
 import CommissionLegend from '../components/CommissionLegend.jsx';
 import DateRangePicker from '../components/DateRangePicker.jsx';
+import DatePicker from '../components/DatePicker.jsx';
 
 export default function BonusesCommissions() {
   const { t } = useTranslation();
@@ -1233,33 +1234,26 @@ export default function BonusesCommissions() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Period Start *</label>
-              <input
-                type="date"
-                value={periodStart}
-                onChange={(e) => setPeriodStart(e.target.value)}
-                className="w-full rounded-tahoe-input px-4 py-2 text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Period End *</label>
-              <input
-                type="date"
-                value={periodEnd}
-                onChange={(e) => setPeriodEnd(e.target.value)}
-                className="w-full rounded-tahoe-input px-4 py-2 text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-2 text-tahoe-text-primary">Period Start / End *</label>
+            <DateRangePicker
+              startYmd={periodStart}
+              endYmd={periodEnd}
+              onApply={({ startYmd, endYmd }) => {
+                setPeriodStart(startYmd);
+                setPeriodEnd(endYmd);
+              }}
+              onClear={() => {
+                setPeriodStart('');
+                setPeriodEnd('');
+              }}
+              placeholder="Select date range for import"
+              commitMode="instant"
+            />
+            <p className="text-xs text-tahoe-text-muted mt-1">
+              Select the date range covered by the sales performance data
+            </p>
           </div>
-          <p className="text-xs text-tahoe-text-muted mt-1">
-            Select the date range covered by the sales performance data
-          </p>
 
           {importStatus && (
             <div className={`p-4 rounded-tahoe-input ${
@@ -3123,11 +3117,10 @@ export default function BonusesCommissions() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Effective Date</label>
-                  <input
-                    type="date"
-                    value={editingStructure.effective_date}
-                    onChange={(e) => setEditingStructure({...editingStructure, effective_date: e.target.value})}
-                    className="form-input"
+                  <DatePicker
+                    valueYmd={editingStructure.effective_date}
+                    onChangeYmd={(ymd) => setEditingStructure({...editingStructure, effective_date: ymd})}
+                    placeholder="Effective Date"
                   />
                 </div>
                 <div className="flex justify-end space-x-3">
@@ -3185,11 +3178,10 @@ export default function BonusesCommissions() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">Payment Date *</label>
-                  <input
-                    type="date"
-                    value={approveData.payment_date}
-                    onChange={(e) => setApproveData({...approveData, payment_date: e.target.value})}
-                    className="form-input"
+                  <DatePicker
+                    valueYmd={approveData.payment_date}
+                    onChangeYmd={(ymd) => setApproveData({...approveData, payment_date: ymd})}
+                    placeholder="Payment Date"
                     required
                   />
                 </div>
@@ -3498,11 +3490,10 @@ export default function BonusesCommissions() {
                 )}
                 <div>
                   <label className="block text-sm font-medium mb-2">Effective Date *</label>
-                  <input
-                    type="date"
-                    value={applyData.effective_date}
-                    onChange={(e) => setApplyData({...applyData, effective_date: e.target.value})}
-                    className="form-input"
+                  <DatePicker
+                    valueYmd={applyData.effective_date}
+                    onChangeYmd={(ymd) => setApplyData({...applyData, effective_date: ymd})}
+                    placeholder="Effective Date"
                     required
                   />
                 </div>

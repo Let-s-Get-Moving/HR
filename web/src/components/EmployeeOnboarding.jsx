@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 import { API } from '../config/api.js';
 import { toYMD, parseLocalDate } from '../utils/timezone.js';
+import DatePicker from './DatePicker.jsx';
 
 export default function EmployeeOnboarding({ onClose, onSuccess }) {
   const { t } = useTranslation();
@@ -263,12 +264,10 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.birthDate')}</label>
-                <input
-                  type="date"
-                  value={formData.birth_date}
-                  onChange={(e) => setFormData({...formData, birth_date: e.target.value})}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                <DatePicker
+                  valueYmd={formData.birth_date}
+                  onChangeYmd={(ymd) => setFormData({...formData, birth_date: ymd})}
+                  placeholder={t('employeeOnboarding.birthDate')}
                 />
               </div>
             </div>
@@ -288,12 +287,9 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.hireDate')} *</label>
-                <input
-                  type="date"
-                  required
-                  value={formData.hire_date}
-                  onChange={(e) => {
-                    const hireDate = e.target.value;
+                <DatePicker
+                  valueYmd={formData.hire_date}
+                  onChangeYmd={(hireDate) => {
                     // Use parseLocalDate to avoid UTC interpretation bug
                     const probationEnd = hireDate ? parseLocalDate(hireDate) : null;
                     if (probationEnd) {
@@ -305,8 +301,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                       probation_end: probationEnd ? toYMD(probationEnd) : ""
                     });
                   }}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                  placeholder={t('employeeOnboarding.hireDate')}
+                  required
                 />
               </div>
               <div>
@@ -370,13 +366,11 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOnboarding.probationEndDate')}</label>
-                <input
-                  type="date"
-                  value={formData.probation_end}
-                  onChange={(e) => setFormData({...formData, probation_end: e.target.value})}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                  readOnly
+                <DatePicker
+                  valueYmd={formData.probation_end}
+                  onChangeYmd={(ymd) => setFormData({...formData, probation_end: ymd})}
+                  placeholder={t('employeeOnboarding.probationEndDate')}
+                  disabled
                 />
               </div>
             </div>
@@ -518,13 +512,10 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   <div>
-                    <input
-                      type="date"
+                    <DatePicker
+                      valueYmd={formData.sin_expiry_date}
+                      onChangeYmd={(ymd) => setFormData({...formData, sin_expiry_date: ymd})}
                       placeholder={t('employeeOnboarding.expiryDatePlaceholder')}
-                      value={formData.sin_expiry_date}
-                      onChange={(e) => setFormData({...formData, sin_expiry_date: e.target.value})}
-                      className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                  style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                     />
                     <p className="text-xs text-tahoe-text-muted mt-1">{t('employeeOnboarding.leaveEmptyIfPermanent')}</p>
                   </div>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from './Modal.tsx';
 import Button from './Button.tsx';
 import { API } from '../config/api.js';
+import DateRangePicker from './DateRangePicker.jsx';
 
 /**
  * Modal for manager/admin to manually create or edit a leave entry
@@ -237,39 +238,24 @@ export default function ManualLeaveCreateModal({
         </div>
         
         {/* Date Range */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
-              {t('leave.startDate')} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required
-              className="w-full px-4 py-2.5 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-white"
-              style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.12)', 
-                border: '1px solid rgba(255, 255, 255, 0.12)' 
-              }}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
-              {t('leave.endDate')} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
-              className="w-full px-4 py-2.5 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-white"
-              style={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.12)', 
-                border: '1px solid rgba(255, 255, 255, 0.12)' 
-              }}
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
+            {t('leave.startDate')} / {t('leave.endDate')} <span className="text-red-500">*</span>
+          </label>
+          <DateRangePicker
+            startYmd={startDate}
+            endYmd={endDate}
+            onApply={({ startYmd, endYmd }) => {
+              setStartDate(startYmd);
+              setEndDate(endYmd);
+            }}
+            onClear={() => {
+              setStartDate('');
+              setEndDate('');
+            }}
+            placeholder={t('leave.selectDateRange') || 'Select leave dates'}
+            commitMode="instant"
+          />
         </div>
         
         {/* Total Days Display */}

@@ -7,6 +7,7 @@ import MyLeaveRequests from '../components/MyLeaveRequests.jsx';
 import LeaveRequestApproval from '../components/LeaveRequestApproval.jsx';
 import LeaveConfigModal from '../components/LeaveConfigModal.jsx';
 import ManualLeaveCreateModal from '../components/ManualLeaveCreateModal.jsx';
+import DateRangePicker from '../components/DateRangePicker.jsx';
 
 import { API } from '../config/api.js';
 import { formatShortDate, parseLocalDate, toYMD } from '../utils/timezone.js';
@@ -502,33 +503,18 @@ export default function LeaveManagement() {
                 )}
 
                 {/* Dates */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="form-group">
-                    <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
-                      {t('leave.startDate')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={newRequest.start_date}
-                      onChange={(e) => setNewRequest({...newRequest, start_date: e.target.value})}
-                      required
-                      className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
-                      {t('leave.endDate')} <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={newRequest.end_date}
-                      onChange={(e) => setNewRequest({...newRequest, end_date: e.target.value})}
-                      required
-                      className="rounded-tahoe-input px-3 py-2 w-full transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                    />
-                  </div>
+                <div className="form-group">
+                  <label className="text-sm font-medium text-tahoe-text-primary mb-2 block">
+                    {t('leave.startDate')} / {t('leave.endDate')} <span className="text-red-500">*</span>
+                  </label>
+                  <DateRangePicker
+                    startYmd={newRequest.start_date}
+                    endYmd={newRequest.end_date}
+                    onApply={({ startYmd, endYmd }) => setNewRequest({...newRequest, start_date: startYmd, end_date: endYmd})}
+                    onClear={() => setNewRequest({...newRequest, start_date: '', end_date: ''})}
+                    placeholder={t('leave.selectDateRange') || 'Select leave dates'}
+                    commitMode="instant"
+                  />
                 </div>
 
                 {/* Show calculated days */}

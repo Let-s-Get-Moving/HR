@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { formatShortDate, parseLocalDate } from '../utils/timezone.js';
 import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
+import DatePicker from '../components/DatePicker.jsx';
 
 export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   const { t } = useTranslation();
@@ -660,13 +661,13 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
             <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.hireDate')}</div>
             {isEditing ? (
-              <input
-                type="date"
-                value={editData.hire_date || ''}
-                onChange={(e) => setEditData({...editData, hire_date: e.target.value})}
-                className="rounded-tahoe-input px-2 py-1 w-full mt-1 transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-              />
+              <div className="mt-1">
+                <DatePicker
+                  valueYmd={editData.hire_date || ''}
+                  onChangeYmd={(ymd) => setEditData({...editData, hire_date: ymd})}
+                  placeholder={t('employeeProfile.hireDate')}
+                />
+              </div>
             ) : (
               <div className="font-medium text-tahoe-text-primary">{formatShortDate(employee.hire_date)}</div>
             )}
@@ -873,16 +874,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <span className="text-tahoe-text-primary">{employee.gender || t('employeeProfile.notSpecified')}</span>
                   )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-tahoe-text-muted">{t('employeeProfile.birthDate')}:</span>
                   {isEditing ? (
-                    <input
-                      type="date"
-                      value={editData.birth_date || ''}
-                      onChange={(e) => setEditData({...editData, birth_date: e.target.value})}
-                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
-                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                    />
+                    <div className="min-w-[180px]">
+                      <DatePicker
+                        valueYmd={editData.birth_date || ''}
+                        onChangeYmd={(ymd) => setEditData({...editData, birth_date: ymd})}
+                        placeholder={t('employeeProfile.birthDate')}
+                      />
+                    </div>
                   ) : (
                     <span>
                       {employee.birth_date && employee.birth_date !== 'Invalid Date' 
@@ -908,15 +909,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
               <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.employmentDetails')}</h3>
               <div className="space-y-3">
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-tahoe-text-muted">{t('employeeProfile.hireDate')}:</span>
                   {isEditing ? (
-                    <input
-                      type="date"
-                      value={editData.hire_date || ''}
-                      onChange={(e) => setEditData({...editData, hire_date: e.target.value})}
-                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
-                    />
+                    <div className="min-w-[180px]">
+                      <DatePicker
+                        valueYmd={editData.hire_date || ''}
+                        onChangeYmd={(ymd) => setEditData({...editData, hire_date: ymd})}
+                        placeholder={t('employeeProfile.hireDate')}
+                      />
+                    </div>
                   ) : (
                     <span>{employee.hire_date ? formatShortDate(employee.hire_date) : t('employeeProfile.notSet')}</span>
                   )}
@@ -977,15 +979,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                     <span>{employee.location_name || t('employeeProfile.notAssigned')}</span>
                   )}
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-tahoe-text-muted">{t('employeeProfile.probationEnd')}:</span>
                   {isEditing ? (
-                    <input
-                      type="date"
-                      value={editData.probation_end || ''}
-                      onChange={(e) => setEditData({...editData, probation_end: e.target.value})}
-                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
-                    />
+                    <div className="min-w-[180px]">
+                      <DatePicker
+                        valueYmd={editData.probation_end || ''}
+                        onChangeYmd={(ymd) => setEditData({...editData, probation_end: ymd})}
+                        placeholder={t('employeeProfile.probationEnd')}
+                      />
+                    </div>
                   ) : (
                     <span>{employee.probation_end ? formatShortDate(employee.probation_end) : t('employeeProfile.notSet')}</span>
                   )}
@@ -1224,15 +1227,16 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   )}
                 </div>
                 {(employee.contract_signed_date || isEditing) && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span className="text-tahoe-text-muted">{t('employeeProfile.signedOn')}:</span>
                     {isEditing ? (
-                      <input
-                        type="date"
-                        value={editData.contract_signed_date || ''}
-                        onChange={(e) => setEditData({...editData, contract_signed_date: e.target.value})}
-                        className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
-                      />
+                      <div className="min-w-[180px]">
+                        <DatePicker
+                          valueYmd={editData.contract_signed_date || ''}
+                          onChangeYmd={(ymd) => setEditData({...editData, contract_signed_date: ymd})}
+                          placeholder={t('employeeProfile.signedOn')}
+                        />
+                      </div>
                     ) : (
                       <span>{formatShortDate(employee.contract_signed_date)}</span>
                     )}
@@ -1901,11 +1905,10 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               <div>
                 <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.sinExpiryDate')}</div>
                 {isEditing ? (
-                  <input
-                    type="date"
-                    value={editData.sin_expiry_date ? editData.sin_expiry_date.split('T')[0] : ''}
-                    onChange={(e) => setEditData({...editData, sin_expiry_date: e.target.value})}
-                    className="w-full px-3 py-2 rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent-lg focus:outline-none focus:border-indigo-500"
+                  <DatePicker
+                    valueYmd={editData.sin_expiry_date ? editData.sin_expiry_date.split('T')[0] : ''}
+                    onChangeYmd={(ymd) => setEditData({...editData, sin_expiry_date: ymd})}
+                    placeholder={t('employeeProfile.sinExpiryDate')}
                   />
                 ) : (
                   <div>

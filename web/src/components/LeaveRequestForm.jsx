@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { parseLocalDate } from '../utils/timezone.js';
+import DateRangePicker from './DateRangePicker.jsx';
 
 const LEAVE_TYPES = [
   'Vacation',
@@ -149,35 +150,18 @@ export default function LeaveRequestForm({ onRequestSubmitted }) {
           </div>
 
           {/* Date Range */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
-                Start Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="start_date"
-                value={formData.start_date}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
-                End Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="end_date"
-                value={formData.end_date}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                required
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
+              Leave Dates <span className="text-red-500">*</span>
+            </label>
+            <DateRangePicker
+              startYmd={formData.start_date}
+              endYmd={formData.end_date}
+              onApply={({ startYmd, endYmd }) => setFormData(prev => ({...prev, start_date: startYmd, end_date: endYmd}))}
+              onClear={() => setFormData(prev => ({...prev, start_date: '', end_date: ''}))}
+              placeholder={t('leave.selectDateRange') || 'Select leave dates'}
+              commitMode="instant"
+            />
           </div>
 
           {/* Reason */}

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { formatShortDate } from '../utils/timezone.js';
 import { useUserRole } from '../hooks/useUserRole.js';
+import DatePicker from './DatePicker.jsx';
 
 export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
   const { userRole } = useUserRole();
@@ -277,12 +278,11 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.terminationDate')} *</label>
-                <input
-                  type="date"
+                <DatePicker
+                  valueYmd={formData.termination_date}
+                  onChangeYmd={(ymd) => setFormData({...formData, termination_date: ymd})}
+                  placeholder={t('employeeOffboarding.terminationDate')}
                   required
-                  value={formData.termination_date}
-                  onChange={(e) => setFormData({...formData, termination_date: e.target.value})}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
                 />
               </div>
               <div>
@@ -358,11 +358,10 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.lastWorkingDay')}</label>
-                <input
-                  type="date"
-                  value={formData.last_working_day}
-                  onChange={(e) => setFormData({...formData, last_working_day: e.target.value})}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                <DatePicker
+                  valueYmd={formData.last_working_day}
+                  onChangeYmd={(ymd) => setFormData({...formData, last_working_day: ymd})}
+                  placeholder={t('employeeOffboarding.lastWorkingDay')}
                 />
               </div>
             </div>
@@ -383,20 +382,18 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.finalPayDate')}</label>
-                <input
-                  type="date"
-                  value={formData.final_pay_date}
-                  onChange={(e) => setFormData({...formData, final_pay_date: e.target.value})}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                <DatePicker
+                  valueYmd={formData.final_pay_date}
+                  onChangeYmd={(ymd) => setFormData({...formData, final_pay_date: ymd})}
+                  placeholder={t('employeeOffboarding.finalPayDate')}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.benefitsEndDate')}</label>
-                <input
-                  type="date"
-                  value={formData.benefits_end_date}
-                  onChange={(e) => setFormData({...formData, benefits_end_date: e.target.value})}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                <DatePicker
+                  valueYmd={formData.benefits_end_date}
+                  onChangeYmd={(ymd) => setFormData({...formData, benefits_end_date: ymd})}
+                  placeholder={t('employeeOffboarding.benefitsEndDate')}
                 />
               </div>
             </div>
@@ -464,11 +461,10 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.exitInterviewDate')}</label>
-                <input
-                  type="date"
-                  value={formData.exit_interview_date}
-                  onChange={(e) => setFormData({...formData, exit_interview_date: e.target.value})}
-                  className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                <DatePicker
+                  valueYmd={formData.exit_interview_date}
+                  onChangeYmd={(ymd) => setFormData({...formData, exit_interview_date: ymd})}
+                  placeholder={t('employeeOffboarding.exitInterviewDate')}
                 />
               </div>
               <div>
@@ -509,12 +505,10 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.returnDate')}</label>
-                  <input
-                    type="date"
-                    value={formData.equipment_return_date}
-                    onChange={(e) => setFormData({...formData, equipment_return_date: e.target.value})}
-                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                  <DatePicker
+                    valueYmd={formData.equipment_return_date}
+                    onChangeYmd={(ymd) => setFormData({...formData, equipment_return_date: ymd})}
+                    placeholder={t('employeeOffboarding.returnDate')}
                   />
                 </div>
               </div>
@@ -545,12 +539,10 @@ export default function EmployeeOffboarding({ employee, onClose, onSuccess }) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">{t('employeeOffboarding.revocationDate')}</label>
-                  <input
-                    type="date"
-                    value={formData.access_revoked_date}
-                    onChange={(e) => setFormData({...formData, access_revoked_date: e.target.value})}
-                    className="w-full px-3 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                  <DatePicker
+                    valueYmd={formData.access_revoked_date}
+                    onChangeYmd={(ymd) => setFormData({...formData, access_revoked_date: ymd})}
+                    placeholder={t('employeeOffboarding.revocationDate')}
                   />
                 </div>
               </div>

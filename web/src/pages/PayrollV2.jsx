@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { API } from '../config/api.js';
 import { formatShortDate, toYMD } from '../utils/timezone.js';
+import DateRangePicker from '../components/DateRangePicker.jsx';
 
 export default function PayrollV2() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -103,12 +104,16 @@ export default function PayrollV2() {
     }
   };
 
-  const applyDateFilter = async () => {
+  const applyDateFilter = async (filterStartDate, filterEndDate) => {
+    // Use provided values or fall back to state
+    const start = filterStartDate !== undefined ? filterStartDate : startDate;
+    const end = filterEndDate !== undefined ? filterEndDate : endDate;
+    
     try {
       setLoading(true);
       let url = "/api/payroll-simple/calculate-live?";
-      if (startDate) url += `pay_period_start=${startDate}&`;
-      if (endDate) url += `pay_period_end=${endDate}`;
+      if (start) url += `pay_period_start=${start}&`;
+      if (end) url += `pay_period_end=${end}`;
       
       const filteredData = await API(url).catch(() => []);
       setPayrolls(filteredData);
@@ -395,35 +400,20 @@ export default function PayrollV2() {
             <div className="rounded-tahoe-input border p-4">
               <div className="flex items-end gap-4">
                 <div className="flex-1">
-                  <label className="block text-sm font-medium mb-2">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full rounded-tahoe-input border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                  <label className="block text-sm font-medium mb-2">Filter by Date Range</label>
+                  <DateRangePicker
+                    startYmd={startDate}
+                    endYmd={endDate}
+                    onApply={({ startYmd, endYmd }) => {
+                      setStartDate(startYmd);
+                      setEndDate(endYmd);
+                      applyDateFilter(startYmd, endYmd);
+                    }}
+                    onClear={clearDateFilter}
+                    placeholder="Select date range to filter"
+                    commitMode="instant"
                   />
                 </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium mb-2">End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full rounded-tahoe-input border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-                  />
-                </div>
-                <button
-                  onClick={applyDateFilter}
-                  className="btn-primary"
-                >
-                  Apply Filter
-                </button>
-                <button
-                  onClick={clearDateFilter}
-                  className="px-6 py-2 bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover rounded-lg font-medium"
-                >
-                  Clear
-                </button>
               </div>
             </div>
 

@@ -9,6 +9,8 @@ import {
   UploadDetailView, 
   EmployeeTimecardView
 } from '../components/TimecardUploadViewer.jsx';
+import DateRangePicker from '../components/DateRangePicker.jsx';
+import DatePicker from '../components/DatePicker.jsx';
 
 export default function TimeTracking() {
   const { t } = useTranslation();
@@ -992,27 +994,22 @@ function UploadModal({ uploadFile, uploadStatus, manualPeriodStart, manualPeriod
             </div>
 
             {/* Manual Period Override */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.uploadModal.periodStartOptional')}</label>
-                <input
-                  type="date"
-                  value={manualPeriodStart}
-                  onChange={(e) => setManualPeriodStart(e.target.value)}
-                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                />
-              </div>
-                <div>
-                <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.uploadModal.periodEndOptional')}</label>
-                <input
-                  type="date"
-                  value={manualPeriodEnd}
-                  onChange={(e) => setManualPeriodEnd(e.target.value)}
-                  className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
-                  />
-                </div>
+            <div>
+              <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.uploadModal.periodStartOptional')} / {t('timeTracking.uploadModal.periodEndOptional')}</label>
+              <DateRangePicker
+                startYmd={manualPeriodStart}
+                endYmd={manualPeriodEnd}
+                onApply={({ startYmd, endYmd }) => {
+                  setManualPeriodStart(startYmd);
+                  setManualPeriodEnd(endYmd);
+                }}
+                onClear={() => {
+                  setManualPeriodStart('');
+                  setManualPeriodEnd('');
+                }}
+                placeholder="Optional: Override detected period"
+                commitMode="instant"
+              />
             </div>
 
             {/* Status Message */}
@@ -1179,11 +1176,10 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
           <div className="flex-1 w-full sm:w-auto">
             <label className="block text-sm font-medium mb-2 text-primary">{t('timeTracking.selectDate')}</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => onDateChange(e.target.value)}
-              className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-primary"
+            <DatePicker
+              valueYmd={selectedDate}
+              onChangeYmd={onDateChange}
+              placeholder={t('timeTracking.selectDate')}
             />
           </div>
           <div className="text-sm text-secondary">

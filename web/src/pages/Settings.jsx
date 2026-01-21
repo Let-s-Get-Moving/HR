@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { API } from '../config/api.js';
 import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
 import LeaveConfigModal from '../components/LeaveConfigModal.jsx';
+import DatePicker from '../components/DatePicker.jsx';
 
 // CleanupButton component COMPLETELY REMOVED
 // This component was causing accidental data deletion and has been permanently removed
@@ -1341,7 +1342,7 @@ export default function Settings() {
   // Add new holiday
   const handleAddHoliday = async (e) => {
     e.preventDefault();
-    const date = holidayInputRefs.current.date?.value || '';
+    const date = newHoliday.date || '';
     const description = holidayInputRefs.current.description?.value?.trim() || '';
     
     if (!date || !description) {
@@ -1370,7 +1371,7 @@ export default function Settings() {
       });
 
       // Clear inputs
-      if (holidayInputRefs.current.date) holidayInputRefs.current.date.value = '';
+      setNewHoliday({ ...newHoliday, date: '' });
       if (holidayInputRefs.current.description) holidayInputRefs.current.description.value = '';
       await loadHolidays();
     } catch (error) {
@@ -3337,11 +3338,10 @@ export default function Settings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">{t('settings.holidays.date')} *</label>
-                      <input
-                        ref={(el) => holidayInputRefs.current.date = el}
-                        type="date"
-                        defaultValue=""
-                        className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe text-white"
+                      <DatePicker
+                        valueYmd={newHoliday.date}
+                        onChangeYmd={(ymd) => setNewHoliday({...newHoliday, date: ymd})}
+                        placeholder={t('settings.holidays.date')}
                         required
                       />
                     </div>

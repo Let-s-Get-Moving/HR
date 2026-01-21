@@ -84,6 +84,7 @@ function computeNextRange(currentRange, activeEdge, clickedDate) {
  * @param {string} props.placeholder - Placeholder text when no range selected
  * @param {boolean} props.disabled - Disable the picker
  * @param {string} props.className - Additional CSS classes for the trigger button
+ * @param {'manual'|'instant'} props.commitMode - 'manual' requires Apply button, 'instant' commits when range is complete
  */
 export default function DateRangePicker({
   startYmd = '',
@@ -92,7 +93,8 @@ export default function DateRangePicker({
   onClear,
   placeholder = 'Select date range',
   disabled = false,
-  className = ''
+  className = '',
+  commitMode = 'manual'
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [pendingRange, setPendingRange] = useState({
@@ -243,6 +245,14 @@ export default function DateRangePicker({
     setPendingRange(nextRange);
     setActiveEdge(nextActiveEdge);
     setHoverDate(undefined); // Clear hover after selection
+    
+    // In instant mode, auto-apply when range is complete
+    if (commitMode === 'instant' && nextRange.from && nextRange.to && onApply) {
+      const startStr = `${nextRange.from.getFullYear()}-${String(nextRange.from.getMonth() + 1).padStart(2, '0')}-${String(nextRange.from.getDate()).padStart(2, '0')}`;
+      const endStr = `${nextRange.to.getFullYear()}-${String(nextRange.to.getMonth() + 1).padStart(2, '0')}-${String(nextRange.to.getDate()).padStart(2, '0')}`;
+      onApply({ startYmd: startStr, endYmd: endStr });
+      setIsOpen(false);
+    }
   };
   
   /**
@@ -397,23 +407,25 @@ export default function DateRangePicker({
             >
               Clear
             </button>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-4 py-1.5 text-sm rounded-lg bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover border border-tahoe-border-primary transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleApply}
-                disabled={isApplyDisabled}
-                className="px-4 py-1.5 text-sm rounded-lg bg-tahoe-accent hover:bg-tahoe-accent-hover text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Apply
-              </button>
-            </div>
+            {commitMode === 'manual' && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="px-4 py-1.5 text-sm rounded-lg bg-tahoe-bg-secondary hover:bg-tahoe-bg-hover border border-tahoe-border-primary transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApply}
+                  disabled={isApplyDisabled}
+                  className="px-4 py-1.5 text-sm rounded-lg bg-tahoe-accent hover:bg-tahoe-accent-hover text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Apply
+                </button>
+              </div>
+            )}
           </div>
         </motion.div>
       )}
