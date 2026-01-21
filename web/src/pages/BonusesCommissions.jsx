@@ -2613,13 +2613,27 @@ export default function BonusesCommissions() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl font-bold text-purple-400">{manager.commission_amount_formatted}</div>
+                    <div className="text-2xl font-bold text-purple-400">
+                      {formatCurrencyDisplay(
+                        parseFloat(manager.commission_amount || 0) +
+                        parseFloat(manager.revenue_add_ons || 0) +
+                        parseFloat(manager.booking_bonus_plus || 0) -
+                        parseFloat(manager.revenue_deductions || 0) -
+                        parseFloat(manager.booking_bonus_minus || 0)
+                      )}
+                    </div>
                     <div className="text-xs text-tahoe-text-muted">from {manager.pooled_revenue_formatted} pooled</div>
                   </div>
                 </div>
                 
                 {/* Adjustment columns for managers */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t border-tahoe-border-primary">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3 pt-3 border-t border-tahoe-border-primary">
+                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
+                    <div className="text-xs text-tahoe-text-muted">Commission</div>
+                    <div className="text-sm font-medium text-green-400">
+                      {manager.commission_amount_formatted}
+                    </div>
+                  </div>
                   <div className="p-2 bg-tahoe-bg-primary rounded text-center">
                     <div className="text-xs text-tahoe-text-muted">Rev Add Ons</div>
                     <div className="text-sm font-medium text-cyan-400">
