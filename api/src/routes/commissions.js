@@ -429,8 +429,11 @@ r.get("/summary", async (req, res) => {
       return res.status(400).json({ error: "period_month parameter is required" });
     }
     
+    // Convert YYYY-MM to YYYY-MM-01 for date comparison
+    const periodDate = `${period_month}-01`;
+    
     let whereClause = 'WHERE ecm.period_month = $1';
-    const params = [period_month];
+    const params = [periodDate];
     
     // RBAC: Users can only see their own summary
     if (req.userScope === 'own' && req.employeeId) {
@@ -467,9 +470,13 @@ r.get("/summary", async (req, res) => {
   } catch (error) {
     console.error("Error fetching commission summary:", error);
     // If table doesn't exist or other DB schema error, return default empty summary
-    if (error.message && (error.message.includes('relation') || error.message.includes('does not exist'))) {
+    if (error.message && (
+      error.message.includes('relation') || 
+      error.message.includes('does not exist') ||
+      error.message.includes('invalid input syntax')
+    )) {
       return res.json({
-        period_month,
+        period_month: req.query.period_month,
         total_employees: 0,
         total_commission_earned: 0,
         total_due: 0,
