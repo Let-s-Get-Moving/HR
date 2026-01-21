@@ -245,11 +245,16 @@ export default function DateRangePicker({
                 head_cell: 'text-tahoe-text-muted rounded-md w-9 font-normal text-xs',
                 row: 'flex w-full mt-1',
                 cell: 'relative p-0 text-center text-sm focus-within:relative focus-within:z-20',
-                day: 'h-9 w-9 p-0 font-normal transition-all cursor-pointer',
-                day_outside: 'opacity-40',
-                day_disabled: 'opacity-30 cursor-not-allowed'
-                // Range selection classes (day_selected, day_today, day_range_*) 
-                // use react-day-picker defaults - styled via CSS in index.css
+                day: 'h-9 w-9 p-0 font-normal transition-all cursor-pointer'
+              }}
+              modifiersClassNames={{
+                selected: 'tahoe-selected',
+                today: 'tahoe-today',
+                outside: 'tahoe-outside',
+                disabled: 'tahoe-disabled',
+                range_start: 'tahoe-range-start',
+                range_middle: 'tahoe-range-middle',
+                range_end: 'tahoe-range-end'
               }}
             />
           </div>
