@@ -2658,76 +2658,107 @@ export default function BonusesCommissions() {
         </h3>
         
         {salesManagerCommissions.length > 0 ? (
-          <div className="space-y-4">
-            {salesManagerCommissions.map((manager, idx) => (
-              <div key={idx} className="p-4 bg-tahoe-bg-secondary rounded-lg">
-                <div className="flex justify-between items-center mb-3">
-                  <div>
-                    <div className="font-semibold text-lg">{manager.employee_name}</div>
-                    <div className="text-sm text-tahoe-text-muted">
-                      {manager.calculation_method === 'fixed_override' ? (
-                        <span className="text-purple-400">Fixed Rate: {manager.commission_pct_override}%</span>
-                      ) : (
-                        <span>Bucket-Sum Calculation</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-purple-400">
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-left text-sm text-tahoe-text-muted border-b border-tahoe-border-primary">
+                    <th className="pb-3 font-medium">Manager</th>
+                    <th className="pb-3 font-medium text-right">Revenue (Pooled)</th>
+                    <th className="pb-3 font-medium text-right">Commission</th>
+                    <th className="pb-3 font-medium text-right text-cyan-400">Rev Add Ons</th>
+                    <th className="pb-3 font-medium text-right text-orange-400">Rev Deductions</th>
+                    <th className="pb-3 font-medium text-right text-emerald-400">Booking Bonus</th>
+                    <th className="pb-3 font-medium text-right text-rose-400">Booking Ded.</th>
+                    <th className="pb-3 font-medium text-right text-purple-300">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {salesManagerCommissions.map((manager, idx) => (
+                    <tr key={idx} className="border-b border-tahoe-border-primary/50 hover:bg-tahoe-bg-secondary/30">
+                      <td className="py-3">
+                        <div className="font-medium">{manager.employee_name}</div>
+                        <span className={`inline-block mt-1 px-2 py-0.5 text-xs rounded ${
+                          manager.calculation_method === 'fixed_override' 
+                            ? 'bg-purple-900/50 text-purple-300' 
+                            : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
+                        }`}>
+                          {manager.calculation_method === 'fixed_override' 
+                            ? `Fixed ${manager.commission_pct_override}%` 
+                            : 'Bucket'}
+                        </span>
+                      </td>
+                      <td className="py-3 text-right font-mono text-tahoe-text-muted">
+                        {manager.pooled_revenue_formatted}
+                      </td>
+                      <td className="py-3 text-right font-mono text-green-400 font-semibold">
+                        {manager.commission_amount_formatted}
+                      </td>
+                      <td className="py-3 text-right font-mono text-cyan-400">
+                        {parseFloat(manager.revenue_add_ons || 0) > 0 ? manager.revenue_add_ons_formatted : '-'}
+                      </td>
+                      <td className="py-3 text-right font-mono text-orange-400">
+                        {formatDeductionDisplay(manager.revenue_deductions)}
+                      </td>
+                      <td className="py-3 text-right font-mono text-emerald-400">
+                        {parseFloat(manager.booking_bonus_plus || 0) > 0 ? manager.booking_bonus_plus_formatted : '-'}
+                      </td>
+                      <td className="py-3 text-right font-mono text-rose-400">
+                        {formatDeductionDisplay(manager.booking_bonus_minus)}
+                      </td>
+                      <td className="py-3 text-right font-mono text-purple-300 font-semibold">
+                        {formatCurrencyDisplay(
+                          parseFloat(manager.commission_amount || 0) +
+                          parseFloat(manager.revenue_add_ons || 0) +
+                          parseFloat(manager.booking_bonus_plus || 0) -
+                          parseFloat(manager.revenue_deductions || 0) -
+                          parseFloat(manager.booking_bonus_minus || 0)
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="font-semibold bg-tahoe-bg-secondary/50">
+                    <td className="py-3" colSpan="2">Total</td>
+                    <td className="py-3 text-right text-green-400">
+                      {formatCurrencyDisplay(salesManagerCommissions.reduce((sum, m) => sum + parseFloat(m.commission_amount || 0), 0))}
+                    </td>
+                    <td className="py-3 text-right text-cyan-400">
+                      {formatCurrencyDisplay(salesManagerCommissions.reduce((sum, m) => sum + parseFloat(m.revenue_add_ons || 0), 0))}
+                    </td>
+                    <td className="py-3 text-right text-orange-400">
+                      {formatDeductionDisplay(salesManagerCommissions.reduce((sum, m) => sum + parseFloat(m.revenue_deductions || 0), 0))}
+                    </td>
+                    <td className="py-3 text-right text-emerald-400">
+                      {formatCurrencyDisplay(salesManagerCommissions.reduce((sum, m) => sum + parseFloat(m.booking_bonus_plus || 0), 0))}
+                    </td>
+                    <td className="py-3 text-right text-rose-400">
+                      {formatDeductionDisplay(salesManagerCommissions.reduce((sum, m) => sum + parseFloat(m.booking_bonus_minus || 0), 0))}
+                    </td>
+                    <td className="py-3 text-right text-purple-300 font-semibold">
                       {formatCurrencyDisplay(
-                        parseFloat(manager.commission_amount || 0) +
-                        parseFloat(manager.revenue_add_ons || 0) +
-                        parseFloat(manager.booking_bonus_plus || 0) -
-                        parseFloat(manager.revenue_deductions || 0) -
-                        parseFloat(manager.booking_bonus_minus || 0)
+                        salesManagerCommissions.reduce((sum, m) => 
+                          sum + 
+                          parseFloat(m.commission_amount || 0) +
+                          parseFloat(m.revenue_add_ons || 0) +
+                          parseFloat(m.booking_bonus_plus || 0) -
+                          parseFloat(m.revenue_deductions || 0) -
+                          parseFloat(m.booking_bonus_minus || 0)
+                        , 0)
                       )}
-                    </div>
-                    <div className="text-xs text-tahoe-text-muted">from {manager.pooled_revenue_formatted} pooled</div>
-                  </div>
-                </div>
-                
-                {/* Adjustment columns for managers */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3 pt-3 border-t border-tahoe-border-primary">
-                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
-                    <div className="text-xs text-tahoe-text-muted">Commission</div>
-                    <div className="text-sm font-medium text-green-400">
-                      {manager.commission_amount_formatted}
-                    </div>
-                  </div>
-                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
-                    <div className="text-xs text-tahoe-text-muted">Rev Add Ons</div>
-                    <div className="text-sm font-medium text-cyan-400">
-                      {parseFloat(manager.revenue_add_ons || 0) > 0 ? manager.revenue_add_ons_formatted : '-'}
-                    </div>
-                  </div>
-                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
-                    <div className="text-xs text-tahoe-text-muted">Rev Deductions</div>
-                    <div className="text-sm font-medium text-orange-400">
-                      {formatDeductionDisplay(manager.revenue_deductions)}
-                    </div>
-                  </div>
-                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
-                    <div className="text-xs text-tahoe-text-muted">Booking Bonus</div>
-                    <div className="text-sm font-medium text-emerald-400">
-                      {parseFloat(manager.booking_bonus_plus || 0) > 0 ? manager.booking_bonus_plus_formatted : '-'}
-                    </div>
-                  </div>
-                  <div className="p-2 bg-tahoe-bg-primary rounded text-center">
-                    <div className="text-xs text-tahoe-text-muted">Booking Ded.</div>
-                    <div className="text-sm font-medium text-rose-400">
-                      {formatDeductionDisplay(manager.booking_bonus_minus)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
             
             {/* Bucket breakdown - shared across all managers using bucket-sum method */}
             {(() => {
               const bucketManager = salesManagerCommissions.find(m => m.calculation_method === 'bucket_sum' && m.breakdown && m.breakdown.length > 0);
               if (!bucketManager) return null;
               return (
-                <div className="mt-4 p-4 bg-tahoe-bg-secondary rounded-lg">
+                <div className="mt-6 p-4 bg-tahoe-bg-secondary rounded-lg">
                   <div className="text-sm font-medium mb-3 text-tahoe-text-muted">Bucket Breakdown (Non-Fixed Rate Agents):</div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
                     {bucketManager.breakdown.map((bucket, bidx) => (
@@ -2742,7 +2773,7 @@ export default function BonusesCommissions() {
                 </div>
               );
             })()}
-          </div>
+          </>
         ) : (
           <div className="text-center py-8 text-tahoe-text-muted">
             <span className="text-4xl mb-2 block">📭</span>
