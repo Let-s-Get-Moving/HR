@@ -420,64 +420,120 @@ async function testBenefitsWorkflow() {
 }
 
 // ============================================
-// WORKFLOW 5: CHAT & NOTIFICATIONS
+// WORKFLOW 5: CHAT & NOTIFICATIONS (DM + Group Chats)
 // ============================================
 
 async function testChatNotificationWorkflow() {
-  logWorkflow('💬 WORKFLOW 5: Chat & Notification Integration');
+  logWorkflow('💬 WORKFLOW 5: Chat & Notification Integration (DM + Groups)');
   
-  log('1️⃣', 'Step 1: Get Available Chat Users');
+  log('1️⃣', 'Step 1: Get Available Chat Users (Company-wide)');
   const usersResponse = await apiCall('/api/chat/available-users');
-  let otherUserId = null;
+  let availableUsers = [];
   
   if (usersResponse.ok && usersResponse.data.users && usersResponse.data.users.length > 0) {
-    otherUserId = usersResponse.data.users[0].id;
-    log('✅', `Found ${usersResponse.data.users.length} available users for chat`);
+    availableUsers = usersResponse.data.users;
+    log('✅', `Found ${availableUsers.length} available users for chat (company-wide directory)`);
   } else {
     log('⚠️', 'No available users for chat (or not authenticated)');
   }
   
   await sleep(500);
   
-  log('2️⃣', 'Step 2: Create Chat Thread');
-  if (otherUserId) {
+  log('2️⃣', 'Step 2: Create DM Thread (User-to-User)');
+  if (availableUsers.length > 0) {
     const threadResponse = await apiCall('/api/chat/threads', {
       method: 'POST',
       body: JSON.stringify({
-        participant_id: otherUserId,
-        subject: 'Integration Test - Workflow Testing'
+        participant_id: availableUsers[0].id,
+        subject: 'Integration Test - DM Workflow'
       })
     });
     
     if (threadResponse.ok && threadResponse.data.thread) {
       testContext.threadId = threadResponse.data.thread.id;
-      log('✅', `Chat thread created: ID ${testContext.threadId}`);
+      log('✅', `DM thread created: ID ${testContext.threadId}`);
     } else {
-      log('⚠️', 'Chat thread creation skipped');
+      log('⚠️', `DM thread creation failed: ${threadResponse.data?.error || 'Unknown error'}`);
     }
   }
   
   await sleep(500);
   
-  log('3️⃣', 'Step 3: Send Message');
+  log('3️⃣', 'Step 3: Create Group Chat');
+  let groupThreadId = null;
+  if (availableUsers.length >= 2) {
+    const groupResponse = await apiCall('/api/chat/threads', {
+      method: 'POST',
+      body: JSON.stringify({
+        is_group: true,
+        name: 'Integration Test Group',
+        participant_ids: availableUsers.slice(0, 2).map(u => u.id),
+        subject: 'Testing group chat functionality'
+      })
+    });
+    
+    if (groupResponse.ok && groupResponse.data.thread) {
+      groupThreadId = groupResponse.data.thread.id;
+      log('✅', `Group chat created: ID ${groupThreadId}, ${groupResponse.data.thread.member_count} members`);
+    } else {
+      log('⚠️', `Group creation failed: ${groupResponse.data?.error || 'Unknown error'}`);
+    }
+  } else {
+    log('⚠️', 'Need at least 2 other users for group chat test');
+  }
+  
+  await sleep(500);
+  
+  log('4️⃣', 'Step 4: Send Message in DM');
   if (testContext.threadId) {
     const messageResponse = await apiCall(`/api/chat/threads/${testContext.threadId}/messages`, {
       method: 'POST',
       body: JSON.stringify({
-        message: 'This is an automated integration test message'
+        message: 'This is an automated DM test message'
       })
     });
     
     if (messageResponse.ok) {
-      log('✅', 'Message sent successfully');
+      log('✅', 'DM message sent successfully');
     } else {
-      log('⚠️', 'Message sending skipped');
+      log('⚠️', `DM message failed: ${messageResponse.data?.error || 'Unknown error'}`);
     }
   }
   
   await sleep(500);
   
-  log('4️⃣', 'Step 4: Check Notifications');
+  log('5️⃣', 'Step 5: Send Message in Group');
+  if (groupThreadId) {
+    const groupMsgResponse = await apiCall(`/api/chat/threads/${groupThreadId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({
+        message: 'This is an automated group test message'
+      })
+    });
+    
+    if (groupMsgResponse.ok) {
+      log('✅', 'Group message sent successfully');
+    } else {
+      log('⚠️', `Group message failed: ${groupMsgResponse.data?.error || 'Unknown error'}`);
+    }
+  }
+  
+  await sleep(500);
+  
+  log('6️⃣', 'Step 6: Get Group Members');
+  if (groupThreadId) {
+    const membersResponse = await apiCall(`/api/chat/threads/${groupThreadId}/members`);
+    
+    if (membersResponse.ok && membersResponse.data.members) {
+      log('✅', `Group has ${membersResponse.data.members.length} members`);
+    } else {
+      log('⚠️', 'Failed to fetch group members');
+    }
+  }
+  
+  await sleep(500);
+  
+  log('7️⃣', 'Step 7: Check Notifications');
   const notificationsResponse = await apiCall('/api/notifications');
   if (notificationsResponse.ok && notificationsResponse.data.notifications) {
     log('✅', `Found ${notificationsResponse.data.notifications.length} notifications`);
@@ -487,7 +543,7 @@ async function testChatNotificationWorkflow() {
   
   await sleep(500);
   
-  log('5️⃣', 'Step 5: Get Unread Count');
+  log('8️⃣', 'Step 8: Get Unread Count');
   const unreadResponse = await apiCall('/api/notifications/unread-count');
   if (unreadResponse.ok && typeof unreadResponse.data.count === 'number') {
     log('✅', `Unread notifications: ${unreadResponse.data.count}`);
@@ -497,7 +553,7 @@ async function testChatNotificationWorkflow() {
   
   await sleep(500);
   
-  log('6️⃣', 'Step 6: Mark All as Read');
+  log('9️⃣', 'Step 9: Mark All as Read');
   const markReadResponse = await apiCall('/api/notifications/mark-all-read', {
     method: 'PUT'
   });
@@ -507,7 +563,7 @@ async function testChatNotificationWorkflow() {
     log('⚠️', 'Mark all read skipped');
   }
   
-  log('🎯', 'Chat & notification workflow completed');
+  log('🎯', 'Chat & notification workflow completed (DM + Group chats)');
 }
 
 // ============================================

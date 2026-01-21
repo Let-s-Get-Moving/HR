@@ -9,15 +9,26 @@ export default function Messages({ pageParams = {} }) {
   const [selectedThread, setSelectedThread] = useState(null);
   const [highlightMessageId, setHighlightMessageId] = useState(null);
   const [showNewThreadModal, setShowNewThreadModal] = useState(false);
-  const [newThreadParticipant, setNewThreadParticipant] = useState('');
-  const [newThreadSubject, setNewThreadSubject] = useState('');
   const [availableUsers, setAvailableUsers] = useState([]);
   const [creatingThread, setCreatingThread] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [threads, setThreads] = useState([]);
+
+  // New thread modal state
+  const [threadMode, setThreadMode] = useState('direct'); // 'direct' | 'group'
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedUserIndex, setSelectedUserIndex] = useState(-1);
+  
+  // DM state
+  const [newThreadParticipant, setNewThreadParticipant] = useState('');
+  const [newThreadSubject, setNewThreadSubject] = useState('');
+  
+  // Group state
+  const [groupName, setGroupName] = useState('');
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
 
   useEffect(() => {
     const user = sessionManager.getUser();
@@ -41,52 +52,104 @@ export default function Messages({ pageParams = {} }) {
     }
   };
 
+  const resetModalState = () => {
+    setThreadMode('direct');
+    setSearchQuery('');
+    setShowSuggestions(false);
+    setSelectedUserIndex(-1);
+    setNewThreadParticipant('');
+    setNewThreadSubject('');
+    setGroupName('');
+    setSelectedParticipants([]);
+  };
+
   const handleNewThread = () => {
+    resetModalState();
     setShowNewThreadModal(true);
     loadAvailableUsers();
   };
 
   const createThread = async () => {
-    if (!newThreadParticipant) {
-      alert('Please select a participant');
-      return;
-    }
+    if (threadMode === 'direct') {
+      if (!newThreadParticipant) {
+        alert('Please select a participant');
+        return;
+      }
 
-    setCreatingThread(true);
-    try {
-      const response = await API('/api/chat/threads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          participant_id: parseInt(newThreadParticipant),
-          subject: newThreadSubject || null
-        })
-      });
+      setCreatingThread(true);
+      try {
+        const response = await API('/api/chat/threads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            participant_id: parseInt(newThreadParticipant),
+            subject: newThreadSubject || null
+          })
+        });
 
-      setSelectedThread(response.thread);
-      setShowNewThreadModal(false);
-      setNewThreadParticipant('');
-      setNewThreadSubject('');
-    } catch (error) {
-      console.error('Error creating thread:', error);
-      alert('Failed to create conversation');
-    } finally {
-      setCreatingThread(false);
+        setSelectedThread(response.thread);
+        setShowNewThreadModal(false);
+        resetModalState();
+      } catch (error) {
+        console.error('Error creating thread:', error);
+        alert('Failed to create conversation');
+      } finally {
+        setCreatingThread(false);
+      }
+    } else {
+      // Group chat
+      if (!groupName.trim()) {
+        alert('Please enter a group name');
+        return;
+      }
+      if (selectedParticipants.length < 1) {
+        alert('Please select at least one participant');
+        return;
+      }
+
+      setCreatingThread(true);
+      try {
+        const response = await API('/api/chat/threads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            is_group: true,
+            name: groupName.trim(),
+            participant_ids: selectedParticipants.map(p => p.id),
+            subject: newThreadSubject || null
+          })
+        });
+
+        setSelectedThread(response.thread);
+        setShowNewThreadModal(false);
+        resetModalState();
+      } catch (error) {
+        console.error('Error creating group:', error);
+        alert('Failed to create group');
+      } finally {
+        setCreatingThread(false);
+      }
     }
   };
 
-  // Mobile: show sidebar or chat, not both
-  const [showSidebar, setShowSidebar] = useState(true);
-  const [threads, setThreads] = useState([]);
+  const addParticipant = (user) => {
+    if (!selectedParticipants.find(p => p.id === user.id)) {
+      setSelectedParticipants([...selectedParticipants, user]);
+    }
+    setSearchQuery('');
+    setShowSuggestions(false);
+  };
 
-  // Load threads and auto-select if threadId is provided in pageParams
+  const removeParticipant = (userId) => {
+    setSelectedParticipants(selectedParticipants.filter(p => p.id !== userId));
+  };
+
   const loadThreads = async () => {
     try {
       const response = await API('/api/chat/threads');
       const loadedThreads = response.threads || [];
       setThreads(loadedThreads);
       
-      // Auto-select thread if threadId is provided
       if (pageParams.threadId && !selectedThread) {
         const threadToSelect = loadedThreads.find(t => t.id === parseInt(pageParams.threadId));
         if (threadToSelect) {
@@ -94,7 +157,6 @@ export default function Messages({ pageParams = {} }) {
           if (isMobile) {
             setShowSidebar(false);
           }
-          // Set message to highlight if provided
           if (pageParams.messageId) {
             setHighlightMessageId(parseInt(pageParams.messageId));
           }
@@ -105,14 +167,12 @@ export default function Messages({ pageParams = {} }) {
     }
   };
 
-  // Initial load - only if we need to auto-select a thread
   useEffect(() => {
     if (pageParams.threadId) {
       loadThreads();
     }
   }, []);
 
-  // Handle pageParams changes (when navigating from notification)
   useEffect(() => {
     if (pageParams.threadId) {
       const threadId = parseInt(pageParams.threadId);
@@ -126,7 +186,6 @@ export default function Messages({ pageParams = {} }) {
           setHighlightMessageId(parseInt(pageParams.messageId));
         }
       } else {
-        // Thread not loaded yet, reload threads
         loadThreads();
       }
     }
@@ -138,17 +197,25 @@ export default function Messages({ pageParams = {} }) {
     }
   }, [selectedThread, isMobile]);
 
+  const filteredUsers = availableUsers.filter(u => 
+    u.id !== currentUserId &&
+    !selectedParticipants.find(p => p.id === u.id) &&
+    (u.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     u.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     u.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     u.department?.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar - Desktop: always visible, Mobile: conditional */}
         {(showSidebar || !isMobile) && (
           <div className={`${isMobile ? 'absolute inset-0 z-10' : 'w-full lg:w-1/3 h-full'}`}>
             <ChatSidebar
               selectedThreadId={selectedThread?.id}
               onSelectThread={(thread) => {
                 setSelectedThread(thread);
-                setHighlightMessageId(null); // Clear highlight when selecting new thread
+                setHighlightMessageId(null);
                 if (isMobile) {
                   setShowSidebar(false);
                 }
@@ -158,7 +225,6 @@ export default function Messages({ pageParams = {} }) {
           </div>
         )}
 
-        {/* Chat Window - Desktop: always visible, Mobile: conditional */}
         {(!showSidebar || !isMobile) && (
           <div className={`${isMobile ? 'w-full h-full' : 'flex-1 min-h-0'}`}>
             <ChatWindow
@@ -173,6 +239,7 @@ export default function Messages({ pageParams = {} }) {
                   setHighlightMessageId(null);
                 }
               }}
+              onThreadUpdate={(updatedThread) => setSelectedThread(updatedThread)}
             />
           </div>
         )}
@@ -189,11 +256,75 @@ export default function Messages({ pageParams = {} }) {
           >
             <h3 className="text-lg font-semibold text-tahoe-text-primary mb-4">New Conversation</h3>
 
+            {/* Mode Toggle */}
+            <div className="flex mb-4 p-1 rounded-tahoe" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}>
+              <button
+                onClick={() => setThreadMode('direct')}
+                className="flex-1 py-2 px-4 rounded-tahoe text-sm font-medium transition-all duration-tahoe"
+                style={threadMode === 'direct' 
+                  ? { backgroundColor: '#0A84FF', color: '#ffffff' } 
+                  : { color: '#98989a' }}
+              >
+                Direct Message
+              </button>
+              <button
+                onClick={() => setThreadMode('group')}
+                className="flex-1 py-2 px-4 rounded-tahoe text-sm font-medium transition-all duration-tahoe"
+                style={threadMode === 'group' 
+                  ? { backgroundColor: '#0A84FF', color: '#ffffff' } 
+                  : { color: '#98989a' }}
+              >
+                Group Chat
+              </button>
+            </div>
+
             <div className="space-y-4">
+              {/* Group Name (only for groups) */}
+              {threadMode === 'group' && (
+                <div>
+                  <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
+                    Group Name
+                  </label>
+                  <input
+                    type="text"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="Enter group name..."
+                    className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
+                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                  />
+                </div>
+              )}
+
+              {/* Participant Selection */}
               <div className="relative">
                 <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
-                  Select participant
+                  {threadMode === 'direct' ? 'Select participant' : 'Add participants'}
                 </label>
+                
+                {/* Selected participants chips (for groups) */}
+                {threadMode === 'group' && selectedParticipants.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedParticipants.map(user => (
+                      <span
+                        key={user.id}
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm"
+                        style={{ backgroundColor: 'rgba(10, 132, 255, 0.2)', color: '#0A84FF' }}
+                      >
+                        {user.employee_name || `${user.first_name} ${user.last_name}`}
+                        <button
+                          onClick={() => removeParticipant(user.id)}
+                          className="ml-1 hover:text-white transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 <div className="relative">
                   <input
                     type="text"
@@ -202,82 +333,71 @@ export default function Messages({ pageParams = {} }) {
                       setSearchQuery(e.target.value);
                       setShowSuggestions(true);
                       setSelectedUserIndex(-1);
-                      if (!e.target.value) {
+                      if (!e.target.value && threadMode === 'direct') {
                         setNewThreadParticipant('');
                       }
                     }}
                     onFocus={() => setShowSuggestions(true)}
-                    onBlur={() => {
-                      // Delay to allow click on suggestion
-                      setTimeout(() => setShowSuggestions(false), 200);
-                    }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     onKeyDown={(e) => {
-                      const filtered = availableUsers.filter(u => 
-                        u.id !== currentUserId &&
-                        (u.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         u.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         u.last_name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                      );
-                      
                       if (e.key === 'ArrowDown') {
                         e.preventDefault();
                         setSelectedUserIndex(prev => 
-                          prev < filtered.length - 1 ? prev + 1 : prev
+                          prev < filteredUsers.slice(0, 10).length - 1 ? prev + 1 : prev
                         );
                       } else if (e.key === 'ArrowUp') {
                         e.preventDefault();
                         setSelectedUserIndex(prev => prev > 0 ? prev - 1 : -1);
                       } else if (e.key === 'Enter' && selectedUserIndex >= 0) {
                         e.preventDefault();
-                        const selected = filtered[selectedUserIndex];
-                        setNewThreadParticipant(selected.id.toString());
-                        setSearchQuery(selected.employee_name || `${selected.first_name} ${selected.last_name}`);
-                        setShowSuggestions(false);
+                        const selected = filteredUsers[selectedUserIndex];
+                        if (threadMode === 'direct') {
+                          setNewThreadParticipant(selected.id.toString());
+                          setSearchQuery(selected.employee_name || `${selected.first_name} ${selected.last_name}`);
+                          setShowSuggestions(false);
+                        } else {
+                          addParticipant(selected);
+                        }
                       }
                     }}
-                    placeholder="Type to search employees..."
+                    placeholder="Search employees..."
                     className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                   />
                   
-                  {/* Suggestions Dropdown */}
                   {showSuggestions && searchQuery && (
                     <div className="absolute z-50 w-full mt-1 rounded-tahoe shadow-tahoe-lg max-h-60 overflow-y-auto" style={{ backgroundColor: 'rgba(22, 22, 24, 0.95)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-                      {availableUsers
-                        .filter(u => 
-                          u.id !== currentUserId &&
-                          (u.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           u.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           u.last_name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                        )
-                        .slice(0, 10)
-                        .map((user, index) => {
-                          const displayName = user.employee_name || `${user.first_name} ${user.last_name}`;
-                          return (
-                            <button
-                              key={user.id}
-                              type="button"
-                              onClick={() => {
+                      {filteredUsers.slice(0, 10).map((user, index) => {
+                        const displayName = user.employee_name || `${user.first_name} ${user.last_name}`;
+                        return (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => {
+                              if (threadMode === 'direct') {
                                 setNewThreadParticipant(user.id.toString());
                                 setSearchQuery(displayName);
                                 setShowSuggestions(false);
-                              }}
-                              className="w-full text-left px-4 py-2 hover:bg-tahoe-bg-hover transition-all duration-tahoe"
-                              style={index === selectedUserIndex ? { backgroundColor: 'rgba(10, 132, 255, 0.1)' } : {}}
-                            >
-                              <div className="font-medium text-tahoe-text-primary">{displayName}</div>
-                              {user.role && (
-                                <div className="text-xs text-tahoe-text-muted">{user.role}</div>
+                              } else {
+                                addParticipant(user);
+                              }
+                            }}
+                            className="w-full text-left px-4 py-2 hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+                            style={index === selectedUserIndex ? { backgroundColor: 'rgba(10, 132, 255, 0.1)' } : {}}
+                          >
+                            <div className="font-medium text-tahoe-text-primary">{displayName}</div>
+                            <div className="text-xs text-tahoe-text-muted flex items-center gap-2">
+                              {user.department && <span>{user.department}</span>}
+                              {user.role && user.role !== 'user' && (
+                                <span className="px-1.5 py-0.5 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}>
+                                  {user.role}
+                                </span>
                               )}
-                            </button>
-                          );
-                        })}
-                      {availableUsers.filter(u => 
-                        u.id !== currentUserId &&
-                        (u.employee_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         u.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         u.last_name?.toLowerCase().includes(searchQuery.toLowerCase()))
-                      ).length === 0 && (
+                            </div>
+                          </button>
+                        );
+                      })}
+                      {filteredUsers.length === 0 && (
                         <div className="px-4 py-2 text-sm text-tahoe-text-muted">
                           No employees found
                         </div>
@@ -285,14 +405,17 @@ export default function Messages({ pageParams = {} }) {
                     </div>
                   )}
                 </div>
-                {newThreadParticipant && (
+
+                {/* Selected participant display (for DM) */}
+                {threadMode === 'direct' && newThreadParticipant && (
                   <div className="mt-2 text-sm text-tahoe-text-secondary">
                     Selected: {availableUsers.find(u => u.id.toString() === newThreadParticipant)?.employee_name || 
-                                `${availableUsers.find(u => u.id.toString() === newThreadParticipant)?.first_name} ${availableUsers.find(u => u.id.toString() === newThreadParticipant)?.last_name}`}
+                              `${availableUsers.find(u => u.id.toString() === newThreadParticipant)?.first_name} ${availableUsers.find(u => u.id.toString() === newThreadParticipant)?.last_name}`}
                   </div>
                 )}
               </div>
 
+              {/* Subject (optional) */}
               <div>
                 <label className="block text-sm font-medium text-tahoe-text-primary mb-2">
                   Subject (optional)
@@ -301,7 +424,7 @@ export default function Messages({ pageParams = {} }) {
                   type="text"
                   value={newThreadSubject}
                   onChange={(e) => setNewThreadSubject(e.target.value)}
-                  placeholder="e.g., Leave Request #123"
+                  placeholder="e.g., Project Discussion"
                   className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
                   style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
                 />
@@ -312,9 +435,7 @@ export default function Messages({ pageParams = {} }) {
               <button
                 onClick={() => {
                   setShowNewThreadModal(false);
-                  setNewThreadParticipant('');
-                  setNewThreadSubject('');
-                  setSearchQuery('');
+                  resetModalState();
                 }}
                 className="px-4 py-2 rounded-tahoe-pill transition-all duration-tahoe"
                 style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.12)' }}
@@ -323,11 +444,15 @@ export default function Messages({ pageParams = {} }) {
               </button>
               <button
                 onClick={createThread}
-                disabled={!newThreadParticipant || creatingThread}
+                disabled={
+                  creatingThread || 
+                  (threadMode === 'direct' && !newThreadParticipant) ||
+                  (threadMode === 'group' && (!groupName.trim() || selectedParticipants.length < 1))
+                }
                 className="px-4 py-2 rounded-tahoe-pill disabled:opacity-50 transition-all duration-tahoe"
                 style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
               >
-                {creatingThread ? 'Creating...' : 'Create'}
+                {creatingThread ? 'Creating...' : threadMode === 'group' ? 'Create Group' : 'Create'}
               </button>
             </div>
           </motion.div>
@@ -336,4 +461,3 @@ export default function Messages({ pageParams = {} }) {
     </div>
   );
 }
-

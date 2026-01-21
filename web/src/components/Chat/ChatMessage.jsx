@@ -1,6 +1,6 @@
 import ChatAttachment from './ChatAttachment.jsx';
 
-export default function ChatMessage({ message, isOwn, senderName, highlightMessageId, messageRef }) {
+export default function ChatMessage({ message, isOwn, senderName, highlightMessageId, messageRef, showSenderName = false }) {
   const formatTime = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -9,13 +9,16 @@ export default function ChatMessage({ message, isOwn, senderName, highlightMessa
 
   const isHighlighted = highlightMessageId && message.id === highlightMessageId;
 
+  // Show sender name in groups for non-own messages
+  const shouldShowSender = showSenderName && !isOwn;
+
   return (
     <div 
       ref={isHighlighted ? messageRef : null}
       className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}
     >
       <div className={`max-w-[70%] sm:max-w-[60%] ${isOwn ? 'order-2' : 'order-1'}`}>
-        {!isOwn && (
+        {shouldShowSender && (
           <p className="text-xs text-tahoe-text-muted mb-1 px-2">
             {senderName || 'Unknown'}
           </p>

@@ -44,11 +44,16 @@ const ENDPOINTS = {
     { method: 'GET', path: '/api/employees/departments', requiresAuth: true },
   ],
   
-  // Chat
+  // Chat (DM + Group Chats)
   chat: [
     { method: 'GET', path: '/api/chat/available-users', requiresAuth: true },
     { method: 'GET', path: '/api/chat/threads', requiresAuth: true },
     { method: 'POST', path: '/api/chat/threads', requiresAuth: true },
+    { method: 'GET', path: '/api/chat/threads/:id', requiresAuth: true },
+    { method: 'PUT', path: '/api/chat/threads/:id', requiresAuth: true },
+    { method: 'GET', path: '/api/chat/threads/:id/members', requiresAuth: true },
+    { method: 'POST', path: '/api/chat/threads/:id/members', requiresAuth: true },
+    { method: 'DELETE', path: '/api/chat/threads/:id/members/:userId', requiresAuth: true },
     { method: 'GET', path: '/api/chat/threads/:id/messages', requiresAuth: true },
     { method: 'POST', path: '/api/chat/threads/:id/messages', requiresAuth: true },
     { method: 'PUT', path: '/api/chat/messages/:id', requiresAuth: true },
