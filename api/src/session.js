@@ -134,6 +134,7 @@ export const requireAuth = async (req, res, next) => {
   try {
     console.log('🔍 [AUTH] Checking database for session...');
     // First check database for persistent sessions
+    // Also enforce user active status and employee status (terminated employees cannot use sessions)
     const sessionResult = await q(`
       SELECT 
         s.id, 
@@ -141,12 +142,18 @@ export const requireAuth = async (req, res, next) => {
         s.expires_at, 
         u.email, 
         u.username,
+        u.employee_id,
         COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
-        COALESCE(r.role_name, 'user') as role
+        COALESCE(r.role_name, 'user') as role,
+        e.status as employee_status
       FROM user_sessions s
       JOIN users u ON s.user_id = u.id
       LEFT JOIN hr_roles r ON u.role_id = r.id
-      WHERE s.id = $1 AND s.expires_at > NOW()
+      LEFT JOIN employees e ON u.employee_id = e.id
+      WHERE s.id = $1 
+        AND s.expires_at > NOW()
+        AND u.is_active = true
+        AND (u.employee_id IS NULL OR e.status IN ('Active', 'On Leave'))
     `, [sessionId]);
     
     console.log('🔍 [AUTH] Database query result:', sessionResult.rows.length, 'sessions found');
@@ -224,6 +231,7 @@ export const optionalAuth = async (req, res, next) => {
   if (sessionId) {
     try {
       // Check database first (like requireAuth)
+      // Also enforce user active status and employee status (terminated employees cannot use sessions)
       const sessionResult = await q(`
         SELECT 
           s.id, 
@@ -231,12 +239,18 @@ export const optionalAuth = async (req, res, next) => {
           s.expires_at, 
           u.email, 
           u.username,
+          u.employee_id,
           COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
-          COALESCE(r.role_name, 'user') as role
+          COALESCE(r.role_name, 'user') as role,
+          e.status as employee_status
         FROM user_sessions s
         JOIN users u ON s.user_id = u.id
         LEFT JOIN hr_roles r ON u.role_id = r.id
-        WHERE s.id = $1 AND s.expires_at > NOW()
+        LEFT JOIN employees e ON u.employee_id = e.id
+        WHERE s.id = $1 
+          AND s.expires_at > NOW()
+          AND u.is_active = true
+          AND (u.employee_id IS NULL OR e.status IN ('Active', 'On Leave'))
       `, [sessionId]);
       
       if (sessionResult.rows.length > 0) {

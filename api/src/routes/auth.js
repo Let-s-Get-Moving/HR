@@ -19,17 +19,20 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     
     console.log('Login attempt:', username);
     
-    // Check if user exists (lookup by username or email)
+    // Check if user exists and employee status allows login
+    // Terminated employees cannot log in; Active and On Leave can
     const userResult = await q(`
       SELECT u.id, u.email, u.username, u.password_hash, u.is_active,
              COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
              COALESCE(r.role_name, 'user') as role,
              u.employee_id,
-             e.sales_role
+             e.sales_role, e.status as employee_status
       FROM users u
       LEFT JOIN hr_roles r ON u.role_id = r.id
       LEFT JOIN employees e ON u.employee_id = e.id
-      WHERE (u.username = $1 OR u.email = $1) AND u.is_active = true
+      WHERE (u.username = $1 OR u.email = $1) 
+        AND u.is_active = true
+        AND (u.employee_id IS NULL OR e.status IN ('Active', 'On Leave'))
       LIMIT 1
     `, [username]);
     
@@ -158,22 +161,25 @@ r.get("/session", async (req, res) => {
   }
   
   try {
-    // Check database
+    // Check database - also enforce user active status and employee status (terminated employees denied)
     const sessionResult = await q(`
       SELECT s.id, s.user_id, s.expires_at, u.email, u.username,
              COALESCE(u.first_name || ' ' || u.last_name, u.username) as full_name,
              COALESCE(r.role_name, 'user') as role,
              u.employee_id,
-             e.sales_role
+             e.sales_role, e.status as employee_status
       FROM user_sessions s
       JOIN users u ON s.user_id = u.id
       LEFT JOIN hr_roles r ON u.role_id = r.id
       LEFT JOIN employees e ON u.employee_id = e.id
-      WHERE s.id = $1 AND s.expires_at > NOW()
+      WHERE s.id = $1 
+        AND s.expires_at > NOW()
+        AND u.is_active = true
+        AND (u.employee_id IS NULL OR e.status IN ('Active', 'On Leave'))
     `, [sessionId]);
     
     if (sessionResult.rows.length === 0) {
-      return res.status(401).json({ error: "Session expired" });
+      return res.status(401).json({ error: "Session expired or access denied" });
     }
     
     const session = sessionResult.rows[0];
