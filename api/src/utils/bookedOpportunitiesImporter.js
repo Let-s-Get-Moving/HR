@@ -12,6 +12,7 @@
  *   - Upserts by quote_id (extracted from "Quote #" column)
  *   - Service Date is required and used for period filtering
  *   - Invoiced Amount is the authoritative value for calculations
+ *   - US branch invoiced amounts (🇺🇸 in Branch Name) are converted from USD to CAD
  */
 
 import { pool } from '../db.js';
@@ -29,6 +30,57 @@ const EXPECTED_HEADERS = [
     'Service Date',
     'Invoiced Amount'
 ];
+
+// ============================================================================
+// Currency Conversion Constants and Functions
+// ============================================================================
+
+/** Fixed USD to CAD exchange rate */
+const USD_TO_CAD_RATE = 1.25;
+
+/** US flag emoji for branch detection */
+const US_FLAG = '🇺🇸';
+
+/** Canadian flag emoji for branch detection */
+const CA_FLAG = '🇨🇦';
+
+/**
+ * Detect if a branch is US-based by checking for US flag emoji in branch name.
+ * 
+ * @param {string|null} branchName - The branch name string (e.g., "NASHVILLE 🇺🇸 - Let's Get Moving")
+ * @returns {{ isUS: boolean, isCA: boolean, hasBothFlags: boolean }}
+ */
+export function detectBranchCurrency(branchName) {
+    if (!branchName) {
+        return { isUS: false, isCA: false, hasBothFlags: false };
+    }
+    
+    const hasUSFlag = branchName.includes(US_FLAG);
+    const hasCAFlag = branchName.includes(CA_FLAG);
+    
+    return {
+        isUS: hasUSFlag && !hasCAFlag,
+        isCA: hasCAFlag && !hasUSFlag,
+        hasBothFlags: hasUSFlag && hasCAFlag
+    };
+}
+
+/**
+ * Convert USD amount to CAD using fixed exchange rate.
+ * Rounds to 2 decimal places (cents).
+ * 
+ * @param {number|null} amountUSD - Amount in USD
+ * @returns {number|null} - Amount in CAD, or null if input is null
+ */
+export function convertUsdToCad(amountUSD) {
+    if (amountUSD === null || amountUSD === undefined) {
+        return null;
+    }
+    
+    const amountCAD = amountUSD * USD_TO_CAD_RATE;
+    // Round to 2 decimal places (cents)
+    return Math.round(amountCAD * 100) / 100;
+}
 
 /**
  * Extract quote ID from "Quote #" cell
@@ -264,7 +316,20 @@ export async function importBookedOpportunitiesFromExcel(fileBuffer, filename, s
                 const statusNorm = normalizeStatus(statusRaw);
                 const bookedDate = parseDate(bookedDateRaw);
                 const estimatedAmount = parseMoney(estimatedAmountRaw);
-                const invoicedAmount = parseMoney(invoicedAmountRaw);
+                let invoicedAmount = parseMoney(invoicedAmountRaw);
+                
+                // Detect branch currency and convert USD to CAD if needed
+                const branchCurrency = detectBranchCurrency(branchName);
+                
+                if (branchCurrency.hasBothFlags) {
+                    // Ambiguous data: branch has both US and CA flags
+                    summary.addWarning(`Row ${rowNum}: Branch "${branchName}" has both US and CA flags - treating as CAD (no conversion)`);
+                }
+                
+                if (branchCurrency.isUS && invoicedAmount !== null) {
+                    // US branch: convert invoiced amount from USD to CAD
+                    invoicedAmount = convertUsdToCad(invoicedAmount);
+                }
                 
                 // Prepare row data
                 const rowData = {
