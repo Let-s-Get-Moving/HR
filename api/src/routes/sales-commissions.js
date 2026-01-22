@@ -77,11 +77,16 @@ r.use(requireBonusesCommissionsAccess);
  * Calculate sales commissions for a period.
  * Admin/Manager only.
  * 
- * Body: { period_start: "YYYY-MM-DD", period_end: "YYYY-MM-DD", dry_run?: boolean }
+ * Revenue now comes from Booked Opportunities (service_date filtered).
+ * Booking percentage still comes from Sales Performance staging.
+ * 
+ * Body: { period_start: "YYYY-MM-DD", period_end: "YYYY-MM-DD", dry_run?: boolean, force?: boolean }
+ * 
+ * force=true bypasses the warning when BO data is missing (calculates with revenue=0)
  */
 r.post("/calculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
     try {
-        const { period_start, period_end, dry_run = false } = req.body;
+        const { period_start, period_end, dry_run = false, force = false } = req.body;
         
         // Validate required fields
         if (!period_start || !period_end) {
@@ -100,7 +105,7 @@ r.post("/calculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), asy
             });
         }
         
-        // Check if staging data exists for this period
+        // Check if staging data exists for this period (booking_pct source)
         const stagingCheck = await q(`
             SELECT COUNT(*) as count 
             FROM sales_performance_staging 
@@ -110,11 +115,37 @@ r.post("/calculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), asy
         if (parseInt(stagingCheck.rows[0].count) === 0) {
             return res.status(400).json({
                 error: "No staging data found",
-                details: `No sales performance data has been imported for period ${period_start} to ${period_end}. Please import data first.`
+                details: `No sales performance data has been imported for period ${period_start} to ${period_end}. Please import Sales Performance data first (provides booking percentages).`
             });
         }
         
+        // Check if Booked Opportunities data exists for this period (revenue source)
+        const boCheck = await q(`
+            SELECT COUNT(*) as count,
+                   COALESCE(SUM(invoiced_amount), 0) as total_revenue
+            FROM sales_booked_opportunities_quotes 
+            WHERE service_date >= $1 AND service_date <= $2
+              AND invoiced_amount IS NOT NULL
+        `, [period_start, period_end]);
+        
+        const boCount = parseInt(boCheck.rows[0].count) || 0;
+        const boTotalRevenue = parseFloat(boCheck.rows[0].total_revenue) || 0;
+        
+        if (boCount === 0 && !force) {
+            return res.status(400).json({
+                error: "No Booked Opportunities data found",
+                details: `No Booked Opportunities with invoiced_amount found for service_date range ${period_start} to ${period_end}. Revenue will be $0 for all agents. Either import Booked Opportunities data, or pass force=true to calculate anyway.`,
+                hint: "Revenue now comes from Booked Opportunities (invoiced_amount), not from Sales Performance staging."
+            });
+        }
+        
+        // Log warning if BO data is sparse
+        if (boCount > 0 && boCount < 10) {
+            console.log(`⚠️ [SALES-COMM] Warning: Only ${boCount} Booked Opportunities quotes with invoiced_amount for period ${period_start} to ${period_end}`);
+        }
+        
         console.log(`📊 [SALES-COMM] Starting calculation for ${period_start} to ${period_end} (dry_run: ${dry_run})`);
+        console.log(`📊 [SALES-COMM] Staging rows: ${stagingCheck.rows[0].count}, BO quotes: ${boCount}, BO revenue: $${boTotalRevenue.toFixed(2)}`);
         
         // Get the user's employee ID for audit
         const calculatedBy = req.employeeId || null;
@@ -127,10 +158,17 @@ r.post("/calculate", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADMIN]), asy
         
         console.log(`✅ [SALES-COMM] Calculation complete`);
         
+        // Build response message based on warnings
+        let message = dry_run 
+            ? "Dry run completed - no data was saved"
+            : "Commission calculation completed successfully";
+        
+        if (summary.warnings.salesPerfNoBO.length > 0) {
+            message += ` (${summary.warnings.salesPerfNoBO.length} agents have booking% but no BO revenue)`;
+        }
+        
         res.json({
-            message: dry_run 
-                ? "Dry run completed - no data was saved"
-                : "Commission calculation completed successfully",
+            message,
             summary
         });
         

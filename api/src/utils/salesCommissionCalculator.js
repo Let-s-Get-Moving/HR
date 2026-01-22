@@ -5,23 +5,33 @@
  * Uses strict nickname matching - Sales employees (agents AND managers) with matching
  * nicknames are resolved. Terminated employees are also matched (they may have commission owed).
  * 
+ * REVENUE SOURCE (v2):
+ *   Revenue now comes from Booked Opportunities (sales_booked_opportunities_quotes.invoiced_amount)
+ *   filtered by service_date within the commission period, NOT from Sales Performance staging.
+ *   Sales Performance staging is still used for booking_pct only.
+ *   US branch amounts are already normalized to CAD at import time (×1.25).
+ * 
  * Matching:
  *   - Employees must be in Sales department with sales_commission_enabled=true
  *   - sales_role can be 'agent', 'manager', or 'international_closer' (all matched by nickname)
  *   - international_closer is functionally identical to agent for commission calculations
- *   - Rows with booked_total <= 0 are skipped entirely (no match/unmatch, no pooled revenue)
+ *   - Rows with booking_pct only but no BO revenue: revenue=0, still assigned to bucket
  * 
  * Agent Rules (personal):
  *   Employees with sales_role='agent' or 'international_closer' get personal commissions.
- *   Based on individual booking_pct and revenue (booked_total).
+ *   Based on individual booking_pct (from Sales Performance) and revenue (from Booked Opportunities).
  *   Rate: 3.5% - 6% depending on thresholds.
  *   >55% booking + >$250k revenue = 6% + vacation package up to $5000
  * 
  * Manager Rules (bucket-sum):
- *   All non-zero staging rows (matched agents + matched managers + unmatched) contribute
- *   to pooled revenue for manager commission.
+ *   All agents with booking_pct contribute to pooled revenue for manager commission.
+ *   Revenue for each agent comes from Booked Opportunities.
  *   Manager gets sum of (agent_revenue * bucket_rate) for each booking% bucket.
  *   Fixed percentage override available (e.g., Sam Lopka: 0.7% of total pooled revenue).
+ * 
+ * Warnings:
+ *   - salesPerfNoBO: Agents with booking_pct in Sales Performance but no BO revenue
+ *   - boUnmatchedSalesPerson: BO rows with sales_person_raw that couldn't be matched to any employee
  */
 
 import { pool } from '../db.js';
@@ -118,27 +128,196 @@ export function computeManagerBucketRate(bookingPct) {
 }
 
 // ============================================================================
+// Booked Opportunities Revenue Functions
+// ============================================================================
+
+/** US flag emoji for branch detection */
+const US_FLAG = '🇺🇸';
+
+/**
+ * Get aggregated revenue from Booked Opportunities by employee.
+ * 
+ * Queries sales_booked_opportunities_quotes filtered by service_date within period
+ * and invoiced_amount IS NOT NULL. Maps sales_person_raw to employee_id via
+ * normalize_nickname() matching against employee nicknames.
+ * 
+ * @param {Object} client - Database client
+ * @param {string} periodStart - Period start date (YYYY-MM-DD)
+ * @param {string} periodEnd - Period end date (YYYY-MM-DD)
+ * @returns {Promise<{
+ *   revenueByEmployee: Map<number, { revenue_cad_total: number, revenue_us_flagged_total: number, revenue_non_us_total: number, quote_count: number }>,
+ *   unmatchedSalesPersons: Array<{ sales_person_raw: string, quote_count: number, total_revenue: number }>
+ * }>}
+ */
+async function getBookedOpportunitiesRevenueByEmployee(client, periodStart, periodEnd) {
+    // Get all BO quotes within the period with invoiced_amount
+    const boResult = await client.query(`
+        SELECT 
+            bo.sales_person_raw,
+            bo.branch_name,
+            bo.invoiced_amount,
+            bo.quote_id
+        FROM sales_booked_opportunities_quotes bo
+        WHERE bo.service_date >= $1 
+          AND bo.service_date <= $2
+          AND bo.invoiced_amount IS NOT NULL
+    `, [periodStart, periodEnd]);
+    
+    const boRows = boResult.rows;
+    
+    if (boRows.length === 0) {
+        return {
+            revenueByEmployee: new Map(),
+            unmatchedSalesPersons: [],
+            totalQuotes: 0,
+            totalRevenue: 0,
+            totalUsRevenue: 0,
+            totalNonUsRevenue: 0
+        };
+    }
+    
+    // Get all enabled sales employees with their normalized nicknames
+    const employeesResult = await client.query(`
+        SELECT e.id, e.first_name, e.last_name, e.sales_role,
+               e.nickname, e.nickname_2, e.nickname_3,
+               normalize_nickname(e.nickname) AS nickname_key_1,
+               normalize_nickname(e.nickname_2) AS nickname_key_2,
+               normalize_nickname(e.nickname_3) AS nickname_key_3
+        FROM employees e
+        JOIN departments d ON e.department_id = d.id
+        WHERE d.name ILIKE '%sales%'
+          AND e.sales_commission_enabled = true
+          AND e.sales_role IN ('agent', 'manager', 'international_closer')
+          AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
+    `);
+    
+    // Build nickname -> employee map
+    const nicknameToEmployee = new Map();
+    for (const emp of employeesResult.rows) {
+        if (emp.nickname_key_1) {
+            nicknameToEmployee.set(emp.nickname_key_1, emp);
+        }
+        if (emp.nickname_key_2) {
+            nicknameToEmployee.set(emp.nickname_key_2, emp);
+        }
+        if (emp.nickname_key_3) {
+            nicknameToEmployee.set(emp.nickname_key_3, emp);
+        }
+    }
+    
+    // Get normalized versions of BO sales_person_raw values
+    // We need to normalize them using the same DB function
+    const uniqueSalesPersons = [...new Set(boRows.map(r => r.sales_person_raw).filter(Boolean))];
+    
+    const normalizedResult = await client.query(`
+        SELECT unnest($1::text[]) AS raw_name,
+               normalize_nickname(unnest($1::text[])) AS normalized_name
+    `, [uniqueSalesPersons]);
+    
+    const rawToNormalized = new Map();
+    for (const row of normalizedResult.rows) {
+        rawToNormalized.set(row.raw_name, row.normalized_name);
+    }
+    
+    // Aggregate revenue by employee
+    const revenueByEmployee = new Map(); // employee_id -> { revenue_cad_total, revenue_us_flagged_total, revenue_non_us_total, quote_count }
+    const unmatchedAggregates = new Map(); // sales_person_raw -> { quote_count, total_revenue }
+    
+    let totalRevenue = 0;
+    let totalUsRevenue = 0;
+    let totalNonUsRevenue = 0;
+    
+    for (const bo of boRows) {
+        const invoicedAmount = parseFloat(bo.invoiced_amount) || 0;
+        const isUSFlagged = bo.branch_name && bo.branch_name.includes(US_FLAG);
+        
+        totalRevenue += invoicedAmount;
+        if (isUSFlagged) {
+            totalUsRevenue += invoicedAmount;
+        } else {
+            totalNonUsRevenue += invoicedAmount;
+        }
+        
+        // Try to match sales_person_raw to employee
+        const normalizedName = rawToNormalized.get(bo.sales_person_raw);
+        const employee = normalizedName ? nicknameToEmployee.get(normalizedName) : null;
+        
+        if (employee) {
+            // Matched employee
+            if (!revenueByEmployee.has(employee.id)) {
+                revenueByEmployee.set(employee.id, {
+                    revenue_cad_total: 0,
+                    revenue_us_flagged_total: 0,
+                    revenue_non_us_total: 0,
+                    quote_count: 0
+                });
+            }
+            const emp = revenueByEmployee.get(employee.id);
+            emp.revenue_cad_total += invoicedAmount;
+            emp.quote_count += 1;
+            if (isUSFlagged) {
+                emp.revenue_us_flagged_total += invoicedAmount;
+            } else {
+                emp.revenue_non_us_total += invoicedAmount;
+            }
+        } else {
+            // Unmatched - aggregate by raw sales_person name
+            const key = bo.sales_person_raw || '(blank)';
+            if (!unmatchedAggregates.has(key)) {
+                unmatchedAggregates.set(key, { quote_count: 0, total_revenue: 0 });
+            }
+            const agg = unmatchedAggregates.get(key);
+            agg.quote_count += 1;
+            agg.total_revenue += invoicedAmount;
+        }
+    }
+    
+    // Convert unmatched to array
+    const unmatchedSalesPersons = Array.from(unmatchedAggregates.entries()).map(([name, data]) => ({
+        sales_person_raw: name,
+        quote_count: data.quote_count,
+        total_revenue: Math.round(data.total_revenue * 100) / 100
+    }));
+    
+    console.log(`[SalesCommission] BO Revenue: ${boRows.length} quotes, $${totalRevenue.toFixed(2)} total (US-flagged: $${totalUsRevenue.toFixed(2)}, non-US: $${totalNonUsRevenue.toFixed(2)})`);
+    console.log(`[SalesCommission] BO matched to ${revenueByEmployee.size} employees, ${unmatchedSalesPersons.length} unmatched sales persons`);
+    
+    return {
+        revenueByEmployee,
+        unmatchedSalesPersons,
+        totalQuotes: boRows.length,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
+        totalUsRevenue: Math.round(totalUsRevenue * 100) / 100,
+        totalNonUsRevenue: Math.round(totalNonUsRevenue * 100) / 100
+    };
+}
+
+// ============================================================================
 // Matching Functions
 // ============================================================================
 
 /**
  * Match staging rows to employees by any of their 3 nicknames.
+ * 
+ * NOTE: This now only provides booking_pct from staging. Revenue comes from Booked Opportunities.
+ * 
  * Matches employees with:
  * - Sales department
  * - sales_commission_enabled = true
- * - sales_role IN ('agent', 'manager')
+ * - sales_role IN ('agent', 'manager', 'international_closer')
  * - Any of (nickname, nickname_2, nickname_3) normalized matches staging.name_key
  * - Includes terminated employees (they can still have commission owed)
  * 
- * Rows with booked_total <= 0 are skipped entirely (not matched, not unmatched).
+ * Rows with booked_pct <= 0 are skipped (no booking percentage = not in commission calc).
+ * Revenue is no longer sourced from staging - it comes from Booked Opportunities.
  * 
  * @param {Object} client - Database client
  * @param {string} periodStart - Period start date (YYYY-MM-DD)
  * @param {string} periodEnd - Period end date (YYYY-MM-DD)
- * @returns {Promise<{ matched: Array, unmatched: Array, skippedZeroRevenue: number }>}
+ * @returns {Promise<{ matched: Array, unmatched: Array, skippedNoBookingPct: number }>}
  */
 async function matchAgentsToStaging(client, periodStart, periodEnd) {
-    // Get all staging rows for the period
+    // Get all staging rows for the period (booking_pct source only)
     const stagingResult = await client.query(`
         SELECT id, name_raw, name_key, booked_pct, booked_total
         FROM sales_performance_staging
@@ -179,22 +358,22 @@ async function matchAgentsToStaging(client, periodStart, periodEnd) {
         }
     }
     
-    // Match staging rows
+    // Match staging rows - now we only care about booking_pct, not revenue
     const matched = [];
     const unmatched = [];
-    let skippedZeroRevenue = 0;
+    let skippedNoBookingPct = 0;
     
     for (const staging of stagingRows) {
-        const revenue = parseFloat(staging.booked_total) || 0;
+        const bookingPct = parseFloat(staging.booked_pct) || 0;
+        const stagingRevenue = parseFloat(staging.booked_total) || 0; // Keep for reference/audit only
         
-        // Skip rows with zero or negative revenue entirely
-        if (revenue <= 0) {
-            skippedZeroRevenue++;
+        // Skip rows with zero booking_pct (they have no meaningful contribution)
+        if (bookingPct <= 0) {
+            skippedNoBookingPct++;
             continue;
         }
         
         const employee = nicknameToEmployee.get(staging.name_key);
-        const bookingPct = parseFloat(staging.booked_pct) || 0;
         
         if (employee) {
             matched.push({
@@ -204,21 +383,21 @@ async function matchAgentsToStaging(client, periodStart, periodEnd) {
                 staging_name: staging.name_raw,
                 sales_role: employee.sales_role,
                 booking_pct: bookingPct,
-                revenue: revenue
+                staging_revenue: stagingRevenue // For audit/comparison only, NOT used for commission
             });
         } else {
-            // Store full data for unmatched rows (needed for manager commission calc)
+            // Store unmatched staging row (has booking_pct but no matched employee)
             unmatched.push({
                 staging_name: staging.name_raw,
                 booking_pct: bookingPct,
-                revenue: revenue
+                staging_revenue: stagingRevenue // For audit only
             });
         }
     }
     
-    console.log(`[SalesCommission] Matched ${matched.length} employees (agents+managers), ${unmatched.length} unmatched, ${skippedZeroRevenue} skipped (zero revenue)`);
+    console.log(`[SalesCommission] Staging matched ${matched.length} employees (agents+managers), ${unmatched.length} unmatched, ${skippedNoBookingPct} skipped (no booking_pct)`);
     
-    return { matched, unmatched, skippedZeroRevenue };
+    return { matched, unmatched, skippedNoBookingPct };
 }
 
 /**
@@ -249,6 +428,9 @@ async function getSalesManagers(client) {
 /**
  * Calculate sales commissions for a period.
  * 
+ * Revenue now comes from Booked Opportunities (service_date filtered, invoiced_amount).
+ * Booking percentage still comes from Sales Performance staging.
+ * 
  * @param {string} periodStart - Period start date (YYYY-MM-DD)
  * @param {string} periodEnd - Period end date (YYYY-MM-DD)
  * @param {Object} options - { dryRun: boolean, calculatedBy: number }
@@ -265,51 +447,88 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
         period_start: periodStart,
         period_end: periodEnd,
         dry_run: dryRun,
+        // Staging stats (booking_pct source)
         total_staging_rows: 0,
         matched_agents: 0,
         matched_managers_in_staging: 0,
-        skipped_zero_revenue_rows: 0,
-        unmatched_names: [],
-        unmatched_count: 0,
+        skipped_no_booking_pct_rows: 0,
+        unmatched_staging_names: [],
+        unmatched_staging_count: 0,
+        // BO Revenue stats (revenue source)
+        bo_total_quotes: 0,
+        bo_revenue_total: 0,
+        bo_revenue_us_total: 0,
+        bo_revenue_non_us_total: 0,
+        // Commission results
         agent_commissions: [],
         manager_commissions: [],
         total_agent_commission: 0,
         total_manager_commission: 0,
         total_vacation_awards: 0,
-        // Revenue breakdown
-        total_staging_revenue: 0,
-        matched_revenue: 0,
-        unmatched_revenue: 0
+        // Pooled revenue for managers (from BO)
+        pooled_revenue: 0,
+        // Warnings for data quality
+        warnings: {
+            salesPerfNoBO: [],     // Agents with booking_pct but no BO revenue
+            boUnmatchedSalesPerson: [] // BO rows that couldn't be matched to any employee
+        }
     };
     
     try {
         await client.query('BEGIN');
         
-        // Step 1: Match staging rows to employees (agents + managers, includes terminated)
-        const { matched, unmatched, skippedZeroRevenue } = await matchAgentsToStaging(client, periodStart, periodEnd);
+        // Step 1: Match staging rows to employees (agents + managers) for booking_pct
+        const { matched, unmatched, skippedNoBookingPct } = await matchAgentsToStaging(client, periodStart, periodEnd);
         
         // Split matched into agents vs managers for different processing
         // international_closer is treated identically to agent for commission purposes
         const matchedAgents = matched.filter(m => m.sales_role === 'agent' || m.sales_role === 'international_closer');
         const matchedManagersInStaging = matched.filter(m => m.sales_role === 'manager');
         
-        summary.total_staging_rows = matched.length + unmatched.length; // excludes skipped zero-revenue
+        summary.total_staging_rows = matched.length + unmatched.length;
         summary.matched_agents = matchedAgents.length;
         summary.matched_managers_in_staging = matchedManagersInStaging.length;
-        summary.skipped_zero_revenue_rows = skippedZeroRevenue;
-        summary.unmatched_names = unmatched.map(u => u.staging_name);
-        summary.unmatched_count = unmatched.length;
+        summary.skipped_no_booking_pct_rows = skippedNoBookingPct;
+        summary.unmatched_staging_names = unmatched.map(u => u.staging_name);
+        summary.unmatched_staging_count = unmatched.length;
         
-        // Step 2: Calculate and upsert agent commissions (ONLY for sales_role='agent')
+        // Step 2: Get revenue from Booked Opportunities
+        const boRevenue = await getBookedOpportunitiesRevenueByEmployee(client, periodStart, periodEnd);
+        
+        summary.bo_total_quotes = boRevenue.totalQuotes;
+        summary.bo_revenue_total = boRevenue.totalRevenue;
+        summary.bo_revenue_us_total = boRevenue.totalUsRevenue;
+        summary.bo_revenue_non_us_total = boRevenue.totalNonUsRevenue;
+        summary.warnings.boUnmatchedSalesPerson = boRevenue.unmatchedSalesPersons;
+        
+        // Step 3: Calculate and upsert agent commissions
+        // Combine staging booking_pct with BO revenue for each agent
         for (const agent of matchedAgents) {
-            const { pct, vacationValue } = computeAgentRate(agent.booking_pct, agent.revenue);
-            const commissionAmount = (agent.revenue * pct) / 100;
+            // Get BO revenue for this agent (or 0 if none)
+            const boData = boRevenue.revenueByEmployee.get(agent.employee_id);
+            const revenue = boData ? boData.revenue_cad_total : 0;
+            
+            // Track warning if agent has booking_pct but no BO revenue
+            if (!boData || boData.revenue_cad_total === 0) {
+                summary.warnings.salesPerfNoBO.push({
+                    employee_id: agent.employee_id,
+                    employee_name: agent.employee_name,
+                    booking_pct: agent.booking_pct,
+                    staging_revenue: agent.staging_revenue // For comparison
+                });
+            }
+            
+            const { pct, vacationValue } = computeAgentRate(agent.booking_pct, revenue);
+            const commissionAmount = (revenue * pct) / 100;
             
             const agentResult = {
                 employee_id: agent.employee_id,
                 employee_name: agent.employee_name,
                 booking_pct: agent.booking_pct,
-                revenue: agent.revenue,
+                revenue: Math.round(revenue * 100) / 100,
+                revenue_us_flagged: boData ? Math.round(boData.revenue_us_flagged_total * 100) / 100 : 0,
+                revenue_non_us: boData ? Math.round(boData.revenue_non_us_total * 100) / 100 : 0,
+                quote_count: boData ? boData.quote_count : 0,
                 commission_pct: pct,
                 commission_amount: Math.round(commissionAmount * 100) / 100,
                 vacation_award_value: vacationValue
@@ -336,27 +555,40 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
                         updated_at = CURRENT_TIMESTAMP
                 `, [
                     periodStart, periodEnd, agent.employee_id, agent.staging_id,
-                    agent.booking_pct, agent.revenue, pct, agentResult.commission_amount, vacationValue
+                    agent.booking_pct, agentResult.revenue, pct, agentResult.commission_amount, vacationValue
                 ]);
             }
         }
         
-        // Step 3: Calculate manager commissions
-        // Managers get commission from ALL non-zero staging rows (matched agents + matched managers + unmatched)
+        // Step 4: Calculate manager commissions
+        // Pooled revenue = sum of all BO revenue for agents with booking_pct
         const managers = await getSalesManagers(client);
         
-        // Combine all staging rows for manager calculations (matched + unmatched, all with revenue > 0)
-        const allStagingRows = [
-            ...matched.map(a => ({ booking_pct: a.booking_pct, revenue: a.revenue })),
-            ...unmatched
-        ];
+        // Build list of all agents with booking_pct (matched from staging) + their BO revenue
+        // This includes unmatched staging names for bucket assignment, but they have revenue=0 from BO perspective
+        const allAgentsForManager = [];
         
-        const pooledRevenue = allStagingRows.reduce((sum, a) => sum + a.revenue, 0);
+        // Matched agents: use BO revenue
+        for (const agent of matched) {
+            const boData = boRevenue.revenueByEmployee.get(agent.employee_id);
+            const revenue = boData ? boData.revenue_cad_total : 0;
+            allAgentsForManager.push({
+                booking_pct: agent.booking_pct,
+                revenue: revenue
+            });
+        }
         
-        // Track revenue breakdown for transparency
-        summary.total_staging_revenue = pooledRevenue;
-        summary.matched_revenue = matched.reduce((sum, a) => sum + a.revenue, 0);
-        summary.unmatched_revenue = unmatched.reduce((sum, a) => sum + a.revenue, 0);
+        // Unmatched staging names: they have booking_pct but can't be mapped to BO
+        // Revenue = 0 for them (no employee match = can't link to BO)
+        for (const u of unmatched) {
+            allAgentsForManager.push({
+                booking_pct: u.booking_pct,
+                revenue: 0
+            });
+        }
+        
+        const pooledRevenue = allAgentsForManager.reduce((sum, a) => sum + a.revenue, 0);
+        summary.pooled_revenue = Math.round(pooledRevenue * 100) / 100;
         
         for (const manager of managers) {
             let commissionAmount = 0;
@@ -380,8 +612,8 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
                     });
                 }
                 
-                // Assign each agent to their bucket (ALL agents, not just matched)
-                for (const agent of allStagingRows) {
+                // Assign each agent to their bucket based on booking_pct, accumulate BO revenue
+                for (const agent of allAgentsForManager) {
                     const { bucket } = computeManagerBucketRate(agent.booking_pct);
                     const totals = bucketTotals.get(bucket.label);
                     totals.revenue += agent.revenue;
@@ -463,7 +695,7 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
             }
         }
         
-        // Step 4: Write audit record
+        // Step 5: Write audit record
         if (!dryRun) {
             await client.query(`
                 INSERT INTO sales_commission_calc_audit (
@@ -473,7 +705,7 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
                 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             `, [
                 periodStart, periodEnd, summary.total_staging_rows, summary.matched_agents,
-                managers.length, JSON.stringify(summary.unmatched_names),
+                managers.length, JSON.stringify(summary.unmatched_staging_names),
                 summary.total_agent_commission, summary.total_manager_commission,
                 summary.total_vacation_awards, calculatedBy, dryRun
             ]);
@@ -482,17 +714,18 @@ export async function calculateSalesCommissions(periodStart, periodEnd, options 
         await client.query('COMMIT');
         
         console.log(`[SalesCommission] Calculation complete:
-          - Total staging rows (non-zero): ${summary.total_staging_rows}
-          - Skipped zero-revenue rows: ${summary.skipped_zero_revenue_rows}
+          - Staging rows (with booking_pct): ${summary.total_staging_rows}
+          - Skipped (no booking_pct): ${summary.skipped_no_booking_pct_rows}
           - Matched agents: ${summary.matched_agents}
           - Matched managers in staging: ${summary.matched_managers_in_staging}
-          - Unmatched: ${summary.unmatched_count} (still included in manager calc)
-          - Total staging revenue: $${summary.total_staging_revenue}
-          - Matched revenue: $${summary.matched_revenue}
-          - Unmatched revenue: $${summary.unmatched_revenue}
+          - Unmatched staging names: ${summary.unmatched_staging_count}
+          - BO quotes: ${summary.bo_total_quotes}
+          - BO revenue (CAD): $${summary.bo_revenue_total} (US-flagged: $${summary.bo_revenue_us_total}, non-US: $${summary.bo_revenue_non_us_total})
+          - Pooled revenue: $${summary.pooled_revenue}
           - Total agent commission: $${summary.total_agent_commission}
           - Total manager commission: $${summary.total_manager_commission}
-          - Total vacation awards: $${summary.total_vacation_awards}`);
+          - Total vacation awards: $${summary.total_vacation_awards}
+          - Warnings: ${summary.warnings.salesPerfNoBO.length} agents with no BO revenue, ${summary.warnings.boUnmatchedSalesPerson.length} unmatched BO sales persons`);
         
     } catch (error) {
         await client.query('ROLLBACK');
