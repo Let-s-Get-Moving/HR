@@ -1,3 +1,6 @@
+> **LEGACY DOCUMENT**
+> This document is outdated. See [backend/routes/payroll-v2.md](./backend/routes/payroll-v2.md) and [frontend/pages/payroll-v2.md](./frontend/pages/payroll-v2.md) for current documentation.
+
 # Payroll System V2 - Automated Timecard-Based Payroll
 
 ## Overview

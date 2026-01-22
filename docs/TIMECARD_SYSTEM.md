@@ -1,3 +1,6 @@
+> **LEGACY DOCUMENT**
+> This document is outdated. See [backend/routes/timecards.md](./backend/routes/timecards.md) and [frontend/pages/time-tracking.md](./frontend/pages/time-tracking.md) for current documentation.
+
 # Timecard System Implementation
 
 ## Overview

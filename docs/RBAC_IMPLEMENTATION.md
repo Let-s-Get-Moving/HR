@@ -1,3 +1,6 @@
+> **LEGACY DOCUMENT**
+> This document is outdated. See [security/rbac.md](./security/rbac.md) for current RBAC documentation.
+
 # RBAC Implementation - 3 Role System
 
 ## Overview

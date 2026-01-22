@@ -1,3 +1,6 @@
+> **LEGACY DOCUMENT**
+> This document is outdated. See [01_system_overview.md](./01_system_overview.md) for current system overview.
+
 # 🏢 HR Management System - Complete System Overview
 
 ## 🎯 **System Status: FULLY OPERATIONAL**

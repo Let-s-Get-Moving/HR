@@ -1,3 +1,6 @@
+> **HISTORICAL DOCUMENT**
+> This is a point-in-time security audit. For current security documentation, see [security/README.md](./security/README.md).
+
 # Security Audit Report - HR System
 **Date**: January 2025  
 **Status**: CRITICAL VULNERABILITIES FOUND

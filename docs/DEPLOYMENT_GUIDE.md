@@ -1,3 +1,6 @@
+> **LEGACY DOCUMENT**
+> This document is outdated. See [ops/deployment.md](./ops/deployment.md) for current deployment documentation.
+
 # 🚀 Deployment Guide - HR Management System
 
 ## Overview

@@ -377,20 +377,34 @@ docker compose -f config/docker-compose.prod.yml up -d
 
 **🎯 The HR Management System is now fully operational and ready for production use!**
 
-## 🔐 **Login Credentials**
+## 🔐 **Authentication**
 
-```
-Username: Avneet
-Password: password123
-```
+Login credentials should be configured via environment variables or database setup. See [Authentication Documentation](docs/security/authentication.md) for details.
 
-**Can't log in?** Contact system administrator to reset credentials.
+**Can't log in?** Run the admin setup script:
+```bash
+cd scripts && node setup-admin-user.js
+```
 
 ## 📚 **Documentation**
 
-- [**Authentication**](docs/AUTHENTICATION.md) - Login system and troubleshooting
-- [**Data Cleanup Guide**](docs/DATA_CLEANUP_GUIDE.md) - How to remove all mock data
-- [System Overview](docs/SYSTEM_OVERVIEW.md) - Complete system architecture
-- [Implementation Summary](docs/IMPLEMENTATION_SUMMARY.md) - What's been implemented
-- [Backend Integration Analysis](docs/BACKEND_INTEGRATION_ANALYSIS.md) - API status and fixes
-- [Button Audit](docs/BUTTON_AUDIT.md) - UI functionality status
+All documentation is organized under `docs/`. Start with the main entry point:
+
+- **[📖 Documentation Home](docs/README.md)** - Start here for all documentation
+
+### Key Documentation
+
+| Topic | Link |
+|-------|------|
+| System Overview | [docs/01_system_overview.md](docs/01_system_overview.md) |
+| Local Development | [docs/ops/local-dev.md](docs/ops/local-dev.md) |
+| Deployment | [docs/ops/deployment.md](docs/ops/deployment.md) |
+| Authentication | [docs/security/authentication.md](docs/security/authentication.md) |
+| Backend API | [docs/backend/README.md](docs/backend/README.md) |
+| Frontend | [docs/frontend/README.md](docs/frontend/README.md) |
+| Database | [docs/database/README.md](docs/database/README.md) |
+| Testing | [docs/testing/README.md](docs/testing/README.md) |
+
+### Coverage
+
+See [docs/coverage.md](docs/coverage.md) for documentation coverage checklist.

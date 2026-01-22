@@ -1,3 +1,6 @@
+> **LEGACY DOCUMENT**
+> This document is outdated. See [security/authentication.md](./security/authentication.md) for current authentication documentation.
+
 # Authentication System
 
 ## Single Admin User
