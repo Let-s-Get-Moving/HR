@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { sessionManager } from '../utils/sessionManager.js';
+import { API } from '../config/api.js';
 
 /**
  * WebSocket hook for real-time updates
+ * Uses cookie-based auth - browser sends HttpOnly session cookie during handshake
  */
 export function useWebSocket() {
   const [connected, setConnected] = useState(false);
@@ -27,22 +29,14 @@ export function useWebSocket() {
         return;
       }
 
-      // Get session ID from localStorage or cookie
-      const sessionId = localStorage.getItem('sessionId') || 
-                       document.cookie.match(/sessionId=([^;]+)/)?.[1];
-
-      if (!sessionId) {
-        console.warn('[WebSocket] No session ID found');
-        return;
-      }
-
-      // Determine WebSocket URL
+      // Determine WebSocket URL - NO sessionId in query params
+      // Browser will send HttpOnly session cookie during handshake
       const apiUrl = import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com';
       const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
       const wsHost = apiUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
-      const wsUrl = `${wsProtocol}://${wsHost}/ws?sessionId=${sessionId}`;
+      const wsUrl = `${wsProtocol}://${wsHost}/ws`;
 
-      console.log('[WebSocket] Connecting to:', wsUrl.replace(sessionId, 'sessionId=***'));
+      console.log('[WebSocket] Connecting to:', wsUrl);
 
       const ws = new WebSocket(wsUrl);
 
@@ -225,19 +219,9 @@ export function useNotifications() {
   useEffect(() => {
     const loadUnreadCount = async () => {
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com'}/api/notifications/unread-count`,
-          {
-            credentials: 'include',
-            headers: {
-              'x-session-id': localStorage.getItem('sessionId') || ''
-            }
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setUnreadCount(data.count || 0);
-        }
+        // Use API helper (cookie-based auth, no x-session-id)
+        const data = await API('/api/notifications/unread-count');
+        setUnreadCount(data.count || 0);
       } catch (error) {
         console.error('Error loading unread count:', error);
       }
@@ -281,4 +265,3 @@ export function useChatMessages(threadId) {
     connected
   };
 }
-

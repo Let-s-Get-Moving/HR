@@ -10,16 +10,18 @@ const connectionUsers = new Map();
 
 /**
  * Authenticate WebSocket connection using session cookie or header
+ * NOTE: Query string auth removed for security (tokens in URLs are logged/leaked)
+ * Browser clients use HttpOnly cookie; non-browser clients use x-session-id header
  */
 async function authenticateConnection(req) {
   try {
-    // Extract session ID from cookies or headers
+    // Extract session ID from cookies (browser) or headers (API clients)
+    // NO query string auth - tokens in URLs are a security risk
     const cookies = req.headers.cookie || '';
     const cookieMatch = cookies.match(/sessionId=([^;]+)/);
     const sessionId = cookieMatch?.[1] || 
                      req.headers['x-session-id'] ||
-                     req.headers['X-Session-ID'] ||
-                     req.url?.split('sessionId=')[1]?.split('&')[0];
+                     req.headers['X-Session-ID'];
 
     if (!sessionId) {
       return null;
