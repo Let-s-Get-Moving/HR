@@ -2083,17 +2083,14 @@ export default function Settings() {
         break;
     }
     
-    // Try to sync with server (but don't fail if it doesn't work)
+    // Try to sync with server (cookie-based auth, no sessionId check needed)
     try {
-      const sessionId = localStorage.getItem('sessionId');
-      if (sessionId) {
-        const response = await API(`/api/settings/${category}/${key}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ value })
-        });
-        console.log(`✅ Setting ${key} updated successfully on server`);
-      }
+      await API(`/api/settings/${category}/${key}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ value })
+      });
+      console.log(`✅ Setting ${key} updated successfully on server`);
     } catch (error) {
       console.warn("Failed to sync setting with server:", error);
       // Don't show error to user - setting is already saved locally

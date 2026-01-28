@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from 'react-i18next';
-import { API } from '../config/api.js';
+import { API, APIUpload } from '../config/api.js';
 import { useUserRole } from '../hooks/useUserRole.js';
 import { normalizeYMD, formatShortDate } from '../utils/timezone.js';
 import { 
@@ -273,18 +273,9 @@ export default function TimeTracking() {
       const formData = new FormData();
       formData.append('file', uploadFile);
 
-      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
-      const sessionId = localStorage.getItem('sessionId');
-
-      console.log("🌐 [TimeTracking] Uploading to:", `${API_BASE_URL}/api/timecard-uploads/upload`);
-      const response = await fetch(`${API_BASE_URL}/api/timecard-uploads/upload`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-        headers: {
-          ...(sessionId && { 'x-session-id': sessionId }),
-        }
-      });
+      console.log("🌐 [TimeTracking] Uploading timecard file...");
+      // Use APIUpload helper (cookie-based auth + CSRF, no x-session-id)
+      const response = await APIUpload('/api/timecard-uploads/upload', formData);
 
       const result = await response.json();
       console.log("📥 [TimeTracking] Upload response:", result);

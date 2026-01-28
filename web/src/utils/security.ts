@@ -48,17 +48,11 @@ export class XSSProtection {
 }
 
 // CSRF Protection
+// NOTE: CSRF tokens are now provided by the server, not generated client-side
 export class CSRFProtection {
   private static token: string | null = null;
 
-  // Generate CSRF token
-  static generateToken(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  // Set CSRF token
+  // Set CSRF token (called with token from server response)
   static setToken(token: string): void {
     this.token = token;
   }
@@ -68,9 +62,9 @@ export class CSRFProtection {
     return this.token;
   }
 
-  // Validate CSRF token
-  static validateToken(token: string): boolean {
-    return this.token === token;
+  // Clear CSRF token (on logout)
+  static clearToken(): void {
+    this.token = null;
   }
 
   // Add CSRF token to headers
@@ -137,6 +131,8 @@ export class InputValidator {
 }
 
 // Content Security Policy
+// NOTE: Actual CSP is enforced via _headers file in public/ for Render deployment
+// This class is for reference/programmatic access
 export class CSPManager {
   private static policies: string[] = [];
 
@@ -150,18 +146,20 @@ export class CSPManager {
     return this.policies.join('; ');
   }
 
-  // Set default CSP policies
+  // Set default CSP policies matching our deployment
   static setDefaultPolicies(): void {
     this.policies = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline'",
+      "script-src 'self'",  // No unsafe-inline for XSS protection
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",  // unsafe-inline needed for CSS-in-JS
+      "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https:",
-      "font-src 'self' data:",
-      "connect-src 'self' https:",
+      "connect-src 'self' https://hr-api-wbzs.onrender.com wss://hr-api-wbzs.onrender.com",
       "frame-ancestors 'none'",
+      "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
+      "upgrade-insecure-requests",
     ];
   }
 }
@@ -352,9 +350,8 @@ export function initializeSecurity(): void {
   // Set up CSP
   CSPManager.setDefaultPolicies();
   
-  // Generate CSRF token
-  const csrfToken = CSRFProtection.generateToken();
-  CSRFProtection.setToken(csrfToken);
+  // NOTE: CSRF token is now provided by the server after login, not generated client-side
+  // The token will be set when login response is received or when /api/auth/csrf is called
   
   console.log('Security features initialized');
 }

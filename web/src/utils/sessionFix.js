@@ -1,14 +1,19 @@
 /**
  * Session Fix Utility
  * Handles proper session cleanup and prevents loading loops
+ * NOTE: Session token is now HttpOnly cookie-only (not in localStorage)
  */
 
-// Clear all session data
+import { clearCSRFToken } from '../config/api.js';
+
+// Clear all session-related data from localStorage
+// (Session itself is cookie-based, cleared by server on logout)
 export const clearAllSessionData = () => {
-  localStorage.removeItem('sessionId');
   localStorage.removeItem('user');
   localStorage.removeItem('passwordWarning');
-  localStorage.removeItem('sessionExtensionInterval');
+  
+  // Clear CSRF token from memory
+  clearCSRFToken();
   
   // Clear any cached settings that might cause issues
   const keysToRemove = [];
@@ -21,10 +26,17 @@ export const clearAllSessionData = () => {
   
   keysToRemove.forEach(key => localStorage.removeItem(key));
   
+  // Clear session extension interval
+  if (window._sessionExtensionInterval) {
+    clearInterval(window._sessionExtensionInterval);
+    window._sessionExtensionInterval = null;
+  }
+  
   console.log('🧹 [SessionFix] Cleared all session data and cached settings');
 };
 
-// Check if session is valid by making a test request
+// Check if session is valid by making a test request to the server
+// (Server validates the HttpOnly session cookie)
 export const validateSession = async (API) => {
   try {
     const response = await API("/api/auth/session");
@@ -39,32 +51,19 @@ export const validateSession = async (API) => {
 export const forceLogout = () => {
   clearAllSessionData();
   
-  // Clear any intervals
-  const intervalId = localStorage.getItem("sessionExtensionInterval");
-  if (intervalId) {
-    clearInterval(parseInt(intervalId));
-    localStorage.removeItem("sessionExtensionInterval");
-  }
-  
   // Reload page to reset app state
   window.location.reload();
 };
 
 // Check and fix session on app load
+// Validates session by calling server (not by checking localStorage)
 export const checkAndFixSession = async (API) => {
-  const sessionId = localStorage.getItem('sessionId');
-  
-  if (!sessionId) {
-    console.log('🔍 [SessionFix] No session ID found');
-    return false;
-  }
-  
-  console.log('🔍 [SessionFix] Found session ID, validating...');
+  console.log('🔍 [SessionFix] Validating session with server...');
   
   const isValid = await validateSession(API);
   
   if (!isValid) {
-    console.log('❌ [SessionFix] Session invalid, clearing data');
+    console.log('❌ [SessionFix] Session invalid, clearing local data');
     clearAllSessionData();
     return false;
   }

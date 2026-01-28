@@ -15,7 +15,7 @@ import BonusesCommissions from "./pages/BonusesCommissions.jsx";
 import Messages from "./pages/Messages.jsx";
 import NotificationCenter from "./components/NotificationCenter.jsx";
 
-import { API } from './config/api.js';
+import { API, fetchCSRFToken, clearCSRFToken } from './config/api.js';
 import { sessionManager } from './utils/sessionManager.js';
 import { checkAndFixSession, forceLogout } from './utils/sessionFix.js';
 
@@ -163,6 +163,10 @@ export default function App() {
           if (sessionData && sessionData.user) {
             setUser(sessionData.user);
             console.log('✅ Session valid, user logged in');
+            
+            // Fetch CSRF token for the restored session
+            await fetchCSRFToken();
+            console.log('✅ CSRF token fetched');
           } else {
             console.log('❌ Session check failed, user not logged in');
             setUser(null);
@@ -206,6 +210,9 @@ export default function App() {
     } catch (error) {
       console.error("Logout error:", error);
     }
+    
+    // Clear CSRF token
+    clearCSRFToken();
     
     setUser(null);
     setCurrentPage("dashboard");

@@ -1,14 +1,10 @@
-import { API } from '../../config/api.js';
+import { APIDownload } from '../../config/api.js';
 
 export default function ChatAttachment({ attachment, isOwn }) {
   const handleDownload = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com'}/api/chat/attachments/${attachment.id}`, {
-        credentials: 'include',
-        headers: {
-          'x-session-id': localStorage.getItem('sessionId') || ''
-        }
-      });
+      // Use APIDownload helper (cookie-based auth, no x-session-id)
+      const response = await APIDownload(`/api/chat/attachments/${attachment.id}`);
 
       if (!response.ok) {
         throw new Error('Download failed');

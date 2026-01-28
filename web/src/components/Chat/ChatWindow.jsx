@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API } from '../../config/api.js';
+import { API, APIUpload } from '../../config/api.js';
 import { useChatMessages, useWebSocket } from '../../hooks/useWebSocket.js';
 import ChatMessage from './ChatMessage.jsx';
 
@@ -295,15 +295,10 @@ export default function ChatWindow({ thread, currentUserId, onBack, highlightMes
       const formData = new FormData();
       formData.append('file', file);
 
-      const sessionId = localStorage.getItem('sessionId');
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'https://hr-api-wbzs.onrender.com'}/api/chat/messages/${messageResponse.message.id}/attachments`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'x-session-id': sessionId || '' },
-          body: formData
-        }
+      // Use APIUpload helper (cookie-based auth + CSRF, no x-session-id)
+      const response = await APIUpload(
+        `/api/chat/messages/${messageResponse.message.id}/attachments`,
+        formData
       );
 
       if (!response.ok) throw new Error('Upload failed');

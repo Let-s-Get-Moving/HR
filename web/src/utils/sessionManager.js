@@ -1,39 +1,20 @@
 // Session management utility
+// NOTE: Session token is now HttpOnly cookie-only (not accessible to JS)
+// This manager validates sessions by calling the server, not by checking localStorage
+
 class SessionManager {
   constructor() {
-    this.sessionId = localStorage.getItem('sessionId');
     this.isChecking = false;
     this.checkPromise = null;
   }
 
-  // Get current session ID
-  getSessionId() {
-    return this.sessionId;
-  }
-
-  // Set session ID
-  setSessionId(sessionId) {
-    this.sessionId = sessionId;
-    if (sessionId) {
-      localStorage.setItem('sessionId', sessionId);
-    } else {
-      localStorage.removeItem('sessionId');
-    }
-  }
-
-  // Check if we have a session ID
-  hasSession() {
-    return !!this.sessionId;
-  }
-
-  // Clear session
+  // Clear user data (session is cookie-based, cleared by server on logout)
   clearSession() {
-    this.sessionId = null;
-    localStorage.removeItem('sessionId');
     localStorage.removeItem('user');
+    localStorage.removeItem('passwordWarning');
   }
 
-  // Get user data from localStorage
+  // Get user data from localStorage (cached from last successful session check)
   getUser() {
     try {
       const userData = localStorage.getItem('user');
@@ -44,17 +25,14 @@ class SessionManager {
     }
   }
 
-  // Check if we have valid user data
+  // Check if we have cached user data
   hasUser() {
     return !!this.getUser();
   }
 
-  // Check session validity (with caching to prevent multiple calls)
+  // Check session validity by calling the server (with caching to prevent multiple calls)
+  // The server will validate the HttpOnly session cookie
   async checkSession(API) {
-    if (!this.hasSession()) {
-      return null;
-    }
-
     // If already checking, return the same promise
     if (this.isChecking && this.checkPromise) {
       return this.checkPromise;
@@ -76,7 +54,7 @@ class SessionManager {
     try {
       const response = await API("/api/auth/session");
       if (response.user) {
-        // Store user data in localStorage for persistence
+        // Store user data in localStorage for quick access (but NOT session token)
         localStorage.setItem('user', JSON.stringify(response.user));
         return response;
       } else {

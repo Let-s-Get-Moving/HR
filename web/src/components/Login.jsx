@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
-import { API } from '../config/api.js';
+import { API, setCSRFToken, clearCSRFToken } from '../config/api.js';
 import { sessionManager } from '../utils/sessionManager.js';
 
 export default function Login({ onLogin }) {
@@ -79,9 +79,10 @@ export default function Login({ onLogin }) {
 
       // Normal login (no MFA or trusted device)
       if (response.user) {
-        // Store session info in localStorage for persistence
-        localStorage.setItem("sessionId", response.sessionId);
+        // Store user info in localStorage (but NOT sessionId - that's cookie-only now)
         localStorage.setItem("user", JSON.stringify(response.user));
+        
+        // CSRF token is stored in memory by the API wrapper (not localStorage)
         
         // Store password warning if present
         if (response.passwordWarning) {
@@ -137,9 +138,10 @@ export default function Login({ onLogin }) {
       });
 
       if (response.user) {
-        // Store session info
-        localStorage.setItem("sessionId", response.sessionId);
+        // Store user info (but NOT sessionId - that's cookie-only now)
         localStorage.setItem("user", JSON.stringify(response.user));
+        
+        // CSRF token is stored in memory by the API wrapper
         
         // Store password warning if present
         if (response.passwordWarning) {
@@ -233,23 +235,22 @@ export default function Login({ onLogin }) {
       }
     }, 25 * 60 * 1000); // 25 minutes
 
-    // Store interval ID for cleanup
-    localStorage.setItem("sessionExtensionInterval", extensionInterval);
+    // Store interval ID for cleanup (this is fine in localStorage - it's just a number)
+    window._sessionExtensionInterval = extensionInterval;
   };
 
   const handleLogout = () => {
-    // Clear session data
-    localStorage.removeItem("sessionId");
+    // Clear user data (session is cookie-based, cleared by server)
     localStorage.removeItem("user");
+    clearCSRFToken();
     
     // Clear extension interval
-    const intervalId = localStorage.getItem("sessionExtensionInterval");
-    if (intervalId) {
-      clearInterval(parseInt(intervalId));
-      localStorage.removeItem("sessionExtensionInterval");
+    if (window._sessionExtensionInterval) {
+      clearInterval(window._sessionExtensionInterval);
+      window._sessionExtensionInterval = null;
     }
 
-    // Call logout API
+    // Call logout API (server will clear the session cookie)
     API("/api/auth/logout", {
       method: "POST",
       credentials: "include"

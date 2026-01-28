@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 
-import { API } from '../config/api.js';
+import { API, APIDownload } from '../config/api.js';
 import { formatShortDate, formatDateOnly, normalizeYMD, parseLocalDate } from '../utils/timezone.js';
 import { useUserRole, hasFullAccess } from '../hooks/useUserRole.js';
 import DatePicker from '../components/DatePicker.jsx';
@@ -408,13 +408,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
         window.open(doc.file_url, '_blank');
       } else {
         console.log(`📥 [EmployeeProfile] Downloading from server...`);
-        // Download from server
-        const response = await fetch(`/api/employees/${employeeId}/documents/${doc.id}/download`, {
-          credentials: 'include',
-          headers: {
-            'x-session-id': localStorage.getItem('sessionId') || ''
-          }
-        });
+        // Download from server (cookie-based auth, no x-session-id)
+        const response = await APIDownload(`/api/employees/${employeeId}/documents/${doc.id}/download`);
         
         console.log(`📡 [EmployeeProfile] Download response status:`, response.status);
         

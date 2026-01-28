@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { useTranslation } from 'react-i18next';
 import { useUserRole } from '../hooks/useUserRole.js';
 
-import { API } from '../config/api.js';
+import { API, APIUpload } from '../config/api.js';
 import { formatShortDate, formatYMD, normalizeYMD } from '../utils/timezone.js';
 import CommissionLegend from '../components/CommissionLegend.jsx';
 import DateRangePicker from '../components/DateRangePicker.jsx';
@@ -562,18 +562,8 @@ export default function BonusesCommissions() {
       formData.append('period_start', periodStart);
       formData.append('period_end', periodEnd);
       
-      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
-      const sessionId = localStorage.getItem('sessionId');
-      
-      const response = await fetch(`${API_BASE_URL}/api/commissions/import`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-        headers: {
-          ...(sessionId && { 'x-session-id': sessionId }),
-        }
-      });
-      
+      // Use APIUpload helper (cookie-based auth + CSRF, no x-session-id)
+      const response = await APIUpload('/api/commissions/import', formData);
       const result = await response.json();
       
       if (!response.ok) {
@@ -621,18 +611,8 @@ export default function BonusesCommissions() {
       const formData = new FormData();
       formData.append('excel_file', leadStatusFile);
       
-      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
-      const sessionId = localStorage.getItem('sessionId');
-      
-      const response = await fetch(`${API_BASE_URL}/api/sales-commissions/import/lead-status`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-        headers: {
-          ...(sessionId && { 'x-session-id': sessionId }),
-        }
-      });
-      
+      // Use APIUpload helper (cookie-based auth + CSRF, no x-session-id)
+      const response = await APIUpload('/api/sales-commissions/import/lead-status', formData);
       const result = await response.json();
       
       if (!response.ok) {
@@ -685,18 +665,8 @@ export default function BonusesCommissions() {
       const formData = new FormData();
       formData.append('excel_file', bookedOpportunitiesFile);
       
-      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
-      const sessionId = localStorage.getItem('sessionId');
-      
-      const response = await fetch(`${API_BASE_URL}/api/sales-commissions/import/booked-opportunities`, {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-        headers: {
-          ...(sessionId && { 'x-session-id': sessionId }),
-        }
-      });
-      
+      // Use APIUpload helper (cookie-based auth + CSRF, no x-session-id)
+      const response = await APIUpload('/api/sales-commissions/import/booked-opportunities', formData);
       const result = await response.json();
       
       if (!response.ok) {
@@ -733,20 +703,9 @@ export default function BonusesCommissions() {
   // Load adjustment import status
   const loadAdjustmentImportStatus = async () => {
     try {
-      const API_BASE_URL = 'https://hr-api-wbzs.onrender.com';
-      const sessionId = localStorage.getItem('sessionId');
-      
-      const response = await fetch(`${API_BASE_URL}/api/sales-commissions/adjustment-status`, {
-        credentials: 'include',
-        headers: {
-          ...(sessionId && { 'x-session-id': sessionId }),
-        }
-      });
-      
-      if (response.ok) {
-        const status = await response.json();
-        setAdjustmentImportStatus(status);
-      }
+      // Use API helper (cookie-based auth, no x-session-id)
+      const status = await API('/api/sales-commissions/adjustment-status');
+      setAdjustmentImportStatus(status);
     } catch (error) {
       console.error("Error loading adjustment status:", error);
     }

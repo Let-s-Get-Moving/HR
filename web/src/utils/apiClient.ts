@@ -1,3 +1,9 @@
+/**
+ * @deprecated Use `API` from `@/config/api.js` instead.
+ * This module is kept for backwards compatibility and testing.
+ * The primary API client is in config/api.js which is imported by all components.
+ */
+
 import { ApiError } from '@/types';
 import { errorHandler } from './errorHandler';
 import { withRetry, RetryStrategy } from './retry';
@@ -11,6 +17,7 @@ interface CacheEntry<T> {
 }
 
 // API Client class with caching and error handling
+// NOTE: Session authentication is now cookie-only (HttpOnly), not header-based
 class ApiClient {
   private baseURL: string;
   private cache: Map<string, CacheEntry<any>> = new Map();
@@ -67,11 +74,6 @@ class ApiClient {
     }
   }
 
-  // Get session ID from localStorage
-  private getSessionId(): string | null {
-    return localStorage.getItem('sessionId');
-  }
-
   // Handle API errors
   private handleError(response: Response, errorText: string, endpoint: string): ApiError {
     let errorMessage = 'An error occurred';
@@ -85,9 +87,8 @@ class ApiClient {
       errorMessage = errorText || `HTTP ${response.status}`;
     }
 
-    // Clear session on auth errors
+    // Clear user data on auth errors (session is cookie-based)
     if (response.status === 401) {
-      localStorage.removeItem('sessionId');
       localStorage.removeItem('user');
     }
 
@@ -118,21 +119,15 @@ class ApiClient {
       }
     }
 
-    // Prepare headers
+    // Prepare headers - NO sessionId header (cookie-only auth)
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...SecurityHeaders.getSecurityHeaders(),
       ...options.headers,
     };
 
-    // Add session ID if available
-    const sessionId = this.getSessionId();
-    if (sessionId) {
-      (headers as any)['x-session-id'] = sessionId;
-    }
-
     // Add CSRF token for state-changing requests
-    if (method !== 'GET') {
+    if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
       const csrfToken = CSRFProtection.getToken();
       if (csrfToken) {
         (headers as any)['X-CSRF-Token'] = csrfToken;
@@ -148,7 +143,7 @@ class ApiClient {
       const response = await fetch(url, {
         ...options,
         headers,
-        credentials: 'include',
+        credentials: 'include', // Send cookies
       });
 
       const responseText = await response.text();
@@ -169,9 +164,9 @@ class ApiClient {
         this.setCache(cacheKey, data);
       }
 
-      // Store session ID if provided
-      if (data.sessionId) {
-        localStorage.setItem('sessionId', data.sessionId);
+      // Store CSRF token if provided (after login)
+      if (data.csrfToken) {
+        CSRFProtection.setToken(data.csrfToken);
       }
 
       return data;
@@ -247,13 +242,17 @@ class ApiClient {
       });
     }
 
+    // Get CSRF token for uploads
+    const csrfToken = CSRFProtection.getToken();
+    const headers: Record<string, string> = {};
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+
     return this.request<T>(endpoint, {
       method: 'POST',
       body: formData,
-      headers: {
-        // Don't set Content-Type, let browser set it with boundary
-        'x-session-id': this.getSessionId() || '',
-      },
+      headers,
     }, false);
   }
 }
