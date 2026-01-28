@@ -6,7 +6,7 @@
 import express from "express";
 import { q } from "../db.js";
 import { SessionManager } from "../session.js";
-import { comparePassword, generateSecureSessionId, createSessionMetadata } from "../utils/security.js";
+import { comparePassword, generateSecureSessionId, createSessionMetadata, logSecurityEventDb } from "../utils/security.js";
 import { AccountLockout, checkAccountLockout } from "../middleware/account-lockout.js";
 import { CSRFProtection } from "../middleware/csrf.js";
 import { MFAService } from "../services/mfa.js";
@@ -235,19 +235,30 @@ r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), a
     // Update last login
     await UserManagementService.updateLastLogin(user.id);
     
-    // Generate CSRF token
-    const csrfToken = CSRFProtection.generateToken(sessionId);
+    // Generate CSRF token (DB-backed)
+    const csrfToken = await CSRFProtection.generateToken(sessionId);
     
-    // Set cookie
+    // Set cookie with SameSite=Strict for maximum CSRF protection
     res.cookie('sessionId', sessionId, {
       httpOnly: true,
-      secure: true, // Required for sameSite: 'none'
-      sameSite: 'none', // Allow cross-origin cookies
+      secure: true,
+      sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/'
     });
     
-    console.log('✅ Login successful (no MFA):', user.full_name);
+    // Security audit log - successful login
+    await logSecurityEventDb({
+      userId: user.id,
+      action: 'login_success',
+      targetType: 'auth',
+      targetId: null,
+      ip: ipAddress,
+      userAgent: req.headers['user-agent'],
+      severity: 'low',
+      success: true,
+      metadata: { mfa: false, trustedDevice: deviceTrusted }
+    });
     
     const response = {
       message: "Login successful",
@@ -274,7 +285,7 @@ r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), a
     res.json(response);
     
   } catch (error) {
-    console.error('❌ Login error:', error);
+    console.error('[Auth] Login error:', error.message);
     res.status(500).json({ error: "Login failed: " + error.message });
   }
 });
@@ -438,19 +449,30 @@ r.post("/verify-mfa", async (req, res) => {
       console.log(`⚠️ Password expiring soon for user ${userId}: ${daysLeft} days left`);
     }
     
-    // Generate CSRF token
-    const csrfToken = CSRFProtection.generateToken(sessionId);
+    // Generate CSRF token (DB-backed)
+    const csrfToken = await CSRFProtection.generateToken(sessionId);
     
-    // Set cookie
+    // Set cookie with SameSite=Strict for maximum CSRF protection
     res.cookie('sessionId', sessionId, {
       httpOnly: true,
-      secure: true, // Required for sameSite: 'none'
-      sameSite: 'none', // Allow cross-origin cookies
+      secure: true,
+      sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: '/'
     });
     
-    console.log('✅ MFA verified successfully for user:', user.full_name);
+    // Security audit log - successful MFA login
+    await logSecurityEventDb({
+      userId: userId,
+      action: 'login_success',
+      targetType: 'auth',
+      targetId: null,
+      ip: ipAddress,
+      userAgent: userAgent,
+      severity: 'low',
+      success: true,
+      metadata: { mfa: true, trustedDeviceCreated: trustDevice }
+    });
     
     const response = {
       message: "Login successful",
@@ -477,7 +499,7 @@ r.post("/verify-mfa", async (req, res) => {
     res.json(response);
     
   } catch (error) {
-    console.error('❌ MFA verification error:', error);
+    console.error('[Auth] MFA verification error:', error.message);
     res.status(500).json({ error: "MFA verification failed: " + error.message });
   }
 });
@@ -738,7 +760,18 @@ r.post("/change-password", optionalAuth, async (req, res) => {
       VALUES ($1, 'password_changed', 'auth', NULL, $2)
     `, [userId, JSON.stringify({ self_initiated: !tempToken })]);
     
-    console.log(`✅ Password changed successfully for user ${userId}`);
+    // Security audit log - password change is high severity
+    await logSecurityEventDb({
+      userId: userId,
+      action: tempToken ? 'password_changed_forced' : 'password_changed_self',
+      targetType: 'user',
+      targetId: userId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: { forced: !!tempToken }
+    });
     
     res.json({ 
       message: "Password changed successfully",
@@ -746,7 +779,7 @@ r.post("/change-password", optionalAuth, async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Change password error:', error);
+    console.error('[Auth] Change password error:', error.message);
     res.status(500).json({ error: "Failed to change password: " + error.message });
   }
 });
@@ -759,11 +792,10 @@ r.post("/logout", async (req, res) => {
     try {
       await q(`DELETE FROM user_sessions WHERE id = $1`, [sessionId]);
       SessionManager.destroySession(sessionId);
-      CSRFProtection.removeToken(sessionId);  // Clean up CSRF token
+      await CSRFProtection.removeToken(sessionId);  // Clean up CSRF token from DB
       res.clearCookie('sessionId', { path: '/' });
-      console.log('Logout successful');
     } catch (err) {
-      console.log('Logout error:', err.message);
+      // Non-critical logout cleanup errors
     }
   }
   
@@ -786,12 +818,12 @@ r.get("/csrf", requireAuth, async (req, res) => {
       return res.status(401).json({ error: "No session" });
     }
     
-    // Generate fresh CSRF token
-    const csrfToken = CSRFProtection.generateToken(sessionId);
+    // Generate fresh CSRF token (DB-backed)
+    const csrfToken = await CSRFProtection.generateToken(sessionId);
     
     res.json({ csrfToken });
   } catch (error) {
-    console.error('CSRF token generation error:', error);
+    console.error('[CSRF] Token generation error:', error.message);
     res.status(500).json({ error: "Failed to generate CSRF token" });
   }
 });

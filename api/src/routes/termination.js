@@ -2,6 +2,7 @@ import { Router } from "express";
 import { q } from "../db.js";
 import { z } from "zod";
 import { requireRole, ROLES } from "../middleware/rbac.js";
+import { logSecurityEventDb } from "../utils/security.js";
 
 const r = Router();
 
@@ -91,6 +92,23 @@ r.post("/details", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) =
       "UPDATE employees SET status = 'Terminated', termination_date = $1, termination_reason = $2, termination_type = $3 WHERE id = $4",
       [validatedData.termination_date, validatedData.termination_reason, validatedData.termination_type, validatedData.employee_id]
     );
+    
+    // Security audit log - employee termination is critical
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'employee_terminated',
+      targetType: 'employee',
+      targetId: validatedData.employee_id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: true,
+      metadata: {
+        terminationType: validatedData.termination_type,
+        terminationDate: validatedData.termination_date,
+        initiatedBy: validatedData.initiated_by
+      }
+    });
 
     res.status(201).json({
       message: "Termination processed successfully",

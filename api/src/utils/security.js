@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import crypto from 'crypto';
+import { q } from '../db.js';
 
 // Password hashing utilities
 export const hashPassword = async (password) => {
@@ -98,20 +99,59 @@ export const securityHeaders = {
   'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
 };
 
-// Audit logging
+// Audit logging (console - legacy)
 export const logSecurityEvent = (event, details = {}) => {
   const timestamp = new Date().toISOString();
-  const logEntry = {
-    timestamp,
-    event,
-    details,
-    level: 'SECURITY'
-  };
-  
-  console.log(`[SECURITY] ${timestamp} - ${event}:`, details);
-  
-  // In production, this would be sent to a proper logging service
-  // For now, we'll just log to console
+  console.log(`[SECURITY] ${timestamp} - ${event}:`, JSON.stringify(details));
+};
+
+/**
+ * Log a security event to the database
+ * Use this for high-risk actions that need audit trail for compliance
+ * 
+ * @param {Object} options
+ * @param {number|null} options.userId - ID of user performing action (null if system/anonymous)
+ * @param {string} options.action - Action type (e.g., 'password_change', 'role_change', 'login_failed')
+ * @param {string} options.targetType - Type of resource affected (e.g., 'user', 'employee', 'payroll')
+ * @param {string|null} options.targetId - ID of affected resource
+ * @param {string} options.ip - Client IP address
+ * @param {string} options.userAgent - Client user agent
+ * @param {string} options.severity - 'low', 'medium', 'high', 'critical'
+ * @param {boolean} options.success - Whether the action succeeded
+ * @param {Object} options.metadata - Additional context (JSON)
+ */
+export const logSecurityEventDb = async ({
+  userId = null,
+  action,
+  targetType = null,
+  targetId = null,
+  ip = null,
+  userAgent = null,
+  severity = 'medium',
+  success = true,
+  metadata = {}
+}) => {
+  try {
+    await q(`
+      INSERT INTO security_audit_log 
+        (user_id, action, target_type, target_id, ip_address, user_agent, severity, success, metadata)
+      VALUES ($1, $2, $3, $4, $5::inet, $6, $7, $8, $9::jsonb)
+    `, [
+      userId,
+      action,
+      targetType,
+      targetId ? String(targetId) : null,
+      ip || null,
+      userAgent ? userAgent.substring(0, 500) : null,
+      severity,
+      success,
+      JSON.stringify(metadata)
+    ]);
+  } catch (error) {
+    // Don't fail the main operation if audit logging fails
+    // But do log to stderr so we know about it
+    console.error('[SecurityAudit] Failed to log event:', error.message, { action, targetType, targetId });
+  }
 };
 
 // Session security

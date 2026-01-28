@@ -4,6 +4,7 @@
  */
 
 import { q } from '../db.js';
+import { logSecurityEventDb } from '../utils/security.js';
 
 // In-memory store for failed attempts (in production, use Redis)
 const failedAttempts = new Map();
@@ -118,14 +119,28 @@ export class AccountLockout {
   }
   
   /**
-   * Log security event to database
+   * Log security event to database (both tables for backwards compatibility and audit)
    */
   static async logSecurityEvent(identifier, ipAddress, userAgent, eventType) {
     try {
+      // Legacy table
       await q(`
         INSERT INTO failed_login_attempts (ip_address, username, user_agent, attempted_at, is_blocked)
         VALUES ($1, $2, $3, NOW(), $4)
       `, [ipAddress, identifier, userAgent, eventType === 'account_locked']);
+      
+      // New security audit log
+      await logSecurityEventDb({
+        userId: null, // No user ID for failed logins
+        action: eventType,
+        targetType: 'auth',
+        targetId: identifier,
+        ip: ipAddress,
+        userAgent: userAgent,
+        severity: eventType === 'account_locked' ? 'high' : 'medium',
+        success: false,
+        metadata: { username: identifier }
+      });
     } catch (error) {
       console.error('Failed to log security event:', error.message);
     }

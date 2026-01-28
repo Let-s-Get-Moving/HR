@@ -4,59 +4,57 @@ import { validateSessionMetadata } from "./utils/security.js";
 // Session configuration
 const IDLE_TIMEOUT_MS = 60 * 60 * 1000; // 60 minutes idle timeout
 
-// In-memory session store (in production, use Redis)
+/**
+ * SessionManager - kept for legacy/non-browser client compatibility only
+ * Browser clients MUST use DB sessions via cookies. This fallback is disabled by default.
+ * @deprecated Use database sessions instead
+ */
+const ENABLE_MEMORY_SESSIONS = process.env.ENABLE_MEMORY_SESSIONS === 'true';
 const sessions = new Map();
-
-// Session configuration
-const SESSION_TIMEOUT = 60 * 60 * 1000; // 60 minutes (1 hour) in milliseconds
+const SESSION_TIMEOUT = 60 * 60 * 1000;
 
 export class SessionManager {
   static createSession(userId, username, fingerprint = null) {
-    const sessionId = this.generateSessionId();
+    if (!ENABLE_MEMORY_SESSIONS) {
+      throw new Error('Memory sessions are disabled. Use database sessions.');
+    }
+    const crypto = require('crypto');
+    const sessionId = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
     
     const session = {
       id: sessionId,
       userId,
       username,
-      fingerprint, // Store session fingerprint for security
+      fingerprint,
       createdAt: new Date(),
       expiresAt,
       lastActivity: new Date()
     };
     
     sessions.set(sessionId, session);
-    
-    // Clean up expired sessions
     this.cleanupExpiredSessions();
-    
     return sessionId;
   }
   
   static getSession(sessionId, fingerprint = null) {
+    if (!ENABLE_MEMORY_SESSIONS) return null;
+    
     const session = sessions.get(sessionId);
+    if (!session) return null;
     
-    if (!session) {
-      return null;
-    }
-    
-    // Check if session has expired
     if (new Date() > session.expiresAt) {
       sessions.delete(sessionId);
       return null;
     }
     
-    // Verify session fingerprint if provided
     if (fingerprint && session.fingerprint && session.fingerprint !== fingerprint) {
-      console.warn('Session fingerprint mismatch - potential session hijacking attempt');
       sessions.delete(sessionId);
       return null;
     }
     
-    // Update last activity
     session.lastActivity = new Date();
     sessions.set(sessionId, session);
-    
     return session;
   }
   
@@ -66,7 +64,6 @@ export class SessionManager {
   
   static extendSession(sessionId) {
     const session = sessions.get(sessionId);
-    
     if (session) {
       session.expiresAt = new Date(Date.now() + SESSION_TIMEOUT);
       session.lastActivity = new Date();
@@ -74,29 +71,15 @@ export class SessionManager {
     }
   }
   
-  static generateSessionId() {
-    // CRYPTOGRAPHICALLY SECURE SESSION ID GENERATION
-    // Using crypto.randomBytes for maximum security
-    const crypto = require('crypto');
-    return crypto.randomBytes(32).toString('hex');
-  }
-  
   static generateSessionFingerprint(req) {
-    // Generate session fingerprint based on IP and User-Agent
-    // This helps detect session hijacking attempts
     const crypto = require('crypto');
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     const userAgent = req.get('User-Agent') || 'unknown';
-    
-    return crypto
-      .createHash('sha256')
-      .update(ip + userAgent)
-      .digest('hex');
+    return crypto.createHash('sha256').update(ip + userAgent).digest('hex');
   }
   
   static cleanupExpiredSessions() {
     const now = new Date();
-    
     for (const [sessionId, session] of sessions.entries()) {
       if (now > session.expiresAt) {
         sessions.delete(sessionId);
@@ -110,36 +93,25 @@ export class SessionManager {
   }
 }
 
-// Middleware for session authentication
+/**
+ * Authentication middleware - requires valid session
+ * Sessions are validated against PostgreSQL (primary) only.
+ * Returns 401 if session is missing, invalid, or expired.
+ */
 export const requireAuth = async (req, res, next) => {
-  console.log('🔍 [AUTH] requireAuth middleware triggered');
-  console.log('🔍 [AUTH] Request path:', req.path);
-  console.log('🔍 [AUTH] Request method:', req.method);
-  console.log('🔍 [AUTH] Headers:', JSON.stringify({
-    authorization: req.headers.authorization ? 'present' : 'missing',
-    'x-session-id': req.headers['x-session-id'] ? req.headers['x-session-id'].substring(0, 10) + '...' : 'missing',
-    'X-Session-ID': req.headers['X-Session-ID'] ? req.headers['X-Session-ID'].substring(0, 10) + '...' : 'missing',
-    cookie: req.headers.cookie ? 'present' : 'missing'
-  }, null, 2));
-  
   // Check cookies FIRST (standard for web apps), then headers (for API clients)
   const sessionId = req.cookies?.sessionId ||
                    req.headers['x-session-id'] ||
                    req.headers['X-Session-ID'] ||
                    req.headers.authorization?.replace('Bearer ', '');
   
-  console.log('🔍 [AUTH] Extracted session ID:', sessionId ? sessionId.substring(0, 15) + '...' : 'NONE');
-  
   if (!sessionId) {
-    console.log('❌ [AUTH] No session ID found - returning 401');
     return res.status(401).json({ error: 'Authentication required' });
   }
   
   try {
-    console.log('🔍 [AUTH] Checking database for session...');
-    // First check database for persistent sessions
-    // Also enforce user active status and employee status (terminated employees cannot use sessions)
-    // Check both absolute expiry AND idle timeout
+    // Validate session against database only
+    // Enforce user active status and employee termination checks
     const sessionResult = await q(`
       SELECT 
         s.id, 
@@ -166,87 +138,57 @@ export const requireAuth = async (req, res, next) => {
         AND (u.employee_id IS NULL OR e.status IN ('Active', 'On Leave'))
     `, [sessionId]);
     
-    console.log('🔍 [AUTH] Database query result:', sessionResult.rows.length, 'sessions found');
-    
-    if (sessionResult.rows.length > 0) {
-      const dbSession = sessionResult.rows[0];
-      console.log('✅ [AUTH] Session found in database');
-      console.log('🔍 [AUTH] User ID:', dbSession.user_id);
-      console.log('🔍 [AUTH] Username:', dbSession.username);
-      console.log('🔍 [AUTH] Role:', dbSession.role);
-      
-      // Validate session metadata (user agent binding)
-      const metaValidation = validateSessionMetadata(dbSession, req);
-      if (!metaValidation.valid) {
-        console.warn(`🚨 [AUTH] Session metadata validation failed: ${metaValidation.reason}`);
-        // Delete the compromised session
-        await q(`DELETE FROM user_sessions WHERE id = $1`, [sessionId]);
-        return res.status(401).json({ 
-          error: 'Session security violation',
-          reason: metaValidation.detail || 'Session fingerprint mismatch'
-        });
-      }
-      
-      // Update last activity and extend idle timeout
-      const newIdleTimeout = new Date(Date.now() + IDLE_TIMEOUT_MS);
-      await q(`
-        UPDATE user_sessions 
-        SET last_activity = NOW(),
-            idle_timeout_at = $2
-        WHERE id = $1
-      `, [sessionId, newIdleTimeout]);
-      
-      req.session = {
-        id: dbSession.id,
-        userId: dbSession.user_id,
-        username: dbSession.username || dbSession.full_name
-      };
-      req.user = { 
-        id: dbSession.user_id, 
-        username: dbSession.username,
-        full_name: dbSession.full_name,
-        email: dbSession.email,
-        role: dbSession.role
-      };
-      console.log('✅ [AUTH] Session validated, calling next()');
-      return next();
+    if (sessionResult.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid or expired session' });
     }
     
-    console.log('⚠️ [AUTH] No session found in database, checking memory...');
+    const dbSession = sessionResult.rows[0];
     
-    // Fall back to memory session with fingerprint verification
-    const fingerprint = SessionManager.generateSessionFingerprint(req);
-    const memorySession = SessionManager.getSession(sessionId, fingerprint);
-    if (memorySession) {
-      console.log('✅ [AUTH] Session found in memory');
-      req.session = memorySession;
-      req.user = { id: memorySession.userId, username: memorySession.username };
-      return next();
+    // Validate session metadata (user agent binding)
+    const metaValidation = validateSessionMetadata(dbSession, req);
+    if (!metaValidation.valid) {
+      // Delete the compromised session
+      await q(`DELETE FROM user_sessions WHERE id = $1`, [sessionId]);
+      return res.status(401).json({ 
+        error: 'Session security violation',
+        reason: metaValidation.detail || 'Session fingerprint mismatch'
+      });
     }
     
-    // No valid session found
-    console.log('❌ [AUTH] No valid session found - returning 401');
-    return res.status(401).json({ error: 'Invalid or expired session' });
+    // Update last activity and extend idle timeout
+    const newIdleTimeout = new Date(Date.now() + IDLE_TIMEOUT_MS);
+    await q(`
+      UPDATE user_sessions 
+      SET last_activity = NOW(),
+          idle_timeout_at = $2
+      WHERE id = $1
+    `, [sessionId, newIdleTimeout]);
+    
+    req.session = {
+      id: dbSession.id,
+      userId: dbSession.user_id,
+      username: dbSession.username || dbSession.full_name
+    };
+    req.user = { 
+      id: dbSession.user_id, 
+      username: dbSession.username,
+      full_name: dbSession.full_name,
+      email: dbSession.email,
+      role: dbSession.role
+    };
+    
+    return next();
+    
   } catch (error) {
-    console.error('❌ [AUTH] Session validation error:', error);
-    
-    // Try memory session as fallback
-    const memorySession = SessionManager.getSession(sessionId);
-    if (memorySession) {
-      console.log('✅ [AUTH] Session found in memory (fallback)');
-      req.session = memorySession;
-      req.user = { id: memorySession.userId, username: memorySession.username };
-      return next();
-    }
-    
-    console.log('❌ [AUTH] Session validation failed - returning 401');
+    console.error('[Auth] Session validation error:', error.message);
     return res.status(401).json({ error: 'Session validation failed' });
   }
 };
 
-// Optional auth middleware
+/**
+ * Optional authentication middleware - attaches user if session exists but doesn't fail
+ */
 export const optionalAuth = async (req, res, next) => {
-  // Check cookies FIRST (standard for web apps), then headers (for API clients)
   const sessionId = req.cookies?.sessionId ||
                    req.headers['x-session-id'] ||
                    req.headers['X-Session-ID'] ||
@@ -254,9 +196,6 @@ export const optionalAuth = async (req, res, next) => {
   
   if (sessionId) {
     try {
-      // Check database first (like requireAuth)
-      // Also enforce user active status and employee status (terminated employees cannot use sessions)
-      // Check both absolute expiry AND idle timeout
       const sessionResult = await q(`
         SELECT 
           s.id, 
@@ -286,12 +225,9 @@ export const optionalAuth = async (req, res, next) => {
       if (sessionResult.rows.length > 0) {
         const dbSession = sessionResult.rows[0];
         
-        // Validate session metadata (user agent binding) - for optional auth, just skip if invalid
+        // Validate session metadata - for optional auth, just skip if invalid
         const metaValidation = validateSessionMetadata(dbSession, req);
-        if (!metaValidation.valid) {
-          console.warn(`🚨 [OPTIONAL_AUTH] Session metadata validation failed: ${metaValidation.reason}`);
-          // For optional auth, just don't set user - don't delete session
-        } else {
+        if (metaValidation.valid) {
           // Update last activity and extend idle timeout
           const newIdleTimeout = new Date(Date.now() + IDLE_TIMEOUT_MS);
           await q(`
@@ -314,17 +250,9 @@ export const optionalAuth = async (req, res, next) => {
             role: dbSession.role
           };
         }
-      } else {
-        // Try memory as fallback
-        const memorySession = SessionManager.getSession(sessionId);
-        if (memorySession) {
-          req.session = memorySession;
-          req.user = { id: memorySession.userId, username: memorySession.username };
-        }
       }
     } catch (error) {
-      console.error('Optional auth error:', error);
-      // Don't fail, just continue without auth
+      // Don't fail on optional auth errors, just continue without auth
     }
   }
   

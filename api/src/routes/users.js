@@ -6,6 +6,7 @@
 import express from "express";
 import { UserManagementService } from "../services/user-management.js";
 import { requireAuth } from "../session.js";
+import { logSecurityEventDb } from "../utils/security.js";
 
 const r = express.Router();
 
@@ -104,6 +105,19 @@ r.post("/", requireAuth, requireAdmin, async (req, res) => {
       { email: user.email }
     );
     
+    // Security audit log
+    await logSecurityEventDb({
+      userId: req.user.id,
+      action: 'user_created',
+      targetType: 'user',
+      targetId: user.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: { newUserEmail: user.email, roleId: role_id }
+    });
+    
     delete user.password_hash;
     res.status(201).json({ user });
   } catch (error) {
@@ -128,6 +142,9 @@ r.put("/:id", requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Cannot change role' });
     }
     
+    // Track if this is a role change (high severity)
+    const isRoleChange = req.body.role_id !== undefined;
+    
     const user = await UserManagementService.updateUser(targetUserId, req.body);
     
     await UserManagementService.logActivity(
@@ -137,6 +154,19 @@ r.put("/:id", requireAuth, async (req, res) => {
       targetUserId,
       req.body
     );
+    
+    // Security audit log (role changes are high severity)
+    await logSecurityEventDb({
+      userId: req.user.id,
+      action: isRoleChange ? 'role_changed' : 'user_updated',
+      targetType: 'user',
+      targetId: targetUserId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: isRoleChange ? 'high' : 'medium',
+      success: true,
+      metadata: { changes: req.body, roleChange: isRoleChange }
+    });
     
     res.json({ user });
   } catch (error) {
@@ -162,6 +192,8 @@ r.put("/:id/password", requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Insufficient permissions' });
     }
     
+    const isSelfChange = targetUserId === req.user.id;
+    
     await UserManagementService.updatePassword(targetUserId, newPassword);
     
     await UserManagementService.logActivity(
@@ -170,6 +202,19 @@ r.put("/:id/password", requireAuth, async (req, res) => {
       'users',
       targetUserId
     );
+    
+    // Security audit log - password changes are always high severity
+    await logSecurityEventDb({
+      userId: req.user.id,
+      action: isSelfChange ? 'password_changed_self' : 'password_changed_admin',
+      targetType: 'user',
+      targetId: targetUserId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: { selfChange: isSelfChange }
+    });
     
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
@@ -196,6 +241,19 @@ r.post("/:id/deactivate", requireAuth, requireAdmin, async (req, res) => {
       targetUserId
     );
     
+    // Security audit log - user deactivation is critical
+    await logSecurityEventDb({
+      userId: req.user.id,
+      action: 'user_deactivated',
+      targetType: 'user',
+      targetId: targetUserId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: true,
+      metadata: {}
+    });
+    
     res.json({ message: 'User deactivated successfully' });
   } catch (error) {
     console.error('Deactivate user error:', error);
@@ -216,6 +274,19 @@ r.post("/:id/reactivate", requireAuth, requireAdmin, async (req, res) => {
       'users',
       targetUserId
     );
+    
+    // Security audit log
+    await logSecurityEventDb({
+      userId: req.user.id,
+      action: 'user_reactivated',
+      targetType: 'user',
+      targetId: targetUserId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: {}
+    });
     
     res.json({ message: 'User reactivated successfully' });
   } catch (error) {
