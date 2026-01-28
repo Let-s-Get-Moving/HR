@@ -1,5 +1,13 @@
+/**
+ * API Client Tests
+ * 
+ * NOTE: The apiClient.ts is DEPRECATED in favor of api.js which uses cookie-only auth.
+ * These tests are updated to reflect the new cookie-based authentication model:
+ * - Session ID is stored in HttpOnly cookie, not localStorage
+ * - No x-session-id header is sent
+ * - CSRF token is sent via X-CSRF-Token header for state-changing requests
+ */
 import { apiClient, api } from '../apiClient';
-import { mockApiResponses, mockApiErrors } from '../../utils/testUtils';
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -28,6 +36,7 @@ describe('ApiClient', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
+          credentials: 'include', // Cookie-based auth
         })
       );
       expect(result).toEqual(mockData);
@@ -83,6 +92,7 @@ describe('ApiClient', () => {
           headers: expect.objectContaining({
             'Content-Type': 'application/json',
           }),
+          credentials: 'include', // Cookie-based auth
         })
       );
       expect(result).toEqual(mockData);
@@ -117,6 +127,7 @@ describe('ApiClient', () => {
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(putData),
+          credentials: 'include', // Cookie-based auth
         })
       );
       expect(result).toEqual(mockData);
@@ -137,15 +148,14 @@ describe('ApiClient', () => {
         expect.stringContaining('/test/1'),
         expect.objectContaining({
           method: 'DELETE',
+          credentials: 'include', // Cookie-based auth
         })
       );
     });
   });
 
-  describe('Session management', () => {
-    it('includes session ID in headers when available', async () => {
-      localStorage.setItem('sessionId', 'test-session-id');
-      
+  describe('Cookie-based session management', () => {
+    it('uses credentials:include for cookie-based auth (no x-session-id header)', async () => {
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
         status: 200,
@@ -154,30 +164,31 @@ describe('ApiClient', () => {
 
       await apiClient.get('/test');
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            'x-session-id': 'test-session-id',
-          }),
-        })
-      );
+      const fetchCall = (fetch as jest.Mock).mock.calls[0];
+      const options = fetchCall[1];
+      
+      // Should use credentials: include for cookie-based auth
+      expect(options.credentials).toBe('include');
+      
+      // Should NOT include x-session-id header (cookie-only auth)
+      expect(options.headers['x-session-id']).toBeUndefined();
     });
 
-    it('clears session on 401 error', async () => {
-      localStorage.setItem('sessionId', 'test-session-id');
-      localStorage.setItem('user', 'test-user');
+    it('clears user data (not sessionId) on 401 error', async () => {
+      localStorage.setItem('user', JSON.stringify({ name: 'test-user' }));
       
       (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
         status: 401,
-        text: () => Promise.resolve(JSON.stringify({ error: 'Unauthorized' })),
+        text: () => Promise.resolve(JSON.stringify({ error: 'Invalid or expired session' })),
       });
 
       await expect(apiClient.get('/test')).rejects.toThrow();
       
-      expect(localStorage.getItem('sessionId')).toBeNull();
+      // User data should be cleared
       expect(localStorage.getItem('user')).toBeNull();
+      // sessionId should NOT be in localStorage (it's cookie-only)
+      expect(localStorage.getItem('sessionId')).toBeNull();
     });
   });
 
