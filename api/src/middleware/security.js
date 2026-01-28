@@ -60,7 +60,9 @@ export const adminRateLimit = createRateLimit(
   'Too many admin operations. Please try again later.'
 );
 
-// Enhanced security headers
+// Enhanced security headers for API responses
+// NOTE: The main CSP should be on the frontend origin (web app), not the API
+// This CSP is secondary protection for any API responses that might be rendered
 export const securityHeaders = helmet({
   contentSecurityPolicy: {
     directives: {
@@ -69,8 +71,10 @@ export const securityHeaders = helmet({
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
       scriptSrc: ["'self'"],
-      connectSrc: ["'self'", "https://api-hr.onrender.com"],
+      // Allow connections to our actual API origins
+      connectSrc: ["'self'", "https://hr-api-wbzs.onrender.com", "wss://hr-api-wbzs.onrender.com"],
       frameSrc: ["'none'"],
+      frameAncestors: ["'none'"],  // Prevent clickjacking
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],

@@ -119,6 +119,94 @@ export const generateSecureSessionId = () => {
   return crypto.randomBytes(32).toString('hex');
 };
 
+/**
+ * Hash user agent string for session binding
+ */
+export const hashUserAgent = (userAgent) => {
+  if (!userAgent) return null;
+  return crypto.createHash('sha256').update(userAgent).digest('hex');
+};
+
+/**
+ * Extract IP prefix (first 3 octets for IPv4, first 3 groups for IPv6)
+ * Used for soft session binding that tolerates mobile IP changes
+ */
+export const getIpPrefix = (ip) => {
+  if (!ip) return null;
+  
+  // Clean up IPv6-mapped IPv4 addresses
+  const cleanIp = ip.replace(/^::ffff:/, '');
+  
+  // IPv4 handling
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(cleanIp)) {
+    return cleanIp.replace(/\.\d{1,3}$/, '');
+  }
+  
+  // IPv6 handling - return first 3 groups
+  if (cleanIp.includes(':')) {
+    const parts = cleanIp.split(':');
+    return parts.slice(0, 3).join(':');
+  }
+  
+  return cleanIp;
+};
+
+/**
+ * Create session metadata object from request
+ */
+export const createSessionMetadata = (req) => {
+  const userAgent = req.headers['user-agent'] || null;
+  const ip = req.ip || req.connection?.remoteAddress || null;
+  
+  return {
+    user_agent_hash: hashUserAgent(userAgent),
+    ip_address: ip,
+    ip_prefix: getIpPrefix(ip),
+    metadata: {
+      created_from: 'login',
+      browser_info: userAgent ? userAgent.substring(0, 200) : null,
+    }
+  };
+};
+
+/**
+ * Validate session metadata against current request
+ * Returns { valid: boolean, reason?: string }
+ */
+export const validateSessionMetadata = (session, req) => {
+  // If no metadata stored, skip validation (backwards compat)
+  if (!session.user_agent_hash && !session.ip_prefix) {
+    return { valid: true };
+  }
+  
+  const currentUserAgent = req.headers['user-agent'] || null;
+  const currentIp = req.ip || req.connection?.remoteAddress || null;
+  
+  // User agent hash must match (strict)
+  if (session.user_agent_hash) {
+    const currentHash = hashUserAgent(currentUserAgent);
+    if (currentHash !== session.user_agent_hash) {
+      return { 
+        valid: false, 
+        reason: 'user_agent_mismatch',
+        detail: 'Browser fingerprint changed'
+      };
+    }
+  }
+  
+  // IP prefix check is soft - only flag, don't reject
+  // (users on mobile/VPN may have different IPs)
+  if (session.ip_prefix && currentIp) {
+    const currentPrefix = getIpPrefix(currentIp);
+    if (currentPrefix !== session.ip_prefix) {
+      // Log but don't reject - IP changes are common
+      console.warn(`[Session] IP prefix changed: ${session.ip_prefix} -> ${currentPrefix}`);
+    }
+  }
+  
+  return { valid: true };
+};
+
 // Password strength validation
 export const validatePasswordStrength = (password) => {
   const errors = [];

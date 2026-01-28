@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { q } from "./db.js";
 import { sanitizeString, logSecurityEvent } from "./utils/security.js";
 import security from "./middleware/security.js";
+import { requireCSRFToken } from "./middleware/csrf.js";
 import { ensureAdminUser } from "./utils/ensureAdminUser.js";
 import { primaryPool, readerPool, timedQuery } from "./db/pools.js";
 import { dbPassport } from "./db/passport.js";
@@ -273,6 +274,9 @@ app.use('/api/admin', security.adminRateLimit);
 
 // Apply upload rate limiting to import endpoints
 app.use('/api/imports', security.uploadRateLimit);
+
+// Apply CSRF protection to all /api routes (middleware skips safe methods and auth endpoints)
+app.use('/api', requireCSRFToken);
 
 // Routes - MLGA: All routes now require authentication except auth endpoints
 app.use("/api/employees", requireAuth, employees);

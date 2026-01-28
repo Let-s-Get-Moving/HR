@@ -1,4 +1,8 @@
 import { q } from "./db.js";
+import { validateSessionMetadata } from "./utils/security.js";
+
+// Session configuration
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000; // 60 minutes idle timeout
 
 // In-memory session store (in production, use Redis)
 const sessions = new Map();
@@ -135,11 +139,16 @@ export const requireAuth = async (req, res, next) => {
     console.log('🔍 [AUTH] Checking database for session...');
     // First check database for persistent sessions
     // Also enforce user active status and employee status (terminated employees cannot use sessions)
+    // Check both absolute expiry AND idle timeout
     const sessionResult = await q(`
       SELECT 
         s.id, 
         s.user_id, 
-        s.expires_at, 
+        s.expires_at,
+        s.idle_timeout_at,
+        s.user_agent_hash,
+        s.ip_address,
+        s.ip_prefix,
         u.email, 
         u.username,
         u.employee_id,
@@ -152,6 +161,7 @@ export const requireAuth = async (req, res, next) => {
       LEFT JOIN employees e ON u.employee_id = e.id
       WHERE s.id = $1 
         AND s.expires_at > NOW()
+        AND (s.idle_timeout_at IS NULL OR s.idle_timeout_at > NOW())
         AND u.is_active = true
         AND (u.employee_id IS NULL OR e.status IN ('Active', 'On Leave'))
     `, [sessionId]);
@@ -165,12 +175,26 @@ export const requireAuth = async (req, res, next) => {
       console.log('🔍 [AUTH] Username:', dbSession.username);
       console.log('🔍 [AUTH] Role:', dbSession.role);
       
-      // Update last activity
+      // Validate session metadata (user agent binding)
+      const metaValidation = validateSessionMetadata(dbSession, req);
+      if (!metaValidation.valid) {
+        console.warn(`🚨 [AUTH] Session metadata validation failed: ${metaValidation.reason}`);
+        // Delete the compromised session
+        await q(`DELETE FROM user_sessions WHERE id = $1`, [sessionId]);
+        return res.status(401).json({ 
+          error: 'Session security violation',
+          reason: metaValidation.detail || 'Session fingerprint mismatch'
+        });
+      }
+      
+      // Update last activity and extend idle timeout
+      const newIdleTimeout = new Date(Date.now() + IDLE_TIMEOUT_MS);
       await q(`
         UPDATE user_sessions 
-        SET last_activity = NOW() 
+        SET last_activity = NOW(),
+            idle_timeout_at = $2
         WHERE id = $1
-      `, [sessionId]);
+      `, [sessionId, newIdleTimeout]);
       
       req.session = {
         id: dbSession.id,
@@ -232,11 +256,16 @@ export const optionalAuth = async (req, res, next) => {
     try {
       // Check database first (like requireAuth)
       // Also enforce user active status and employee status (terminated employees cannot use sessions)
+      // Check both absolute expiry AND idle timeout
       const sessionResult = await q(`
         SELECT 
           s.id, 
           s.user_id, 
-          s.expires_at, 
+          s.expires_at,
+          s.idle_timeout_at,
+          s.user_agent_hash,
+          s.ip_address,
+          s.ip_prefix,
           u.email, 
           u.username,
           u.employee_id,
@@ -249,6 +278,7 @@ export const optionalAuth = async (req, res, next) => {
         LEFT JOIN employees e ON u.employee_id = e.id
         WHERE s.id = $1 
           AND s.expires_at > NOW()
+          AND (s.idle_timeout_at IS NULL OR s.idle_timeout_at > NOW())
           AND u.is_active = true
           AND (u.employee_id IS NULL OR e.status IN ('Active', 'On Leave'))
       `, [sessionId]);
@@ -256,25 +286,34 @@ export const optionalAuth = async (req, res, next) => {
       if (sessionResult.rows.length > 0) {
         const dbSession = sessionResult.rows[0];
         
-        // Update last activity
-        await q(`
-          UPDATE user_sessions 
-          SET last_activity = NOW() 
-          WHERE id = $1
-        `, [sessionId]);
-        
-        req.session = {
-          id: dbSession.id,
-          userId: dbSession.user_id,
-          username: dbSession.username || dbSession.full_name
-        };
-        req.user = { 
-          id: dbSession.user_id, 
-          username: dbSession.username,
-          full_name: dbSession.full_name,
-          email: dbSession.email,
-          role: dbSession.role
-        };
+        // Validate session metadata (user agent binding) - for optional auth, just skip if invalid
+        const metaValidation = validateSessionMetadata(dbSession, req);
+        if (!metaValidation.valid) {
+          console.warn(`🚨 [OPTIONAL_AUTH] Session metadata validation failed: ${metaValidation.reason}`);
+          // For optional auth, just don't set user - don't delete session
+        } else {
+          // Update last activity and extend idle timeout
+          const newIdleTimeout = new Date(Date.now() + IDLE_TIMEOUT_MS);
+          await q(`
+            UPDATE user_sessions 
+            SET last_activity = NOW(),
+                idle_timeout_at = $2
+            WHERE id = $1
+          `, [sessionId, newIdleTimeout]);
+          
+          req.session = {
+            id: dbSession.id,
+            userId: dbSession.user_id,
+            username: dbSession.username || dbSession.full_name
+          };
+          req.user = { 
+            id: dbSession.user_id, 
+            username: dbSession.username,
+            full_name: dbSession.full_name,
+            email: dbSession.email,
+            role: dbSession.role
+          };
+        }
       } else {
         // Try memory as fallback
         const memorySession = SessionManager.getSession(sessionId);

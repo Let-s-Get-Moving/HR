@@ -6,7 +6,7 @@
 import express from "express";
 import { q } from "../db.js";
 import { SessionManager } from "../session.js";
-import { comparePassword, generateSecureSessionId } from "../utils/security.js";
+import { comparePassword, generateSecureSessionId, createSessionMetadata } from "../utils/security.js";
 import { AccountLockout, checkAccountLockout } from "../middleware/account-lockout.js";
 import { CSRFProtection } from "../middleware/csrf.js";
 import { MFAService } from "../services/mfa.js";
@@ -215,11 +215,22 @@ r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), a
     
     const sessionId = generateSecureSessionId();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const idleTimeoutAt = new Date(Date.now() + 60 * 60 * 1000); // 60 min idle timeout
+    const sessionMeta = createSessionMetadata(req);
     
     await q(`
-      INSERT INTO user_sessions (id, user_id, expires_at)
-      VALUES ($1, $2, $3)
-    `, [sessionId, user.id, expiresAt]);
+      INSERT INTO user_sessions (id, user_id, expires_at, idle_timeout_at, user_agent_hash, ip_address, ip_prefix, metadata)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [
+      sessionId, 
+      user.id, 
+      expiresAt, 
+      idleTimeoutAt,
+      sessionMeta.user_agent_hash,
+      sessionMeta.ip_address,
+      sessionMeta.ip_prefix,
+      JSON.stringify(sessionMeta.metadata)
+    ]);
     
     // Update last login
     await UserManagementService.updateLastLogin(user.id);
@@ -250,7 +261,8 @@ r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), a
         employeeId: user.employee_id,
         salesRole: user.sales_role || null
       },
-      sessionId,
+      // NOTE: sessionId deliberately NOT returned to browser (cookie-only auth)
+      // CSRF token still returned so frontend can store in memory
       csrfToken
     };
     
@@ -324,11 +336,22 @@ r.post("/verify-mfa", async (req, res) => {
     // Create real session
     const sessionId = generateSecureSessionId();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    const idleTimeoutAt = new Date(Date.now() + 60 * 60 * 1000); // 60 min idle timeout
+    const sessionMeta = createSessionMetadata(req);
     
     await q(`
-      INSERT INTO user_sessions (id, user_id, expires_at)
-      VALUES ($1, $2, $3)
-    `, [sessionId, userId, expiresAt]);
+      INSERT INTO user_sessions (id, user_id, expires_at, idle_timeout_at, user_agent_hash, ip_address, ip_prefix, metadata)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [
+      sessionId, 
+      userId, 
+      expiresAt,
+      idleTimeoutAt,
+      sessionMeta.user_agent_hash,
+      sessionMeta.ip_address,
+      sessionMeta.ip_prefix,
+      JSON.stringify(sessionMeta.metadata)
+    ]);
     
     // Create trusted device if requested
     if (trustDevice) {
@@ -441,7 +464,8 @@ r.post("/verify-mfa", async (req, res) => {
         employeeId: user.employee_id,
         salesRole: user.sales_role || null
       },
-      sessionId,
+      // NOTE: sessionId deliberately NOT returned to browser (cookie-only auth)
+      // CSRF token still returned so frontend can store in memory
       csrfToken
     };
     
@@ -735,6 +759,7 @@ r.post("/logout", async (req, res) => {
     try {
       await q(`DELETE FROM user_sessions WHERE id = $1`, [sessionId]);
       SessionManager.destroySession(sessionId);
+      CSRFProtection.removeToken(sessionId);  // Clean up CSRF token
       res.clearCookie('sessionId', { path: '/' });
       console.log('Logout successful');
     } catch (err) {
@@ -743,6 +768,32 @@ r.post("/logout", async (req, res) => {
   }
   
   res.json({ message: "Logged out successfully" });
+});
+
+/**
+ * Get CSRF Token
+ * Requires authenticated session (via cookie)
+ * Returns a fresh CSRF token for state-changing requests
+ */
+r.get("/csrf", requireAuth, async (req, res) => {
+  try {
+    // Get session ID from cookie (primary) or headers (backwards compat)
+    const sessionId = req.cookies?.sessionId || 
+                      req.headers['x-session-id'] ||
+                      req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!sessionId) {
+      return res.status(401).json({ error: "No session" });
+    }
+    
+    // Generate fresh CSRF token
+    const csrfToken = CSRFProtection.generateToken(sessionId);
+    
+    res.json({ csrfToken });
+  } catch (error) {
+    console.error('CSRF token generation error:', error);
+    res.status(500).json({ error: "Failed to generate CSRF token" });
+  }
 });
 
 r.get("/session", async (req, res) => {

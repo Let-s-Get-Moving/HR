@@ -88,13 +88,22 @@ export const requireCSRFToken = (req, res, next) => {
     return next();
   }
   
-  // Skip CSRF for auth endpoints (login, etc.)
-  if (req.path.includes('/auth/login') || req.path.includes('/auth/session')) {
+  // Skip CSRF for auth endpoints that don't have a session yet
+  // (login uses credentials, verify-mfa uses tempToken, change-password can use tempToken)
+  const skipPaths = [
+    '/auth/login',
+    '/auth/verify-mfa',
+    '/auth/change-password',
+    '/auth/logout',  // Logout is safe to allow without CSRF (just destroys session)
+    '/auth/create-user', // Uses requireAuth separately
+  ];
+  
+  if (skipPaths.some(path => req.path.includes(path))) {
     return next();
   }
   
-  // Get session ID
-  const sessionId = req.session?.id || req.cookies?.sessionId || req.headers['x-session-id'];
+  // Get session ID from cookie (primary) or headers (backwards compat for non-browser clients)
+  const sessionId = req.cookies?.sessionId || req.headers['x-session-id'];
   
   if (!sessionId) {
     return res.status(401).json({ error: 'Session required for CSRF validation' });
@@ -112,7 +121,7 @@ export const requireCSRFToken = (req, res, next) => {
   
   // Validate token
   if (!CSRFProtection.validateToken(sessionId, csrfToken)) {
-    console.warn(`CSRF validation failed for session ${sessionId}`);
+    console.warn(`CSRF validation failed for session ${sessionId.substring(0, 8)}...`);
     return res.status(403).json({ 
       error: 'Invalid CSRF token',
       message: 'CSRF token validation failed'
