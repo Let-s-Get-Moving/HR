@@ -6,22 +6,29 @@
  * - Content structure validation
  * - Malicious content detection
  * - File integrity checks
+ * 
+ * NOTE: Uses exceljs adapter instead of SheetJS xlsx for security.
+ * Legacy .xls format is NOT supported - only .xlsx and .csv.
  */
 
 import { createHash } from 'crypto';
+import {
+  loadXlsxWorkbookFromBuffer,
+  workbookToSheetNames,
+  getWorksheet,
+  getWorksheetDimensions,
+  worksheetToAoa
+} from './excelWorkbook.js';
 
 // File signature database (magic numbers)
 const FILE_SIGNATURES = {
-  // Excel files
+  // Excel files - only .xlsx (ZIP-based) supported
   'xlsx': [
     [0x50, 0x4B, 0x03, 0x04], // ZIP-based (xlsx)
     [0x50, 0x4B, 0x05, 0x06], // ZIP-based (xlsx)
     [0x50, 0x4B, 0x07, 0x08]  // ZIP-based (xlsx)
   ],
-  'xls': [
-    [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1], // OLE2 (xls)
-    [0x09, 0x08, 0x10, 0x00, 0x00, 0x00, 0x06, 0x05]  // BIFF8 (xls)
-  ],
+  // NOTE: .xls (OLE2) signatures removed for security
   
   // Image files
   'jpeg': [
@@ -66,7 +73,7 @@ const FILE_SIGNATURES = {
 // MIME type to extension mapping
 const MIME_TO_EXTENSION = {
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
-  'application/vnd.ms-excel': 'xls',
+  // NOTE: .xls mime type removed - not supported
   'image/jpeg': 'jpeg',
   'image/png': 'png',
   'image/gif': 'gif',
@@ -144,17 +151,47 @@ export function detectFileType(buffer) {
 }
 
 /**
+ * Check if buffer is legacy .xls (OLE2) format - which is NOT supported
+ */
+function isLegacyXls(buffer) {
+  const oleSignature = [0xD0, 0xCF, 0x11, 0xE0];
+  if (buffer.length >= oleSignature.length) {
+    return oleSignature.every((byte, index) => buffer[index] === byte);
+  }
+  return false;
+}
+
+/**
  * Validate Excel file content
+ * NOTE: Only .xlsx files are supported. Legacy .xls will be rejected.
  */
 export async function validateExcelContent(buffer, filename) {
   try {
+    // 0. Check for legacy .xls format (NOT supported)
+    if (isLegacyXls(buffer)) {
+      return {
+        valid: false,
+        message: 'Legacy .xls files are not supported for security reasons',
+        details: 'Please convert your file to .xlsx format (Excel 2007+) and try again'
+      };
+    }
+    
+    // Also check filename extension
+    if (filename && filename.toLowerCase().endsWith('.xls') && !filename.toLowerCase().endsWith('.xlsx')) {
+      return {
+        valid: false,
+        message: 'Legacy .xls files are not supported for security reasons',
+        details: 'Please convert your file to .xlsx format (Excel 2007+) and try again'
+      };
+    }
+    
     // 1. Check file signature
     const signatureCheck = validateFileSignature(buffer, 'xlsx');
     if (!signatureCheck.valid) {
       return {
         valid: false,
         message: signatureCheck.message,
-        details: 'File does not appear to be a valid Excel file'
+        details: 'File does not appear to be a valid Excel (.xlsx) file'
       };
     }
     
@@ -175,23 +212,19 @@ export async function validateExcelContent(buffer, filename) {
     }
     
     // 3. Check for ZIP structure (xlsx files are ZIP archives)
-    if (filename.endsWith('.xlsx')) {
-      const zipCheck = validateZipStructure(buffer);
-      if (!zipCheck.valid) {
-        return {
-          valid: false,
-          message: 'Invalid Excel file structure',
-          details: zipCheck.message
-        };
-      }
+    const zipCheck = validateZipStructure(buffer);
+    if (!zipCheck.valid) {
+      return {
+        valid: false,
+        message: 'Invalid Excel file structure',
+        details: zipCheck.message
+      };
     }
     
-    // 4. Parse Excel file to validate structure (compatible with existing parsers)
+    // 4. Parse Excel file to validate structure using exceljs
     let workbook;
     try {
-      const XLSX = await import('xlsx');
-      // Use same options as existing parsers for consistency
-      workbook = XLSX.default.read(buffer, { type: 'buffer', cellDates: false, cellText: false });
+      workbook = await loadXlsxWorkbookFromBuffer(buffer);
     } catch (e) {
       return {
         valid: false,
@@ -201,7 +234,8 @@ export async function validateExcelContent(buffer, filename) {
     }
 
     // 5. Validate workbook structure (based on real files: 1 sheet, 1000-1500 rows)
-    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+    const sheetNames = workbookToSheetNames(workbook);
+    if (!sheetNames || sheetNames.length === 0) {
       return {
         valid: false,
         message: 'Excel file contains no worksheets',
@@ -210,8 +244,8 @@ export async function validateExcelContent(buffer, filename) {
     }
 
     // 6. Check each worksheet for HR data structure
-    for (const sheetName of workbook.SheetNames) {
-      const worksheet = workbook.Sheets[sheetName];
+    for (const sheetName of sheetNames) {
+      const worksheet = getWorksheet(workbook, sheetName);
       if (!worksheet) {
         return {
           valid: false,
@@ -221,10 +255,7 @@ export async function validateExcelContent(buffer, filename) {
       }
 
       // Check worksheet dimensions (based on real files: 8-30 columns, 1000-1500 rows)
-      const XLSX = await import('xlsx');
-      const range = XLSX.default.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-      const rowCount = range.e.r + 1;
-      const colCount = range.e.c + 1;
+      const { rowCount, columnCount } = getWorksheetDimensions(worksheet);
       
       if (rowCount < 2) {
         return {
@@ -234,7 +265,7 @@ export async function validateExcelContent(buffer, filename) {
         };
       }
       
-      if (colCount < 1) {
+      if (columnCount < 1) {
         return {
           valid: false,
           message: `Worksheet "${sheetName}" contains no columns`,
@@ -251,22 +282,19 @@ export async function validateExcelContent(buffer, filename) {
         };
       }
       
-      if (colCount > 100) {
+      if (columnCount > 100) {
         return {
           valid: false,
           message: `Worksheet "${sheetName}" has too many columns`,
-          details: `Found ${colCount} columns, maximum allowed: 100`
+          details: `Found ${columnCount} columns, maximum allowed: 100`
         };
       }
 
       // 7. Check for HR data patterns (based on real files)
       try {
-        const XLSX = await import('xlsx');
-        const jsonData = XLSX.default.utils.sheet_to_json(worksheet, { 
-          header: 1, 
-          defval: null, 
-          raw: false,
-          blankrows: true 
+        const jsonData = worksheetToAoa(worksheet, {
+          includeEmpty: true,
+          normalizeEmptyToNull: true
         });
         
         // Look for common HR data patterns from real files
@@ -330,8 +358,8 @@ export async function validateExcelContent(buffer, filename) {
         fileSize: buffer.length,
         hash: hash.substring(0, 16) + '...',
         type: signatureCheck.detectedType,
-        sheets: workbook.SheetNames.length,
-        sheetNames: workbook.SheetNames
+        sheets: sheetNames.length,
+        sheetNames: sheetNames
       }
     };
     
@@ -453,7 +481,7 @@ export async function validateCSVContent(buffer, filename) {
       };
     }
     
-    // 7. Check for suspicious content
+    // 8. Check for suspicious content
     const suspiciousCheck = checkForSuspiciousCSVContent(content);
     if (!suspiciousCheck.clean) {
       return {
@@ -772,13 +800,20 @@ export async function validateFileContent(file, expectedType = null) {
       // Try to determine from filename
       if (file.originalname.endsWith('.csv')) {
         expectedType = 'csv';
-      } else if (file.originalname.endsWith('.xlsx') || file.originalname.endsWith('.xls')) {
+      } else if (file.originalname.endsWith('.xlsx')) {
         expectedType = 'excel';
+      } else if (file.originalname.endsWith('.xls')) {
+        // Explicitly reject .xls
+        return {
+          valid: false,
+          message: 'Legacy .xls files are not supported for security reasons',
+          details: 'Please convert your file to .xlsx format (Excel 2007+) and try again'
+        };
       } else {
         return {
           valid: false,
           message: 'Unable to detect file type',
-          details: 'File must be CSV or Excel format'
+          details: 'File must be CSV or Excel (.xlsx) format. Legacy .xls files are not supported.'
         };
       }
     }
@@ -800,7 +835,7 @@ export async function validateFileContent(file, expectedType = null) {
         return {
           valid: false,
           message: `Unknown file type: ${expectedType}`,
-          details: 'Only excel, csv, and image types are supported'
+          details: 'Only excel (.xlsx), csv, and image types are supported. Legacy .xls files are not supported.'
         };
     }
   } catch (error) {

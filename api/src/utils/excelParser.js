@@ -7,44 +7,37 @@
  * - Hourly Payout can be in columns A-F, rows 50-100
  * 
  * Searches entire sheet for headers, not just column A
+ * 
+ * NOTE: Uses exceljs adapter instead of SheetJS xlsx for security.
  */
 
-import XLSX from 'xlsx';
-import { loadFileAsWorkbook } from './unifiedFileParser.js';
+import { loadFileAsWorkbook, getWorksheetDataFromWorkbook } from './unifiedFileParser.js';
 
 /**
  * Load Excel workbook from buffer or file
  * Now supports both CSV and Excel formats via unified parser
  * Maintains backwards compatibility - existing code continues to work
  */
-export function loadExcelWorkbook(fileBuffer, filename = null) {
+export async function loadExcelWorkbook(fileBuffer, filename = null) {
     // Use unified parser which handles both CSV and Excel
     // If filename not provided, try to detect from buffer
-    return loadFileAsWorkbook(fileBuffer, filename || 'unknown');
+    return await loadFileAsWorkbook(fileBuffer, filename || 'unknown');
 }
 
 /**
  * Get worksheet data as 2D array
+ * Now retrieves pre-computed AoA from the unified workbook
  */
 export function getWorksheetData(workbook, sheetName) {
-    const sheet = workbook.Sheets[sheetName];
-    if (!sheet) return [];
-    
-    // Get the sheet range to ensure we capture all columns including empty ones
-    const range = XLSX.utils.decode_range(sheet['!ref']);
-    
-    const data = XLSX.utils.sheet_to_json(sheet, {
-        header: 1,           // Return array of arrays
-        defval: null,        // Empty cells return null (not undefined)
-        raw: false,          // Format values as strings
-        dateNF: 'yyyy-mm-dd',
-        range: range,        // CRITICAL: Include full range to preserve empty cells
-        blankrows: true      // Include blank rows (don't skip them)
-    });
+    // Use the new helper that works with our AoA format
+    const data = getWorksheetDataFromWorkbook(workbook, sheetName);
+    if (!data || data.length === 0) {
+        return [];
+    }
     
     // Normalize empty strings to null for consistency between CSV and Excel
     return data.map(row => 
-        row.map(cell => {
+        (row || []).map(cell => {
             if (cell === '' || cell === undefined) {
                 return null;
             }

@@ -1,25 +1,37 @@
-import XLSX from 'xlsx';
 import { pool } from '../db.js';
 import { findExistingEmployee } from './employeeMatching.js';
 import { findAndMergeDuplicates } from './autoMergeDuplicates.js';
+import { loadFileAsWorkbook, getWorksheetDataFromWorkbook } from './unifiedFileParser.js';
 
 /**
  * Parse Excel file and save for display viewing
  * Preserves exact structure from Excel including multiple punches per day
+ * 
+ * NOTE: Uses exceljs adapter instead of SheetJS xlsx for security.
  */
 
 // Load file as workbook (handles both CSV and Excel)
 // Uses unified parser for format detection and normalization
-import { loadFileAsWorkbook } from './unifiedFileParser.js';
-
-function loadExcelWorkbook(fileBuffer, filename = null) {
-    return loadFileAsWorkbook(fileBuffer, filename || 'unknown');
+async function loadExcelWorkbook(fileBuffer, filename = null) {
+    return await loadFileAsWorkbook(fileBuffer, filename || 'unknown');
 }
 
 // Get worksheet data as 2D array
 function getWorksheetData(workbook, sheetName) {
-    const worksheet = workbook.Sheets[sheetName];
-    return XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
+    const data = getWorksheetDataFromWorkbook(workbook, sheetName);
+    if (!data || data.length === 0) {
+        return [];
+    }
+    
+    // Normalize to match old behavior: empty cells become ''
+    return data.map(row => 
+        (row || []).map(cell => {
+            if (cell === null || cell === undefined) {
+                return '';
+            }
+            return cell;
+        })
+    );
 }
 
 // Parse filename to get pay period dates
@@ -279,7 +291,7 @@ export async function importTimecardsForDisplay(fileBuffer, filename) {
         await client.query('BEGIN');
         
         // Load file as workbook (handles both CSV and Excel)
-        const workbook = loadExcelWorkbook(fileBuffer, filename);
+        const workbook = await loadExcelWorkbook(fileBuffer, filename);
         const employees = [];
         
         // Parse pay period from filename and Excel

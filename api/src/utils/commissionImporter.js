@@ -760,7 +760,7 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
     
     try {
         // Load file as workbook (handles both CSV and Excel)
-        const workbook = loadExcelWorkbook(fileBuffer, filename);
+        const workbook = await loadExcelWorkbook(fileBuffer, filename);
         const actualSheetName = sheetName || workbook.SheetNames[workbook.SheetNames.length - 1];
         summary.sheet = actualSheetName;
         
@@ -771,7 +771,8 @@ export async function importCommissionsFromExcel(fileBuffer, filename, sheetName
         let periodInfo = null;
         if (data && data.length > 0 && data[0]) {
             // Cell A1 should contain period text like "Two pay-periods in June:  May 19- June 1 & June 2- June 15"
-            const cellA1 = data[0][Object.keys(data[0])[0]]; // Get first column value of first row
+            // Data is AoA (Array of Arrays), so data[0][0] is cell A1
+            const cellA1 = (data?.[0]?.[0] ?? null);
             summary.addDebugLog(`Cell A1 content: "${cellA1}"`);
             
             periodInfo = parseCommissionPeriod(cellA1);

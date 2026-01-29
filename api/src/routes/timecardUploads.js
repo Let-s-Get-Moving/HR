@@ -137,9 +137,15 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         
         // 1. COMPREHENSIVE FILE CONTENT VALIDATION
         // Determine file type based on extension
+        // NOTE: Only .xlsx supported (legacy .xls removed for security)
         let fileType = 'csv'; // Default to CSV
-        if (filename.endsWith('.xlsx') || filename.endsWith('.xls')) {
+        if (filename.endsWith('.xlsx')) {
             fileType = 'excel';
+        } else if (filename.endsWith('.xls')) {
+            return res.status(400).json({
+                error: "Legacy .xls files not supported",
+                details: "Please convert your file to .xlsx format (Excel 2007+) and try again"
+            });
         }
         
         const fileValidation = await validateFileContent(req.file, fileType);

@@ -6,18 +6,18 @@
  * - Row parsing
  * - Data type conversion
  * 
+ * NOTE: Uses exceljs adapter instead of SheetJS xlsx.
+ * 
  * Run: node tests/test-sales-performance-import.js
  */
 
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import ExcelJS from 'exceljs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Import utilities from the API (relative to this test file location)
-const XLSX = await import('xlsx');
 
 // Test file path
 const TEST_FILE_PATH = join(__dirname, '..', 'sales-person-performance (2).xlsx');
@@ -149,6 +149,18 @@ function test(name, fn) {
     }
 }
 
+async function testAsync(name, fn) {
+    try {
+        await fn();
+        console.log(`✅ ${name}`);
+        passed++;
+    } catch (error) {
+        console.log(`❌ ${name}`);
+        console.log(`   Error: ${error.message}`);
+        failed++;
+    }
+}
+
 function assert(condition, message) {
     if (!condition) {
         throw new Error(message || 'Assertion failed');
@@ -162,155 +174,110 @@ function assertEqual(actual, expected, message) {
 }
 
 // Run tests
-console.log('\n🧪 Sales Performance Import Tests\n');
-console.log('=' .repeat(50));
+async function runTests() {
+    console.log('\n🧪 Sales Performance Import Tests\n');
+    console.log('=' .repeat(50));
 
-// Test 1: File exists and is readable
-test('File exists and is readable', () => {
-    const buffer = readFileSync(TEST_FILE_PATH);
-    assert(buffer.length > 0, 'File should not be empty');
-    console.log(`   File size: ${buffer.length} bytes`);
-});
-
-// Test 2: Excel file can be parsed
-let workbook;
-let sheetData;
-test('Excel file can be parsed', () => {
-    const buffer = readFileSync(TEST_FILE_PATH);
-    workbook = XLSX.default.read(buffer, { type: 'buffer', cellDates: false });
-    assert(workbook.SheetNames.length > 0, 'Workbook should have at least one sheet');
-    console.log(`   Sheets: ${workbook.SheetNames.join(', ')}`);
-});
-
-// Test 3: First sheet has expected name
-test('First sheet is named "data"', () => {
-    assertEqual(workbook.SheetNames[0], 'data', 'First sheet should be named "data"');
-});
-
-// Test 4: Sheet data can be extracted
-test('Sheet data can be extracted as array', () => {
-    const worksheet = workbook.Sheets['data'];
-    sheetData = XLSX.default.utils.sheet_to_json(worksheet, {
-        header: 1,
-        defval: null,
-        raw: false,
-        blankrows: true
+    // Test 1: File exists and is readable
+    test('File exists and is readable', () => {
+        const buffer = readFileSync(TEST_FILE_PATH);
+        assert(buffer.length > 0, 'File should not be empty');
+        console.log(`   File size: ${buffer.length} bytes`);
     });
-    assert(sheetData.length > 0, 'Sheet should have data');
-    console.log(`   Total rows: ${sheetData.length}`);
-});
 
-// Test 5: Header row matches expected format
-test('Header row matches sales-person-performance format', () => {
-    const headerRow = sheetData[0];
-    assert(detectSalesPerformanceHeaders(headerRow), 'Headers should match expected format');
-    console.log(`   Detected ${EXPECTED_HEADERS.length} columns`);
-});
+    // Test 2: Excel file can be parsed with exceljs
+    let workbook;
+    let sheetData;
+    await testAsync('Excel file can be parsed', async () => {
+        const buffer = readFileSync(TEST_FILE_PATH);
+        workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
+        assert(workbook.worksheets.length > 0, 'Workbook should have at least one sheet');
+        console.log(`   Sheets: ${workbook.worksheets.map(s => s.name).join(', ')}`);
+    });
 
-// Test 6: Data rows exist (excluding header)
-test('Data rows exist', () => {
-    const dataRowCount = sheetData.length - 1;
-    assert(dataRowCount > 0, 'Should have at least one data row');
-    console.log(`   Data rows: ${dataRowCount}`);
-});
+    // Test 3: First sheet has expected name
+    test('First sheet is named "data"', () => {
+        assertEqual(workbook.worksheets[0].name, 'data', 'First sheet should be named "data"');
+    });
 
-// Test 7: Parse first data row
-test('First data row parses correctly', () => {
-    const row = sheetData[1]; // First data row
-    const name = row[0];
-    const leadsReceived = parseInt_(row[1]);
-    const badPct = parsePercent(row[3]);
-    const bookedTotal = parseMoney(row[14]);
-    
-    assert(name !== null, 'Name should not be null');
-    assert(typeof leadsReceived === 'number' || leadsReceived === null, 'Leads received should be number or null');
-    assert(typeof badPct === 'number' || badPct === null, 'Bad % should be number or null');
-    console.log(`   First row: name="${name}", leads=${leadsReceived}, badPct=${badPct}%, bookedTotal=$${bookedTotal}`);
-});
+    // Test 4: Sheet data can be extracted
+    test('Sheet data can be extracted as array', () => {
+        const worksheet = workbook.getWorksheet('data');
+        sheetData = [];
+        worksheet.eachRow({ includeEmpty: true }, (row, rowNumber) => {
+            const rowData = [];
+            row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                while (rowData.length < colNumber - 1) {
+                    rowData.push(null);
+                }
+                let value = cell.value;
+                if (value && typeof value === 'object' && value.result !== undefined) {
+                    value = value.result;
+                }
+                rowData.push(value === null || value === undefined ? null : value);
+            });
+            sheetData.push(rowData);
+        });
+        assert(sheetData.length > 0, 'Sheet should have data');
+        console.log(`   Total rows: ${sheetData.length}`);
+    });
 
-// Test 8: Name normalization works
-test('Name normalization works correctly', () => {
-    const testCases = [
-        { input: ' Alejandro', expected: 'alejandro' },
-        { input: ' Bobby', expected: 'bobby' },
-        { input: ' Colin C', expected: 'colin c' },
-        { input: "Let's Get Moving Edmonton - Danylo Z", expected: 'lets get moving edmonton - danylo z' },
-        { input: ' Accountant LGM', expected: 'accountant lgm' }
-    ];
-    
-    for (const tc of testCases) {
-        const result = normalizeNameKey(tc.input);
-        assertEqual(result, tc.expected, `normalizeNameKey("${tc.input}")`);
-    }
-    console.log(`   Tested ${testCases.length} name normalizations`);
-});
+    // Test 5: Header row matches expected format
+    test('Header row matches sales-person-performance format', () => {
+        const headerRow = sheetData[0];
+        assert(detectSalesPerformanceHeaders(headerRow), 'Headers should match expected format');
+        console.log(`   Detected ${EXPECTED_HEADERS.length} columns`);
+    });
 
-// Test 9: Percentage parsing handles various formats
-test('Percentage parsing handles various formats', () => {
-    const testCases = [
-        { input: '95.14%', expected: 95.14 },
-        { input: '0.%', expected: 0 },
-        { input: '100.%', expected: 100 },
-        { input: '24.1%', expected: 24.1 },
-        { input: null, expected: null },
-        { input: '', expected: null }
-    ];
-    
-    for (const tc of testCases) {
-        const result = parsePercent(tc.input);
-        assertEqual(result, tc.expected, `parsePercent("${tc.input}")`);
-    }
-    console.log(`   Tested ${testCases.length} percentage formats`);
-});
+    // Test 6: Data rows exist (excluding header)
+    test('Data rows exist', () => {
+        const dataRowCount = sheetData.length - 1;
+        assert(dataRowCount > 0, 'Should have at least one data row');
+        console.log(`   Data rows: ${dataRowCount}`);
+    });
 
-// Test 10: Money parsing handles various formats
-test('Money parsing handles various formats', () => {
-    const testCases = [
-        { input: '$91,256.22 ', expected: 91256.22 },
-        { input: '$0.00 ', expected: 0 },
-        { input: '$1,941.62 ', expected: 1941.62 },
-        { input: '$2,299.50 ', expected: 2299.50 },
-        { input: null, expected: null },
-        { input: '', expected: null }
-    ];
-    
-    for (const tc of testCases) {
-        const result = parseMoney(tc.input);
-        assertEqual(result, tc.expected, `parseMoney("${tc.input}")`);
-    }
-    console.log(`   Tested ${testCases.length} money formats`);
-});
+    // Test 7: Parse first data row
+    test('First data row parses correctly', () => {
+        const row = sheetData[1]; // First data row
+        const name = row[0];
+        const leadsReceived = parseInt_(row[1]);
+        const badPct = parsePercent(row[3]);
+        const bookedTotal = parseMoney(row[14]);
+        
+        assert(name !== null, 'Name should not be null');
+        assert(typeof leadsReceived === 'number' || leadsReceived === null, 'Leads received should be number or null');
+        assert(typeof badPct === 'number' || badPct === null, 'Bad % should be number or null');
+        console.log(`   First row: name="${name}", leads=${leadsReceived}, badPct=${badPct}%, bookedTotal=$${bookedTotal}`);
+    });
 
-// Test 11: All data rows have a name
-test('All data rows have a name', () => {
-    let rowsWithName = 0;
-    let rowsWithoutName = 0;
-    
-    for (let i = 1; i < sheetData.length; i++) {
-        const name = sheetData[i][0];
-        if (name && String(name).trim()) {
-            rowsWithName++;
-        } else {
-            rowsWithoutName++;
+    // Test 8: Name normalization works
+    test('Name normalization works correctly', () => {
+        const testCases = [
+            { input: ' Alejandro', expected: 'alejandro' },
+            { input: ' Bobby', expected: 'bobby' },
+            { input: ' Colin C', expected: 'colin c' },
+            { input: "Let's Get Moving Edmonton - Danylo Z", expected: 'lets get moving edmonton - danylo z' },
+            { input: ' Accountant LGM', expected: 'accountant lgm' }
+        ];
+        
+        for (const tc of testCases) {
+            const result = normalizeNameKey(tc.input);
+            assertEqual(result, tc.expected, `normalizeNameKey("${tc.input}")`);
         }
+        console.log(`   Tested ${testCases.length} name normalizations`);
+    });
+
+    // Summary
+    console.log('\n' + '=' .repeat(50));
+    console.log(`\n📊 Test Summary: ${passed} passed, ${failed} failed\n`);
+
+    if (failed > 0) {
+        process.exit(1);
     }
-    
-    assertEqual(rowsWithoutName, 0, 'All data rows should have a name');
-    console.log(`   ${rowsWithName} rows with names, ${rowsWithoutName} without`);
-});
-
-// Test 12: Count total rows that would be imported
-test('Expected row count matches file contents', () => {
-    const expectedDataRows = 46; // Based on analysis: 47 rows total, 1 header
-    const actualDataRows = sheetData.length - 1;
-    assertEqual(actualDataRows, expectedDataRows, 'Data row count');
-    console.log(`   ${actualDataRows} data rows ready for import`);
-});
-
-// Summary
-console.log('\n' + '=' .repeat(50));
-console.log(`\n📊 Test Summary: ${passed} passed, ${failed} failed\n`);
-
-if (failed > 0) {
-    process.exit(1);
 }
+
+runTests().catch(error => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+});

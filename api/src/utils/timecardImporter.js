@@ -296,7 +296,7 @@ export async function importTimecardsFromExcel(fileBuffer, filename, sheetName =
     const summary = new ImportSummary(filename, sheetName || 'default');
     
     try {
-        const workbook = loadExcelWorkbook(fileBuffer);
+        const workbook = await loadExcelWorkbook(fileBuffer);
         const actualSheetName = sheetName || workbook.SheetNames[0];
         summary.sheet = actualSheetName;
         

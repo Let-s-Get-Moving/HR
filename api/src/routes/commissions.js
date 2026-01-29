@@ -22,16 +22,18 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
+    // NOTE: Only .xlsx supported (legacy .xls removed for security)
     const isExcel = file.mimetype.includes('sheet') || 
-                    file.originalname.endsWith('.xlsx') || 
-                    file.originalname.endsWith('.xls');
+                    file.originalname.endsWith('.xlsx');
     const isCSV = file.mimetype === 'text/csv' || 
                   file.mimetype === 'application/csv' ||
                   file.originalname.endsWith('.csv');
     if (isExcel || isCSV) {
       cb(null, true);
+    } else if (file.originalname.endsWith('.xls')) {
+      cb(new Error('Legacy .xls files are not supported. Please convert to .xlsx format.'), false);
     } else {
-      cb(new Error('Only Excel or CSV files are allowed'), false);
+      cb(new Error('Only Excel (.xlsx) or CSV files are allowed'), false);
     }
   }
 });
@@ -49,7 +51,7 @@ r.post("/debug-headers", upload.single('excel_file'), async (req, res) => {
     const { loadExcelWorkbook, getWorksheetData, detectAllBlocks } = await import('../utils/excelParser.js');
     
     // Load workbook
-    const workbook = loadExcelWorkbook(req.file.buffer);
+    const workbook = await loadExcelWorkbook(req.file.buffer);
     console.log('Sheet names:', workbook.SheetNames);
     
     // Get worksheet data  
@@ -116,7 +118,12 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
         error: "CSV format not supported",
         details: "Please upload an Excel (.xlsx) file in sales-person-performance format"
       });
-    } else if (!req.file.originalname.endsWith('.xlsx') && !req.file.originalname.endsWith('.xls')) {
+    } else if (req.file.originalname.endsWith('.xls') && !req.file.originalname.endsWith('.xlsx')) {
+      return res.status(400).json({
+        error: "Legacy .xls files not supported",
+        details: "Please convert your file to .xlsx format (Excel 2007+) and try again"
+      });
+    } else if (!req.file.originalname.endsWith('.xlsx')) {
       return res.status(400).json({
         error: "Invalid file type",
         details: "Please upload an Excel (.xlsx) file"
@@ -158,7 +165,7 @@ r.post("/import", upload.single('excel_file'), async (req, res) => {
     console.log(`📅 [COMMISSIONS] Period: ${period_start} to ${period_end}`);
     
     // 3. Detect file schema by reading headers
-    const workbook = loadExcelWorkbook(req.file.buffer, req.file.originalname);
+    const workbook = await loadExcelWorkbook(req.file.buffer, req.file.originalname);
     const actualSheetName = sheet_name || workbook.SheetNames[0];
     const data = getWorksheetData(workbook, actualSheetName);
     

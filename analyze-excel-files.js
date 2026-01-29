@@ -2,11 +2,13 @@
  * ANALYZE EXCEL FILES
  * This script examines the actual Excel files to understand their structure
  * and content for proper validation
+ * 
+ * NOTE: Uses exceljs instead of SheetJS xlsx.
  */
 
-const XLSX = require('xlsx');
-const fs = require('fs');
-const path = require('path');
+import ExcelJS from 'exceljs';
+import fs from 'fs';
+import path from 'path';
 
 // Color logging
 const log = {
@@ -17,78 +19,49 @@ const log = {
   test: (msg) => console.log(`\x1b[35m[TEST]\x1b[0m ${msg}`)
 };
 
-function analyzeExcelFile(filePath) {
+async function analyzeExcelFile(filePath) {
   log.info(`\n📊 Analyzing: ${path.basename(filePath)}`);
   console.log('='.repeat(60));
   
   try {
-    // Read the Excel file
-    const workbook = XLSX.readFile(filePath);
+    // Read the Excel file using exceljs
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filePath);
     
-    console.log(`📋 Sheet Names: ${workbook.SheetNames.join(', ')}`);
-    console.log(`📊 Number of Sheets: ${workbook.SheetNames.length}`);
+    const sheetNames = workbook.worksheets.map(ws => ws.name);
+    console.log(`📋 Sheet Names: ${sheetNames.join(', ')}`);
+    console.log(`📊 Number of Sheets: ${sheetNames.length}`);
     
     // Analyze each sheet
-    workbook.SheetNames.forEach((sheetName, index) => {
-      console.log(`\n📄 Sheet ${index + 1}: "${sheetName}"`);
+    workbook.worksheets.forEach((worksheet, index) => {
+      console.log(`\n📄 Sheet ${index + 1}: "${worksheet.name}"`);
       console.log('-'.repeat(40));
       
-      const worksheet = workbook.Sheets[sheetName];
-      
       // Get the range of the sheet
-      const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-      console.log(`📍 Range: ${worksheet['!ref'] || 'Empty'}`);
-      console.log(`📏 Rows: ${range.e.r + 1}, Columns: ${range.e.c + 1}`);
+      const rowCount = worksheet.rowCount;
+      const columnCount = worksheet.columnCount;
+      console.log(`📏 Rows: ${rowCount}, Columns: ${columnCount}`);
       
-      // Get first 10 rows of data
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      console.log(`📊 Total Data Rows: ${jsonData.length}`);
-      
-      if (jsonData.length > 0) {
-        console.log('\n🔍 First 5 rows of data:');
-        jsonData.slice(0, 5).forEach((row, i) => {
-          console.log(`  Row ${i + 1}:`, row);
+      // Get first 5 rows of data
+      console.log('\n🔍 First 5 rows of data:');
+      for (let i = 1; i <= Math.min(5, rowCount); i++) {
+        const row = worksheet.getRow(i);
+        const values = [];
+        row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+          while (values.length < colNumber - 1) {
+            values.push(null);
+          }
+          values.push(cell.value);
         });
-        
-        // Analyze column headers
-        if (jsonData.length > 0) {
-          const headers = jsonData[0];
-          console.log(`\n📋 Column Headers (${headers.length}):`);
-          headers.forEach((header, i) => {
-            console.log(`  ${i + 1}. "${header}"`);
-          });
-        }
-        
-        // Check for data types in columns
-        if (jsonData.length > 1) {
-          console.log('\n🔍 Data Type Analysis:');
-          const headers = jsonData[0];
-          const sampleRow = jsonData[1];
-          
-          headers.forEach((header, i) => {
-            const value = sampleRow[i];
-            const type = typeof value;
-            console.log(`  "${header}": ${type} (${value})`);
-          });
-        }
+        console.log(`  Row ${i}:`, values.slice(0, 10));
       }
       
       // Check for merged cells
-      if (worksheet['!merges']) {
-        console.log(`\n🔗 Merged Cells: ${worksheet['!merges'].length}`);
-        worksheet['!merges'].slice(0, 3).forEach((merge, i) => {
-          console.log(`  Merge ${i + 1}: ${XLSX.utils.encode_range(merge)}`);
-        });
-      }
-      
-      // Check for formulas
-      const formulaCells = Object.keys(worksheet).filter(key => 
-        key.startsWith('!') === false && worksheet[key].f
-      );
-      if (formulaCells.length > 0) {
-        console.log(`\n🧮 Formula Cells: ${formulaCells.length}`);
-        formulaCells.slice(0, 3).forEach(cell => {
-          console.log(`  ${cell}: ${worksheet[cell].f}`);
+      const mergedCells = worksheet.model?.merges || [];
+      if (mergedCells.length > 0) {
+        console.log(`\n🔗 Merged Cells: ${mergedCells.length}`);
+        mergedCells.slice(0, 3).forEach((merge, i) => {
+          console.log(`  Merge ${i + 1}: ${merge}`);
         });
       }
     });
@@ -102,12 +75,7 @@ function analyzeExcelFile(filePath) {
     
     return {
       success: true,
-      sheets: workbook.SheetNames.length,
-      totalRows: workbook.SheetNames.reduce((total, sheetName) => {
-        const ws = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(ws, { header: 1 });
-        return total + jsonData.length;
-      }, 0),
+      sheets: sheetNames.length,
       fileSize: stats.size
     };
     
@@ -131,7 +99,7 @@ async function analyzeAllExcelFiles() {
   
   for (const file of excelFiles) {
     if (fs.existsSync(file)) {
-      const result = analyzeExcelFile(file);
+      const result = await analyzeExcelFile(file);
       results.push({ file, ...result });
     } else {
       log.warn(`⚠️ File not found: ${file}`);
@@ -145,7 +113,7 @@ async function analyzeAllExcelFiles() {
   
   results.forEach(result => {
     if (result.success) {
-      console.log(`✅ ${result.file}: ${result.sheets} sheets, ${result.totalRows} total rows, ${(result.fileSize / 1024).toFixed(2)} KB`);
+      console.log(`✅ ${result.file}: ${result.sheets} sheets, ${(result.fileSize / 1024).toFixed(2)} KB`);
     } else {
       console.log(`❌ ${result.file}: Error - ${result.error}`);
     }

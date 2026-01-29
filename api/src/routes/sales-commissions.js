@@ -41,16 +41,18 @@ const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
     fileFilter: (req, file, cb) => {
+        // NOTE: Only .xlsx supported (legacy .xls removed for security)
         const isExcel = file.mimetype.includes('sheet') || 
-                        file.originalname.endsWith('.xlsx') || 
-                        file.originalname.endsWith('.xls');
+                        file.originalname.endsWith('.xlsx');
         const isCSV = file.mimetype === 'text/csv' || 
                       file.mimetype === 'application/csv' ||
                       file.originalname.endsWith('.csv');
         if (isExcel || isCSV) {
             cb(null, true);
+        } else if (file.originalname.endsWith('.xls')) {
+            cb(new Error('Legacy .xls files are not supported. Please convert to .xlsx format.'), false);
         } else {
-            cb(new Error('Only Excel or CSV files are allowed'), false);
+            cb(new Error('Only Excel (.xlsx) or CSV files are allowed'), false);
         }
     }
 });
@@ -537,14 +539,22 @@ r.post("/import/lead-status", requireAuth, requireRole([ROLES.MANAGER, ROLES.ADM
         
         console.log(`📥 [SALES-COMM] Starting Lead Status import: ${req.file.originalname}`);
         
-        // Validate file type
-        const isExcel = req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls');
+        // Validate file type (NOTE: .xls removed for security)
+        const isExcel = req.file.originalname.endsWith('.xlsx');
         const isCSV = req.file.originalname.endsWith('.csv');
+        const isLegacyXls = req.file.originalname.endsWith('.xls') && !req.file.originalname.endsWith('.xlsx');
+        
+        if (isLegacyXls) {
+            return res.status(400).json({
+                error: "Legacy .xls files not supported",
+                details: "Please convert your file to .xlsx format (Excel 2007+) and try again"
+            });
+        }
         
         if (!isExcel && !isCSV) {
             return res.status(400).json({
                 error: "Invalid file type",
-                details: "Please upload an Excel (.xlsx, .xls) or CSV file"
+                details: "Please upload an Excel (.xlsx) or CSV file"
             });
         }
         
@@ -606,14 +616,22 @@ r.post("/import/booked-opportunities", requireAuth, requireRole([ROLES.MANAGER, 
         
         console.log(`📥 [SALES-COMM] Starting Booked Opportunities import: ${req.file.originalname}`);
         
-        // Validate file type
-        const isExcel = req.file.originalname.endsWith('.xlsx') || req.file.originalname.endsWith('.xls');
+        // Validate file type (NOTE: .xls removed for security)
+        const isExcel = req.file.originalname.endsWith('.xlsx');
         const isCSV = req.file.originalname.endsWith('.csv');
+        const isLegacyXls = req.file.originalname.endsWith('.xls') && !req.file.originalname.endsWith('.xlsx');
+        
+        if (isLegacyXls) {
+            return res.status(400).json({
+                error: "Legacy .xls files not supported",
+                details: "Please convert your file to .xlsx format (Excel 2007+) and try again"
+            });
+        }
         
         if (!isExcel && !isCSV) {
             return res.status(400).json({
                 error: "Invalid file type",
-                details: "Please upload an Excel (.xlsx, .xls) or CSV file"
+                details: "Please upload an Excel (.xlsx) or CSV file"
             });
         }
         

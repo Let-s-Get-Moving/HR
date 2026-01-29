@@ -278,7 +278,7 @@ class ImportSummary {
  */
 export async function importLeadStatusFromExcel(fileBuffer, filename, sheetName = null) {
     // Load workbook
-    const workbook = loadExcelWorkbook(fileBuffer, filename);
+    const workbook = await loadExcelWorkbook(fileBuffer, filename);
     const actualSheetName = sheetName || workbook.SheetNames[0];
     
     const summary = new ImportSummary(filename, actualSheetName);

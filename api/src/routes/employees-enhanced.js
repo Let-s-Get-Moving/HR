@@ -26,16 +26,18 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
+    // NOTE: Only .xlsx supported (legacy .xls removed for security)
     const isExcel = file.mimetype.includes('sheet') || 
-                    file.originalname.endsWith('.xlsx') || 
-                    file.originalname.endsWith('.xls');
+                    file.originalname.endsWith('.xlsx');
     const isCSV = file.mimetype === 'text/csv' || 
                   file.mimetype === 'application/csv' ||
                   file.originalname.endsWith('.csv');
     if (isExcel || isCSV) {
       cb(null, true);
+    } else if (file.originalname.endsWith('.xls')) {
+      cb(new Error('Legacy .xls files are not supported. Please convert to .xlsx format.'), false);
     } else {
-      cb(new Error('Only Excel or CSV files are allowed'), false);
+      cb(new Error('Only Excel (.xlsx) or CSV files are allowed'), false);
     }
   }
 });
@@ -426,8 +428,8 @@ r.post("/bulk-import",
   createFileValidationMiddleware({
     required: true,
     maxSize: 5 * 1024 * 1024, // 5MB
-    allowedTypes: ['text/csv', 'application/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel'],
-    allowedExtensions: ['csv', 'xlsx', 'xls'],
+    allowedTypes: ['text/csv', 'application/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+    allowedExtensions: ['csv', 'xlsx'], // NOTE: .xls removed for security
     contentValidation: null // Will be detected automatically
   }),
   async (req, res) => {
@@ -443,7 +445,7 @@ r.post("/bulk-import",
       const { loadFileAsWorkbook } = await import('../utils/unifiedFileParser.js');
       const { getWorksheetData } = await import('../utils/excelParser.js');
       
-      const workbook = loadFileAsWorkbook(file.buffer, file.originalname);
+      const workbook = await loadFileAsWorkbook(file.buffer, file.originalname);
       const sheetName = workbook.SheetNames[0]; // Use first sheet
       const data = getWorksheetData(workbook, sheetName);
       
