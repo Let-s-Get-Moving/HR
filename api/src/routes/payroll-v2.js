@@ -1,6 +1,7 @@
 import express from "express";
 import { z } from "zod";
 import { q } from "../db.js";
+import { logSecurityEventDb } from "../utils/security.js";
 
 const r = express.Router();
 
@@ -343,6 +344,24 @@ r.post("/vacation/payout", async (req, res) => {
     console.log(`🏖️  [VACATION-PAYOUT] ${data.vacation_hours_paid} hours ($${vacationPayAmount.toFixed(2)})`);
     console.log('═══════════════════════════════════════════════════════════\n');
 
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'vacation_payout_created',
+      targetType: 'employee',
+      targetId: data.employee_id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: {
+        payoutId: payoutRows[0].id,
+        vacationHoursPaid: data.vacation_hours_paid,
+        payoutDate: data.payout_date,
+        payoutAmount: vacationPayAmount,
+        approvedBy: data.approved_by || null
+      }
+    });
+
     res.json(payoutRows[0]);
   } catch (error) {
     const totalTime = Date.now() - startTime;
@@ -351,6 +370,17 @@ r.post("/vacation/payout", async (req, res) => {
     console.error('❌ [VACATION-PAYOUT] Error:', error.message);
     console.error('❌ [VACATION-PAYOUT] Stack:', error.stack);
     console.error('═══════════════════════════════════════════════════════════\n');
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'vacation_payout_created',
+      targetType: 'employee',
+      targetId: req.body?.employee_id || null,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: false,
+      metadata: { error: error.message }
+    });
     res.status(500).json({ error: "Failed to create vacation payout: " + error.message });
   }
 });

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { q } from "../db.js";
 import dbPool from "../utils/dbPool.js";
 import { parse } from "csv-parse/sync";
+import { logSecurityEventDb } from "../utils/security.js";
 
 const r = Router();
 
@@ -94,6 +95,17 @@ r.post("/time-entries", async (req, res) => {
     });
     
     console.log(`✅ Import completed: ${result.inserted} inserted, ${result.skipped} skipped`);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'time_entries_imported',
+      targetType: 'payroll_submission',
+      targetId: result.submission_id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: { totalRows: rows.length, inserted: result.inserted, skipped: result.skipped }
+    });
     res.json({ 
       inserted: result.inserted, 
       skipped: result.skipped,
@@ -104,6 +116,17 @@ r.post("/time-entries", async (req, res) => {
     
   } catch (e) {
     console.error("Error importing time entries:", e);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'time_entries_imported',
+      targetType: 'payroll_submission',
+      targetId: null,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: false,
+      metadata: { error: e.message }
+    });
     res.status(500).json({ error: e.message });
   }
 });

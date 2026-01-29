@@ -4,11 +4,29 @@ import { z } from "zod";
 import { applyScopeFilter, requireRole, ROLES } from "../middleware/rbac.js";
 import { requireAuth } from "../session.js";
 import { normalizeEmployeeDates } from "../utils/dateUtils.js";
+import { logSecurityEventDb } from "../utils/security.js";
 
 const r = Router();
 
 // Apply RBAC scope filtering to all employee routes
 r.use(applyScopeFilter);
+
+const EMPLOYEE_SENSITIVE_FIELDS = new Set([
+  'sin_number',
+  'sin_expiry_date',
+  'bank_name',
+  'bank_account_number',
+  'bank_transit_number',
+  'full_address',
+]);
+
+function getAuditContext(req) {
+  return {
+    userId: req.user?.id || null,
+    ip: req.ip,
+    userAgent: req.headers['user-agent'],
+  };
+}
 
 r.get("/", async (req, res) => {
   let query = `SELECT e.*, 
@@ -521,6 +539,21 @@ r.post("/", async (req, res) => {
       ]
     );
     console.log('✅ [API] Employee created:', rows[0]);
+    
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'employee_created',
+      targetType: 'employee',
+      targetId: rows[0]?.id,
+      severity: 'high',
+      success: true,
+      metadata: {
+        createdEmployeeId: rows[0]?.id,
+        departmentId: data.department_id ?? null,
+        locationId: data.location_id ?? null
+      }
+    });
+    
     // Normalize date-only fields to YYYY-MM-DD
     res.status(201).json(normalizeEmployeeDates(rows[0]));
   } catch (error) {
@@ -532,12 +565,31 @@ r.post("/", async (req, res) => {
       return res.status(409).json({ error: nicknameError, code: 'NICKNAME_CONFLICT' });
     }
     
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'employee_created',
+      targetType: 'employee',
+      targetId: null,
+      severity: 'high',
+      success: false,
+      metadata: { error: error.message }
+    });
+    
     res.status(500).json({ error: 'Failed to create employee', details: error.message });
   }
 });
 
 r.delete("/:id", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => {
   await q(`UPDATE employees SET status='Terminated', termination_date=CURRENT_DATE, termination_reason='Terminated via HR system' WHERE id=$1`, [req.params.id]);
+  await logSecurityEventDb({
+    ...getAuditContext(req),
+    action: 'employee_terminated',
+    targetType: 'employee',
+    targetId: req.params.id,
+    severity: 'critical',
+    success: true,
+    metadata: { via: 'employees_delete' }
+  });
   res.sendStatus(204);
 });
 
@@ -563,6 +615,8 @@ r.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Employee not found" });
     }
     const existing = existingResult.rows[0];
+    const requestedFields = Object.keys(data || {});
+    const touchesSensitive = requestedFields.some((k) => EMPLOYEE_SENSITIVE_FIELDS.has(k));
     
     // Validate foreign keys exist if provided
     if (data.job_title_id !== undefined && data.job_title_id !== null) {
@@ -713,6 +767,20 @@ r.put("/:id", async (req, res) => {
       return res.status(404).json({ error: "Employee not found" });
     }
     
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'employee_updated',
+      targetType: 'employee',
+      targetId: id,
+      severity: touchesSensitive ? 'high' : 'medium',
+      success: true,
+      metadata: {
+        changedFields: requestedFields,
+        touchesSensitive,
+        statusChange: data.status !== undefined && data.status !== existing.status,
+      }
+    });
+    
     // Normalize date-only fields to YYYY-MM-DD
     res.json(normalizeEmployeeDates(rows[0]));
   } catch (error) {
@@ -724,6 +792,16 @@ r.put("/:id", async (req, res) => {
     if (nicknameError) {
       return res.status(409).json({ error: nicknameError, code: 'NICKNAME_CONFLICT' });
     }
+    
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'employee_updated',
+      targetType: 'employee',
+      targetId: id,
+      severity: 'high',
+      success: false,
+      metadata: { error: error.message }
+    });
     
     res.status(500).json({ error: "Failed to update employee", details: error.message });
   }
@@ -908,6 +986,25 @@ r.post("/:id/documents", async (req, res) => {
       doc_type,
       category: rows[0].document_category
     });
+    
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'document_uploaded',
+      targetType: 'document',
+      targetId: rows[0]?.id,
+      severity: 'high',
+      success: true,
+      metadata: {
+        employeeId: id,
+        docType: doc_type,
+        fileName: file_name,
+        mimeType: mime_type || 'application/octet-stream',
+        category: document_category || 'Other',
+        signed: !!signed,
+        fileSize: rows[0]?.file_size || null
+      }
+    });
+    
     res.status(201).json(rows[0]);
   } catch (error) {
     console.error('❌ [API] Error uploading document:', error);
@@ -916,6 +1013,16 @@ r.post("/:id/documents", async (req, res) => {
       code: error.code,
       stack: error.stack
     });
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'document_uploaded',
+      targetType: 'document',
+      targetId: null,
+      severity: 'high',
+      success: false,
+      metadata: { employeeId: req.params?.id, error: error.message }
+    });
+    
     res.status(500).json({ error: 'Failed to upload document', details: error.message });
   }
 });
@@ -954,11 +1061,29 @@ r.get("/:id/documents/:docId/download", async (req, res) => {
       console.log(`✅ [API] Serving file data, size: ${doc.file_data.length} bytes`);
       res.setHeader('Content-Type', doc.mime_type || 'application/octet-stream');
       res.setHeader('Content-Disposition', `attachment; filename="${doc.file_name}"`);
+      await logSecurityEventDb({
+        ...getAuditContext(req),
+        action: 'document_downloaded',
+        targetType: 'document',
+        targetId: docId,
+        severity: 'high',
+        success: true,
+        metadata: { employeeId: id, fileName: doc.file_name, served: 'file_data' }
+      });
       res.send(doc.file_data);
     } 
     // If we only have a URL, redirect to it
     else if (doc.file_url) {
       console.log(`🔗 [API] Returning external URL`);
+      await logSecurityEventDb({
+        ...getAuditContext(req),
+        action: 'document_downloaded',
+        targetType: 'document',
+        targetId: docId,
+        severity: 'high',
+        success: true,
+        metadata: { employeeId: id, fileName: doc.file_name, served: 'file_url' }
+      });
       res.json({ 
         message: 'Document is stored externally',
         url: doc.file_url,
@@ -976,6 +1101,16 @@ r.get("/:id/documents/:docId/download", async (req, res) => {
       code: error.code,
       stack: error.stack
     });
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'document_downloaded',
+      targetType: 'document',
+      targetId: req.params?.docId || null,
+      severity: 'high',
+      success: false,
+      metadata: { employeeId: req.params?.id, error: error.message }
+    });
+    
     res.status(500).json({ error: 'Failed to download document', details: error.message });
   }
 });
@@ -998,6 +1133,15 @@ r.delete("/:id/documents/:docId", async (req, res) => {
     }
     
     console.log(`✅ [API] Document deleted successfully: ${docId}`);
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'document_deleted',
+      targetType: 'document',
+      targetId: docId,
+      severity: 'high',
+      success: true,
+      metadata: { employeeId: id }
+    });
     res.sendStatus(204);
   } catch (error) {
     console.error('❌ [API] Error deleting document:', error);
@@ -1006,6 +1150,16 @@ r.delete("/:id/documents/:docId", async (req, res) => {
       code: error.code,
       stack: error.stack
     });
+    await logSecurityEventDb({
+      ...getAuditContext(req),
+      action: 'document_deleted',
+      targetType: 'document',
+      targetId: req.params?.docId || null,
+      severity: 'high',
+      success: false,
+      metadata: { employeeId: req.params?.id, error: error.message }
+    });
+    
     res.status(500).json({ error: 'Failed to delete document', details: error.message });
   }
 });

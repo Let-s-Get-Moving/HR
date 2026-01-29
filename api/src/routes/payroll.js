@@ -2,6 +2,7 @@ import express from "express";
 import { z } from "zod";
 import { q } from "../db.js";
 import { formatCurrency, formatHours } from "../utils/formatting.js";
+import { logSecurityEventDb } from "../utils/security.js";
 
 const r = express.Router();
 
@@ -72,8 +73,31 @@ r.post("/fix-schema", async (req, res) => {
       sample_data: result.rows.slice(0, 2)
     });
     
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_schema_fix',
+      targetType: 'payroll',
+      targetId: null,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: true,
+      metadata: { submissionsCount: result.rows.length }
+    });
+    
   } catch (error) {
     console.error('Error fixing schema:', error);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_schema_fix',
+      targetType: 'payroll',
+      targetId: null,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: false,
+      metadata: { error: error.message, code: error.code }
+    });
     res.status(500).json({
       success: false,
       error: error.message,
@@ -251,9 +275,31 @@ r.post("/submissions", async (req, res) => {
       RETURNING *
     `, [period_name, notes, submission_date || new Date().toISOString()]);
     
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_submission_created',
+      targetType: 'payroll_submission',
+      targetId: rows[0]?.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: { periodName: period_name || null }
+    });
     res.json(rows[0]);
   } catch (error) {
     console.error("Error creating payroll submission:", error);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_submission_created',
+      targetType: 'payroll_submission',
+      targetId: null,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: false,
+      metadata: { error: error.message }
+    });
     res.status(500).json({ error: "Failed to create payroll submission" });
   }
 });
@@ -421,9 +467,31 @@ r.post("/periods", async (req, res) => {
        RETURNING *`,
       [data.period_name, data.start_date, data.end_date, data.pay_date, data.status]
     );
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_period_created',
+      targetType: 'payroll_period',
+      targetId: rows[0]?.id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: { periodName: data.period_name, start: data.start_date, end: data.end_date, payDate: data.pay_date }
+    });
     res.status(201).json(rows[0]);
   } catch (error) {
     console.error("Error creating payroll period:", error);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_period_created',
+      targetType: 'payroll_period',
+      targetId: null,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: false,
+      metadata: { error: error.message }
+    });
     res.status(500).json({ error: "Failed to create payroll period" });
   }
 });
@@ -543,9 +611,31 @@ r.post("/calculate/:periodId", async (req, res) => {
     
     console.log(`✅ Payroll calculation completed for ${employeesResult.rows.length} employees`);
     
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_calculated',
+      targetType: 'payroll_period',
+      targetId: periodId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: true,
+      metadata: { employeeCount: employeesResult.rows.length }
+    });
     res.json({ message: "Payroll calculated successfully" });
   } catch (error) {
     console.error("Error calculating payroll:", error);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_calculated',
+      targetType: 'payroll_period',
+      targetId: periodId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'high',
+      success: false,
+      metadata: { error: error.message }
+    });
     res.status(500).json({ error: "Failed to calculate payroll" });
   }
 });
@@ -684,6 +774,17 @@ r.post("/export/:periodId", async (req, res) => {
       [periodId, export_type, filename, 'system']
     );
     
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_exported',
+      targetType: 'payroll_period',
+      targetId: periodId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: true,
+      metadata: { exportType: export_type, filename, recordCount: rows.length }
+    });
     res.json({
       message: "Export completed successfully",
       filename,
@@ -692,6 +793,17 @@ r.post("/export/:periodId", async (req, res) => {
     });
   } catch (error) {
     console.error("Error exporting payroll:", error);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'payroll_exported',
+      targetType: 'payroll_period',
+      targetId: periodId,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: false,
+      metadata: { exportType: export_type, error: error.message }
+    });
     res.status(500).json({ error: "Failed to export payroll" });
   }
 });

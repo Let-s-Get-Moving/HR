@@ -17,6 +17,7 @@ import { requireRole, ROLES } from "../middleware/rbac.js";
 import { enhancedEmployeeSchema } from "../schemas/enhancedSchemas.js";
 import { normalizeEmployeeDates } from "../utils/dateUtils.js";
 import multer from "multer";
+import { logSecurityEventDb } from "../utils/security.js";
 
 const r = Router();
 
@@ -127,8 +128,31 @@ r.post("/",
         data: normalizeEmployeeDates(rows[0])
       });
       
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employee_created',
+        targetType: 'employee',
+        targetId: rows[0]?.id,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'high',
+        success: true,
+        metadata: { createdEmployeeId: rows[0]?.id }
+      });
+      
     } catch (error) {
       console.error('Error creating employee:', error);
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employee_created',
+        targetType: 'employee',
+        targetId: null,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'high',
+        success: false,
+        metadata: { error: error.message }
+      });
       res.status(500).json({ 
         error: 'Failed to create employee',
         details: error.message 
@@ -210,8 +234,31 @@ r.put("/:id",
         data: normalizeEmployeeDates(rows[0])
       });
       
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employee_updated',
+        targetType: 'employee',
+        targetId: id,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'medium',
+        success: true,
+        metadata: { changedFields: Object.keys(data || {}) }
+      });
+      
     } catch (error) {
       console.error('Error updating employee:', error);
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employee_updated',
+        targetType: 'employee',
+        targetId: req.params?.id || null,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'high',
+        success: false,
+        metadata: { error: error.message }
+      });
       res.status(500).json({ 
         error: 'Failed to update employee',
         details: error.message 
@@ -257,8 +304,31 @@ r.delete("/:id", requireRole([ROLES.MANAGER, ROLES.ADMIN]), async (req, res) => 
       message: 'Employee terminated successfully'
     });
     
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'employee_terminated',
+      targetType: 'employee',
+      targetId: id,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: true,
+      metadata: {}
+    });
+    
   } catch (error) {
     console.error('Error terminating employee:', error);
+    await logSecurityEventDb({
+      userId: req.user?.id || null,
+      action: 'employee_terminated',
+      targetType: 'employee',
+      targetId: req.params?.id || null,
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      severity: 'critical',
+      success: false,
+      metadata: { error: error.message }
+    });
     res.status(500).json({ 
       error: 'Failed to terminate employee',
       details: error.message 
@@ -317,8 +387,31 @@ r.post("/:id/photo",
         }
       });
       
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employee_photo_uploaded',
+        targetType: 'employee',
+        targetId: id,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'medium',
+        success: true,
+        metadata: { fileName: file.originalname, fileSize: file.size, mimeType: file.mimetype }
+      });
+      
     } catch (error) {
       console.error('Error uploading photo:', error);
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employee_photo_uploaded',
+        targetType: 'employee',
+        targetId: req.params?.id || null,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'medium',
+        success: false,
+        metadata: { error: error.message }
+      });
       res.status(500).json({ 
         error: 'Failed to upload photo',
         details: error.message 
@@ -478,8 +571,31 @@ r.post("/bulk-import",
         }
       });
       
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employees_bulk_imported',
+        targetType: 'employee',
+        targetId: null,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'high',
+        success: true,
+        metadata: { fileName: file.originalname, totalRows: dataRows.length, insertedCount }
+      });
+      
     } catch (error) {
       console.error('Error in bulk import:', error);
+      await logSecurityEventDb({
+        userId: req.user?.id || null,
+        action: 'employees_bulk_imported',
+        targetType: 'employee',
+        targetId: null,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'high',
+        success: false,
+        metadata: { error: error.message }
+      });
       res.status(500).json({ 
         error: 'Bulk import failed',
         details: error.message 

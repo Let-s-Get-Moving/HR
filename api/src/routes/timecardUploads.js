@@ -3,6 +3,7 @@ import multer from 'multer';
 import { q } from '../db.js';
 import { importTimecardsForDisplay } from '../utils/timecardDisplayImporter.js';
 import { validateFileContent } from '../utils/fileValidation.js';
+import { logSecurityEventDb } from '../utils/security.js';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -158,11 +159,39 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         const result = await importTimecardsForDisplay(fileBuffer, filename);
         
         if (result.error) {
+            await logSecurityEventDb({
+                userId: req.user?.id || null,
+                action: 'timecard_upload',
+                targetType: 'timecard_upload',
+                targetId: null,
+                ip: req.ip,
+                userAgent: req.headers['user-agent'],
+                severity: 'high',
+                success: false,
+                metadata: { filename, error: result.error }
+            });
             return res.status(400).json({ error: result.error, details: result.details });
         }
         
         // Invalidate stats cache after successful upload
         invalidateStatsCache();
+        
+        await logSecurityEventDb({
+            userId: req.user?.id || null,
+            action: 'timecard_upload',
+            targetType: 'timecard_upload',
+            targetId: result.uploadId,
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+            severity: 'high',
+            success: true,
+            metadata: {
+                filename,
+                employeeCount: result.employeeCount,
+                totalHours: result.totalHours,
+                fileSize: req.file.size
+            }
+        });
         
         res.json({
             success: true,
@@ -179,6 +208,17 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         
     } catch (error) {
         console.error('❌ [TIMECARD] Error uploading timecard:', error);
+        await logSecurityEventDb({
+            userId: req.user?.id || null,
+            action: 'timecard_upload',
+            targetType: 'timecard_upload',
+            targetId: null,
+            ip: req.ip,
+            userAgent: req.headers['user-agent'],
+            severity: 'high',
+            success: false,
+            metadata: { filename: req.file?.originalname, error: error.message }
+        });
         res.status(500).json({ error: 'Failed to upload timecard', details: error.message });
     }
 });
