@@ -7,6 +7,16 @@ import { CSRFProtection } from "../middleware/csrf.js";
 
 const r = express.Router();
 
+// Cookie options for cross-origin session cookie (mirrors auth-mfa.js)
+const isProd = process.env.NODE_ENV === 'production';
+const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax', // 'none' required for cross-origin in prod, 'lax' for local HTTP dev
+  maxAge: 8 * 60 * 60 * 1000, // 8 hours (legacy route)
+  path: '/'
+};
+
 // Simple login endpoint for single admin user
 r.post("/login", checkAccountLockout, async (req, res) => {
   try {
@@ -87,14 +97,8 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     const fingerprint = SessionManager.generateSessionFingerprint(req);
     SessionManager.createSession(user.id, user.username, fingerprint);
     
-    // Set cookie
-    res.cookie('sessionId', sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 8 * 60 * 60 * 1000,
-      path: '/'
-    });
+    // Set session cookie (uses SameSite=None in prod for cross-origin)
+    res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
     
     // Clear any failed attempts on successful login
     const ipAddress = req.ip || req.connection.remoteAddress;
@@ -137,8 +141,8 @@ r.post("/logout", async (req, res) => {
       // Delete from memory
       SessionManager.destroySession(sessionId);
       
-      // Clear cookie
-      res.clearCookie('sessionId', { path: '/' });
+      // Clear cookie (must match same options for reliable clearing)
+      res.clearCookie('sessionId', { path: '/', sameSite: isProd ? 'none' : 'lax', secure: isProd });
       
       console.log('Logout successful');
     } catch (err) {

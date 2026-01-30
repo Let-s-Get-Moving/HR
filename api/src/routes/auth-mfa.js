@@ -19,6 +19,16 @@ import { loginSchema, userRegistrationSchema } from "../schemas/enhancedSchemas.
 
 const r = express.Router();
 
+// Cookie options for cross-origin session cookie
+const isProd = process.env.NODE_ENV === 'production';
+const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? 'none' : 'lax', // 'none' required for cross-origin in prod, 'lax' for local HTTP dev
+  maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  path: '/'
+};
+
 /**
  * Step 1: Login with username/password
  * Returns: requiresMFA flag if MFA is enabled
@@ -238,14 +248,8 @@ r.post("/login", checkAccountLockout, createValidationMiddleware(loginSchema), a
     // Generate CSRF token (DB-backed)
     const csrfToken = await CSRFProtection.generateToken(sessionId);
     
-    // Set cookie with SameSite=Strict for maximum CSRF protection
-    res.cookie('sessionId', sessionId, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/'
-    });
+    // Set session cookie (uses SameSite=None in prod for cross-origin)
+    res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
     
     // Security audit log - successful login
     await logSecurityEventDb({
@@ -452,14 +456,8 @@ r.post("/verify-mfa", async (req, res) => {
     // Generate CSRF token (DB-backed)
     const csrfToken = await CSRFProtection.generateToken(sessionId);
     
-    // Set cookie with SameSite=Strict for maximum CSRF protection
-    res.cookie('sessionId', sessionId, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      path: '/'
-    });
+    // Set session cookie (uses SameSite=None in prod for cross-origin)
+    res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
     
     // Security audit log - successful MFA login
     await logSecurityEventDb({
@@ -793,7 +791,7 @@ r.post("/logout", async (req, res) => {
       await q(`DELETE FROM user_sessions WHERE id = $1`, [sessionId]);
       SessionManager.destroySession(sessionId);
       await CSRFProtection.removeToken(sessionId);  // Clean up CSRF token from DB
-      res.clearCookie('sessionId', { path: '/' });
+      res.clearCookie('sessionId', { path: '/', sameSite: isProd ? 'none' : 'lax', secure: isProd });
     } catch (err) {
       // Non-critical logout cleanup errors
     }
