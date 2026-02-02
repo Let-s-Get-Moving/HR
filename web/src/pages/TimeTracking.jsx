@@ -1279,12 +1279,12 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                       <th className="px-6 py-3 text-center text-xs font-medium text-secondary uppercase">{t('timeTracking.dayViewTable.actionsHeader')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="table-body">
                     {employee.entries.map((entry, idx) => {
                       const isEditing = editingEntryId === entry.entry_id;
                       
                       return (
-                        <tr key={idx} className="hover:bg-tahoe-bg-hover transition-colors">
+                        <tr key={idx} className="table-row">
                           <td className="px-6 py-3">
                             {isEditing ? (
                               <input
