@@ -379,8 +379,7 @@ export default function TimeTracking() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowUploadModal(true)}
-            className="px-6 py-3 rounded-tahoe-pill font-medium transition-all duration-tahoe flex items-center gap-2"
-            style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
+            className="btn-primary flex items-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -461,8 +460,7 @@ export default function TimeTracking() {
                   const period = payPeriods.find(p => p.pay_period_start === e.target.value);
                   setSelectedPeriod(period);
                 }}
-                className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                className="form-select"
               >
                 <option value="">{t('timeTracking.selectPeriod')}</option>
                 {payPeriods.map((period) => (
@@ -488,8 +486,7 @@ export default function TimeTracking() {
                     placeholder={t('timeTracking.searchByName')}
                     value={employeeSearch}
                     onChange={(e) => setEmployeeSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                    className="form-input pl-10 pr-4"
                   />
                   {employeeSearch && (
                 <button
@@ -504,7 +501,7 @@ export default function TimeTracking() {
                 </div>
                 {/* Autocomplete dropdown */}
                 {employeeSearch && filteredEmployees.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full rounded-tahoe-input shadow-lg max-h-60 overflow-auto border backdrop-blur-lg" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                  <div className="absolute z-10 mt-1 w-full surface-popover max-h-60 overflow-auto">
                     {filteredEmployees.slice(0, 10).map((emp) => (
                       <button
                         key={emp.id}
@@ -643,9 +640,9 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
               <th className="px-6 py-4 text-center text-sm font-medium text-primary">{t('timeTracking.actions')}</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="table-body">
             {timecards.map((timecard) => (
-              <tr key={timecard.id} className="hover:bg-tahoe-bg-hover transition-colors">
+              <tr key={timecard.id} className="table-row">
                 <td className="px-6 py-4">
                   <div className="font-medium text-primary">{timecard.employee_name}</div>
                   <div className="text-sm text-secondary">{timecard.role_title || "N/A"}</div>
@@ -656,7 +653,7 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
                 </td>
                 <td className="px-6 py-4 text-right">
                   {parseFloat(timecard.overtime_hours || 0) > 0 ? (
-                    <span className="text-amber-600 dark:text-amber-400 font-medium">
+                    <span className="text-warning font-medium">
                       {formatHoursAsTime(parseFloat(timecard.overtime_hours))}
                     </span>
                   ) : (
@@ -667,7 +664,7 @@ function MainTableView({ timecards, onViewIndividual, loading, t }) {
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                     timecard.status === 'Approved' ? 'bg-tahoe-success-bg/20 text-tahoe-success-text' :
                     timecard.status === 'Submitted' ? 'bg-tahoe-info-bg/20 text-tahoe-info-text' :
-                    timecard.status === 'Rejected' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' :
+                    timecard.status === 'Rejected' ? 'bg-error text-error' :
                     'bg-tahoe-bg-secondary/20 text-tahoe-text-muted'
                   }`}>
                     {timecard.status}
@@ -734,7 +731,7 @@ function DashboardView({ stats, selectedPeriod, t }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">
+          <p className="text-3xl font-bold text-warning">
             {formatHoursAsTime(parseFloat(stats.summary.total_overtime || 0))}
           </p>
           <p className="text-xs text-secondary mt-1">{stats.summary.employees_with_overtime} employees</p>
@@ -747,7 +744,7 @@ function DashboardView({ stats, selectedPeriod, t }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-3xl font-bold text-red-600 dark:text-red-400">{stats.summary.total_missing_punches || 0}</p>
+          <p className="text-3xl font-bold text-error">{stats.summary.total_missing_punches || 0}</p>
         </div>
       </div>
 
@@ -759,23 +756,23 @@ function DashboardView({ stats, selectedPeriod, t }) {
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
+            <thead className="table-head">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.employee')}</th>
+                <th className="px-6 py-3 text-left text-sm font-medium text-secondary">{t('timeTracking.employee')}</th>
                 <th className="px-6 py-3 text-right text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.totalHours')}</th>
                 <th className="px-6 py-3 text-right text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.overtime')}</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.missingPunches')}</th>
                 <th className="px-6 py-3 text-center text-sm font-medium text-tahoe-text-secondary">{t('timeTracking.status')}</th>
               </tr>
             </thead>
-            <tbody className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+            <tbody className="table-body">
               {stats.employees.map((emp) => (
-                <tr key={emp.employee_id} className="hover:bg-tahoe-bg-hover transition-all duration-tahoe">
+                <tr key={emp.employee_id} className="table-row">
                   <td className="px-6 py-4 text-sm text-primary font-medium">{emp.employee_name}</td>
                   <td className="px-6 py-4 text-sm text-right text-primary">{formatHoursAsTime(parseFloat(emp.total_hours || 0))}</td>
                   <td className="px-6 py-4 text-sm text-right">
                     {parseFloat(emp.overtime_hours || 0) > 0 ? (
-                      <span className="text-amber-600 dark:text-amber-400 font-medium">
+                      <span className="text-warning font-medium">
                         {formatHoursAsTime(parseFloat(emp.overtime_hours))}
                       </span>
                     ) : (
@@ -784,7 +781,7 @@ function DashboardView({ stats, selectedPeriod, t }) {
                   </td>
                   <td className="px-6 py-4 text-center">
                     {parseInt(emp.missing_punches_count || 0) > 0 ? (
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+                      <span className="status-error">
                         {emp.missing_punches_count}
                       </span>
                     ) : (
@@ -872,7 +869,7 @@ function IndividualView({ timecard, onBack, t }) {
             <div className="text-3xl font-bold text-primary">{formatHoursAsTime(parseFloat(timecard.total_hours || 0))}</div>
             <div className="text-sm text-secondary">{t('timeTracking.totalHours')}</div>
             {parseFloat(timecard.overtime_hours || 0) > 0 && (
-              <div className="mt-2 text-amber-600 dark:text-amber-400 font-medium">
+              <div className="mt-2 text-warning font-medium">
                 {formatHoursAsTime(parseFloat(timecard.overtime_hours))} OT
             </div>
             )}
@@ -1264,7 +1261,7 @@ function DayView({ selectedDate, onDateChange, dayViewData, availableDates, load
                       {formatHoursAsTime(employee.total_hours)}
                     </div>
                     {employee.total_hours > 8 && (
-                      <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">{t('timeTracking.dayViewTable.overtime')}</span>
+                      <span className="text-xs text-warning font-medium">{t('timeTracking.dayViewTable.overtime')}</span>
                     )}
                   </div>
                 </div>

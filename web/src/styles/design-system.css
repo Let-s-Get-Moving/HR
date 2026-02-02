@@ -154,11 +154,21 @@
 }
 
 .btn-danger {
-  @apply btn-base bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-tahoe-sm hover:shadow-tahoe-md;
+  @apply btn-base text-white shadow-tahoe-sm hover:shadow-tahoe-md;
+  background-color: var(--error-text);
+}
+
+.btn-danger:hover {
+  background-color: var(--error-border);
 }
 
 .btn-success {
-  @apply btn-base bg-green-600 hover:bg-green-700 text-white focus:ring-green-500 shadow-tahoe-sm hover:shadow-tahoe-md;
+  @apply btn-base text-white shadow-tahoe-sm hover:shadow-tahoe-md;
+  background-color: var(--success-text);
+}
+
+.btn-success:hover {
+  background-color: var(--success-border);
 }
 
 /* Button Sizes */
@@ -394,38 +404,241 @@
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
-/* Status Indicators - macOS Tahoe */
+/* Status Indicators - macOS Tahoe (theme-aware) */
 .status-success {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  background: rgba(48, 209, 88, 0.15);
-  color: #30d158;
-  border: 1px solid rgba(48, 209, 88, 0.3);
+  background: var(--success-bg);
+  color: var(--success-text);
+  border: 1px solid var(--success-border);
 }
 
 .status-warning {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  background: rgba(255, 159, 10, 0.15);
-  color: #ff9f0a;
-  border: 1px solid rgba(255, 159, 10, 0.3);
+  background: var(--warning-bg);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
 }
 
 .status-error {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  background: rgba(255, 69, 58, 0.15);
-  color: #ff453a;
-  border: 1px solid rgba(255, 69, 58, 0.3);
+  background: var(--error-bg);
+  color: var(--error-text);
+  border: 1px solid var(--error-border);
 }
 
 .status-info {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  background: rgba(10, 132, 255, 0.15);
-  color: #0A84FF;
-  border: 1px solid rgba(10, 132, 255, 0.3);
+  background: var(--info-bg);
+  color: var(--info-text);
+  border: 1px solid var(--info-border);
 }
 
 .status-neutral {
   @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  background: rgba(255, 255, 255, 0.08);
-  color: #e5e5e7;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+/* ============================================================================
+   Tahoe Surface Utilities
+   Reusable classes for common surface patterns to eliminate inline styles
+   ============================================================================ */
+
+/* App-level background surface */
+.surface-app {
+  background-color: var(--bg-primary);
+  min-height: 100vh;
+}
+
+/* Glass panel surface (for cards, modals, sidebars) */
+.surface-panel {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Header chrome surface */
+.surface-header {
+  background-color: var(--nav-bg);
+  border-bottom: 1px solid var(--nav-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Sidebar chrome surface */
+.surface-sidebar {
+  background-color: var(--nav-bg);
+  border-right: 1px solid var(--nav-border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Popover/dropdown surface */
+.surface-popover {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-secondary);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Modal overlay */
+.surface-overlay {
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* Divider line */
+.surface-divider {
+  height: 1px;
+  background-color: var(--border-primary);
+  border: none;
+}
+
+/* ============================================================================
+   Table Chrome Utilities
+   Tahoe-style table styling without inline styles
+   ============================================================================ */
+
+/* Table container with glass effect */
+.table-shell {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+/* Table header row */
+.table-head {
+  background-color: var(--bg-hover);
+  border-bottom: 1px solid var(--border-primary);
+}
+
+.table-head th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
+}
+
+/* Table body without divider lines, with zebra + hover */
+.table-body {
+  font-size: 14px;
+}
+
+.table-row {
+  transition: background-color 150ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.table-row:hover {
+  background-color: var(--bg-hover);
+}
+
+.table-row:nth-child(even) {
+  background-color: var(--bg-hover);
+}
+
+.table-row:nth-child(even):hover {
+  background-color: var(--bg-active);
+}
+
+.table-cell {
+  padding: 12px 16px;
+  color: var(--text-primary);
+}
+
+/* ============================================================================
+   Badge Dot Utilities
+   Small colored dots for notification type indicators
+   ============================================================================ */
+
+.badge-dot {
+  @apply inline-block w-2 h-2 rounded-full;
+}
+
+.badge-dot-success {
+  background-color: var(--success-text);
+}
+
+.badge-dot-warning {
+  background-color: var(--warning-text);
+}
+
+.badge-dot-error {
+  background-color: var(--error-text);
+}
+
+.badge-dot-info {
+  background-color: var(--info-text);
+}
+
+.badge-dot-neutral {
+  background-color: var(--text-muted);
+}
+
+/* Unread badge (e.g. notification count) */
+.badge-unread {
+  @apply inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-xs font-bold text-white;
+  background-color: var(--error-text);
+}
+
+/* ============================================================================
+   Text Utilities (semantic colors)
+   ============================================================================ */
+
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-success {
+  color: var(--success-text);
+}
+
+.text-warning {
+  color: var(--warning-text);
+}
+
+.text-error {
+  color: var(--error-text);
+}
+
+.text-info {
+  color: var(--info-text);
+}
+
+/* ============================================================================
+   Background Utilities (semantic colors)
+   ============================================================================ */
+
+.bg-success {
+  background-color: var(--success-bg);
+}
+
+.bg-warning {
+  background-color: var(--warning-bg);
+}
+
+.bg-error {
+  background-color: var(--error-bg);
+}
+
+.bg-info {
+  background-color: var(--info-bg);
 }

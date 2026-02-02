@@ -23,7 +23,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     secondary: 'bg-tahoe-border-primary hover:bg-tahoe-border-secondary border border-tahoe-border-primary text-white focus:ring-tahoe-border-secondary',
     outline: 'border border-tahoe-accent text-tahoe-accent hover:bg-tahoe-accent hover:text-white focus:ring-tahoe-accent',
     ghost: 'text-tahoe-text-secondary hover:bg-tahoe-bg-hover focus:ring-tahoe-border-primary',
-    danger: 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500 shadow-tahoe-sm hover:shadow-tahoe-md'
+    danger: 'bg-[var(--error-text)] hover:bg-[var(--error-border)] text-white focus:ring-[var(--error-border)] shadow-tahoe-sm hover:shadow-tahoe-md'
   };
 
   const sizeClasses = {

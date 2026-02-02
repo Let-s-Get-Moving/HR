@@ -95,14 +95,7 @@ const Modal: React.FC<ModalProps> = ({
           {/* Modal */}
           <div
             ref={modalRef}
-            className={`relative transform overflow-hidden rounded-tahoe bg-tahoe-card-bg backdrop-blur-tahoe text-left shadow-tahoe-lg transition-all duration-tahoe sm:my-8 sm:w-full ${sizeClasses[size]} ${className}`}
-            style={{ 
-              backgroundColor: 'rgba(22, 22, 24, 0.8)', 
-              backdropFilter: 'blur(20px)', 
-              WebkitBackdropFilter: 'blur(20px)',
-              animation: isOpen ? 'modalSlideIn 200ms cubic-bezier(0.25, 0.8, 0.25, 1)' : 'none',
-              border: '1px solid rgba(255, 255, 255, 0.12)'
-            }}
+            className={`relative transform overflow-hidden rounded-tahoe surface-panel text-left shadow-tahoe-lg transition-all duration-tahoe sm:my-8 sm:w-full ${sizeClasses[size]} ${className} ${isOpen ? 'animate-slide-up' : ''}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? 'modal-title' : undefined}
@@ -158,22 +151,6 @@ const Modal: React.FC<ModalProps> = ({
           </div>
         </div>
       </div>
-      <style>{`
-        @keyframes modalSlideIn {
-          from {
-            opacity: 0;
-            transform: scale(0.95) translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-          }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-      `}</style>
     </FocusTrap>
   );
 };
@@ -203,9 +180,9 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   loading = false,
 }) => {
   const variantClasses = {
-    danger: 'text-red-600 dark:text-red-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    info: 'text-blue-600 dark:text-blue-400',
+    danger: 'text-error',
+    warning: 'text-warning',
+    info: 'text-info',
   };
 
   const buttonVariant = variant === 'danger' ? 'danger' : 'primary';

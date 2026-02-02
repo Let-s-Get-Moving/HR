@@ -226,41 +226,41 @@ export default function App() {
   const CurrentComponent = pages[currentPage].component;
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0B0B0C' }}>
+    <div className="surface-app">
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b" style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+      <header className="sticky top-0 z-40 surface-header">
         <div className="px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe lg:hidden"
+                className="p-2 rounded-lg text-secondary hover:text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe lg:hidden"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-tahoe-sm" style={{ background: 'linear-gradient(135deg, #0A84FF 0%, #0071e3 100%)' }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-tahoe-sm bg-gradient-to-br from-[var(--primary-bg)] to-[var(--primary-hover)]">
                   <span className="text-white font-semibold text-lg">HR</span>
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-tahoe-text-primary">{t('app.title')}</h1>
-                  <p className="text-xs text-tahoe-text-muted">{t('app.subtitle')}</p>
+                  <h1 className="text-xl font-semibold text-primary">{t('app.title')}</h1>
+                  <p className="text-xs text-muted">{t('app.subtitle')}</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <div className="hidden sm:block text-sm">
-                <div className="text-tahoe-text-primary font-medium">{t('app.welcome')}, {user.username}</div>
-                <div className="text-xs text-tahoe-text-muted">{t('app.lastLogin')}: {new Date().toLocaleDateString()}</div>
+                <div className="text-primary font-medium">{t('app.welcome')}, {user.username}</div>
+                <div className="text-xs text-muted">{t('app.lastLogin')}: {new Date().toLocaleDateString()}</div>
               </div>
               <NotificationCenter onNavigate={handleNavigate} />
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe"
+                className="flex items-center space-x-2 px-4 py-2 text-secondary hover:text-primary hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe"
               >
                 <Icons.logout />
                 <span className="hidden sm:inline font-medium">{t('nav.logout')}</span>
@@ -276,16 +276,15 @@ export default function App() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="shadow-tahoe-sm"
-          style={{ backgroundColor: 'rgba(255, 159, 10, 0.15)', borderBottom: '1px solid rgba(255, 159, 10, 0.3)' }}
+          className="shadow-tahoe-sm bg-warning border-b border-[var(--warning-border)]"
         >
           <div className="max-w-7xl mx-auto px-6 lg:px-8 py-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">⚠️</span>
                 <div>
-                  <p className="font-semibold text-tahoe-text-primary">{passwordWarning.message}</p>
-                  <p className="text-sm text-tahoe-text-secondary">
+                  <p className="font-semibold text-primary">{passwordWarning.message}</p>
+                  <p className="text-sm text-secondary">
                     {t('app.pleaseChangePassword')}
                   </p>
                 </div>
@@ -293,8 +292,7 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setCurrentPage('settings')}
-                  className="px-4 py-2 rounded-tahoe-pill font-medium transition-all duration-tahoe"
-                  style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
+                  className="btn-primary"
                 >
                   {t('app.changePassword')}
                 </button>
@@ -303,7 +301,7 @@ export default function App() {
                     setPasswordWarning(null);
                     localStorage.removeItem('passwordWarning');
                   }}
-                  className="p-2 hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
+                  className="p-2 hover:bg-tahoe-bg-hover rounded-lg transition-all duration-tahoe text-secondary hover:text-primary"
                   title={t('app.dismiss')}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -318,17 +316,15 @@ export default function App() {
 
       <div className="flex min-h-[calc(100vh-4rem)]">
         {/* Sidebar Navigation */}
-        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-tahoe ease-tahoe ${
+        <nav className={`fixed lg:static inset-y-0 left-0 z-50 w-64 transform transition-transform duration-tahoe ease-tahoe surface-sidebar ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
-        style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderRight: '1px solid rgba(255, 255, 255, 0.12)' }}
-        >
+        }`}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-6 lg:hidden">
-              <h2 className="text-lg font-semibold text-tahoe-text-primary">{t('nav.navigation')}</h2>
+              <h2 className="text-lg font-semibold text-primary">{t('nav.navigation')}</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe text-tahoe-text-secondary hover:text-tahoe-text-primary"
+                className="p-2 rounded-lg hover:bg-tahoe-bg-hover transition-all duration-tahoe text-secondary hover:text-primary"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -348,7 +344,7 @@ export default function App() {
                   className={`w-full flex items-center space-x-3 px-4 py-3 rounded-tahoe text-left transition-all duration-tahoe ${
                     currentPage === key
                       ? "bg-tahoe-accent text-white shadow-tahoe-sm"
-                      : "text-tahoe-text-secondary hover:bg-tahoe-bg-hover hover:text-tahoe-text-primary"
+                      : "text-secondary hover:bg-tahoe-bg-hover hover:text-primary"
                   }`}
                 >
                   <page.icon />
@@ -362,13 +358,13 @@ export default function App() {
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden"
+            className="surface-overlay fixed inset-0 z-40 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-6 lg:p-8 overflow-hidden" style={{ backgroundColor: '#0B0B0C' }}>
+        <main className="flex-1 p-6 lg:p-8 overflow-hidden">
           <motion.div
             key={currentPage}
             initial={{ opacity: 0, y: 8 }}

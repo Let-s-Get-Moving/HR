@@ -37,7 +37,7 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
     focus:outline-none focus:ring-2 focus:ring-tahoe-accent focus:ring-offset-2 focus:ring-offset-tahoe-bg-primary
     disabled:opacity-50 disabled:cursor-not-allowed
     ${hasError 
-      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+      ? 'border-[var(--error-border)] focus:ring-[var(--error-border)] focus:border-[var(--error-border)]' 
       : 'border-tahoe-border-primary focus:ring-tahoe-accent focus:border-tahoe-accent'
     }
     bg-tahoe-input-bg text-tahoe-text-primary
@@ -52,7 +52,7 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
           className="block text-xs font-medium text-tahoe-text-primary mb-1.5 tracking-wide"
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-error ml-1">*</span>}
         </label>
       )}
       
@@ -79,7 +79,7 @@ const FormSelect = forwardRef<HTMLSelectElement, FormSelectProps>(({
       </select>
       
       {error && (
-        <p className="text-xs text-red-500 mt-1">
+        <p className="text-xs text-error mt-1">
           {error.message}
         </p>
       )}

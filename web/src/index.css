@@ -5,94 +5,92 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Professional Light Theme */
+/* macOS Tahoe Light Theme */
 .light {
-  /* Background Colors */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --bg-quaternary: #e2e8f0;
-  --bg-hover: #f1f5f9;
-  --bg-active: #e2e8f0;
+  /* Background Colors - Tahoe Light */
+  --bg-primary: #F4F5F7;
+  --bg-secondary: #EBEDF0;
+  --bg-tertiary: #E4E6E9;
+  --bg-quaternary: #D8DBDF;
+  --bg-hover: rgba(0, 0, 0, 0.04);
+  --bg-active: rgba(0, 0, 0, 0.08);
+  
+  /* Dashboard specific backgrounds */
+  --dashboard-bg: #F4F5F7;
+  --dashboard-card-bg: rgba(255, 255, 255, 0.8);
   
   /* Text Colors - High Contrast */
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-tertiary: #475569;
-  --text-muted: #64748b;
+  --text-primary: #1d1d1f;
+  --text-secondary: #3d3d3f;
+  --text-tertiary: #5d5d5f;
+  --text-muted: #86868b;
   --text-inverse: #ffffff;
   
-  /* Border Colors */
-  --border-primary: #e2e8f0;
-  --border-secondary: #cbd5e1;
-  --border-focus: #3b82f6;
-  --border-error: #ef4444;
+  /* Border Colors - Subtle dark borders */
+  --border-primary: rgba(0, 0, 0, 0.06);
+  --border-secondary: rgba(0, 0, 0, 0.12);
+  --border-focus: #0A84FF;
+  --border-error: #ff453a;
   
-  /* Card Colors */
-  --card-bg: #ffffff;
-  --card-border: #e2e8f0;
-  --card-shadow: rgba(0, 0, 0, 0.1);
+  /* Card Colors - Glassy panels */
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.06);
+  --card-shadow: rgba(0, 0, 0, 0.08);
   
-  /* Status Colors - High Contrast */
-  --success-bg: #dcfce7;
-  --success-text: #14532d;
-  --success-border: #bbf7d0;
+  /* Status Colors - Tahoe Light */
+  --success-bg: rgba(48, 209, 88, 0.12);
+  --success-text: #248a3d;
+  --success-border: rgba(48, 209, 88, 0.25);
   
-  --warning-bg: #fef3c7;
-  --warning-text: #92400e;
-  --warning-border: #fde68a;
+  --warning-bg: rgba(255, 159, 10, 0.12);
+  --warning-text: #b25000;
+  --warning-border: rgba(255, 159, 10, 0.25);
   
-  --error-bg: #fee2e2;
-  --error-text: #b91c1c;
-  --error-border: #fecaca;
+  --error-bg: rgba(255, 69, 58, 0.12);
+  --error-text: #d70015;
+  --error-border: rgba(255, 69, 58, 0.25);
   
-  --info-bg: #dbeafe;
-  --info-text: #1e40af;
-  --info-border: #bfdbfe;
+  --info-bg: rgba(10, 132, 255, 0.12);
+  --info-text: #0071e3;
+  --info-border: rgba(10, 132, 255, 0.25);
   
   /* Toggle Colors */
-  --toggle-on: #10b981;
-  --toggle-off: #ef4444;
-  --toggle-on-hover: #059669;
-  --toggle-off-hover: #dc2626;
+  --toggle-on: #34c759;
+  --toggle-off: #ff3b30;
+  --toggle-on-hover: #30d158;
+  --toggle-off-hover: #ff453a;
   
-  /* Header Colors */
-  --header-bg: #ffffff;
-  --header-bg-dark: #0f172a;
-  --header-border: #e2e8f0;
-  --header-border-dark: #334155;
-  
-  /* Sidebar Colors */
-  --sidebar-bg: #ffffff;
-  --sidebar-bg-dark: #1e293b;
-  --sidebar-border: #e2e8f0;
-  --sidebar-border-dark: #475569;
-  --sidebar-hover: #f1f5f9;
-  --sidebar-hover-dark: #334155;
-  
-  /* Interactive Colors - High Contrast */
-  --primary-bg: #2563eb;
-  --primary-hover: #1d4ed8;
+  /* Interactive Colors - macOS Blue accent */
+  --primary-bg: #0A84FF;
+  --primary-hover: #0071e3;
   --primary-text: #ffffff;
   
-  --secondary-bg: #4b5563;
-  --secondary-hover: #374151;
-  --secondary-text: #ffffff;
+  --secondary-bg: rgba(0, 0, 0, 0.06);
+  --secondary-hover: rgba(0, 0, 0, 0.1);
+  --secondary-text: #1d1d1f;
   
   /* Form Elements */
-  --input-bg: #ffffff;
-  --input-border: #d1d5db;
-  --input-focus: #3b82f6;
-  --input-disabled: #f3f4f6;
+  --input-bg: rgba(255, 255, 255, 0.8);
+  --input-border: rgba(0, 0, 0, 0.1);
+  --input-focus: #0A84FF;
+  --input-disabled: rgba(0, 0, 0, 0.04);
   
-  /* Navigation - Light Theme */
-  --nav-bg: #f8fafc;
-  --nav-border: #e2e8f0;
-  --nav-hover: #f1f5f9;
-  --nav-active: #e2e8f0;
-  --nav-text: #334155;
-  --nav-text-hover: #0f172a;
+  /* Tahoe specific - for Tailwind classes */
+  --tahoe-input-bg: rgba(255, 255, 255, 0.8);
+  --tahoe-card-bg: rgba(255, 255, 255, 0.8);
+  --tahoe-bg-hover: rgba(0, 0, 0, 0.04);
+  
+  /* Navigation */
+  --nav-bg: rgba(255, 255, 255, 0.8);
+  --nav-border: rgba(0, 0, 0, 0.06);
+  --nav-hover: rgba(0, 0, 0, 0.04);
+  --nav-active: rgba(10, 132, 255, 0.15);
+  --nav-text: #3d3d3f;
+  --nav-text-hover: #1d1d1f;
   --nav-text-active: #ffffff;
+  
+  /* Backdrop blur */
+  --backdrop-blur: blur(20px);
 }
 
 /* macOS Tahoe Dark Theme */
@@ -1104,25 +1102,55 @@ input[type="time"]::-webkit-calendar-picker-indicator {
   }
 }
 
-/* macOS Style Scrollbar */
-::-webkit-scrollbar {
+/* macOS Style Scrollbar - Dark Theme */
+.dark ::-webkit-scrollbar,
+.dark::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+.dark ::-webkit-scrollbar-track,
+.dark::-webkit-scrollbar-track {
   background: transparent;
 }
 
-::-webkit-scrollbar-thumb {
+.dark ::-webkit-scrollbar-thumb,
+.dark::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
   border-radius: 4px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
-::-webkit-scrollbar-thumb:hover {
+.dark ::-webkit-scrollbar-thumb:hover,
+.dark::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
+  background-clip: padding-box;
+}
+
+/* macOS Style Scrollbar - Light Theme */
+.light ::-webkit-scrollbar,
+.light::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.light ::-webkit-scrollbar-track,
+.light::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.light ::-webkit-scrollbar-thumb,
+.light::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.light ::-webkit-scrollbar-thumb:hover,
+.light::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
   background-clip: padding-box;
 }
 

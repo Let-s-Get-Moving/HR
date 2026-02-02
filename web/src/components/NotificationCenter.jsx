@@ -4,11 +4,11 @@ import { API } from '../config/api.js';
 import { useNotifications, useWebSocket } from '../hooks/useWebSocket.js';
 
 const NOTIFICATION_TYPES = {
-  leave_approval: { label: 'Leave Approval', color: 'bg-green-500' },
-  leave_rejection: { label: 'Leave Rejection', color: 'bg-red-500' },
-  payroll_processed: { label: 'Payroll', color: 'bg-blue-500' },
-  chat_message: { label: 'Message', color: 'bg-purple-500' },
-  system_alert: { label: 'System', color: 'bg-yellow-500' }
+  leave_approval: { label: 'Leave Approval', color: 'badge-dot-success' },
+  leave_rejection: { label: 'Leave Rejection', color: 'badge-dot-error' },
+  payroll_processed: { label: 'Payroll', color: 'badge-dot-info' },
+  chat_message: { label: 'Message', color: 'badge-dot-info' },
+  system_alert: { label: 'System', color: 'badge-dot-warning' }
 };
 
 export default function NotificationCenter({ onNavigate }) {
@@ -227,7 +227,7 @@ export default function NotificationCenter({ onNavigate }) {
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-0 right-0 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full"
+            className="absolute top-0 right-0 badge-unread"
           >
             {unreadCount > 99 ? '99+' : unreadCount}
           </motion.span>
@@ -235,7 +235,7 @@ export default function NotificationCenter({ onNavigate }) {
 
         {/* Connection Status Indicator */}
         {!connected && (
-          <span className="absolute bottom-0 right-0 w-2 h-2 bg-yellow-500 rounded-full border-2" style={{ borderColor: '#0B0B0C' }} />
+          <span className="absolute bottom-0 right-0 badge-dot badge-dot-warning border-2 border-[var(--bg-primary)]" />
         )}
       </button>
 
@@ -257,11 +257,10 @@ export default function NotificationCenter({ onNavigate }) {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute right-0 mt-2 w-[90vw] sm:w-96 lg:w-[400px] max-h-[600px] rounded-tahoe shadow-tahoe-lg z-50 flex flex-col"
-              style={{ backgroundColor: 'rgba(22, 22, 24, 0.8)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+              className="absolute right-0 mt-2 w-[90vw] sm:w-96 lg:w-[400px] max-h-[600px] surface-popover z-50 flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+              <div className="flex items-center justify-between p-4 border-b border-[var(--border-primary)]">
                 <h3 className="text-lg font-semibold text-tahoe-text-primary">Notifications</h3>
                 <div className="flex items-center space-x-2">
                   {unreadInFilter > 0 && (
@@ -284,7 +283,7 @@ export default function NotificationCenter({ onNavigate }) {
               </div>
 
               {/* Filters */}
-              <div className="p-3 border-b" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+              <div className="p-3 border-b border-[var(--border-primary)]">
                 <div className="flex space-x-2 overflow-x-auto">
                   {['all', 'unread', ...Object.keys(NOTIFICATION_TYPES)].map((type) => (
                     <button
@@ -292,10 +291,9 @@ export default function NotificationCenter({ onNavigate }) {
                       onClick={() => setFilter(type)}
                       className={`px-3 py-1.5 rounded-tahoe-pill text-sm font-medium whitespace-nowrap transition-all duration-tahoe ${
                         filter === type
-                          ? 'text-white'
-                          : 'text-tahoe-text-secondary hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover'
+                          ? 'bg-[var(--primary-bg)] text-white'
+                          : 'bg-[var(--bg-hover)] text-secondary hover:text-primary'
                       }`}
-                      style={filter === type ? { backgroundColor: '#0A84FF' } : { backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
                     >
                       {type === 'all' ? 'All' : type === 'unread' ? 'Unread' : NOTIFICATION_TYPES[type]?.label || type}
                     </button>
@@ -317,16 +315,15 @@ export default function NotificationCenter({ onNavigate }) {
                     <p className="text-tahoe-text-muted">No notifications</p>
                   </div>
                 ) : (
-                  <div className="divide-y" style={{ borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+                  <div className="divide-y divide-[var(--border-primary)]">
                     {filteredNotifications.map((notification) => {
-                      const typeInfo = NOTIFICATION_TYPES[notification.type] || { label: notification.type, color: 'bg-gray-500' };
+                      const typeInfo = NOTIFICATION_TYPES[notification.type] || { label: notification.type, color: 'badge-dot-neutral' };
                       return (
                         <motion.div
                           key={notification.id}
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="p-4 hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer"
-                          style={!notification.is_read ? { backgroundColor: 'rgba(10, 132, 255, 0.1)' } : {}}
+                          className={`p-4 hover:bg-tahoe-bg-hover transition-all duration-tahoe cursor-pointer ${!notification.is_read ? 'bg-info' : ''}`}
                           onClick={() => {
                             // Mark as read
                             if (!notification.is_read) {
@@ -347,7 +344,7 @@ export default function NotificationCenter({ onNavigate }) {
                         >
                           <div className="flex items-start space-x-3">
                             {/* Type Indicator */}
-                            <div className={`w-2 h-2 rounded-full mt-2 ${typeInfo.color} ${notification.is_read ? 'opacity-50' : ''}`} />
+                            <div className={`badge-dot mt-2 ${typeInfo.color} ${notification.is_read ? 'opacity-50' : ''}`} />
 
                             {/* Content */}
                             <div className="flex-1 min-w-0">

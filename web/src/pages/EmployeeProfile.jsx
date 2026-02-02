@@ -553,7 +553,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
   if (!employee) {
     return (
       <div className="p-6">
-        <div className="text-red-400">{t('employeeProfile.employeeNotFound')}</div>
+        <div className="text-error">{t('employeeProfile.employeeNotFound')}</div>
       </div>
     );
   }
@@ -1108,11 +1108,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         <span className="text-sm">Enabled</span>
                       </label>
                     ) : (
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        employee.sales_commission_enabled 
-                          ? 'bg-green-900/50 text-green-300' 
-                          : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
-                      }`}>
+                      <span className={employee.sales_commission_enabled ? 'status-success' : 'status-neutral'}>
                         {employee.sales_commission_enabled ? 'Enabled' : 'Disabled'}
                       </span>
                     )}
@@ -1123,8 +1119,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       <select
                         value={editData.sales_role || ''}
                         onChange={(e) => setEditData({...editData, sales_role: e.target.value || null})}
-                        className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 min-w-[150px]"
-                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                        className="form-select px-2 py-1 min-w-[150px]"
                       >
                         <option value="">Not Set</option>
                         <option value="agent">Sales Agent</option>
@@ -1132,15 +1127,15 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         <option value="manager">Sales Manager</option>
                       </select>
                     ) : (
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <span className={
                         employee.sales_role === 'manager' 
-                          ? 'bg-purple-900/50 text-purple-300' 
+                          ? 'status-info' 
                           : employee.sales_role === 'agent'
-                          ? 'bg-blue-900/50 text-blue-300'
+                          ? 'status-info'
                           : employee.sales_role === 'international_closer'
-                          ? 'bg-emerald-900/50 text-emerald-300'
-                          : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
-                      }`}>
+                          ? 'status-success'
+                          : 'status-neutral'
+                      }>
                         {employee.sales_role === 'manager' 
                           ? 'Sales Manager' 
                           : employee.sales_role === 'agent' 
@@ -1163,8 +1158,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                             max="10"
                             value={editData.sales_manager_fixed_pct || ''}
                             onChange={(e) => setEditData({...editData, sales_manager_fixed_pct: e.target.value ? parseFloat(e.target.value) : null})}
-                            className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1 w-24 text-right"
-                            style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+                            className="form-input px-2 py-1 w-24 text-right"
                             placeholder="e.g., 0.7"
                           />
                           <span className="text-tahoe-text-muted">%</span>
@@ -1179,7 +1173,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   <div className="mt-4 p-3 rounded-lg bg-tahoe-bg-secondary/50 text-xs text-tahoe-text-muted">
                     <strong>Note:</strong> Any of the 3 nicknames must match the name in imported sales data for commission calculations to work. Use Nickname 2/3 for short names used in reports.
                     {(employee.nickname || employee.nickname_2 || employee.nickname_3) && (
-                      <span className="block mt-1 text-green-400">
+                      <span className="block mt-1 text-success">
                         Current nicknames: {[employee.nickname, employee.nickname_2, employee.nickname_3].filter(Boolean).map(n => `"${n}"`).join(', ')}
                       </span>
                     )}
@@ -1190,31 +1184,31 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           </div>
 
           <div className="space-y-6">
-            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-              <h3 className="text-lg font-semibold mb-4 flex items-center text-tahoe-text-primary">
+            <div className="surface-panel p-6">
+              <h3 className="text-lg font-semibold mb-4 flex items-center text-primary">
                 <span className="mr-2">📋</span> Onboarding Status
               </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center">
-                  <span className="text-tahoe-text-muted">{t('employeeProfile.contract')}:</span>
+                  <span className="text-muted">{t('employeeProfile.contract')}:</span>
                   {isEditing ? (
                     <select
                       value={editData.contract_status || 'Not Sent'}
                       onChange={(e) => setEditData({...editData, contract_status: e.target.value})}
-                      className="rounded-tahoe-input transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent px-2 py-1"
+                      className="form-select px-2 py-1"
                     >
                       <option value="Not Sent">{t('employeeProfile.contractNotSent')}</option>
                       <option value="Sent">{t('employeeProfile.contractSent')}</option>
                       <option value="Signed">{t('employeeProfile.contractSigned')}</option>
                     </select>
                   ) : (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    <span className={
                       employee.contract_status === 'Signed' 
-                        ? 'bg-green-900/50 text-green-300' 
+                        ? 'status-success' 
                         : employee.contract_status === 'Sent' 
-                        ? 'bg-yellow-900/50 text-yellow-300'
-                        : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
-                    }`}>
+                        ? 'status-warning'
+                        : 'status-neutral'
+                    }>
                       {employee.contract_status || t('employeeProfile.contractNotSent')}
                     </span>
                   )}
@@ -1248,11 +1242,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                       <span className="text-sm">{t('employeeProfile.sent')}</span>
                     </label>
                   ) : (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      employee.gift_card_sent 
-                        ? 'bg-green-900/50 text-green-300' 
-                        : 'bg-tahoe-bg-secondary text-tahoe-text-muted'
-                    }`}>
+                    <span className={employee.gift_card_sent ? 'status-success' : 'status-neutral'}>
                       {employee.gift_card_sent ? t('employeeProfile.sentCheckmark') : t('employeeProfile.pending')}
                     </span>
                   )}
@@ -1266,8 +1256,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
             </div>
 
-            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-              <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.quickStats')}</h3>
+            <div className="surface-panel p-6">
+              <h3 className="text-lg font-semibold mb-4 text-primary">{t('employeeProfile.quickStats')}</h3>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>{t('employeeProfile.totalHoursWorked')}</span>
@@ -1288,8 +1278,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
             </div>
 
-            <div className="p-6 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-              <h3 className="text-lg font-semibold mb-4 text-tahoe-text-primary">{t('employeeProfile.recentActivity')}</h3>
+            <div className="surface-panel p-6">
+              <h3 className="text-lg font-semibold mb-4 text-primary">{t('employeeProfile.recentActivity')}</h3>
               <div className="space-y-3">
                 {(timeEntries || []).slice(0, 5).map((entry) => (
                   <div key={entry.id} className="flex justify-between text-sm">
@@ -1570,27 +1560,25 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {/* Financial Documents */}
                   {categorized.Financial && categorized.Financial.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                      <h4 className="font-semibold text-secondary mb-3 flex items-center">
                         <span className="mr-2">💰</span> {t('employeeProfile.financialDocuments')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Financial.map(doc => (
-                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-active)] transition">
                             <div className="flex items-center space-x-4">
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
-                                <div className="text-xs text-neutral-500">
+                                <div className="text-xs text-muted">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
-                              }`}>
+                              <span className={doc.signed ? 'status-success' : 'status-warning'}>
                                 {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
@@ -1601,7 +1589,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-tahoe-text-muted hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-error transition"
                               >
                                 🗑️
                               </button>
@@ -1615,27 +1603,25 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {/* Immigration Documents */}
                   {categorized.Immigration && categorized.Immigration.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                      <h4 className="font-semibold text-secondary mb-3 flex items-center">
                         <span className="mr-2">🛂</span> {t('employeeProfile.immigrationStatus')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Immigration.map(doc => (
-                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-active)] transition">
                             <div className="flex items-center space-x-4">
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
-                                <div className="text-xs text-neutral-500">
+                                <div className="text-xs text-muted">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
-                              }`}>
+                              <span className={doc.signed ? 'status-success' : 'status-warning'}>
                                 {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
@@ -1646,7 +1632,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-tahoe-text-muted hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-error transition"
                               >
                                 🗑️
                               </button>
@@ -1660,27 +1646,25 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {/* Employment Documents */}
                   {categorized.Employment && categorized.Employment.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                      <h4 className="font-semibold text-secondary mb-3 flex items-center">
                         <span className="mr-2">📄</span> {t('employeeProfile.employmentDocuments')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Employment.map(doc => (
-                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-active)] transition">
                             <div className="flex items-center space-x-4">
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
-                                <div className="text-xs text-neutral-500">
+                                <div className="text-xs text-muted">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
-                              }`}>
+                              <span className={doc.signed ? 'status-success' : 'status-warning'}>
                                 {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
@@ -1691,7 +1675,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-tahoe-text-muted hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-error transition"
                               >
                                 🗑️
                               </button>
@@ -1705,18 +1689,18 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   {/* Other Documents */}
                   {categorized.Other && categorized.Other.length > 0 && (
                     <div>
-                      <h4 className="font-semibold text-neutral-300 mb-3 flex items-center">
+                      <h4 className="font-semibold text-secondary mb-3 flex items-center">
                         <span className="mr-2">📎</span> {t('employeeProfile.otherDocuments')}
                       </h4>
                       <div className="grid gap-3">
                         {categorized.Other.map(doc => (
-                          <div key={doc.id} className="flex justify-between items-center p-4 bg-neutral-700 rounded-lg hover:bg-neutral-650 transition">
+                          <div key={doc.id} className="flex justify-between items-center p-4 bg-[var(--bg-hover)] rounded-lg hover:bg-[var(--bg-active)] transition">
                             <div className="flex items-center space-x-4">
                               <div className="text-3xl">{getDocumentIcon(doc.doc_type)}</div>
                               <div>
                                 <div className="font-medium">{formatDocType(doc.doc_type)}</div>
                                 <div className="text-sm text-tahoe-text-muted">{doc.file_name}</div>
-                                <div className="text-xs text-neutral-500">
+                                <div className="text-xs text-muted">
                                   {t('employeeProfile.uploaded')}: {formatShortDate(doc.uploaded_on)}
                                   {doc.file_size && ` • ${(doc.file_size / 1024).toFixed(1)} KB`}
                                 </div>
@@ -1726,9 +1710,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                doc.signed ? 'bg-green-900/50 text-green-300' : 'bg-yellow-900/50 text-yellow-300'
-                              }`}>
+                              <span className={doc.signed ? 'status-success' : 'status-warning'}>
                                 {doc.signed ? t('employeeProfile.signedCheckmark') : t('employeeProfile.pending')}
                               </span>
                               <button
@@ -1739,7 +1721,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                               </button>
                               <button
                                 onClick={() => handleDeleteDocument(doc.id)}
-                                className="text-tahoe-text-muted hover:text-red-400 transition"
+                                className="text-tahoe-text-muted hover:text-error transition"
                               >
                                 🗑️
                               </button>
@@ -1881,7 +1863,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="space-y-4">
               {/* SIN Number */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.sinNumber')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.sinNumber')}</div>
                 {isEditing ? (
                   <input
                     type="text"
@@ -1896,7 +1878,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* SIN Expiry Date */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.sinExpiryDate')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.sinExpiryDate')}</div>
                 {isEditing ? (
                   <DatePicker
                     valueYmd={normalizeYMD(editData.sin_expiry_date)}
@@ -1917,7 +1899,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="space-y-4">
               {/* Bank Name */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.bankName')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.bankName')}</div>
                 {isEditing ? (
                   <input
                     type="text"
@@ -1932,7 +1914,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* Transit Number */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.transitNumber')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.transitNumber')}</div>
                 {isEditing ? (
                   <input
                     type="text"
@@ -1947,7 +1929,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* Account Number */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.accountNumber')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.accountNumber')}</div>
                 {isEditing ? (
                   <input
                     type="text"
@@ -1968,7 +1950,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="space-y-4">
               {/* Full Address */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.fullAddress')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.fullAddress')}</div>
                 {isEditing ? (
                   <textarea
                     value={editData.full_address || ''}
@@ -1989,7 +1971,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             <div className="space-y-4">
               {/* Emergency Contact Name */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.emergencyContactName')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.emergencyContactName')}</div>
                 {isEditing ? (
                   <input
                     type="text"
@@ -2004,7 +1986,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
               </div>
               {/* Emergency Contact Phone */}
               <div>
-                <div className="text-xs text-neutral-500 mb-1">{t('employeeProfile.emergencyContactPhone')}</div>
+                <div className="text-xs text-muted mb-1">{t('employeeProfile.emergencyContactPhone')}</div>
                 {isEditing ? (
                   <input
                     type="tel"
@@ -2081,7 +2063,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                   <div>
                     <div className="font-medium">{record.training_name}</div>
                     <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.completed')}: {formatShortDate(record.completed_on)}</div>
-                    <div className="text-xs text-neutral-500">{t('employeeProfile.validFor', { months: record.validity_months })}</div>
+                    <div className="text-xs text-muted">{t('employeeProfile.validFor', { months: record.validity_months })}</div>
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`px-2 py-1 rounded text-xs ${
@@ -2110,7 +2092,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           className="space-y-6"
         >
           <div className="bg-red-900/20 border border-red-700 p-6 rounded-lg">
-            <h3 className="text-lg font-semibold mb-4 text-red-400">⚠️ {t('employeeProfile.terminationInformation')}</h3>
+            <h3 className="text-lg font-semibold mb-4 text-error">⚠️ {t('employeeProfile.terminationInformation')}</h3>
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.terminationDate')}</div>
@@ -2133,7 +2115,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
 
           <div className="bg-tahoe-card-bg p-6 rounded-lg">
             <h4 className="font-semibold mb-3">{t('employeeProfile.terminationReason')}</h4>
-            <p className="text-neutral-300">{terminationDetails.termination_reason || t('employeeProfile.noReasonProvided')}</p>
+            <p className="text-secondary">{terminationDetails.termination_reason || t('employeeProfile.noReasonProvided')}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-6">
@@ -2198,7 +2180,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
             {terminationDetails.exit_interview_notes && (
               <div>
                 <div className="text-sm text-tahoe-text-muted mb-2">{t('employeeProfile.interviewNotes')}</div>
-                <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.exit_interview_notes}</div>
+                <div className="bg-neutral-700 p-4 rounded text-secondary whitespace-pre-wrap">{terminationDetails.exit_interview_notes}</div>
               </div>
             )}
           </div>
@@ -2221,7 +2203,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                 {terminationDetails.equipment_return_notes && (
                   <div>
                     <div className="text-sm text-tahoe-text-muted">{t('employeeProfile.notes')}</div>
-                    <div className="text-neutral-300">{terminationDetails.equipment_return_notes}</div>
+                    <div className="text-secondary">{terminationDetails.equipment_return_notes}</div>
                   </div>
                 )}
               </div>
@@ -2248,7 +2230,7 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
           {terminationDetails.final_pay_notes && (
             <div className="bg-tahoe-card-bg p-6 rounded-lg">
               <h4 className="font-semibold mb-3">{t('employeeProfile.finalPayNotes')}</h4>
-              <div className="bg-neutral-700 p-4 rounded text-neutral-300 whitespace-pre-wrap">{terminationDetails.final_pay_notes}</div>
+              <div className="bg-neutral-700 p-4 rounded text-secondary whitespace-pre-wrap">{terminationDetails.final_pay_notes}</div>
             </div>
           )}
         </motion.div>

@@ -182,8 +182,7 @@ export default function Dashboard({ onNavigate, user }) {
             <select
               value={selectedTimeRange}
               onChange={(e) => setSelectedTimeRange(e.target.value)}
-              className="px-3 py-2 rounded-tahoe-input border text-sm transition-all duration-tahoe focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', borderColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+              className="form-select"
             >
               <option value="week">{t('dashboard.thisWeek')}</option>
               <option value="month">{t('dashboard.thisMonth')}</option>
@@ -196,8 +195,7 @@ export default function Dashboard({ onNavigate, user }) {
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center space-x-2 px-4 py-2 rounded-tahoe-pill text-sm font-medium transition-all duration-tahoe disabled:opacity-50"
-            style={{ backgroundColor: '#0A84FF', color: '#ffffff' }}
+            className="btn-primary"
           >
             <svg 
               className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} 
@@ -291,7 +289,7 @@ export default function Dashboard({ onNavigate, user }) {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-tahoe-text-muted">{t('dashboard.totalPayroll')}</span>
-                <span className="text-2xl font-bold text-green-400">
+                <span className="text-2xl font-bold text-success">
                   ${totalPayroll.toLocaleString()}
                 </span>
               </div>
@@ -360,7 +358,7 @@ export default function Dashboard({ onNavigate, user }) {
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-tahoe-text-muted">Pending Requests</span>
-              <span className="text-2xl font-bold text-yellow-400">
+              <span className="text-2xl font-bold text-warning">
                 {analytics?.leaveStats?.pending_requests || 0}
               </span>
             </div>
@@ -401,7 +399,7 @@ export default function Dashboard({ onNavigate, user }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 rounded-full bg-green-400"></div>
+                  <div className="w-4 h-4 rounded-full badge-dot-success"></div>
                   <div>
                     <div className="text-white font-medium">{t('dashboard.partTime')}</div>
                     <div className="text-tahoe-text-muted">{wf.breakdown.part_time || 0} {t('dashboard.employees')}</div>
@@ -469,8 +467,8 @@ export default function Dashboard({ onNavigate, user }) {
           <div className="space-y-4">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
-                  <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: '#818cf8' }}></div>
+                <div key={index} className="flex items-start space-x-3 p-3 rounded-tahoe-input bg-[var(--bg-hover)] border border-[var(--border-primary)]">
+                  <div className="w-2 h-2 rounded-full mt-2 badge-dot-info"></div>
                   <div className="flex-1">
                     <p className="text-sm text-white">{activity.description}</p>
                     <p className="text-xs text-tahoe-text-muted mt-1">
@@ -498,7 +496,7 @@ export default function Dashboard({ onNavigate, user }) {
           <div className="grid grid-cols-2 gap-3">
             <button 
               onClick={() => handleQuickAction('upload-timecards')}
-              className="p-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
+              className="p-4 bg-[var(--primary-bg)] hover:bg-[var(--primary-hover)] rounded-tahoe text-center transition-all hover:scale-105 hover:shadow-lg"
             >
               <div className="text-2xl mb-2">⏰</div>
               <div className="text-sm font-medium">{t('dashboard.uploadTimecards')}</div>
@@ -506,7 +504,7 @@ export default function Dashboard({ onNavigate, user }) {
             {userCanAccessBonuses && (
               <button 
                 onClick={() => handleQuickAction('upload-bonuses')}
-                className="p-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
+                className="p-4 bg-[var(--warning-text)] hover:bg-[var(--warning-border)] rounded-tahoe text-center transition-all hover:scale-105 hover:shadow-lg"
               >
                 <div className="text-2xl mb-2">⭐</div>
                 <div className="text-sm font-medium">{t('dashboard.uploadBonuses')}</div>
@@ -514,7 +512,7 @@ export default function Dashboard({ onNavigate, user }) {
             )}
             <button 
               onClick={() => handleQuickAction('manage-leave')}
-              className="p-4 bg-green-600 hover:bg-green-700 rounded-lg text-center transition-all hover:scale-105 hover:shadow-lg"
+              className="p-4 bg-[var(--success-text)] hover:bg-[var(--success-border)] rounded-tahoe text-center transition-all hover:scale-105 hover:shadow-lg"
             >
               <div className="text-2xl mb-2">🏖️</div>
               <div className="text-sm font-medium">{t('dashboard.leaveRequests')}</div>

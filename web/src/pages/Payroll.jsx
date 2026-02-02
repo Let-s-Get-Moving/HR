@@ -218,8 +218,7 @@ export default function Payroll() {
                 const period = payPeriods.find(p => p.pay_date === e.target.value);
                 setSelectedPeriod(period);
               }}
-              className="w-full px-4 py-2 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent transition-all duration-tahoe"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+              className="form-select"
             >
               <option value="">{t('payroll.selectPayDate')}</option>
               {payPeriods.map((period) => {
@@ -281,8 +280,7 @@ export default function Payroll() {
               placeholder={t('payroll.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-10 py-3 rounded-tahoe-input focus:outline-none focus:ring-2 focus:ring-tahoe-accent text-sm transition-all duration-tahoe"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff' }}
+              className="form-input pl-10 pr-10"
             />
             {searchQuery && (
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
@@ -381,7 +379,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
             onClick={() => onEmployeeClick(employee)}
           >
             {/* Employee Header */}
-            <div className="px-6 py-4 border-b" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)' }}>
+            <div className="px-6 py-4 border-b border-[var(--border-primary)] bg-[var(--bg-hover)]">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <h3 className="font-semibold text-primary text-lg">
@@ -395,7 +393,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                   )}
         </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-2xl font-bold text-success">
                     {formatCurrency(employee.net_pay)}
           </div>
                   <div className="text-xs text-secondary">{t('payroll.netPay')}</div>
@@ -417,7 +415,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                       </div>
                       <div>
                   <div className="text-xs text-secondary uppercase mb-1">{t('payroll.overtimeHours')}</div>
-                  <div className="text-lg font-semibold text-amber-600 dark:text-amber-400">
+                  <div className="text-lg font-semibold text-warning">
                     {formatHours(employee.overtime_hours)}
                         </div>
                       </div>
@@ -436,7 +434,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                     </div>
                   <div className="flex justify-between">
                     <span className="text-secondary">{t('payroll.overtimePay')}</span>
-                    <span className="font-medium text-amber-600 dark:text-amber-400">
+                    <span className="font-medium text-warning">
                       {formatCurrency(employee.overtime_pay)}
                     </span>
                       </div>
@@ -446,7 +444,7 @@ function PeriodView({ payrollData, loading, onEmployeeClick, formatCurrency, for
                   </div>
                   <div className="flex justify-between">
                     <span className="text-secondary">{t('payroll.vacationAccrued')}</span>
-                    <span className="font-medium text-green-600 dark:text-green-400">
+                    <span className="font-medium text-success">
                       {formatHours(employee.vacation_hours_accrued)}h
                     </span>
                   </div>
@@ -561,7 +559,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
           {/* Detailed Breakdown */}
           <div className="space-y-6">
             {/* Hours Breakdown */}
-            <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div className="surface-panel p-4">
               <h3 className="text-lg font-semibold text-primary mb-4">{t('payroll.hoursBreakdown')}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
@@ -574,7 +572,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
           </div>
           <div>
                   <div className="text-xs text-secondary uppercase mb-1">{t('payroll.overtimeHours')}</div>
-                  <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  <div className="text-2xl font-bold text-warning">
                     {formatHours(employee.overtime_hours)}
             </div>
           </div>
@@ -588,7 +586,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
     </div>
 
             {/* Pay Breakdown */}
-            <div className="p-4 rounded-tahoe-input" style={{ backgroundColor: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
+            <div className="surface-panel p-4">
               <h3 className="text-lg font-semibold text-primary mb-4">{t('payroll.payBreakdown')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2 border-b">
@@ -607,7 +605,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
                       {formatHours(employee.overtime_hours)} hours × {formatCurrency(employee.hourly_rate * (employee.overtime_multiplier || 1.0))} ({employee.overtime_multiplier || 1.0}×)
       </div>
     </div>
-                  <div className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                  <div className="text-xl font-bold text-warning">
                     {formatCurrency(employee.overtime_pay)}
           </div>
         </div>
@@ -632,7 +630,7 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
                     <div className="font-bold text-green-900 dark:text-green-300 text-lg">{t('payroll.netPayLabel')}</div>
                     <div className="text-xs text-green-700 dark:text-green-400">{t('payroll.takeHomeAmount')}</div>
                   </div>
-                  <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-3xl font-bold text-success">
                     {formatCurrency(employee.net_pay)}
                   </div>
                 </div>
@@ -645,13 +643,13 @@ function EmployeeDetailModal({ employee, selectedPeriod, onClose, formatCurrency
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-xs text-secondary uppercase mb-1">{t('payroll.vacationHoursAccrued')}</div>
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-2xl font-bold text-success">
                     {formatHours(employee.vacation_hours_accrued)}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-secondary uppercase mb-1">{t('payroll.vacationPayValue')}</div>
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  <div className="text-2xl font-bold text-success">
                     {formatCurrency(employee.vacation_pay_accrued)}
                   </div>
                 </div>

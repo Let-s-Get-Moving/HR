@@ -2446,7 +2446,7 @@ export default function Settings() {
               {getSettingDescription(key) && <p className="text-xs text-secondary mt-1">{getSettingDescription(key)}</p>}
             </div>
             <div className="flex items-center space-x-3">
-              <span className={`text-xs font-medium ${editBoolValue ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`text-xs font-medium ${editBoolValue ? 'text-success' : 'text-error'}`}>
                 {editBoolValue ? t('common.on') : t('common.off')}
               </span>
               <button
@@ -2505,11 +2505,11 @@ export default function Settings() {
               <select
                 value={value || ''}
                 disabled={true}
-                className="form-select opacity-50 cursor-not-allowed border-red-500"
+                className="form-select opacity-50 cursor-not-allowed border-[var(--error-border)]"
               >
                 <option value="">{t('settings.noOptionsAvailable')}</option>
               </select>
-              <p className="text-xs text-red-500 mt-1">{t('settings.noOptionsWarning')}</p>
+              <p className="text-xs text-error mt-1">{t('settings.noOptionsWarning')}</p>
             </div>
           );
         }
@@ -3666,7 +3666,7 @@ export default function Settings() {
                           </div>
                         )}
                         {jt.employee_count > 0 && (
-                          <div className="text-xs text-yellow-400 mt-1">
+                          <div className="text-xs text-warning mt-1">
                             {t('settings.jobTitles.inUse', { count: jt.employee_count })}
                           </div>
                         )}
@@ -3946,7 +3946,7 @@ export default function Settings() {
                           </div>
                         )}
                         {bp.employee_count > 0 && (
-                          <div className="text-xs text-yellow-400 mt-1">
+                          <div className="text-xs text-warning mt-1">
                             {t('settings.benefitsPackages.inUse', { count: bp.employee_count })}
                           </div>
                         )}
@@ -4090,7 +4090,7 @@ export default function Settings() {
                         <div className="font-medium text-white">{ws.name}</div>
                         {ws.description && <div className="text-sm text-secondary mt-1">{ws.description}</div>}
                         <div className="text-xs text-secondary mt-1">{ws.start_time} - {ws.end_time} • {ws.days_of_week?.join(', ') || 'No days'} • {ws.flexible_hours ? t('settings.workSchedules.flexible') : t('settings.workSchedules.fixed')}</div>
-                        {ws.employee_count > 0 && <div className="text-xs text-yellow-400 mt-1">{t('settings.workSchedules.inUse', { count: ws.employee_count })}</div>}
+                        {ws.employee_count > 0 && <div className="text-xs text-warning mt-1">{t('settings.workSchedules.inUse', { count: ws.employee_count })}</div>}
                       </div>
                       {canManage && <div className="flex gap-2">
                         <button onClick={() => {
@@ -4913,15 +4913,15 @@ export default function Settings() {
 
               {/* Error Message */}
               {userPasswordError && (
-                <div className="bg-red-900/20 border border-red-600 p-3 rounded-lg">
-                  <p className="text-red-400 text-sm">{userPasswordError}</p>
+                <div className="bg-error border border-[var(--error-border)] p-3 rounded-lg">
+                  <p className="text-error text-sm">{userPasswordError}</p>
                 </div>
               )}
 
               {/* Success Message */}
               {userPasswordSuccess && (
-                <div className="bg-green-900/20 border border-green-600 p-3 rounded-lg">
-                  <p className="text-green-400 text-sm">Password has been reset successfully.</p>
+                <div className="bg-success border border-[var(--success-border)] p-3 rounded-lg">
+                  <p className="text-success text-sm">Password has been reset successfully.</p>
                 </div>
               )}
 
@@ -5088,7 +5088,7 @@ export default function Settings() {
                           </p>
                           <p>
                             <span className="inline-block w-20">{t('settings.trustedDevicesInfo.expiresIn')}</span>
-                            <span className={device.expiresIn?.includes('1 day') || device.expiresIn?.includes('Less') ? 'text-yellow-500' : 'text-secondary'}>
+                            <span className={device.expiresIn?.includes('1 day') || device.expiresIn?.includes('Less') ? 'text-warning' : 'text-secondary'}>
                               {device.expiresIn}
                             </span>
                           </p>
@@ -5102,7 +5102,7 @@ export default function Settings() {
                       </div>
                       <button
                         onClick={() => revokeDevice(device.id)}
-                        className="ml-4 px-3 py-1 text-sm text-red-400 hover:text-red-300 hover:bg-red-900 hover:bg-opacity-20 rounded transition-all"
+                        className="ml-4 px-3 py-1 text-sm text-error hover:bg-error rounded transition-all"
                         title={t('settings.revoke')}
                       >
                         {t('settings.revoke')}
@@ -5160,14 +5160,14 @@ export default function Settings() {
                   autoFocus
                 />
                 {mfaError && (
-                  <p className="text-red-500 text-sm mt-2">{mfaError}</p>
+                  <p className="text-error text-sm mt-2">{mfaError}</p>
                 )}
               </div>
               
               {/* Backup Codes */}
               {mfaData.backupCodes && mfaData.backupCodes.length > 0 && (
-                <div className="border border-yellow-600 bg-yellow-900 bg-opacity-20 p-3 rounded">
-                  <h3 className="font-semibold text-yellow-500 mb-2">{t('settings.mfaSetup.saveBackupCodes')}</h3>
+                <div className="border border-[var(--warning-border)] bg-warning p-3 rounded">
+                  <h3 className="font-semibold text-warning mb-2">{t('settings.mfaSetup.saveBackupCodes')}</h3>
                   <p className="text-sm text-secondary mb-2">
                     {t('settings.mfaSetup.backupCodesDescription')}
                   </p>
@@ -5255,14 +5255,14 @@ export default function Settings() {
               
               {/* Error Message */}
               {passwordError && (
-                <div className="bg-red-900 bg-opacity-20 border border-red-600 p-3 rounded">
-                  <p className="text-red-500 text-sm">{passwordError}</p>
+                <div className="bg-error border border-[var(--error-border)] p-3 rounded">
+                  <p className="text-error text-sm">{passwordError}</p>
                 </div>
               )}
-              
+
               {/* Success Message */}
               {passwordSuccess && (
-                <div className="bg-green-900 bg-opacity-20 border border-green-600 p-3 rounded">
+                <div className="bg-success border border-[var(--success-border)] p-3 rounded">
                   <p className="text-green-500 text-sm">{t('settings.passwordChange.passwordChangedSuccess')}</p>
                 </div>
               )}

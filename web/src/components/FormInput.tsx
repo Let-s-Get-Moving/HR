@@ -39,7 +39,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
     ${leftIcon ? 'pl-10' : ''}
     ${rightIcon ? 'pr-10' : ''}
     ${hasError 
-      ? 'border-red-500 focus:ring-red-500 focus:border-red-500' 
+      ? 'border-[var(--error-border)] focus:ring-[var(--error-border)] focus:border-[var(--error-border)]' 
       : 'border-tahoe-border-primary focus:ring-tahoe-accent focus:border-tahoe-accent'
     }
     bg-tahoe-input-bg text-tahoe-text-primary
@@ -55,7 +55,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
           className="block text-xs font-medium text-tahoe-text-primary mb-1.5 tracking-wide"
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-error ml-1">*</span>}
         </label>
       )}
       
@@ -90,7 +90,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(({
       {error && (
         <p 
           id={errorId}
-          className="text-xs text-red-500 mt-1"
+          className="text-xs text-error mt-1"
           role="alert"
           aria-live="polite"
         >
