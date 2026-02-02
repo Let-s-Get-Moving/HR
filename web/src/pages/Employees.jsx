@@ -237,7 +237,7 @@ export default function Employees() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}>
+            <thead className="bg-tahoe-bg-secondary/60 backdrop-blur-tahoe border-b border-tahoe-border-primary">
               <tr>
                 <th className="px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.name')}</th>
                 <th className="hidden md:table-cell px-3 sm:px-6 py-4 text-left text-sm font-medium text-tahoe-text-secondary">{t('employees.email')}</th>
@@ -255,7 +255,7 @@ export default function Employees() {
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-y">
+            <tbody className="text-sm">
               {filteredEmployees.length === 0 && searchQuery ? (
                 <tr>
                   <td colSpan="9" className="px-6 py-8 text-center text-tahoe-text-muted">
@@ -272,16 +272,16 @@ export default function Employees() {
                 filteredEmployees.map((employee) => (
                 <tr 
                   key={employee.id} 
-                  className="hover:bg-tahoe-bg-hover cursor-pointer transition-all duration-tahoe"
+                  className="cursor-pointer transition-colors duration-tahoe hover:bg-tahoe-bg-hover even:bg-white/[0.02] focus-within:bg-tahoe-bg-hover"
                   onClick={() => setSelectedEmployee(employee)}
                 >
-                  <td className="px-3 sm:px-6 py-4">
+                  <td className="px-3 sm:px-6 py-3">
                     <div>
                       <div className="font-medium text-tahoe-text-primary">{employee.first_name} {employee.last_name}</div>
                       <div className="text-sm text-tahoe-text-muted">{employee.role_title}</div>
                     </div>
                   </td>
-                  <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-sm">
+                  <td className="hidden md:table-cell px-3 sm:px-6 py-3 text-sm">
                     <div className="space-y-1">
                       <div className="text-tahoe-accent font-mono text-xs">
                         {employee.first_name.toLowerCase()}@letsgetmovinggroup.com
@@ -294,40 +294,40 @@ export default function Employees() {
                     </div>
                   </td>
                   {filterStatus === "active" && (
-                    <td className="px-3 sm:px-6 py-4 text-sm">{employee.department}</td>
+                    <td className="px-3 sm:px-6 py-3 text-sm text-tahoe-text-secondary">{employee.department}</td>
                   )}
-                  <td className="px-3 sm:px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      employee.employment_type === 'Full-time' ? 'bg-green-900 text-green-300' :
-                      employee.employment_type === 'Part-time' ? 'bg-blue-900 text-blue-300' :
-                      'bg-purple-900 text-purple-300'
-                    }`}>
+                  <td className="px-3 sm:px-6 py-3">
+                    <span className={
+                      employee.employment_type === 'Full-time' ? 'status-success' :
+                      employee.employment_type === 'Part-time' ? 'status-info' :
+                      'status-neutral'
+                    }>
                       {employee.employment_type}
                     </span>
                   </td>
-                  <td className="hidden md:table-cell px-3 sm:px-6 py-4 text-sm">{formatDateOnly(employee.hire_date)}</td>
-                  <td className="px-3 sm:px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      employee.status === 'Active' ? 'bg-green-900 text-green-300' :
-                      employee.status === 'On Leave' ? 'bg-yellow-900 text-yellow-300' :
-                      'bg-red-900 text-red-300'
-                    }`}>
+                  <td className="hidden md:table-cell px-3 sm:px-6 py-3 text-sm text-tahoe-text-secondary tabular-nums">{formatDateOnly(employee.hire_date)}</td>
+                  <td className="px-3 sm:px-6 py-3">
+                    <span className={
+                      employee.status === 'Active' ? 'status-success' :
+                      employee.status === 'On Leave' ? 'status-warning' :
+                      'status-error'
+                    }>
                       {employee.status}
                     </span>
                   </td>
                   {filterStatus === "terminated" && (
-                    <td className="hidden lg:table-cell px-3 sm:px-6 py-4 text-sm">
+                    <td className="hidden lg:table-cell px-3 sm:px-6 py-3 text-sm text-tahoe-text-secondary tabular-nums">
                       {employee.termination_date ? formatDateOnly(employee.termination_date) : '-'}
                     </td>
                   )}
                   {filterStatus === "active" && (userRole === 'manager' || userRole === 'admin') && (
-                    <td className="px-3 sm:px-6 py-4">
+                    <td className="px-3 sm:px-6 py-3">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleTerminate(employee);
                         }}
-                        className="text-red-400 hover:text-red-300 text-sm"
+                        className="inline-flex items-center rounded-tahoe-pill px-3 py-1.5 text-xs font-medium text-tahoe-error-text hover:bg-[rgba(255,69,58,0.12)] transition-all duration-tahoe"
                       >
                         {t('employees.terminateEmployee')}
                       </button>
