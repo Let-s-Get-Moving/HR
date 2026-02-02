@@ -123,6 +123,7 @@
     "reject": "Rejeter",
     "duration": "Durée",
     "days": "jours",
+    "day": "jour",
     "submittedOn": "Soumis le",
     "noRequests": "Aucune demande de congé",
     "description": "Gérer les demandes et les soldes de congés des employés",
@@ -281,7 +282,14 @@
       "2weeks": "2 semaines",
       "maximumConsecutiveDays": "Jours Consécutifs Maximum",
       "saveChanges": "Enregistrer les Modifications"
-    }
+    },
+    "errorCreating": "Erreur lors de la création de l'entrée de congé",
+    "editLeaveEntry": "Modifier l'Entrée de Congé",
+    "editLeaveDescription": "Mettre à jour les détails de l'entrée de congé",
+    "selectDateRange": "Sélectionner les dates de congé",
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette entrée de congé ? Cette action est irréversible.",
+    "deleteError": "Échec de la suppression de l'entrée de congé",
+    "errorDeleting": "Échec de la suppression de la demande de congé"
   },
   "payroll": {
     "title": "Gestion de la Paie",
@@ -614,6 +622,9 @@
     "logRetentionPeriod": "Période de rétention des journaux en jours",
     "userPreferences": "Préférences Utilisateur",
     "saving": "Enregistrement...",
+    "save": "Enregistrer",
+    "saveAll": "Tout Enregistrer",
+    "saveError": "Échec de l'enregistrement des paramètres",
     "enableMFA": "Activer MFA",
     "cancel": "Annuler",
     "mfaSetup": {
@@ -629,7 +640,8 @@
       "verifying": "Vérification...",
       "enableMFA": "Activer MFA",
       "qrCodeAlt": "Code QR MFA",
-      "success": "✅ Authentification à deux facteurs activée avec succès! Votre compte est maintenant protégé."
+      "success": "✅ Authentification à deux facteurs activée avec succès! Votre compte est maintenant protégé.",
+      "failed": "Échec de l'activation de l'authentification à deux facteurs. Veuillez réessayer."
     },
     "passwordChange": {
       "title": "🔐 Changer le Mot de Passe",
@@ -803,7 +815,8 @@
       "addError": "Échec de l'ajout du titre de poste",
       "updateError": "Échec de la mise à jour du titre de poste",
       "deleteError": "Échec de la suppression du titre de poste",
-      "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce titre de poste?"
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce titre de poste?",
+      "notFound": "Titre de poste introuvable"
     },
     "benefitsPackages": {
       "title": "Forfaits d'Avantages",
@@ -1274,7 +1287,8 @@
     "selectInitiatedBy": "Veuillez sélectionner qui a initié la résiliation",
     "terminationSuccess": "L'employé {{firstName}} {{lastName}} a été résilié avec succès. Les documents ont été téléchargés sur son profil.",
     "failedToProcess": "Échec du traitement de la résiliation: {{error}}",
-    "completeTerminationProcess": "Compléter le processus de résiliation pour {{firstName}} {{lastName}}"
+    "completeTerminationProcess": "Compléter le processus de résiliation pour {{firstName}} {{lastName}}",
+    "hireDate": "Date d'Embauche"
   },
   "employeeOnboarding": {
     "basicInformation": "Informations de Base",
@@ -1487,13 +1501,17 @@
     "type": "Type",
     "hoursBiweekly": "Heures/quinzaine",
     "noCompensationRecords": "Aucun dossier de compensation",
-    "statusHistory": "Historique du Statut"
+    "statusHistory": "Historique du Statut",
+    "period": "Période",
+    "signedCheckmark": "Signé"
   },
   "common": {
     "n/a": "N/A",
     "success": "Succès",
     "period": "Période",
     "other": "Autre",
-    "upload": "Télécharger"
+    "upload": "Télécharger",
+    "select": "Sélectionner",
+    "date": "Date"
   }
 }

@@ -123,6 +123,7 @@
     "reject": "Rechazar",
     "duration": "Duración",
     "days": "días",
+    "day": "día",
     "submittedOn": "Enviado el",
     "noRequests": "No hay solicitudes de ausencia",
     "description": "Gestionar solicitudes y saldos de ausencias de empleados",
@@ -281,7 +282,14 @@
       "2weeks": "2 semanas",
       "maximumConsecutiveDays": "Días Consecutivos Máximos",
       "saveChanges": "Guardar Cambios"
-    }
+    },
+    "errorCreating": "Error al crear entrada de licencia",
+    "editLeaveEntry": "Editar Entrada de Licencia",
+    "editLeaveDescription": "Actualizar los detalles de la entrada de licencia",
+    "selectDateRange": "Seleccionar fechas de licencia",
+    "confirmDelete": "¿Está seguro de que desea eliminar esta entrada de licencia? Esta acción no se puede deshacer.",
+    "deleteError": "Error al eliminar entrada de licencia",
+    "errorDeleting": "Error al eliminar solicitud de licencia"
   },
   "payroll": {
     "title": "Gestión de Nómina",
@@ -614,6 +622,9 @@
     "logRetentionPeriod": "Período de retención de registros en días",
     "userPreferences": "Preferencias de Usuario",
     "saving": "Guardando...",
+    "save": "Guardar",
+    "saveAll": "Guardar Todo",
+    "saveError": "Error al guardar configuración",
     "enableMFA": "Habilitar MFA",
     "cancel": "Cancelar",
     "mfaSetup": {
@@ -629,7 +640,8 @@
       "verifying": "Verificando...",
       "enableMFA": "Habilitar MFA",
       "qrCodeAlt": "Código QR MFA",
-      "success": "✅ ¡Autenticación de dos factores habilitada exitosamente! Su cuenta ahora está protegida."
+      "success": "✅ ¡Autenticación de dos factores habilitada exitosamente! Su cuenta ahora está protegida.",
+      "failed": "Error al habilitar la autenticación de dos factores. Por favor intente de nuevo."
     },
     "passwordChange": {
       "title": "🔐 Cambiar Contraseña",
@@ -803,7 +815,8 @@
       "addError": "Error al agregar título de trabajo",
       "updateError": "Error al actualizar título de trabajo",
       "deleteError": "Error al eliminar título de trabajo",
-      "confirmDelete": "¿Está seguro de que desea eliminar este título de trabajo?"
+      "confirmDelete": "¿Está seguro de que desea eliminar este título de trabajo?",
+      "notFound": "Título de trabajo no encontrado"
     },
     "benefitsPackages": {
       "title": "Paquetes de Beneficios",
@@ -1278,7 +1291,8 @@
     "selectInitiatedBy": "Por favor seleccione quién inició la terminación",
     "terminationSuccess": "El empleado {{firstName}} {{lastName}} ha sido terminado exitosamente. Los documentos han sido subidos a su perfil.",
     "failedToProcess": "Error al procesar la terminación: {{error}}",
-    "completeTerminationProcess": "Completar proceso de terminación para {{firstName}} {{lastName}}"
+    "completeTerminationProcess": "Completar proceso de terminación para {{firstName}} {{lastName}}",
+    "hireDate": "Fecha de Contratación"
   },
   "employeeOnboarding": {
     "basicInformation": "Información Básica",
@@ -1491,11 +1505,15 @@
     "type": "Tipo",
     "hoursBiweekly": "Horas/quincena",
     "noCompensationRecords": "No hay registros de compensación",
-    "statusHistory": "Historial de Estado"
+    "statusHistory": "Historial de Estado",
+    "period": "Período",
+    "signedCheckmark": "Firmado"
   },
   "common": {
     "n/a": "N/A",
     "other": "Otro",
-    "upload": "Subir"
+    "upload": "Subir",
+    "select": "Seleccionar",
+    "date": "Fecha"
   }
 }

@@ -103,7 +103,7 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
   };
 
   const handleDeleteLeave = async (leaveId) => {
-    if (!window.confirm(t('leave.confirmDelete') || 'Are you sure you want to delete this leave entry? This action cannot be undone.')) {
+    if (!window.confirm(t('leave.confirmDelete'))) {
       return;
     }
     
@@ -119,7 +119,7 @@ export default function LeaveRequestApproval({ onApprovalChange, refreshTrigger 
       }
     } catch (error) {
       console.error("Error deleting leave:", error);
-      alert(t('leave.errorDeleting') || 'Failed to delete leave request');
+      alert(t('leave.errorDeleting'));
     } finally {
       setDeletingLeaveId(null);
     }

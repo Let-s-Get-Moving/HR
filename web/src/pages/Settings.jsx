@@ -2186,7 +2186,7 @@ export default function Settings() {
       await loadSettingsForTab('system');
     } catch (error) {
       console.error('Failed to save system settings:', error);
-      alert(t('settings.saveError') || 'Failed to save settings: ' + error.message);
+      alert(t('settings.saveError') + ': ' + error.message);
     } finally {
       setSaving(prev => {
         const newSaving = { ...prev };
@@ -2470,7 +2470,7 @@ export default function Settings() {
                   disabled={saving[key]}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
-                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                  {saving[key] ? t('settings.saving') : t('settings.save')}
                 </button>
               )}
             </div>
@@ -2548,7 +2548,7 @@ export default function Settings() {
                   disabled={saving[key]}
                   className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
-                  {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                  {saving[key] ? t('settings.saving') : t('settings.save')}
                 </button>
               )}
             </div>
@@ -2608,7 +2608,7 @@ export default function Settings() {
                     disabled={saving[key]}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap self-start"
                   >
-                    {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                    {saving[key] ? t('settings.saving') : t('settings.save')}
                   </button>
                 )}
               </div>
@@ -2667,7 +2667,7 @@ export default function Settings() {
                     disabled={saving[key]}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
-                    {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                    {saving[key] ? t('settings.saving') : t('settings.save')}
                   </button>
                 )}
               </div>
@@ -2726,7 +2726,7 @@ export default function Settings() {
                     disabled={saving[key]}
                     className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                   >
-                    {saving[key] ? t('settings.saving') || 'Saving...' : t('settings.save') || 'Save'}
+                    {saving[key] ? t('settings.saving') : t('settings.save')}
                   </button>
                 )}
               </div>
@@ -2943,8 +2943,8 @@ export default function Settings() {
               className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {Object.values(saving).some(v => v === true) 
-                ? (t('settings.saving') || 'Saving...') 
-                : (t('settings.saveAll') || 'Save All')}
+                ? t('settings.saving') 
+                : t('settings.saveAll')}
             </button>
           </div>
         )}
@@ -3683,7 +3683,7 @@ export default function Settings() {
                                 console.error('Job title not found for editing:', jt.id);
                                 setEditingJobTitle(null);
                                 setEditingJobTitleData(null);
-                                setJobTitleError(t('settings.jobTitles.notFound') || 'Job title not found');
+                                setJobTitleError(t('settings.jobTitles.notFound'));
                               }
                             }}
                             className="btn-primary"

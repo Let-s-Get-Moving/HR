@@ -124,6 +124,7 @@
     "reject": "Reject",
     "duration": "Duration",
     "days": "days",
+    "day": "day",
     "submittedOn": "Submitted On",
     "noRequests": "No leave requests",
     "description": "Manage employee leave requests and balances",
@@ -307,7 +308,13 @@
       "maximumConsecutiveDays": "Maximum Consecutive Days",
       "saveChanges": "Save Changes"
     },
-    "errorCreating": "Error creating leave entry"
+    "errorCreating": "Error creating leave entry",
+    "editLeaveEntry": "Edit Leave Entry",
+    "editLeaveDescription": "Update the leave entry details",
+    "selectDateRange": "Select leave dates",
+    "confirmDelete": "Are you sure you want to delete this leave entry? This action cannot be undone.",
+    "deleteError": "Failed to delete leave entry",
+    "errorDeleting": "Failed to delete leave request"
   },
   "payroll": {
     "title": "Payroll Management",
@@ -691,6 +698,9 @@
     "logRetentionPeriod": "Log retention period in days",
     "userPreferences": "User Preferences",
     "saving": "Saving...",
+    "save": "Save",
+    "saveAll": "Save All",
+    "saveError": "Failed to save settings",
     "enableMFA": "Enable MFA",
     "cancel": "Cancel",
     "mfaSetup": {
@@ -706,7 +716,8 @@
       "verifying": "Verifying...",
       "enableMFA": "Enable MFA",
       "qrCodeAlt": "MFA QR Code",
-      "success": "✅ Two-Factor Authentication enabled successfully! Your account is now protected."
+      "success": "✅ Two-Factor Authentication enabled successfully! Your account is now protected.",
+      "failed": "Failed to enable Two-Factor Authentication. Please try again."
     },
     "passwordChange": {
       "title": "🔐 Change Password",
@@ -880,7 +891,8 @@
       "addError": "Failed to add job title",
       "updateError": "Failed to update job title",
       "deleteError": "Failed to delete job title",
-      "confirmDelete": "Are you sure you want to delete this job title?"
+      "confirmDelete": "Are you sure you want to delete this job title?",
+      "notFound": "Job title not found"
     },
     "benefitsPackages": {
       "title": "Benefits Packages",
@@ -1286,7 +1298,8 @@
     "selectInitiatedBy": "Please select who initiated the termination",
     "terminationSuccess": "Employee {{firstName}} {{lastName}} has been terminated successfully. Documents have been uploaded to their profile.",
     "failedToProcess": "Failed to process termination: {{error}}",
-    "completeTerminationProcess": "Complete termination process for {{firstName}} {{lastName}}"
+    "completeTerminationProcess": "Complete termination process for {{firstName}} {{lastName}}",
+    "hireDate": "Hire Date"
   },
   "employeeOnboarding": {
     "basicInformation": "Basic Information",
@@ -1446,7 +1459,9 @@
     "period": "Period",
     "name": "Name",
     "other": "Other",
-    "upload": "Upload"
+    "upload": "Upload",
+    "select": "Select",
+    "date": "Date"
   },
   "employeeProfile": {
     "selectFileAndType": "Please select a file and document type",
@@ -1637,6 +1652,8 @@
     "notProvided": "Not provided",
     "notSet": "Not set",
     "sinPlaceholder": "XXX-XXX-XXX",
-    "transitNumberPlaceholder": "XXXXX"
+    "transitNumberPlaceholder": "XXXXX",
+    "period": "Period",
+    "signedCheckmark": "Signed"
   }
 }

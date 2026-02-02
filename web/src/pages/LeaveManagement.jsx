@@ -257,7 +257,7 @@ export default function LeaveManagement() {
 
   // Handle delete leave request (Manager/Admin only)
   const handleDeleteLeave = async (leaveId) => {
-    if (!window.confirm(t('leave.confirmDelete') || 'Are you sure you want to delete this leave entry? This action cannot be undone.')) {
+    if (!window.confirm(t('leave.confirmDelete'))) {
       return;
     }
     
@@ -272,7 +272,7 @@ export default function LeaveManagement() {
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
       console.error("Error deleting leave:", error);
-      alert(t('leave.deleteError') || 'Failed to delete leave entry: ' + (error.message || 'Unknown error'));
+      alert(t('leave.deleteError') + ': ' + (error.message || t('common.unknownError')));
     } finally {
       setDeletingLeaveId(null);
     }
@@ -512,7 +512,7 @@ export default function LeaveManagement() {
                     endYmd={newRequest.end_date}
                     onApply={({ startYmd, endYmd }) => setNewRequest({...newRequest, start_date: startYmd, end_date: endYmd})}
                     onClear={() => setNewRequest({...newRequest, start_date: '', end_date: ''})}
-                    placeholder={t('leave.selectDateRange') || 'Select leave dates'}
+                    placeholder={t('leave.selectDateRange')}
                   />
                 </div>
 
@@ -1444,7 +1444,7 @@ export default function LeaveManagement() {
                                             setShowManualLeaveCreate(true);
                                           }}
                                           className="p-1.5 text-tahoe-text-muted hover:text-tahoe-accent hover:bg-tahoe-bg-hover rounded transition-all duration-tahoe"
-                                          title={t('common.edit') || 'Edit'}
+                                          title={t('common.edit')}
                                         >
                                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -1454,7 +1454,7 @@ export default function LeaveManagement() {
                                           onClick={() => handleDeleteLeave(leave.id)}
                                           disabled={deletingLeaveId === leave.id}
                                           className="p-1.5 text-tahoe-text-muted hover:text-red-400 hover:bg-red-500/10 rounded transition-all duration-tahoe disabled:opacity-50"
-                                          title={t('common.delete') || 'Delete'}
+                                          title={t('common.delete')}
                                         >
                                           {deletingLeaveId === leave.id ? (
                                             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">

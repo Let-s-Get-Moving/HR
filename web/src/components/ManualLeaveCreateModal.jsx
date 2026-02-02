@@ -176,11 +176,11 @@ export default function ManualLeaveCreateModal({
   const activeEmployees = (employees || []).filter(e => e.status === 'Active');
   
   const modalTitle = isEditMode 
-    ? (t('leave.editLeaveEntry') || 'Edit Leave Entry')
+    ? t('leave.editLeaveEntry')
     : t('leave.recordLeaveEntry');
   
   const modalDescription = isEditMode
-    ? (t('leave.editLeaveDescription') || 'Update the leave entry details')
+    ? t('leave.editLeaveDescription')
     : t('leave.hrRecordsDescription');
   
   return (
@@ -254,7 +254,7 @@ export default function ManualLeaveCreateModal({
               setStartDate('');
               setEndDate('');
             }}
-            placeholder={t('leave.selectDateRange') || 'Select leave dates'}
+            placeholder={t('leave.selectDateRange')}
           />
         </div>
         
@@ -369,14 +369,14 @@ export default function ManualLeaveCreateModal({
             onClick={onClose}
             disabled={saving}
           >
-            {t('common.cancel') || 'Cancel'}
+            {t('common.cancel')}
           </Button>
           <Button
             type="submit"
             variant="primary"
             loading={saving}
           >
-            {isEditMode ? (t('common.save') || 'Save') : t('leave.saveAndApprove')}
+            {isEditMode ? t('common.save') : t('leave.saveAndApprove')}
           </Button>
         </div>
       </form>
