@@ -116,8 +116,10 @@ r.post(
         }
 
         try {
-            importResults.leadStatus = await importLeadStatusFromExcel(leadFile.buffer);
+            importResults.leadStatus = await importLeadStatusFromExcel(leadFile.buffer, leadFile.originalname);
+            console.log('[commission-drafts/ingest] Lead Status imported:', importResults.leadStatus);
         } catch (err) {
+            console.error('[commission-drafts/ingest] Lead Status import failed:', err);
             return res.status(400).json({ error: 'Failed to import Lead Status file', details: err.message });
         }
 

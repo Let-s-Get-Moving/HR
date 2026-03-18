@@ -45,13 +45,13 @@ const EXPECTED_HEADERS = [
  */
 export async function importSalesCommissionSummary(fileBuffer, periodStart, periodEnd) {
     const workbook = await loadExcelWorkbook(fileBuffer);
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     
-    if (!worksheet) {
-        throw new Error('No worksheet found in file');
+    if (!workbook || !workbook.SheetNames || workbook.SheetNames.length === 0) {
+        throw new Error('No worksheets found in file');
     }
     
-    const data = getWorksheetData(worksheet);
+    const sheetName = workbook.SheetNames[0];
+    const data = getWorksheetData(workbook, sheetName);
     
     if (data.length === 0) {
         throw new Error('No data found in worksheet');
