@@ -183,6 +183,20 @@ export default function BonusesCommissions() {
   const [bookedOpportunitiesImportStatus, setBookedOpportunitiesImportStatus] = useState(null);
   const [adjustmentImportStatus, setAdjustmentImportStatus] = useState(null);
   
+  // Commission Drafts state (NEW SYSTEM)
+  const [commissionDrafts, setCommissionDrafts] = useState([]);
+  const [selectedDraft, setSelectedDraft] = useState(null);
+  const [draftLineItems, setDraftLineItems] = useState([]);
+  const [draftLoading, setDraftLoading] = useState(false);
+  const [draftUploadStatus, setDraftUploadStatus] = useState(null);
+  const [performanceFile, setPerformanceFile] = useState(null);
+  const [commissionSummaryFile, setCommissionSummaryFile] = useState(null);
+  const [leadStatusDraftFile, setLeadStatusDraftFile] = useState(null);
+  const [draftPeriodStart, setDraftPeriodStart] = useState('');
+  const [draftPeriodEnd, setDraftPeriodEnd] = useState('');
+  const [savingLineItems, setSavingLineItems] = useState(new Set());
+  const [editValues, setEditValues] = useState({});
+  
   // Analytics data
   const [analyticsData, setAnalyticsData] = useState(null);
   const [availablePeriods, setAvailablePeriods] = useState([]);
@@ -203,10 +217,16 @@ export default function BonusesCommissions() {
   const tabs = [
     // Hide import tab for user role
     ...(userRole !== 'user' ? [{ id: "import", name: t('bonuses.excelImport'), icon: "📥" }] : []),
-    // Sales Commissions tab - for managers/admins OR users with sales_role
+    // Commission Drafts tab - NEW draft-based workflow
+    ...((userRole !== 'user' || salesRole) ? [{ 
+      id: "commission-drafts", 
+      name: "Commission Drafts", 
+      icon: "📋" 
+    }] : []),
+    // Sales Commissions tab - for managers/admins OR users with sales_role (OLD SYSTEM - keep for reference)
     ...((userRole !== 'user' || salesRole) ? [{ 
       id: "sales-commissions", 
-      name: userRole === 'user' ? "My Commissions" : "Sales Commissions", 
+      name: userRole === 'user' ? "My Commissions (Old)" : "Sales Commissions (Old)", 
       icon: "💰" 
     }] : [])
   ];
@@ -214,13 +234,13 @@ export default function BonusesCommissions() {
   // Set default tab based on role
   useEffect(() => {
     if (activeTab === null && userRole !== null) {
-      // Default to sales-commissions for users with sales_role, import for others
+      // Default to commission-drafts for all users with access
       if (userRole === 'user' && salesRole) {
-        setActiveTab('sales-commissions');
+        setActiveTab('commission-drafts');
       } else if (userRole !== 'user') {
-        setActiveTab('import');
+        setActiveTab('commission-drafts');
       } else {
-        setActiveTab('sales-commissions');
+        setActiveTab('commission-drafts');
       }
     }
   }, [userRole, salesRole, activeTab]);
@@ -2057,6 +2077,588 @@ export default function BonusesCommissions() {
   };
 
   // ============================================================================
+  // Commission Drafts — Functions (NEW SYSTEM)
+  // ============================================================================
+
+  // ── Debounce utility ────────────────────────────────────────────────────────
+  const debounceTimers = React.useRef({});
+  const debounceCall = (key, fn, wait = 600) => {
+    clearTimeout(debounceTimers.current[key]);
+    debounceTimers.current[key] = setTimeout(fn, wait);
+  };
+
+  // ── Load list of all drafts ─────────────────────────────────────────────────
+  const loadCommissionDrafts = async () => {
+    try {
+      const drafts = await API('/api/commission-drafts');
+      setCommissionDrafts(drafts || []);
+      // Auto-select most recent if none is selected
+      if (drafts?.length > 0 && !selectedDraft) {
+        await loadDraft(drafts[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load commission drafts:', err);
+    }
+  };
+
+  // ── Load a single draft + its line items ───────────────────────────────────
+  const loadDraft = async (draftId) => {
+    try {
+      setDraftLoading(true);
+      const draft = await API(`/api/commission-drafts/${draftId}`);
+      applyDraftToState(draft);
+    } catch (err) {
+      console.error('Failed to load draft:', err);
+    } finally {
+      setDraftLoading(false);
+    }
+  };
+
+  // ── Apply a draft response to local state ──────────────────────────────────
+  const applyDraftToState = (draft) => {
+    setSelectedDraft(draft);
+    setDraftLineItems(draft.lineItems || []);
+    // Seed editable values from server data (only manual fields)
+    setEditValues(prev => {
+      const next = { ...prev };
+      draft.lineItems?.forEach(item => {
+        if (!next[item.id]) next[item.id] = {};
+        MANUAL_FIELDS.forEach(f => {
+          next[item.id][f] = item[f] ?? 0;
+        });
+      });
+      return next;
+    });
+  };
+
+  // Manual fields whitelist (used in edit + save)
+  const MANUAL_FIELDS = [
+    'spiff_bonus', 'revenue_bonus',
+    'booking_bonus_5_10_plus', 'booking_bonus_5_10_minus',
+    'hourly_paid_out', 'deduction_sales_manager', 'deduction_missing_punch',
+    'deduction_customer_support', 'deduction_post_commission',
+    'deduction_dispatch', 'deduction_other',
+  ];
+
+  // ── Polling: while calculation_status === 'calculating', poll every 3 s ───
+  const pollingRef = React.useRef(null);
+
+  const startPolling = (draftId) => {
+    stopPolling();
+    pollingRef.current = setInterval(async () => {
+      try {
+        const draft = await API(`/api/commission-drafts/${draftId}`);
+        applyDraftToState(draft);
+        if (draft.calculation_status !== 'calculating') {
+          stopPolling();
+          // Refresh the draft list so the status badge updates
+          const drafts = await API('/api/commission-drafts');
+          setCommissionDrafts(drafts || []);
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 3000);
+  };
+
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
+  // Start / stop polling whenever the selected draft changes calculation_status
+  useEffect(() => {
+    if (selectedDraft?.calculation_status === 'calculating') {
+      startPolling(selectedDraft.id);
+    } else {
+      stopPolling();
+    }
+    return stopPolling; // cleanup on unmount
+  }, [selectedDraft?.id, selectedDraft?.calculation_status]);
+
+  // ── Load drafts when tab is first opened ──────────────────────────────────
+  useEffect(() => {
+    if (activeTab === 'commission-drafts' && (userRole !== 'user' || salesRole)) {
+      loadCommissionDrafts();
+    }
+    // Stop polling when leaving the tab
+    if (activeTab !== 'commission-drafts') stopPolling();
+  }, [activeTab, userRole, salesRole]);
+
+  // ── Upload 3 files → ingest → create skeleton draft ───────────────────────
+  const handleDraftIngest = async () => {
+    if (!performanceFile || !commissionSummaryFile || !leadStatusDraftFile || !draftPeriodStart || !draftPeriodEnd) {
+      setDraftUploadStatus({ status: 'error', message: 'All 3 files and period dates are required' });
+      return;
+    }
+    try {
+      setDraftLoading(true);
+      setDraftUploadStatus({ status: 'loading', message: 'Importing files…' });
+
+      const formData = new FormData();
+      formData.append('performanceFile',       performanceFile);
+      formData.append('commissionSummaryFile', commissionSummaryFile);
+      formData.append('leadStatusFile',        leadStatusDraftFile);
+      formData.append('periodStart',           draftPeriodStart);
+      formData.append('periodEnd',             draftPeriodEnd);
+
+      const response = await APIUpload('/api/commission-drafts/ingest', formData);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || `HTTP ${response.status}`);
+      }
+      const result = await response.json();
+
+      setDraftUploadStatus({
+        status: 'success',
+        message: `Files imported. Draft #${result.draft.draftId} created — gathering SmartMoving data for ${result.draft.quotesTotal} job${result.draft.quotesTotal !== 1 ? 's' : ''}…`,
+      });
+
+      // Clear inputs
+      setPerformanceFile(null);
+      setCommissionSummaryFile(null);
+      setLeadStatusDraftFile(null);
+
+      // Load the new draft (it will start polling automatically via the useEffect above)
+      await loadDraft(result.draft.draftId);
+      const drafts = await API('/api/commission-drafts');
+      setCommissionDrafts(drafts || []);
+
+    } catch (err) {
+      setDraftUploadStatus({ status: 'error', message: err.message || 'Failed to create draft' });
+    } finally {
+      setDraftLoading(false);
+    }
+  };
+
+  // ── Manual field change + debounced save ───────────────────────────────────
+  const handleLineItemChange = (lineItemId, field, value) => {
+    setEditValues(prev => ({
+      ...prev,
+      [lineItemId]: { ...prev[lineItemId], [field]: value },
+    }));
+    debounceCall(`li-${lineItemId}-${field}`, () => saveLineItem(lineItemId, field, value));
+  };
+
+  const saveLineItem = async (lineItemId, field, value) => {
+    if (!selectedDraft) return;
+    try {
+      setSavingLineItems(prev => new Set(prev).add(lineItemId));
+      const updated = await API(
+        `/api/commission-drafts/${selectedDraft.id}/line-items/${lineItemId}`,
+        { method: 'PATCH', body: JSON.stringify({ [field]: parseFloat(value) || 0 }) }
+      );
+      // Refresh the row (trigger has recalculated total_due server-side)
+      setDraftLineItems(prev => prev.map(item => item.id === lineItemId ? updated : item));
+      setEditValues(prev => ({
+        ...prev,
+        [lineItemId]: { ...prev[lineItemId], ...MANUAL_FIELDS.reduce((acc, f) => ({ ...acc, [f]: updated[f] ?? 0 }), {}) },
+      }));
+    } catch (err) {
+      console.error('Failed to save line item:', err);
+    } finally {
+      setSavingLineItems(prev => { const n = new Set(prev); n.delete(lineItemId); return n; });
+    }
+  };
+
+  // ── Finalize draft ─────────────────────────────────────────────────────────
+  const handleFinalizeDraft = async () => {
+    if (!selectedDraft) return;
+    if (!window.confirm('Finalize this commission? This will lock all fields.')) return;
+    try {
+      setDraftLoading(true);
+      await API(`/api/commission-drafts/${selectedDraft.id}/finalize`, { method: 'POST' });
+      await loadDraft(selectedDraft.id);
+      const drafts = await API('/api/commission-drafts');
+      setCommissionDrafts(drafts || []);
+    } catch (err) {
+      console.error('Failed to finalize draft:', err);
+      alert('Failed to finalize: ' + err.message);
+    } finally {
+      setDraftLoading(false);
+    }
+  };
+
+  // ── Helper: render a SmartMoving-dependent cell ────────────────────────────
+  // Shows animated "Gathering data…" pill when value is null (enrichment pending)
+  const SmPendingCell = ({ value, format = 'currency', colorClass = 'text-gray-400' }) => {
+    if (value === null || value === undefined) {
+      return (
+        <span className="inline-flex items-center gap-1 text-xs text-blue-400 italic whitespace-nowrap">
+          <span className="inline-block w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+          Gathering data…
+        </span>
+      );
+    }
+    if (format === 'pct')      return <span className={colorClass}>{parseFloat(value).toFixed(2)}%</span>;
+    if (format === 'currency') return <span className={colorClass}>${parseFloat(value).toFixed(2)}</span>;
+    return <span className={colorClass}>{value}</span>;
+  };
+
+  // ── Progress banner (shown while calculation_status === 'calculating') ─────
+  const DraftProgressBanner = ({ draft }) => {
+    if (!draft || draft.calculation_status !== 'calculating') return null;
+    const total     = parseInt(draft.quotes_total, 10) || 0;
+    const processed = parseInt(draft.quotes_processed, 10) || 0;
+    const pct       = total > 0 ? Math.round((processed / total) * 100) : 0;
+    return (
+      <div className="card p-4 border border-blue-500/30 bg-blue-900/20">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin flex-shrink-0" />
+          <span className="text-sm font-medium text-blue-200">
+            Gathering SmartMoving data — processing job {processed} of {total}…
+          </span>
+        </div>
+        <div className="w-full h-1.5 bg-blue-900/40 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-blue-400 rounded-full transition-all duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        <p className="text-xs text-blue-300/70 mt-1">
+          Revenue Add-Ons, Deductions, and dependent columns will populate once all jobs are fetched.
+        </p>
+      </div>
+    );
+  };
+
+  // ── Error banner ───────────────────────────────────────────────────────────
+  const DraftErrorBanner = ({ draft }) => {
+    if (!draft || draft.calculation_status !== 'error') return null;
+    return (
+      <div className="card p-4 border border-red-500/30 bg-red-900/20">
+        <p className="text-sm font-medium text-red-300">
+          Data gathering failed: {draft.calculation_error || 'Unknown error'}
+        </p>
+        <p className="text-xs text-red-300/70 mt-1">
+          Revenue-dependent fields cannot be calculated. Contact an administrator.
+        </p>
+      </div>
+    );
+  };
+
+  // ============================================================================
+  // Commission Drafts Tab Content (NEW SYSTEM)
+  // ============================================================================
+  const renderCommissionDrafts = () => {
+    const isCalculating = selectedDraft?.calculation_status === 'calculating';
+    const isReady       = selectedDraft?.calculation_status === 'ready';
+    const isEditable    = isReady && selectedDraft?.status === 'draft' && userRole !== 'user';
+
+    return (
+    <div className="space-y-6">
+
+      {/* ── Upload Panel ── */}
+      {userRole !== 'user' && (
+        <div className="card p-6">
+          <h3 className="text-lg font-semibold mb-4">Create New Commission Draft</h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            {/* File 1 */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Sales Person Performance</label>
+              <input type="file" accept=".xlsx,.xls" onChange={e => setPerformanceFile(e.target.files[0])} className="hidden" id="perf-file" />
+              <label htmlFor="perf-file" className="cursor-pointer block p-3 border border-tahoe-border-primary rounded-tahoe-input hover:bg-tahoe-hover transition-all">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📊</div>
+                  <div className="text-xs text-tahoe-text-muted">{performanceFile ? performanceFile.name : 'Select file'}</div>
+                </div>
+              </label>
+            </div>
+
+            {/* File 2 */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Commission Summary</label>
+              <input type="file" accept=".xlsx,.xls,.csv" onChange={e => setCommissionSummaryFile(e.target.files[0])} className="hidden" id="summary-file" />
+              <label htmlFor="summary-file" className="cursor-pointer block p-3 border border-tahoe-border-primary rounded-tahoe-input hover:bg-tahoe-hover transition-all">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">💼</div>
+                  <div className="text-xs text-tahoe-text-muted">{commissionSummaryFile ? commissionSummaryFile.name : 'Select file'}</div>
+                </div>
+              </label>
+            </div>
+
+            {/* File 3 */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Lead Status by Service Date</label>
+              <input type="file" accept=".xlsx,.xls,.csv" onChange={e => setLeadStatusDraftFile(e.target.files[0])} className="hidden" id="lead-draft-file" />
+              <label htmlFor="lead-draft-file" className="cursor-pointer block p-3 border border-tahoe-border-primary rounded-tahoe-input hover:bg-tahoe-hover transition-all">
+                <div className="text-center">
+                  <div className="text-2xl mb-1">📋</div>
+                  <div className="text-xs text-tahoe-text-muted">{leadStatusDraftFile ? leadStatusDraftFile.name : 'Select file'}</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-2">Period</label>
+            <DateRangePicker
+              startYmd={draftPeriodStart} endYmd={draftPeriodEnd}
+              onApply={({ startYmd, endYmd }) => { setDraftPeriodStart(startYmd); setDraftPeriodEnd(endYmd); }}
+              onClear={() => { setDraftPeriodStart(''); setDraftPeriodEnd(''); }}
+              placeholder="Select commission period"
+            />
+          </div>
+
+          {draftUploadStatus && (
+            <div className={`p-3 rounded-tahoe-input mb-4 text-sm ${
+              draftUploadStatus.status === 'success' ? 'bg-green-900/30 text-green-200' :
+              draftUploadStatus.status === 'error'   ? 'bg-red-900/30 text-red-200' :
+              'bg-blue-900/30 text-blue-200'
+            }`}>
+              {draftUploadStatus.message}
+            </div>
+          )}
+
+          <button
+            onClick={handleDraftIngest}
+            disabled={!performanceFile || !commissionSummaryFile || !leadStatusDraftFile || !draftPeriodStart || !draftPeriodEnd || draftLoading}
+            className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {draftLoading ? 'Processing…' : 'Process & Create Draft'}
+          </button>
+        </div>
+      )}
+
+      {/* ── Draft Selector + Finish button ── */}
+      {commissionDrafts.length > 0 && (
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Commission Drafts</h3>
+            {selectedDraft?.status === 'draft' && userRole !== 'user' && (
+              <button
+                onClick={handleFinalizeDraft}
+                disabled={!isReady}
+                title={!isReady ? 'Wait until data gathering is complete' : ''}
+                className="btn-primary bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Finish Commission
+              </button>
+            )}
+          </div>
+
+          <select
+            value={selectedDraft?.id || ''}
+            onChange={e => loadDraft(parseInt(e.target.value, 10))}
+            className="form-input w-full"
+          >
+            <option value="">Select a draft…</option>
+            {commissionDrafts.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.period_start} → {d.period_end}
+                {' · '}
+                {d.status === 'finalized' ? 'Finalized' : d.calculation_status === 'calculating' ? 'Gathering data…' : d.calculation_status === 'error' ? 'Error' : 'Draft'}
+                {' · '}
+                {d.line_item_count} line item{d.line_item_count !== 1 ? 's' : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* ── Progress / error banners ── */}
+      <DraftProgressBanner draft={selectedDraft} />
+      <DraftErrorBanner    draft={selectedDraft} />
+
+      {/* ── Line Items ── */}
+      {selectedDraft && draftLineItems.length > 0 && (
+        <>
+          {/* Agent table */}
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold mb-1">Agent Commissions</h3>
+            {isCalculating && (
+              <p className="text-xs text-blue-400 mb-3">
+                Columns marked with a blue indicator are pending SmartMoving data. Manual entry will be enabled once all jobs are processed.
+              </p>
+            )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-tahoe-text-muted border-b border-tahoe-border-primary">
+                    <th className="pb-2 pr-3 font-medium">Agent</th>
+                    <th className="pb-2 px-2 text-right font-medium">Hourly Rate</th>
+                    <th className="pb-2 px-2 text-right font-medium">Invoiced</th>
+                    <th className="pb-2 px-2 text-right font-medium text-cyan-400">Rev Add-Ons</th>
+                    <th className="pb-2 px-2 text-right font-medium text-orange-400">Rev Ded.</th>
+                    <th className="pb-2 px-2 text-right font-medium">Total Rev</th>
+                    <th className="pb-2 px-2 text-right font-medium">Booking %</th>
+                    <th className="pb-2 px-2 text-right font-medium">Rate %</th>
+                    <th className="pb-2 px-2 text-right font-medium">Commission</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Spiff Bonus</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Rev Bonus</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>$5/$10 Bonus</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>$5/$10 Ded.</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Hourly Paid Out</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Sales Mgr</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Punch</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Cust Support</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Post-Comm</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Dispatch</th>
+                    <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Deduction</th>
+                    <th className="pb-2 px-2 text-right font-medium text-purple-300">Total Due</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {draftLineItems.filter(item => item.role !== 'manager').map(item => {
+                    const saving = savingLineItems.has(item.id);
+                    const manualFieldDefs = [
+                      { field: 'spiff_bonus' },
+                      { field: 'revenue_bonus' },
+                      { field: 'booking_bonus_5_10_plus' },
+                      { field: 'booking_bonus_5_10_minus' },
+                      { field: 'hourly_paid_out' },
+                      { field: 'deduction_sales_manager' },
+                      { field: 'deduction_missing_punch' },
+                      { field: 'deduction_customer_support' },
+                      { field: 'deduction_post_commission' },
+                      { field: 'deduction_dispatch' },
+                      { field: 'deduction_other' },
+                    ];
+
+                    return (
+                      <tr key={item.id} className="border-b border-tahoe-border-primary hover:bg-tahoe-hover transition-colors">
+                        <td className="py-2 pr-3 whitespace-nowrap">
+                          {item.employee_name_raw}
+                          {saving && <span className="ml-1 text-xs text-blue-400">Saving…</span>}
+                        </td>
+
+                        {/* Immediately-available columns */}
+                        <td className="py-2 px-2 text-right text-gray-400">${parseFloat(item.hourly_rate).toFixed(2)}</td>
+                        <td className="py-2 px-2 text-right text-gray-400">${parseFloat(item.invoiced).toFixed(2)}</td>
+
+                        {/* SmartMoving-dependent columns */}
+                        <td className="py-2 px-2 text-right"><SmPendingCell value={item.revenue_add_ons}    colorClass="text-cyan-400" /></td>
+                        <td className="py-2 px-2 text-right"><SmPendingCell value={item.revenue_deductions} colorClass="text-orange-400" /></td>
+                        <td className="py-2 px-2 text-right"><SmPendingCell value={item.total_revenue}      colorClass="text-gray-400" /></td>
+
+                        {/* Also immediately available */}
+                        <td className="py-2 px-2 text-right text-gray-400">{parseFloat(item.booking_pct).toFixed(1)}%</td>
+
+                        {/* SM-dependent: commission rate + earned */}
+                        <td className="py-2 px-2 text-right"><SmPendingCell value={item.commission_pct}    format="pct" colorClass="text-gray-400" /></td>
+                        <td className="py-2 px-2 text-right"><SmPendingCell value={item.commission_earned} colorClass="text-gray-400" /></td>
+
+                        {/* Manual fields — only editable when isEditable */}
+                        {manualFieldDefs.map(({ field }) => (
+                          <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
+                            {isEditable ? (
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={editValues[item.id]?.[field] ?? 0}
+                                onChange={e => handleLineItemChange(item.id, field, e.target.value)}
+                                className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                              />
+                            ) : (
+                              <span className="block text-right text-gray-400 text-xs">
+                                ${parseFloat(item[field] ?? 0).toFixed(2)}
+                              </span>
+                            )}
+                          </td>
+                        ))}
+
+                        {/* Total Due — SM-dependent */}
+                        <td className="py-2 px-2 text-right font-bold">
+                          <SmPendingCell value={item.total_due} colorClass="text-purple-300" />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Manager table */}
+          {draftLineItems.some(item => item.role === 'manager') && (
+            <div className="card p-6">
+              <h3 className="text-lg font-semibold mb-4">Manager Commissions</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-tahoe-text-muted border-b border-tahoe-border-primary">
+                      <th className="pb-2 pr-3 font-medium">Manager</th>
+                      <th className="pb-2 px-2 text-right font-medium">Pooled Revenue</th>
+                      <th className="pb-2 px-2 text-right font-medium">Commission</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Spiff Bonus</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Rev Bonus</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Hourly Paid Out</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Sales Mgr</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Punch</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Cust Support</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Post-Comm</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Dispatch</th>
+                      <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Deduction</th>
+                      <th className="pb-2 px-2 text-right font-medium text-purple-300">Total Due</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {draftLineItems.filter(item => item.role === 'manager').map(item => {
+                      const saving = savingLineItems.has(item.id);
+                      const mgrManualFields = [
+                        'spiff_bonus', 'revenue_bonus',
+                        'hourly_paid_out', 'deduction_sales_manager', 'deduction_missing_punch',
+                        'deduction_customer_support', 'deduction_post_commission',
+                        'deduction_dispatch', 'deduction_other',
+                      ];
+
+                      return (
+                        <tr key={item.id} className="border-b border-tahoe-border-primary hover:bg-tahoe-hover transition-colors">
+                          <td className="py-2 pr-3 whitespace-nowrap">
+                            {item.employee_name_raw}
+                            {saving && <span className="ml-1 text-xs text-blue-400">Saving…</span>}
+                          </td>
+                          <td className="py-2 px-2 text-right"><SmPendingCell value={item.invoiced}          colorClass="text-gray-400" /></td>
+                          <td className="py-2 px-2 text-right"><SmPendingCell value={item.commission_earned} colorClass="text-gray-400" /></td>
+
+                          {mgrManualFields.map(field => (
+                            <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
+                              {isEditable ? (
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editValues[item.id]?.[field] ?? 0}
+                                  onChange={e => handleLineItemChange(item.id, field, e.target.value)}
+                                  className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                                />
+                              ) : (
+                                <span className="block text-right text-gray-400 text-xs">
+                                  ${parseFloat(item[field] ?? 0).toFixed(2)}
+                                </span>
+                              )}
+                            </td>
+                          ))}
+
+                          <td className="py-2 px-2 text-right font-bold">
+                            <SmPendingCell value={item.total_due} colorClass="text-purple-300" />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Empty state */}
+      {!selectedDraft && commissionDrafts.length === 0 && !draftLoading && (
+        <div className="card p-12 text-center">
+          <div className="text-6xl mb-4">📋</div>
+          <h3 className="text-xl font-semibold mb-2">No Commission Drafts Yet</h3>
+          <p className="text-tahoe-text-muted">Upload the 3 required files above to create your first commission draft.</p>
+        </div>
+      )}
+    </div>
+    );
+  };
+
+  // ============================================================================
   // Sales Commissions Tab Content
   // ============================================================================
   const renderSalesCommissions = () => (
@@ -2799,6 +3401,7 @@ export default function BonusesCommissions() {
       {/* Tab Content */}
       <div className="space-y-6">
         {userRole !== 'user' && activeTab === "import" && renderImport()}
+        {(userRole !== 'user' || salesRole) && activeTab === "commission-drafts" && renderCommissionDrafts()}
         {(userRole !== 'user' || salesRole) && activeTab === "sales-commissions" && renderSalesCommissions()}
       </div>
 
