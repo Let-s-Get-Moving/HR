@@ -245,6 +245,45 @@ r.patch(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// POST /api/commission-drafts/:id/retry-enrichment
+// Manually retry enrichment for a stuck draft
+// ─────────────────────────────────────────────────────────────────────────────
+r.post('/:id/retry-enrichment', requireAuth, requireRole([ROLES.ADMIN, ROLES.MANAGER]), async (req, res) => {
+    try {
+        const draftId = parseInt(req.params.id, 10);
+        
+        // Get the draft to get period dates
+        const draft = await getDraftById(draftId);
+        if (!draft) {
+            return res.status(404).json({ error: 'Draft not found' });
+        }
+        
+        // Reset calculation status to 'calculating'
+        await pool.query(
+            `UPDATE commission_drafts 
+             SET calculation_status = 'calculating', 
+                 calculation_error = NULL,
+                 quotes_processed = 0
+             WHERE id = $1`,
+            [draftId]
+        );
+        
+        // Fire enrichment in background
+        enrichDraftWithSmartMovingData(draftId, draft.period_start, draft.period_end)
+            .catch(err => console.error(`[commission-drafts] retry enrichment error for draft ${draftId}:`, err));
+        
+        res.json({ 
+            success: true, 
+            message: 'Enrichment restarted. Poll the draft to see progress.',
+            draftId 
+        });
+    } catch (err) {
+        console.error('[commission-drafts] retry-enrichment:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // POST /api/commission-drafts/:id/finalize
 // ─────────────────────────────────────────────────────────────────────────────
 r.post('/:id/finalize', requireAuth, requireRole([ROLES.ADMIN, ROLES.MANAGER]), async (req, res) => {

@@ -146,6 +146,8 @@ export async function createDraftSkeleton(periodStart, periodEnd, createdBy) {
  */
 export async function enrichDraftWithSmartMovingData(draftId, periodStart, periodEnd) {
     try {
+        console.log(`[enrichDraft] Starting enrichment for draft ${draftId}, period ${periodStart} to ${periodEnd}`);
+
         // ── 1. Get all quotes that need SmartMoving data ────────────────────
         const quotesResult = await pool.query(`
             SELECT DISTINCT
@@ -170,6 +172,8 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
         const directives = quotesResult.rows;
         const uniqueQuoteIds = [...new Set(directives.map(r => r.quote_id))];
 
+        console.log(`[enrichDraft] Found ${directives.length} directives, ${uniqueQuoteIds.length} unique quotes`);
+
         // Update total count (may differ from skeleton estimate due to race)
         await pool.query(
             `UPDATE commission_drafts SET quotes_total = $1 WHERE id = $2`,
@@ -191,14 +195,21 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
             );
         }
 
+        console.log(`[enrichDraft] Fetched ${uniqueQuoteIds.length} quote subtotals, calculating adjustments...`);
+
         // ── 3. Calculate adjustments using now-cached subtotals ─────────────
         const adjustments = await calculateAdjustments(directives, periodStart, periodEnd);
+        
+        console.log(`[enrichDraft] Calculated adjustments for ${adjustments.size} employees`);
 
         // ── 4. Pull agent / manager data again (same query as skeleton) ─────
         const client = await pool.connect();
         try {
+            console.log(`[enrichDraft] Pulling agent and manager data...`);
             const agentData = await pullAgentData(client, periodStart, periodEnd);
             const managerData = await pullManagerData(client);
+            
+            console.log(`[enrichDraft] Found ${agentData.length} agents, ${managerData.length} managers`);
 
             // Build a map of employee_id → { adjustments }
             const adjById = adjustments;
@@ -226,6 +237,8 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                     draftId, agent.employee_id, agent.role
                 ]);
             }
+            
+            console.log(`[enrichDraft] Updated ${agentData.length} agent line items`);
 
             // ── 6. Update each manager line item ────────────────────────────
             // Managers use pooled revenue = sum of all agent total_revenues
@@ -233,6 +246,8 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                 const adj = adjById.get(agent.employee_id) || emptyAdj();
                 return sum + agent.invoiced + adj.revenue_add_ons - adj.revenue_deductions;
             }, 0);
+            
+            console.log(`[enrichDraft] Pooled revenue for managers: $${pooledRevenue.toFixed(2)}`);
 
             for (const manager of managerData) {
                 const managerCommission = calculateManagerCommission(
@@ -256,6 +271,8 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                     draftId, manager.employee_id
                 ]);
             }
+            
+            console.log(`[enrichDraft] Updated ${managerData.length} manager line items`);
 
         } finally {
             client.release();
@@ -268,9 +285,12 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
              WHERE id = $1`,
             [draftId]
         );
+        
+        console.log(`[enrichDraft] ✅ Draft ${draftId} enrichment complete and marked as ready`);
 
     } catch (error) {
         console.error(`[commissionDraftEngine] Enrichment failed for draft ${draftId}:`, error);
+        console.error(`[commissionDraftEngine] Error stack:`, error.stack);
 
         // Record the error so the frontend can show a meaningful message
         await pool.query(
@@ -351,6 +371,8 @@ async function pullManagerData(client) {
  * Returns Map<employee_id, { revenue_add_ons, revenue_deductions, booking_bonus_plus, booking_bonus_minus }>
  */
 async function calculateAdjustments(directives, periodStart, periodEnd) {
+    console.log(`[calculateAdjustments] Processing ${directives.length} directives`);
+    
     // Build nickname → employee_id lookup
     const empResult = await pool.query(`
         SELECT
@@ -368,39 +390,59 @@ async function calculateAdjustments(directives, periodStart, periodEnd) {
         if (row.key2) nicknameToEmp.set(row.key2, row.employee_id);
         if (row.key3) nicknameToEmp.set(row.key3, row.employee_id);
     }
+    
+    console.log(`[calculateAdjustments] Built nickname lookup with ${nicknameToEmp.size} entries`);
 
     const adjustments = new Map();
+    let processedCount = 0;
+    let skippedCount = 0;
 
     for (const row of directives) {
-        // Subtotal is now cached — synchronous DB read via getQuoteSubtotal
-        const subtotal = await getQuoteSubtotal(row.quote_id);
-        if (subtotal === 0) continue;
+        try {
+            // Subtotal is now cached — synchronous DB read via getQuoteSubtotal
+            const subtotal = await getQuoteSubtotal(row.quote_id);
+            if (subtotal === 0) {
+                skippedCount++;
+                continue;
+            }
 
-        const originalId = nicknameToEmp.get(row.sales_person_key);
-        const targetId   = nicknameToEmp.get(row.target_name_key);
+            const originalId = nicknameToEmp.get(row.sales_person_key);
+            const targetId   = nicknameToEmp.get(row.target_name_key);
 
-        let transferAmount = 0;
-        if (row.directive_type === 'percent_split') {
-            transferAmount = round2(subtotal * row.pct / 100);
-        } else if (row.directive_type === 'fixed_rev_transfer' || row.directive_type === 'fixed_booking_transfer') {
-            transferAmount = parseFloat(row.amount) || 0;
-        }
-        if (transferAmount === 0) continue;
+            let transferAmount = 0;
+            if (row.directive_type === 'percent_split') {
+                transferAmount = round2(subtotal * row.pct / 100);
+            } else if (row.directive_type === 'fixed_rev_transfer' || row.directive_type === 'fixed_booking_transfer') {
+                transferAmount = parseFloat(row.amount) || 0;
+            }
+            if (transferAmount === 0) {
+                skippedCount++;
+                continue;
+            }
 
-        const isBooking = row.directive_type === 'fixed_booking_transfer';
+            const isBooking = row.directive_type === 'fixed_booking_transfer';
 
-        if (originalId) {
-            ensureAdj(adjustments, originalId);
-            if (isBooking) adjustments.get(originalId).booking_bonus_minus += transferAmount;
-            else           adjustments.get(originalId).revenue_deductions  += transferAmount;
-        }
+            if (originalId) {
+                ensureAdj(adjustments, originalId);
+                if (isBooking) adjustments.get(originalId).booking_bonus_minus += transferAmount;
+                else           adjustments.get(originalId).revenue_deductions  += transferAmount;
+            }
 
-        if (targetId) {
-            ensureAdj(adjustments, targetId);
-            if (isBooking) adjustments.get(targetId).booking_bonus_plus += transferAmount;
-            else           adjustments.get(targetId).revenue_add_ons    += transferAmount;
+            if (targetId) {
+                ensureAdj(adjustments, targetId);
+                if (isBooking) adjustments.get(targetId).booking_bonus_plus += transferAmount;
+                else           adjustments.get(targetId).revenue_add_ons    += transferAmount;
+            }
+            
+            processedCount++;
+        } catch (error) {
+            console.error(`[calculateAdjustments] Error processing directive for quote ${row.quote_id}:`, error);
+            // Continue processing other directives even if one fails
+            skippedCount++;
         }
     }
+    
+    console.log(`[calculateAdjustments] Processed ${processedCount}, skipped ${skippedCount}, adjustments for ${adjustments.size} employees`);
 
     return adjustments;
 }

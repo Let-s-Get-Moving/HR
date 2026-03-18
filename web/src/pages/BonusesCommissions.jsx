@@ -599,13 +599,40 @@ export default function BonusesCommissions() {
     const total     = parseInt(draft.quotes_total, 10) || 0;
     const processed = parseInt(draft.quotes_processed, 10) || 0;
     const pct       = total > 0 ? Math.round((processed / total) * 100) : 0;
+    
+    // Show retry option if stuck (all quotes processed but still calculating)
+    const isStuck = total > 0 && processed >= total;
+    
+    const handleForceComplete = async () => {
+      try {
+        setDraftLoading(true);
+        await API(`/api/commission-drafts/${draft.id}/retry-enrichment`, { method: 'POST' });
+        await loadDraft(draft.id);
+      } catch (err) {
+        console.error('Failed to force complete:', err);
+        alert('Failed: ' + err.message);
+      } finally {
+        setDraftLoading(false);
+      }
+    };
+    
     return (
       <div className="card p-4 border border-blue-500/30 bg-blue-900/20">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin flex-shrink-0" />
-          <span className="text-sm font-medium text-blue-200">
+          <span className="text-sm font-medium text-blue-200 flex-1">
             Gathering SmartMoving API data — {processed} of {total} leads processed
+            {isStuck && ' (appears stuck)'}
           </span>
+          {isStuck && (
+            <button
+              onClick={handleForceComplete}
+              disabled={draftLoading}
+              className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Force Retry
+            </button>
+          )}
         </div>
         <div className="w-full h-2 bg-blue-900/40 rounded-full overflow-hidden">
           <div
@@ -623,14 +650,40 @@ export default function BonusesCommissions() {
   // ── Error banner ───────────────────────────────────────────────────────────
   const DraftErrorBanner = ({ draft }) => {
     if (!draft || draft.calculation_status !== 'error') return null;
+    
+    const handleRetry = async () => {
+      try {
+        setDraftLoading(true);
+        await API(`/api/commission-drafts/${draft.id}/retry-enrichment`, { method: 'POST' });
+        // Reload the draft to see updated status
+        await loadDraft(draft.id);
+      } catch (err) {
+        console.error('Failed to retry enrichment:', err);
+        alert('Failed to retry: ' + err.message);
+      } finally {
+        setDraftLoading(false);
+      }
+    };
+    
     return (
       <div className="card p-4 border border-red-500/30 bg-red-900/20">
-        <p className="text-sm font-medium text-red-300">
-          Data gathering failed: {draft.calculation_error || 'Unknown error'}
-        </p>
-        <p className="text-xs text-red-300/70 mt-1">
-          Revenue-dependent fields cannot be calculated. Contact an administrator.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-300">
+              Data gathering failed: {draft.calculation_error || 'Unknown error'}
+            </p>
+            <p className="text-xs text-red-300/70 mt-1">
+              Revenue-dependent fields cannot be calculated. Try retrying the enrichment process.
+            </p>
+          </div>
+          <button
+            onClick={handleRetry}
+            disabled={draftLoading}
+            className="px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {draftLoading ? 'Retrying...' : 'Retry'}
+          </button>
+        </div>
       </div>
     );
   };
