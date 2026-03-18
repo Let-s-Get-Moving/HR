@@ -26,7 +26,7 @@
 
 import { pool } from '../db.js';
 import { getQuoteSubtotal } from '../services/smartmovingClient.js';
-import { computeAgentRate, computeManagerBucketRate } from './salesCommissionCalculator.js';
+import { computeAgentRate, computeManagerBucketRate } from './commissionRateCalculator.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Phase 1 — skeleton creation (called synchronously inside the route handler)
@@ -211,9 +211,9 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                 const adj = adjById.get(agent.employee_id) || emptyAdj();
                 const totalRevenue = agent.invoiced + adj.revenue_add_ons - adj.revenue_deductions;
                 const rateInfo = computeAgentRate(agent.booking_pct, totalRevenue);
-                const commissionEarned = round2(totalRevenue * rateInfo.rate / 100);
+                const commissionEarned = round2(totalRevenue * rateInfo.pct / 100);
 
-                console.log(`[enrichDraft] Updating agent ${agent.employee_id} (${agent.role}): commission_pct=${rateInfo.rate}%, commission_earned=$${commissionEarned}`);
+                console.log(`[enrichDraft] Updating agent ${agent.employee_id} (${agent.role}): commission_pct=${rateInfo.pct}%, commission_earned=$${commissionEarned}`);
 
                 const updateResult = await client.query(`
                     UPDATE commission_line_items
@@ -227,7 +227,7 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                       AND role = $8
                 `, [
                     adj.revenue_add_ons, adj.revenue_deductions,
-                    totalRevenue, rateInfo.rate, commissionEarned,
+                    totalRevenue, rateInfo.pct, commissionEarned,
                     draftId, agent.employee_id, agent.role
                 ]);
                 
@@ -394,22 +394,39 @@ async function calculateAdjustments(directives, periodStart, periodEnd) {
     }
     
     console.log(`[calculateAdjustments] Built nickname lookup with ${nicknameToEmp.size} entries`);
+    console.log(`[calculateAdjustments] Sample nicknames in map:`, Array.from(nicknameToEmp.keys()).slice(0, 10));
 
     const adjustments = new Map();
     let processedCount = 0;
     let skippedCount = 0;
+    let skippedReasons = {
+        noSubtotal: 0,
+        noTransferAmount: 0,
+        noOriginalEmployee: 0,
+        noTargetEmployee: 0,
+        apiError: 0
+    };
 
     for (const row of directives) {
         try {
             // Subtotal is now cached — synchronous DB read via getQuoteSubtotal
             const subtotal = await getQuoteSubtotal(row.quote_id);
+            
             if (subtotal === 0) {
                 skippedCount++;
+                skippedReasons.noSubtotal++;
+                console.log(`[calculateAdjustments] ⚠️  Skipped quote ${row.quote_id}: subtotal is 0 (directive: ${row.directive_type}, target: ${row.target_name_key})`);
                 continue;
             }
 
             const originalId = nicknameToEmp.get(row.sales_person_key);
             const targetId   = nicknameToEmp.get(row.target_name_key);
+            
+            // Debug: Log nickname lookup results for first few directives
+            if (processedCount + skippedCount < 5) {
+                console.log(`[calculateAdjustments] Directive #${processedCount + skippedCount + 1}: quote=${row.quote_id}, type=${row.directive_type}, sales_person=${row.sales_person_key}, target=${row.target_name_key}, subtotal=$${subtotal}`);
+                console.log(`[calculateAdjustments]   -> originalId=${originalId}, targetId=${targetId}`);
+            }
 
             let transferAmount = 0;
             if (row.directive_type === 'percent_split') {
@@ -419,6 +436,7 @@ async function calculateAdjustments(directives, periodStart, periodEnd) {
             }
             if (transferAmount === 0) {
                 skippedCount++;
+                skippedReasons.noTransferAmount++;
                 continue;
             }
 
@@ -428,23 +446,28 @@ async function calculateAdjustments(directives, periodStart, periodEnd) {
                 ensureAdj(adjustments, originalId);
                 if (isBooking) adjustments.get(originalId).booking_bonus_minus += transferAmount;
                 else           adjustments.get(originalId).revenue_deductions  += transferAmount;
+            } else {
+                skippedReasons.noOriginalEmployee++;
             }
 
             if (targetId) {
                 ensureAdj(adjustments, targetId);
                 if (isBooking) adjustments.get(targetId).booking_bonus_plus += transferAmount;
                 else           adjustments.get(targetId).revenue_add_ons    += transferAmount;
+            } else {
+                skippedReasons.noTargetEmployee++;
             }
             
             processedCount++;
         } catch (error) {
             console.error(`[calculateAdjustments] Error processing directive for quote ${row.quote_id}:`, error);
-            // Continue processing other directives even if one fails
             skippedCount++;
+            skippedReasons.apiError++;
         }
     }
     
     console.log(`[calculateAdjustments] Processed ${processedCount}, skipped ${skippedCount}, adjustments for ${adjustments.size} employees`);
+    console.log(`[calculateAdjustments] Skip reasons:`, skippedReasons);
 
     return adjustments;
 }
