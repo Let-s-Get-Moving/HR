@@ -393,12 +393,47 @@ export default function BonusesCommissions() {
 
   // ── Load a single draft + its line items ───────────────────────────────────
   const loadDraft = async (draftId) => {
+    // Validate draftId
+    if (!draftId || isNaN(draftId)) {
+      console.error('Invalid draft ID:', draftId);
+      return;
+    }
+    
     try {
       setDraftLoading(true);
       const draft = await API(`/api/commission-drafts/${draftId}`);
       applyDraftToState(draft);
     } catch (err) {
       console.error('Failed to load draft:', err);
+    } finally {
+      setDraftLoading(false);
+    }
+  };
+  
+  // ── Delete draft ───────────────────────────────────────────────────────────
+  const handleDeleteDraft = async () => {
+    if (!selectedDraft) return;
+    
+    if (!window.confirm(`Are you sure you want to delete the draft for ${selectedDraft.period_start} → ${selectedDraft.period_end}?\n\nThis action cannot be undone.`)) {
+      return;
+    }
+    
+    try {
+      setDraftLoading(true);
+      await API(`/api/commission-drafts/${selectedDraft.id}`, { method: 'DELETE' });
+      
+      // Reload the drafts list
+      const drafts = await API('/api/commission-drafts');
+      setCommissionDrafts(drafts || []);
+      
+      // Clear selection
+      setSelectedDraft(null);
+      setDraftLineItems([]);
+      
+      alert('Draft deleted successfully');
+    } catch (err) {
+      console.error('Failed to delete draft:', err);
+      alert('Failed to delete draft: ' + err.message);
     } finally {
       setDraftLoading(false);
     }
@@ -787,16 +822,27 @@ export default function BonusesCommissions() {
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Commission Drafts</h3>
-            {selectedDraft?.status === 'draft' && userRole !== 'user' && (
-              <button
-                onClick={handleFinalizeDraft}
-                disabled={!isReady}
-                title={!isReady ? 'Wait until data gathering is complete' : ''}
-                className="btn-primary bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Finish Commission
-              </button>
-            )}
+            <div className="flex gap-2">
+              {selectedDraft && selectedDraft.status === 'draft' && userRole !== 'user' && (
+                <button
+                  onClick={handleDeleteDraft}
+                  disabled={draftLoading}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Delete Draft
+                </button>
+              )}
+              {selectedDraft?.status === 'draft' && userRole !== 'user' && (
+                <button
+                  onClick={handleFinalizeDraft}
+                  disabled={!isReady || draftLoading}
+                  title={!isReady ? 'Wait until data gathering is complete' : ''}
+                  className="btn-primary bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Finish Commission
+                </button>
+              )}
+            </div>
           </div>
 
           <select

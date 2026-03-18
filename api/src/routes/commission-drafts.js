@@ -245,6 +245,41 @@ r.patch(
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
+// DELETE /api/commission-drafts/:id
+// Delete a draft (only if status is 'draft', not finalized)
+// ─────────────────────────────────────────────────────────────────────────────
+r.delete('/:id', requireAuth, requireRole([ROLES.ADMIN, ROLES.MANAGER]), async (req, res) => {
+    try {
+        const draftId = parseInt(req.params.id, 10);
+        
+        // Check if draft exists and is deletable
+        const checkResult = await pool.query(
+            'SELECT id, status FROM commission_drafts WHERE id = $1',
+            [draftId]
+        );
+        
+        if (checkResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Draft not found' });
+        }
+        
+        if (checkResult.rows[0].status === 'finalized') {
+            return res.status(400).json({ error: 'Cannot delete a finalized draft' });
+        }
+        
+        // Delete line items first (foreign key constraint)
+        await pool.query('DELETE FROM commission_line_items WHERE draft_id = $1', [draftId]);
+        
+        // Delete the draft
+        await pool.query('DELETE FROM commission_drafts WHERE id = $1', [draftId]);
+        
+        res.json({ success: true, message: 'Draft deleted successfully' });
+    } catch (err) {
+        console.error('[commission-drafts] delete:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // POST /api/commission-drafts/:id/retry-enrichment
 // Manually retry enrichment for a stuck draft
 // ─────────────────────────────────────────────────────────────────────────────
