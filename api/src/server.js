@@ -33,7 +33,7 @@ import commissions from "./routes/commissions.js";
 // OLD SYSTEM - DEPRECATED: import salesCommissions from "./routes/sales-commissions.js";
 import commissionDrafts from "./routes/commission-drafts.js";
 import debugFileHeaders from "./routes/debug-file-headers.js";
-import revenueComparison from "./routes/revenue-comparison.js";
+// OLD SYSTEM - DEPRECATED: import revenueComparison from "./routes/revenue-comparison.js";
 import imports from "./routes/imports.js";
 import admin from "./routes/admin.js";
 import timecards from "./routes/timecards.js";
@@ -309,7 +309,7 @@ app.use("/api/commissions", requireAuth, commissions);
 // OLD SYSTEM - DEPRECATED: app.use("/api/sales-commissions", requireAuth, salesCommissions);
 app.use("/api/commission-drafts", requireAuth, commissionDrafts);
 app.use("/api/debug", debugFileHeaders); // No auth for debugging
-app.use("/api/revenue-comparison", requireAuth, revenueComparison);
+// OLD SYSTEM - DEPRECATED: app.use("/api/revenue-comparison", requireAuth, revenueComparison);
 app.use("/api/imports", requireAuth, imports);
 app.use("/api/admin", requireAuth, admin);
 app.use("/api/timecards", requireAuth, timecards);

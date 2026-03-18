@@ -64,12 +64,8 @@ export async function createDraftSkeleton(periodStart, periodEnd, createdBy) {
             WHERE ls.status_norm IN ('completed', 'closed')
               AND ls.directive_type IS NOT NULL
               AND ls.directive_type <> 'none'
-              AND EXISTS (
-                  SELECT 1 FROM sales_booked_opportunities_quotes bo
-                  WHERE bo.quote_id = ls.quote_id
-                    AND bo.service_date >= $1
-                    AND bo.service_date <= $2
-              )
+              AND ls.service_date_lead_report >= $1
+              AND ls.service_date_lead_report <= $2
         `, [periodStart, periodEnd]);
         const quotesTotal = parseInt(quoteCountResult.rows[0].cnt, 10);
 
@@ -160,12 +156,8 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
             WHERE ls.status_norm IN ('completed', 'closed')
               AND ls.directive_type IS NOT NULL
               AND ls.directive_type <> 'none'
-              AND EXISTS (
-                  SELECT 1 FROM sales_booked_opportunities_quotes bo
-                  WHERE bo.quote_id = ls.quote_id
-                    AND bo.service_date >= $1
-                    AND bo.service_date <= $2
-              )
+              AND ls.service_date_lead_report >= $1
+              AND ls.service_date_lead_report <= $2
         `, [periodStart, periodEnd]);
 
         const directives = quotesResult.rows;
