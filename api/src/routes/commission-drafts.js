@@ -66,10 +66,22 @@ r.post(
         const leadFile    = req.files?.leadStatusFile?.[0];
 
         if (!perfFile || !summaryFile || !leadFile) {
+            console.log('[commission-drafts/ingest] Missing files:', {
+                hasPerf: !!perfFile,
+                hasSummary: !!summaryFile,
+                hasLead: !!leadFile
+            });
             return res.status(400).json({
                 error: 'All three files are required: performanceFile, commissionSummaryFile, leadStatusFile',
             });
         }
+
+        console.log('[commission-drafts/ingest] Files received:', {
+            performance: perfFile.originalname,
+            summary: summaryFile.originalname,
+            lead: leadFile.originalname,
+            period: { start: periodStart, end: periodEnd }
+        });
 
         // ── Validate ──────────────────────────────────────────────────────────
         try {

@@ -59,7 +59,9 @@ export async function importSalesCommissionSummary(fileBuffer, periodStart, peri
     
     // Validate headers
     const headers = data[0];
+    console.log('[SalesCommissionSummary] Raw headers:', headers);
     const headerMap = buildHeaderMap(headers);
+    console.log('[SalesCommissionSummary] Mapped headers:', Object.keys(headerMap));
     
     validateHeaders(headerMap);
     
@@ -187,26 +189,29 @@ function buildHeaderMap(headers) {
         const header = cleanCellValue(headers[i]);
         if (!header) continue;
         
-        const normalized = header.trim().toLowerCase();
+        const normalized = header.trim().toLowerCase().replace(/[^a-z0-9\s]/g, ''); // Remove special chars
         
-        // Map common variations
-        if (normalized.includes('sales person') || normalized === 'salesperson' || normalized === 'agent') {
+        // Map common variations - be VERY flexible
+        if (normalized.includes('sales') && (normalized.includes('person') || normalized.includes('agent'))) {
             map['Sales Person'] = i;
-        } else if (normalized.includes('total estimated')) {
+        } else if (normalized.includes('total') && normalized.includes('estimated')) {
             map['Total Estimated'] = i;
-        } else if (normalized.includes('invoiced') && normalized.includes('before') && (normalized.includes('tax') || normalized.includes('tip'))) {
+        } else if (normalized.includes('invoiced') && normalized.includes('before') && !normalized.includes('total')) {
+            // Matches: "invoiced before taxes", "invoiced before tax and tip", etc.
             map['Invoiced (before taxes and tip)'] = i;
-        } else if (normalized.includes('total invoiced') || (normalized.includes('invoiced') && normalized.includes('including'))) {
+        } else if ((normalized.includes('total') && normalized.includes('invoiced')) || 
+                   (normalized.includes('invoiced') && normalized.includes('including'))) {
             map['Total Invoiced (including taxes and tip)'] = i;
-        } else if (normalized.includes('commission base') || normalized === 'base') {
+        } else if (normalized.includes('commission') && normalized.includes('base')) {
             map['Commission Base'] = i;
-        } else if (normalized.includes('calculated') || (normalized.includes('commission') && !normalized.includes('base') && !normalized.includes('net'))) {
+        } else if ((normalized.includes('calculated') && normalized.includes('commission')) || 
+                   (normalized === 'commissions' || normalized === 'commission')) {
             map['Calculated Commissions'] = i;
-        } else if (normalized.includes('lump sum')) {
+        } else if (normalized.includes('lump')) {
             map['Lump Sums'] = i;
-        } else if (normalized === 'deductions' || normalized.includes('deduction')) {
+        } else if (normalized.includes('deduction')) {
             map['Deductions'] = i;
-        } else if (normalized.includes('net commission')) {
+        } else if (normalized.includes('net') && normalized.includes('commission')) {
             map['Net Commissions'] = i;
         }
     }
@@ -227,9 +232,11 @@ function validateHeaders(headerMap) {
     }
     
     if (missing.length > 0) {
+        const foundHeaders = Object.keys(headerMap);
         throw new Error(
             `Missing required columns: ${missing.join(', ')}. ` +
-            `Expected columns: ${EXPECTED_HEADERS.join(', ')}`
+            `Found columns: ${foundHeaders.length > 0 ? foundHeaders.join(', ') : 'none'}. ` +
+            `Expected all of: ${EXPECTED_HEADERS.join(', ')}`
         );
     }
 }

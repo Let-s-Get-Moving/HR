@@ -50,13 +50,16 @@ export function detectSalesPerformanceHeaders(firstRow) {
         return false;
     }
     
-    // Check if all expected headers are present (exact match)
+    // Normalize function for flexible matching
+    const normalize = (str) => String(str).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Check if all expected headers are present with FLEXIBLE matching
     for (let i = 0; i < EXPECTED_HEADERS.length; i++) {
-        const expected = EXPECTED_HEADERS[i];
-        const actual = firstRow[i];
+        const expected = normalize(EXPECTED_HEADERS[i]);
+        const actual = firstRow[i] ? normalize(firstRow[i]) : '';
         
-        if (!actual || String(actual).trim() !== expected) {
-            console.log(`[detectSalesPerformanceHeaders] Mismatch at column ${i}: expected "${expected}", got "${actual}"`);
+        if (actual !== expected) {
+            console.log(`[detectSalesPerformanceHeaders] Mismatch at column ${i}: expected "${EXPECTED_HEADERS[i]}" (normalized: "${expected}"), got "${firstRow[i]}" (normalized: "${actual}")`);
             return false;
         }
     }

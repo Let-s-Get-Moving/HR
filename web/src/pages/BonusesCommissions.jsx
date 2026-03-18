@@ -497,7 +497,8 @@ export default function BonusesCommissions() {
       const response = await APIUpload('/api/commission-drafts/ingest', formData);
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.error || `HTTP ${response.status}`);
+        const errorMsg = body.details ? `${body.error}: ${body.details}` : (body.error || `HTTP ${response.status}`);
+        throw new Error(errorMsg);
       }
       const result = await response.json();
 
