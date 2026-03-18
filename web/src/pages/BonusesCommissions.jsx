@@ -600,16 +600,25 @@ export default function BonusesCommissions() {
     const processed = parseInt(draft.quotes_processed, 10) || 0;
     const pct       = total > 0 ? Math.round((processed / total) * 100) : 0;
     
-    // Show retry option if stuck (all quotes processed but still calculating)
-    const isStuck = total > 0 && processed >= total;
+    // Check if draft has been stuck for more than 5 minutes
+    const createdAt = new Date(draft.created_at);
+    const now = new Date();
+    const minutesSinceCreation = (now - createdAt) / 1000 / 60;
+    const isStuckTooLong = minutesSinceCreation > 5;
     
-    const handleForceComplete = async () => {
+    // Also consider stuck if all quotes processed but still calculating
+    const isStuckComplete = total > 0 && processed >= total;
+    
+    const isStuck = isStuckTooLong || isStuckComplete;
+    
+    const handleForceRetry = async () => {
+      if (!window.confirm('Restart the data gathering process? This will reset progress and start over.')) return;
       try {
         setDraftLoading(true);
         await API(`/api/commission-drafts/${draft.id}/retry-enrichment`, { method: 'POST' });
         await loadDraft(draft.id);
       } catch (err) {
-        console.error('Failed to force complete:', err);
+        console.error('Failed to retry:', err);
         alert('Failed: ' + err.message);
       } finally {
         setDraftLoading(false);
@@ -626,11 +635,11 @@ export default function BonusesCommissions() {
           </span>
           {isStuck && (
             <button
-              onClick={handleForceComplete}
+              onClick={handleForceRetry}
               disabled={draftLoading}
-              className="px-3 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-1 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Force Retry
+              Retry Enrichment
             </button>
           )}
         </div>
@@ -642,6 +651,7 @@ export default function BonusesCommissions() {
         </div>
         <p className="text-xs text-blue-300/70 mt-1">
           Revenue Add-Ons, Deductions, and dependent columns will populate once all leads are fetched. You can navigate away and return later.
+          {isStuck && ' ⚠️ This draft appears stuck - click Retry to restart the process.'}
         </p>
       </div>
     );
