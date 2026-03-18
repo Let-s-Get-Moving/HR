@@ -175,16 +175,11 @@ export default function Testing() {
       ]
     },
     {
-      id: "sales-commissions",
-      name: "💰 Sales Commissions",
-      description: "Sales agents, managers, commission rules and calculations",
+      id: "commission-drafts",
+      name: "💰 Commission Drafts (NEW)",
+      description: "New draft-based commission system with SmartMoving integration",
       endpoints: [
-        { url: `/api/sales-commissions/agents?period_start=${getCurrentMonthStart()}&period_end=${getCurrentMonthEnd()}`, name: "Sales Agents" },
-        { url: `/api/sales-commissions/managers?period_start=${getCurrentMonthStart()}&period_end=${getCurrentMonthEnd()}`, name: "Sales Managers" },
-        { url: "/api/sales-commissions/periods", name: "Commission Periods" },
-        { url: `/api/sales-commissions/summary?period_start=${getCurrentMonthStart()}&period_end=${getCurrentMonthEnd()}`, name: "Commission Summary" },
-        { url: "/api/sales-commissions/rules", name: "Commission Rules" },
-        { url: "/api/sales-commissions/adjustment-status", name: "Adjustment Status" },
+        { url: "/api/commission-drafts", name: "List All Drafts" },
       ]
     },
     {
