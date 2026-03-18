@@ -5,7 +5,7 @@
  * Used by the NEW commission draft system.
  */
 
-import pool from '../db.js';
+import { pool } from '../db.js';
 
 // Cache for loaded commission structure settings
 let settingsCache = null;
