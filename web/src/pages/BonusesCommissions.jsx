@@ -604,17 +604,17 @@ export default function BonusesCommissions() {
         <div className="flex items-center gap-3 mb-2">
           <div className="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin flex-shrink-0" />
           <span className="text-sm font-medium text-blue-200">
-            Gathering SmartMoving data — processing job {processed} of {total}…
+            Gathering SmartMoving API data — {processed} of {total} leads processed
           </span>
         </div>
-        <div className="w-full h-1.5 bg-blue-900/40 rounded-full overflow-hidden">
+        <div className="w-full h-2 bg-blue-900/40 rounded-full overflow-hidden">
           <div
             className="h-full bg-blue-400 rounded-full transition-all duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
         <p className="text-xs text-blue-300/70 mt-1">
-          Revenue Add-Ons, Deductions, and dependent columns will populate once all jobs are fetched.
+          Revenue Add-Ons, Deductions, and dependent columns will populate once all leads are fetched. You can navigate away and return later.
         </p>
       </div>
     );

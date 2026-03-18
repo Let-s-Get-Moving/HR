@@ -303,9 +303,9 @@ async function pullAgentData(client, periodStart, periodEnd) {
         LEFT JOIN sales_performance_staging sp ON (
             sp.period_start = $1 AND sp.period_end = $2
             AND (
-                normalize_nickname(e.nickname)  = sp.sales_person_key OR
-                normalize_nickname(e.nickname_2) = sp.sales_person_key OR
-                normalize_nickname(e.nickname_3) = sp.sales_person_key
+                normalize_nickname(e.nickname)  = sp.name_key OR
+                normalize_nickname(e.nickname_2) = sp.name_key OR
+                normalize_nickname(e.nickname_3) = sp.name_key
             )
         )
         LEFT JOIN sales_commission_summary_staging cs ON (
