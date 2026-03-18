@@ -109,7 +109,9 @@ r.post(
             importResults.commissionSummary = await importSalesCommissionSummary(
                 summaryFile.buffer, periodStart, periodEnd
             );
+            console.log('[commission-drafts/ingest] Commission Summary imported:', importResults.commissionSummary);
         } catch (err) {
+            console.error('[commission-drafts/ingest] Commission Summary import failed:', err);
             return res.status(400).json({ error: 'Failed to import Commission Summary file', details: err.message });
         }
 

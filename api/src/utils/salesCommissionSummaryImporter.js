@@ -44,7 +44,7 @@ const EXPECTED_HEADERS = [
  * @returns {Promise<object>} Import result summary
  */
 export async function importSalesCommissionSummary(fileBuffer, periodStart, periodEnd) {
-    const workbook = loadExcelWorkbook(fileBuffer);
+    const workbook = await loadExcelWorkbook(fileBuffer);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
     
     if (!worksheet) {
