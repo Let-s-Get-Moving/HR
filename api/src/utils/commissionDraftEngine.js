@@ -210,7 +210,7 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
             for (const agent of agentData) {
                 const adj = adjById.get(agent.employee_id) || emptyAdj();
                 const totalRevenue = agent.invoiced + adj.revenue_add_ons - adj.revenue_deductions;
-                const rateInfo = computeAgentRate(agent.booking_pct, totalRevenue);
+                const rateInfo = await computeAgentRate(agent.booking_pct, totalRevenue);
                 const commissionEarned = round2(totalRevenue * rateInfo.pct / 100);
 
                 console.log(`[enrichDraft] Updating agent ${agent.employee_id} (${agent.role}): commission_pct=${rateInfo.pct}%, commission_earned=$${commissionEarned}`);
@@ -251,7 +251,7 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
             console.log(`[enrichDraft] Pooled revenue for managers: $${pooledRevenue.toFixed(2)}`);
 
             for (const manager of managerData) {
-                const managerCommission = calculateManagerCommission(
+                const managerCommission = await calculateManagerCommission(
                     manager, agentData, adjById, pooledRevenue
                 );
 
@@ -475,7 +475,7 @@ async function calculateAdjustments(directives, periodStart, periodEnd) {
 /**
  * Calculate a manager's commission (bucket-sum or fixed rate).
  */
-function calculateManagerCommission(manager, agentData, adjById, pooledRevenue) {
+async function calculateManagerCommission(manager, agentData, adjById, pooledRevenue) {
     if (manager.sales_manager_fixed_pct) {
         return {
             method: 'fixed',
@@ -488,7 +488,7 @@ function calculateManagerCommission(manager, agentData, adjById, pooledRevenue) 
     for (const agent of agentData) {
         const adj = adjById.get(agent.employee_id) || emptyAdj();
         const agentRevenue = agent.invoiced + adj.revenue_add_ons - adj.revenue_deductions;
-        const bucketRate = computeManagerBucketRate(agent.booking_pct);
+        const bucketRate = await computeManagerBucketRate(agent.booking_pct);
         total += round2(agentRevenue * bucketRate / 100);
     }
 

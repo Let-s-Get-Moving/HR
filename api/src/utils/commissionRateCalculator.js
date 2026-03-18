@@ -1,95 +1,141 @@
 /**
- * Sales Commission Rate Calculator (Pure Functions)
+ * Sales Commission Rate Calculator (DB-Backed)
  * 
- * Contains pure mathematical functions for calculating commission rates.
+ * Loads commission structure from application_settings table.
  * Used by the NEW commission draft system.
- * 
- * IMPORTANT: This file contains ONLY pure calculation logic.
- * All database operations are in commissionDraftEngine.js
  */
 
+import pool from '../db.js';
+
+// Cache for loaded commission structure settings
+let settingsCache = null;
+let lastCacheTime = 0;
+const CACHE_TTL = 60000; // 1 minute
+
 /**
- * Compute agent commission rate based on booking percentage and revenue.
+ * Load commission structure settings from application_settings table.
+ * Results are cached for 1 minute.
  * 
- * Rules (ordered highest-first, "more than" means >):
- * - booking_pct > 55 AND revenue > 250000: 6.0% + vacation $5000
- * - booking_pct > 50 AND revenue > 250000: 6.0%
- * - booking_pct > 40 AND revenue > 200000: 5.5%
- * - booking_pct > 35 AND revenue > 160000: 5.0%
- * - booking_pct > 30 AND revenue > 115000: 4.5%
- * - (booking_pct > 30 AND revenue <= 115000) OR (booking_pct <= 30 AND revenue > 115000): 4.0%
- * - else: 3.5%
- * 
- * @param {number} bookingPct - Booking conversion percentage (0-100)
- * @param {number} revenue - Total revenue
- * @returns {{ pct: number, vacationValue: number }} Commission rate and vacation award
+ * @returns {Promise<{ agentThresholds: Array, managerThresholds: Array, vacationValue: number }>}
  */
-export function computeAgentRate(bookingPct, revenue) {
-    const pct = bookingPct || 0;
-    const rev = revenue || 0;
+async function loadCommissionSettings() {
+    const now = Date.now();
     
-    // Highest tier first: 55%+ booking AND 250k+ revenue = 6% + vacation
-    if (pct > 55 && rev > 250000) {
-        return { pct: 6.0, vacationValue: 5000 };
+    // Return cached settings if still valid
+    if (settingsCache && (now - lastCacheTime) < CACHE_TTL) {
+        return settingsCache;
     }
     
-    // 50%+ booking AND 250k+ revenue = 6%
-    if (pct > 50 && rev > 250000) {
-        return { pct: 6.0, vacationValue: 0 };
+    try {
+        const result = await pool.query(`
+            SELECT key, value 
+            FROM application_settings 
+            WHERE key LIKE 'sales_agent_threshold_%' 
+               OR key LIKE 'sales_manager_threshold_%'
+               OR key = 'sales_agent_vacation_package_value'
+            ORDER BY key
+        `);
+        
+        const agentThresholds = [];
+        const managerThresholds = [];
+        let vacationValue = 5000; // Default
+        
+        for (const row of result.rows) {
+            if (row.key === 'sales_agent_vacation_package_value') {
+                vacationValue = parseFloat(row.value) || 5000;
+            } else if (row.key.startsWith('sales_agent_threshold_')) {
+                const [leadPct, revenueThreshold, commissionPct] = row.value.split(',').map(v => parseFloat(v));
+                agentThresholds.push({ leadPct, revenueThreshold, commissionPct });
+            } else if (row.key.startsWith('sales_manager_threshold_')) {
+                const [minBooking, maxBooking, commissionPct] = row.value.split(',').map(v => parseFloat(v));
+                managerThresholds.push({ minBooking, maxBooking, commissionPct });
+            }
+        }
+        
+        settingsCache = { agentThresholds, managerThresholds, vacationValue };
+        lastCacheTime = now;
+        
+        console.log(`[commissionRateCalculator] Loaded ${agentThresholds.length} agent thresholds, ${managerThresholds.length} manager thresholds`);
+        
+        return settingsCache;
+    } catch (error) {
+        console.error('[commissionRateCalculator] Failed to load settings, using hardcoded fallback:', error);
+        
+        // Fallback to hardcoded values
+        return {
+            agentThresholds: [
+                { leadPct: 55, revenueThreshold: 250000, commissionPct: 6.0 },
+                { leadPct: 40, revenueThreshold: 200000, commissionPct: 5.5 },
+                { leadPct: 35, revenueThreshold: 160000, commissionPct: 5.0 },
+                { leadPct: 30, revenueThreshold: 115000, commissionPct: 4.5 },
+                { leadPct: 30, revenueThreshold: 115000, commissionPct: 4.0 },
+                { leadPct: 0, revenueThreshold: 0, commissionPct: 3.5 }
+            ],
+            managerThresholds: [
+                { minBooking: 40, maxBooking: 100, commissionPct: 0.45 },
+                { minBooking: 35, maxBooking: 39, commissionPct: 0.40 },
+                { minBooking: 30, maxBooking: 34, commissionPct: 0.35 },
+                { minBooking: 25, maxBooking: 29, commissionPct: 0.30 },
+                { minBooking: 20, maxBooking: 24, commissionPct: 0.275 },
+                { minBooking: 0, maxBooking: 19, commissionPct: 0.25 }
+            ],
+            vacationValue: 5000
+        };
     }
-    
-    // 40%+ booking AND 200k+ revenue = 5.5%
-    if (pct > 40 && rev > 200000) {
-        return { pct: 5.5, vacationValue: 0 };
-    }
-    
-    // 35%+ booking AND 160k+ revenue = 5%
-    if (pct > 35 && rev > 160000) {
-        return { pct: 5.0, vacationValue: 0 };
-    }
-    
-    // 30%+ booking AND 115k+ revenue = 4.5%
-    if (pct > 30 && rev > 115000) {
-        return { pct: 4.5, vacationValue: 0 };
-    }
-    
-    // Mixed: (>30% booking AND <=115k) OR (<=30% booking AND >115k) = 4%
-    if ((pct > 30 && rev <= 115000) || (pct <= 30 && rev > 115000)) {
-        return { pct: 4.0, vacationValue: 0 };
-    }
-    
-    // Base rate: <30% booking AND <115k revenue = 3.5%
-    return { pct: 3.5, vacationValue: 0 };
 }
 
 /**
- * Manager bucket rate definitions.
- * Key: bucket label, value: { min, max, rate }
- */
-export const MANAGER_BUCKETS = [
-    { label: '0-19%', min: 0, max: 19.99, rate: 0.25 },
-    { label: '20-24%', min: 20, max: 24.99, rate: 0.275 },
-    { label: '25-29%', min: 25, max: 29.99, rate: 0.3 },
-    { label: '30-34%', min: 30, max: 34.99, rate: 0.35 },
-    { label: '35-39%', min: 35, max: 39.99, rate: 0.4 },
-    { label: '40%+', min: 40, max: Infinity, rate: 0.45 }
-];
-
-/**
- * Get manager commission rate for an agent's booking percentage.
+ * Compute agent commission rate based on booking percentage and revenue.
+ * Now loads from application_settings table.
  * 
- * @param {number} bookingPct - Agent's booking conversion percentage (0-100)
- * @returns {{ bucket: object, rate: number }} Bucket info and rate
+ * @param {number} bookingPct - Booking conversion percentage (0-100)
+ * @param {number} revenue - Total revenue
+ * @returns {Promise<{ pct: number, vacationValue: number }>} Commission rate and vacation award
  */
-export function computeManagerBucketRate(bookingPct) {
+export async function computeAgentRate(bookingPct, revenue) {
+    const settings = await loadCommissionSettings();
     const pct = bookingPct || 0;
+    const rev = revenue || 0;
     
-    for (const bucket of MANAGER_BUCKETS) {
-        if (pct >= bucket.min && pct <= bucket.max) {
-            return { bucket, rate: bucket.rate };
+    // Find the best matching threshold (highest commission that agent qualifies for)
+    // Thresholds are stored as: leadPct >= X AND revenueThreshold >= Y → commissionPct
+    let bestMatch = { commissionPct: 3.5, hasVacation: false }; // Default lowest rate
+    
+    for (const threshold of settings.agentThresholds) {
+        const meetsLeadReq = pct >= threshold.leadPct;
+        const meetsRevenueReq = rev >= threshold.revenueThreshold;
+        
+        if (meetsLeadReq && meetsRevenueReq && threshold.commissionPct > bestMatch.commissionPct) {
+            bestMatch = {
+                commissionPct: threshold.commissionPct,
+                hasVacation: (pct >= 55 && rev >= 250000) // Vacation only for top tier
+            };
         }
     }
     
-    // Fallback (should never happen with correct bucket definitions)
-    return { bucket: MANAGER_BUCKETS[0], rate: 0.25 };
+    return {
+        pct: bestMatch.commissionPct,
+        vacationValue: bestMatch.hasVacation ? settings.vacationValue : 0
+    };
+}
+
+/**
+ * Get manager commission rate for an agent's booking percentage.
+ * Now loads from application_settings table.
+ * 
+ * @param {number} bookingPct - Agent's booking conversion percentage (0-100)
+ * @returns {Promise<number>} Commission rate percentage
+ */
+export async function computeManagerBucketRate(bookingPct) {
+    const settings = await loadCommissionSettings();
+    const pct = bookingPct || 0;
+    
+    for (const threshold of settings.managerThresholds) {
+        if (pct >= threshold.minBooking && pct <= threshold.maxBooking) {
+            return threshold.commissionPct;
+        }
+    }
+    
+    // Fallback to lowest tier
+    return 0.25;
 }
