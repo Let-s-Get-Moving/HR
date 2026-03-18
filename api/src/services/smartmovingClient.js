@@ -62,11 +62,13 @@ export async function getQuoteSubtotal(quoteNumber) {
         
         // Determine currency and convert if needed
         // US branches start with "US-" or contain "USA"
-        const isUSBranch = branch && (
-            branch.toUpperCase().startsWith('US-') || 
-            branch.toUpperCase().includes('USA') ||
-            branch.toUpperCase().includes('UNITED STATES')
-        );
+        let isUSBranch = false;
+        if (branch && typeof branch === 'string') {
+            const branchUpper = branch.toUpperCase();
+            isUSBranch = branchUpper.startsWith('US-') || 
+                         branchUpper.includes('USA') ||
+                         branchUpper.includes('UNITED STATES');
+        }
         
         let subtotalCAD = parseFloat(subtotalRaw) || 0;
         let currencyCode = 'CAD';
