@@ -126,55 +126,31 @@ export default function BonusesCommissions() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   
-  // Sales Commissions state
-  const [salesCommissionPeriods, setSalesCommissionPeriods] = useState([]);
-  const [selectedSalesPeriod, setSelectedSalesPeriod] = useState({ start: '', end: '' });
-  const [salesAgentCommissions, setSalesAgentCommissions] = useState([]);
-  const [salesManagerCommissions, setSalesManagerCommissions] = useState([]);
-  const [salesCommissionSummary, setSalesCommissionSummary] = useState(null);
-  const [salesCalcLoading, setSalesCalcLoading] = useState(false);
-  const [salesCalcResult, setSalesCalcResult] = useState(null);
-  const [salesDryRun, setSalesDryRun] = useState(false);
+  // ──────────────────────────────────────────────────────────────────────────
+  // OLD SYSTEM STATE - DEPRECATED (kept for reference, not used in new system)
+  // ──────────────────────────────────────────────────────────────────────────
+  // Sales Commissions state (OLD)
+  // const [salesCommissionPeriods, setSalesCommissionPeriods] = useState([]);
+  // const [selectedSalesPeriod, setSelectedSalesPeriod] = useState({ start: '', end: '' });
+  // const [salesAgentCommissions, setSalesAgentCommissions] = useState([]);
+  // const [salesManagerCommissions, setSalesManagerCommissions] = useState([]);
+  // const [salesCommissionSummary, setSalesCommissionSummary] = useState(null);
+  // const [salesCalcLoading, setSalesCalcLoading] = useState(false);
+  // const [salesCalcResult, setSalesCalcResult] = useState(null);
+  // const [salesDryRun, setSalesDryRun] = useState(false);
   
-  // Agent table sorting state
-  const [agentSortColumn, setAgentSortColumn] = useState('employee_name');
-  const [agentSortDirection, setAgentSortDirection] = useState('asc');
+  // Agent table sorting state (OLD)
+  // const [agentSortColumn, setAgentSortColumn] = useState('employee_name');
+  // const [agentSortDirection, setAgentSortDirection] = useState('asc');
   
-  // Form data states
-  const [newBonus, setNewBonus] = useState({
-    employee_id: "",
-    bonus_type: "Performance",
-    amount: "",
-    period: "",
-    criteria: "",
-    status: "Pending"
-  });
+  // Import-related state variables (OLD)
+  // const [importFile, setImportFile] = useState(null);
+  // const [importStatus, setImportStatus] = useState(null);
+  // const [periodStart, setPeriodStart] = useState('');
+  // const [periodEnd, setPeriodEnd] = useState('');
+  // const [monthlyCommissions, setMonthlyCommissions] = useState([]);
+  // ──────────────────────────────────────────────────────────────────────────
   
-  const [newCommission, setNewCommission] = useState({
-    employee_id: "",
-    commission_rate: "",
-    threshold_amount: "",
-    deal_amount: "",
-    commission_amount: "",
-    period: ""
-  });
-  
-  const [newStructure, setNewStructure] = useState({
-    name: "",
-    type: "Bonus",
-    base_amount: "",
-    criteria: "",
-    effective_date: "",
-    is_active: true
-  });
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  
-  // Import-related state variables
-  const [importFile, setImportFile] = useState(null);
-  const [importStatus, setImportStatus] = useState(null);
-  const [periodStart, setPeriodStart] = useState(''); // Required: period start date (YYYY-MM-DD)
-  const [periodEnd, setPeriodEnd] = useState(''); // Required: period end date (YYYY-MM-DD)
-  const [monthlyCommissions, setMonthlyCommissions] = useState([]);
   
   // Lead Status and Booked Opportunities import state
   const [leadStatusFile, setLeadStatusFile] = useState(null);
@@ -215,18 +191,10 @@ export default function BonusesCommissions() {
   const [savingField, setSavingField] = useState(null);
 
   const tabs = [
-    // Hide import tab for user role
-    ...(userRole !== 'user' ? [{ id: "import", name: t('bonuses.excelImport'), icon: "📥" }] : []),
-    // Commission Drafts tab - NEW draft-based workflow
+    // Commission Drafts tab - NEW draft-based workflow (only tab)
     ...((userRole !== 'user' || salesRole) ? [{ 
       id: "commission-drafts", 
-      name: "Commission Drafts", 
-      icon: "📋" 
-    }] : []),
-    // Sales Commissions tab - for managers/admins OR users with sales_role (OLD SYSTEM - keep for reference)
-    ...((userRole !== 'user' || salesRole) ? [{ 
-      id: "sales-commissions", 
-      name: userRole === 'user' ? "My Commissions (Old)" : "Sales Commissions (Old)", 
+      name: userRole === 'user' ? "My Commissions" : "Commissions", 
       icon: "💰" 
     }] : [])
   ];
@@ -1214,6 +1182,14 @@ export default function BonusesCommissions() {
     </div>
   );
 
+  // ============================================================================
+  // OLD SYSTEM - DEPRECATED - DO NOT USE
+  // These functions (renderImport, renderSalesCommissions) are from the old
+  // commission system. They are kept here only for reference.
+  // The NEW system uses renderCommissionDrafts() above.
+  // ============================================================================
+  
+  /* DEPRECATED - OLD IMPORT FUNCTION
   const renderImport = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -2075,6 +2051,7 @@ export default function BonusesCommissions() {
     </div>
   );
   };
+  END OF DEPRECATED renderImport */
 
   // ============================================================================
   // Commission Drafts — Functions (NEW SYSTEM)
@@ -2659,8 +2636,10 @@ export default function BonusesCommissions() {
   };
 
   // ============================================================================
-  // Sales Commissions Tab Content
+  // OLD SYSTEM - DEPRECATED - DO NOT USE
+  // Sales Commissions Tab Content (OLD SYSTEM)
   // ============================================================================
+  /* DEPRECATED - OLD SALES COMMISSIONS VIEWER
   const renderSalesCommissions = () => (
     <div className="space-y-6">
       {/* Title for users */}
@@ -3347,6 +3326,11 @@ export default function BonusesCommissions() {
       )}
     </div>
   );
+  END OF DEPRECATED renderSalesCommissions */
+
+  // ============================================================================
+  // Main Component Render
+  // ============================================================================
 
   if (initialLoading) {
     return (
@@ -3400,9 +3384,7 @@ export default function BonusesCommissions() {
 
       {/* Tab Content */}
       <div className="space-y-6">
-        {userRole !== 'user' && activeTab === "import" && renderImport()}
         {(userRole !== 'user' || salesRole) && activeTab === "commission-drafts" && renderCommissionDrafts()}
-        {(userRole !== 'user' || salesRole) && activeTab === "sales-commissions" && renderSalesCommissions()}
       </div>
 
       {/* Add Bonus Modal */}
