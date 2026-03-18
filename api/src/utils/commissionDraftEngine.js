@@ -140,6 +140,7 @@ export async function createDraftSkeleton(periodStart, periodEnd, createdBy) {
  * @param {string} periodEnd    YYYY-MM-DD
  */
 export async function enrichDraftWithSmartMovingData(draftId, periodStart, periodEnd) {
+    console.log(`[enrichDraft] ⚡ FUNCTION CALLED - draft ${draftId}, period ${periodStart} to ${periodEnd}`);
     try {
         console.log(`[enrichDraft] Starting enrichment for draft ${draftId}, period ${periodStart} to ${periodEnd}`);
 

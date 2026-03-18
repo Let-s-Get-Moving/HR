@@ -150,6 +150,7 @@ r.post(
         // ── Fire enrichment in background (no await) ──────────────────────────
         // Node will process this after the response has been flushed.
         // Jobs are fetched one by one; quotes_processed is incremented after each.
+        console.log(`[commission-drafts/ingest] 🚀 About to fire enrichment for draft ${skeleton.draftId}`);
         enrichDraftWithSmartMovingData(skeleton.draftId, periodStart, periodEnd)
             .catch(err =>
                 console.error(`[commission-drafts] enrichment error for draft ${skeleton.draftId}:`, err)
