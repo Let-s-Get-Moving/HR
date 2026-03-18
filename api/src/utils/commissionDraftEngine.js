@@ -102,13 +102,12 @@ export async function createDraftSkeleton(periodStart, periodEnd, createdBy) {
             ]);
         }
 
-        // Insert manager line items
+        // Insert manager line items (leave SM-dependent fields NULL)
         for (const manager of managerData) {
             await client.query(`
                 INSERT INTO commission_line_items
-                    (draft_id, employee_id, employee_name_raw, role,
-                     hourly_rate, invoiced, booking_pct)
-                VALUES ($1, $2, $3, $4, $5, 0, 0)
+                    (draft_id, employee_id, employee_name_raw, role, hourly_rate)
+                VALUES ($1, $2, $3, $4, $5)
             `, [
                 draftId, manager.employee_id, manager.employee_name, manager.role,
                 manager.hourly_rate
@@ -244,7 +243,10 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
             // Managers use pooled revenue = sum of all agent total_revenues
             const pooledRevenue = agentData.reduce((sum, agent) => {
                 const adj = adjById.get(agent.employee_id) || emptyAdj();
-                return sum + agent.invoiced + adj.revenue_add_ons - adj.revenue_deductions;
+                const invoiced = parseFloat(agent.invoiced) || 0;
+                const addOns = parseFloat(adj.revenue_add_ons) || 0;
+                const deductions = parseFloat(adj.revenue_deductions) || 0;
+                return sum + invoiced + addOns - deductions;
             }, 0);
             
             console.log(`[enrichDraft] Pooled revenue for managers: $${pooledRevenue.toFixed(2)}`);
@@ -261,7 +263,8 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                         commission_pct     = $3,
                         commission_earned  = $4,
                         revenue_add_ons    = 0,
-                        revenue_deductions = 0
+                        revenue_deductions = 0,
+                        booking_pct        = 0
                     WHERE draft_id = $5
                       AND employee_id = $6
                       AND role = 'manager'

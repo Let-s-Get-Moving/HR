@@ -628,6 +628,12 @@ export default function BonusesCommissions() {
     return <span className={colorClass}>{value}</span>;
   };
 
+  // ── Helper: format date range for display ─────────────────────────────────
+  const formatDateRange = (startYmd, endYmd) => {
+    if (!startYmd || !endYmd) return 'Unknown period';
+    return `${formatYMD(startYmd, 'MMM d')} – ${formatYMD(endYmd, 'MMM d, yyyy')}`;
+  };
+
   // ── Progress banner (shown while calculation_status === 'calculating') ─────
   const DraftProgressBanner = ({ draft }) => {
     if (!draft || draft.calculation_status !== 'calculating') return null;
@@ -853,7 +859,7 @@ export default function BonusesCommissions() {
             <option value="">Select a draft…</option>
             {commissionDrafts.map(d => (
               <option key={d.id} value={d.id}>
-                {d.period_start} → {d.period_end}
+                {formatDateRange(d.period_start, d.period_end)}
                 {' · '}
                 {d.status === 'finalized' ? 'Finalized' : d.calculation_status === 'calculating' ? 'Gathering data…' : d.calculation_status === 'error' ? 'Error' : 'Draft'}
                 {' · '}
