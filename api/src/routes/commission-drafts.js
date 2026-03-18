@@ -132,6 +132,14 @@ r.post(
             return res.status(500).json({ error: 'Failed to create draft', details: err.message });
         }
 
+        // ── Fire enrichment in background (no await) ──────────────────────────
+        // Fire BEFORE response to ensure Node picks it up
+        console.log(`[commission-drafts/ingest] 🚀 About to fire enrichment for draft ${skeleton.draftId}`);
+        enrichDraftWithSmartMovingData(skeleton.draftId, periodStart, periodEnd)
+            .catch(err =>
+                console.error(`[commission-drafts] enrichment error for draft ${skeleton.draftId}:`, err)
+            );
+
         // ── Respond immediately ───────────────────────────────────────────────
         // The client receives the draftId + calculation_status='calculating'.
         // It should start polling GET /:id every 3 s to track progress.
@@ -146,15 +154,6 @@ r.post(
                 calculationStatus: 'calculating',
             },
         });
-
-        // ── Fire enrichment in background (no await) ──────────────────────────
-        // Node will process this after the response has been flushed.
-        // Jobs are fetched one by one; quotes_processed is incremented after each.
-        console.log(`[commission-drafts/ingest] 🚀 About to fire enrichment for draft ${skeleton.draftId}`);
-        enrichDraftWithSmartMovingData(skeleton.draftId, periodStart, periodEnd)
-            .catch(err =>
-                console.error(`[commission-drafts] enrichment error for draft ${skeleton.draftId}:`, err)
-            );
     }
 );
 
