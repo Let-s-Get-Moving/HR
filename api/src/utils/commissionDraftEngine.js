@@ -154,7 +154,7 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                 ls.pct,
                 ls.amount
             FROM sales_lead_status_quotes ls
-            WHERE ls.status_norm IN ('completed', 'closed')
+            WHERE (ls.status_norm LIKE '%closed%' OR ls.status_norm LIKE '%completed%')
               AND ls.directive_type IS NOT NULL
               AND ls.directive_type <> 'none'
               AND ls.service_date_lead_report >= $1
@@ -213,7 +213,9 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                 const rateInfo = computeAgentRate(agent.booking_pct, totalRevenue);
                 const commissionEarned = round2(totalRevenue * rateInfo.rate / 100);
 
-                await client.query(`
+                console.log(`[enrichDraft] Updating agent ${agent.employee_id} (${agent.role}): commission_pct=${rateInfo.rate}%, commission_earned=$${commissionEarned}`);
+
+                const updateResult = await client.query(`
                     UPDATE commission_line_items
                     SET revenue_add_ons     = $1,
                         revenue_deductions  = $2,
@@ -228,6 +230,10 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                     totalRevenue, rateInfo.rate, commissionEarned,
                     draftId, agent.employee_id, agent.role
                 ]);
+                
+                if (updateResult.rowCount === 0) {
+                    console.error(`[enrichDraft] ⚠️  UPDATE failed for agent ${agent.employee_id} - no rows matched (draft=${draftId}, employee=${agent.employee_id}, role=${agent.role})`);
+                }
             }
             
             console.log(`[enrichDraft] Updated ${agentData.length} agent line items`);
