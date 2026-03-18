@@ -494,6 +494,11 @@ export default function BonusesCommissions() {
       formData.append('periodStart',           draftPeriodStart);
       formData.append('periodEnd',             draftPeriodEnd);
 
+      console.log('[Commission Upload] Sending dates:', {
+        periodStart: draftPeriodStart,
+        periodEnd: draftPeriodEnd
+      });
+
       const response = await APIUpload('/api/commission-drafts/ingest', formData);
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));

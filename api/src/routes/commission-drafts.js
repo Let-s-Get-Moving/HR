@@ -99,7 +99,7 @@ r.post(
 
         try {
             importResults.performance = await importSalesPerformanceFromExcel(
-                perfFile.buffer, periodStart, periodEnd
+                perfFile.buffer, perfFile.originalname, periodStart, periodEnd
             );
         } catch (err) {
             return res.status(400).json({ error: 'Failed to import Sales Performance file', details: err.message });

@@ -303,6 +303,12 @@ export default function DateRangePicker({
       // Convert to YYYY-MM-DD strings using local date components
       const startStr = `${pendingRange.from.getFullYear()}-${String(pendingRange.from.getMonth() + 1).padStart(2, '0')}-${String(pendingRange.from.getDate()).padStart(2, '0')}`;
       const endStr = `${pendingRange.to.getFullYear()}-${String(pendingRange.to.getMonth() + 1).padStart(2, '0')}-${String(pendingRange.to.getDate()).padStart(2, '0')}`;
+      console.log('[DateRangePicker] Applying dates:', {
+        from: pendingRange.from,
+        to: pendingRange.to,
+        startStr,
+        endStr
+      });
       onApply({ startYmd: startStr, endYmd: endStr });
     }
     setIsOpen(false);
