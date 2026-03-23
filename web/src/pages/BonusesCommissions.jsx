@@ -906,14 +906,14 @@ export default function BonusesCommissions() {
       {selectedDraft && draftLineItems.length > 0 && (
         <>
           {/* Agent table */}
-          <div className="card p-6 w-full max-w-none">
-            <h3 className="text-lg font-semibold mb-1">Agent Commissions</h3>
+          <div className="card p-6 w-full max-w-none -mx-6 lg:-mx-8">
+            <h3 className="text-lg font-semibold mb-1 px-6 lg:px-8">Agent Commissions</h3>
             {isCalculating && (
-              <p className="text-xs text-blue-400 mb-3">
+              <p className="text-xs text-blue-400 mb-3 px-6 lg:px-8">
                 Columns marked with a blue indicator are pending SmartMoving data. Manual entry will be enabled once all jobs are processed.
               </p>
             )}
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto px-6 lg:px-8">
               <table className="w-full text-base table-auto" style={{minWidth: '1400px'}}>
                 <thead>
                   <tr className="text-left text-tahoe-text-muted border-b border-tahoe-border-primary">
@@ -1045,9 +1045,9 @@ export default function BonusesCommissions() {
 
           {/* Manager table */}
           {draftLineItems.some(item => item.role === 'manager') && (
-            <div className="card p-6 w-full max-w-none">
-              <h3 className="text-lg font-semibold mb-4">Manager Commissions</h3>
-              <div className="overflow-x-auto">
+            <div className="card p-6 w-full max-w-none -mx-6 lg:-mx-8">
+              <h3 className="text-lg font-semibold mb-4 px-6 lg:px-8">Manager Commissions</h3>
+              <div className="overflow-x-auto px-6 lg:px-8">
                 <table className="w-full text-base table-auto" style={{minWidth: '1200px'}}>
                   <thead>
                     <tr className="text-left text-tahoe-text-muted border-b border-tahoe-border-primary">
@@ -1175,7 +1175,7 @@ export default function BonusesCommissions() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="w-full">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">{t('bonuses.title')}</h1>
