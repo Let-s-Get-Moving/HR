@@ -906,7 +906,7 @@ export default function BonusesCommissions() {
       {selectedDraft && draftLineItems.length > 0 && (
         <>
           {/* Agent table */}
-          <div className="card p-6">
+          <div className="card p-6 w-full max-w-none">
             <h3 className="text-lg font-semibold mb-1">Agent Commissions</h3>
             {isCalculating && (
               <p className="text-xs text-blue-400 mb-3">
@@ -1045,7 +1045,7 @@ export default function BonusesCommissions() {
 
           {/* Manager table */}
           {draftLineItems.some(item => item.role === 'manager') && (
-            <div className="card p-6">
+            <div className="card p-6 w-full max-w-none">
               <h3 className="text-lg font-semibold mb-4">Manager Commissions</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-base table-auto" style={{minWidth: '1200px'}}>
