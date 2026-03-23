@@ -914,18 +914,18 @@ export default function BonusesCommissions() {
               </p>
             )}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base table-auto" style={{minWidth: '1400px'}}>
                 <thead>
                   <tr className="text-left text-tahoe-text-muted border-b border-tahoe-border-primary">
                     <th className="pb-2 pr-3 font-medium">Agent</th>
-                    <th className="pb-2 px-2 text-right font-medium">Hourly Rate</th>
-                    <th className="pb-2 px-2 text-right font-medium">Invoiced</th>
+                    <th className="pb-3 px-3 text-right font-medium">Hourly Rate</th>
+                    <th className="pb-3 px-3 text-right font-medium">Invoiced</th>
                     <th className="pb-2 px-2 text-right font-medium text-cyan-400">Rev Add-Ons</th>
                     <th className="pb-2 px-2 text-right font-medium text-orange-400">Rev Ded.</th>
-                    <th className="pb-2 px-2 text-right font-medium">Total Rev</th>
-                    <th className="pb-2 px-2 text-right font-medium">Booking %</th>
-                    <th className="pb-2 px-2 text-right font-medium">Rate %</th>
-                    <th className="pb-2 px-2 text-right font-medium">Commission</th>
+                    <th className="pb-3 px-3 text-right font-medium">Total Rev</th>
+                    <th className="pb-3 px-3 text-right font-medium">Booking %</th>
+                    <th className="pb-3 px-3 text-right font-medium">Rate %</th>
+                    <th className="pb-3 px-3 text-right font-medium">Commission</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Spiff Bonus</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Rev Bonus</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>$5/$10 Bonus</th>
@@ -999,7 +999,7 @@ export default function BonusesCommissions() {
                                       step="0.01"
                                       value={editValues[item.id]?.[field] ?? 0}
                                       onChange={e => handleLineItemChange(item.id, field, e.target.value)}
-                                      className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                                      className="w-28 px-2 py-1 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-sm focus:border-blue-400 focus:outline-none"
                                     />
                                   ) : (
                                     <span className="block text-right text-gray-400 text-xs">
@@ -1048,12 +1048,12 @@ export default function BonusesCommissions() {
             <div className="card p-6">
               <h3 className="text-lg font-semibold mb-4">Manager Commissions</h3>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-base table-auto" style={{minWidth: '1200px'}}>
                   <thead>
                     <tr className="text-left text-tahoe-text-muted border-b border-tahoe-border-primary">
                       <th className="pb-2 pr-3 font-medium">Manager</th>
-                      <th className="pb-2 px-2 text-right font-medium">Pooled Revenue</th>
-                      <th className="pb-2 px-2 text-right font-medium">Commission</th>
+                      <th className="pb-3 px-3 text-right font-medium">Pooled Revenue</th>
+                      <th className="pb-3 px-3 text-right font-medium">Commission</th>
                       <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Spiff Bonus</th>
                       <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Rev Bonus</th>
                       <th className="pb-2 px-2 text-right font-medium text-emerald-400">Hourly Earned</th>
@@ -1083,8 +1083,8 @@ export default function BonusesCommissions() {
                             {item.employee_name_raw}
                             {saving && <span className="ml-1 text-xs text-blue-400">Saving…</span>}
                           </td>
-                          <td className="py-2 px-2 text-right"><SmPendingCell value={item.invoiced}          colorClass="text-gray-400" /></td>
-                          <td className="py-2 px-2 text-right"><SmPendingCell value={item.commission_earned} colorClass="text-gray-400" /></td>
+                          <td className="py-3 px-3 text-right"><SmPendingCell value={item.invoiced}          colorClass="text-gray-400" /></td>
+                          <td className="py-3 px-3 text-right"><SmPendingCell value={item.commission_earned} colorClass="text-gray-400" /></td>
 
                           {mgrManualFields.map(field => {
                             // Hourly Earned comes before Hourly Paid Out
@@ -1103,10 +1103,10 @@ export default function BonusesCommissions() {
                                         step="0.01"
                                         value={editValues[item.id]?.[field] ?? 0}
                                         onChange={e => handleLineItemChange(item.id, field, e.target.value)}
-                                        className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                                        className="w-28 px-2 py-1 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-sm focus:border-blue-400 focus:outline-none"
                                       />
                                     ) : (
-                                      <span className="block text-right text-gray-400 text-xs">
+                                      <span className="block text-right text-gray-400 text-sm">
                                         ${parseFloat(item[field] ?? 0).toFixed(2)}
                                       </span>
                                     )}
