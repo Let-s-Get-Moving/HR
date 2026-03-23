@@ -209,7 +209,8 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
             // ── 5. Update each agent line item ──────────────────────────────
             for (const agent of agentData) {
                 const adj = adjById.get(agent.employee_id) || emptyAdj();
-                const totalRevenue = agent.invoiced + adj.revenue_add_ons - adj.revenue_deductions;
+                const invoiced = parseFloat(agent.invoiced) || 0;
+                const totalRevenue = invoiced + adj.revenue_add_ons - adj.revenue_deductions;
                 const rateInfo = await computeAgentRate(agent.booking_pct, totalRevenue);
                 const commissionEarned = round2(totalRevenue * rateInfo.pct / 100);
 
