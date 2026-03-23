@@ -58,7 +58,9 @@ export async function getQuoteSubtotal(quoteNumber) {
         
         // Extract subtotal from estimatedTotal.subtotal
         const subtotalRaw = data?.estimatedTotal?.subtotal || 0;
-        const branch = data?.branchName || data?.branch || null;
+        
+        // Extract branch name - API returns it as an object with a 'name' property
+        const branch = data?.branch?.name || data?.branchName || null;
         
         // Determine currency and convert if needed
         // US branches start with "US-" or contain "USA"
