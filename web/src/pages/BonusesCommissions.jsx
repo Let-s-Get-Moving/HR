@@ -414,7 +414,7 @@ export default function BonusesCommissions() {
   const handleDeleteDraft = async () => {
     if (!selectedDraft) return;
     
-    if (!window.confirm(`Are you sure you want to delete the draft for ${selectedDraft.period_start} → ${selectedDraft.period_end}?\n\nThis action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to delete the commission for ${selectedDraft.period_start} → ${selectedDraft.period_end}?\n\nThis action cannot be undone.`)) {
       return;
     }
     
@@ -430,10 +430,10 @@ export default function BonusesCommissions() {
       setSelectedDraft(null);
       setDraftLineItems([]);
       
-      alert('Draft deleted successfully');
+      alert('Commission deleted successfully');
     } catch (err) {
-      console.error('Failed to delete draft:', err);
-      alert('Failed to delete draft: ' + err.message);
+      console.error('Failed to delete commission:', err);
+      alert('Failed to delete commission: ' + err.message);
     } finally {
       setDraftLoading(false);
     }
@@ -558,7 +558,7 @@ export default function BonusesCommissions() {
       setCommissionDrafts(drafts || []);
 
     } catch (err) {
-      setDraftUploadStatus({ status: 'error', message: err.message || 'Failed to create draft' });
+      setDraftUploadStatus({ status: 'error', message: err.message || 'Failed to create commission' });
     } finally {
       setDraftLoading(false);
     }
@@ -753,7 +753,7 @@ export default function BonusesCommissions() {
       {/* ── Upload Panel ── */}
       {userRole !== 'user' && (
         <div className="card p-6">
-          <h3 className="text-lg font-semibold mb-4">Create New Commission Draft</h3>
+          <h3 className="text-lg font-semibold mb-4">Create New Commission</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* File 1 */}
@@ -823,29 +823,19 @@ export default function BonusesCommissions() {
         </div>
       )}
 
-      {/* ── Draft Navigation ── */}
+      {/* ── Commission Navigation ── */}
       {commissionDrafts.length > 0 && (
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">Commission Drafts</h3>
+            <h3 className="text-lg font-semibold">Commissions</h3>
             <div className="flex gap-2">
-              {selectedDraft && selectedDraft.status === 'draft' && userRole !== 'user' && (
+              {selectedDraft && userRole !== 'user' && (
                 <button
                   onClick={handleDeleteDraft}
                   disabled={draftLoading}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Delete Draft
-                </button>
-              )}
-              {selectedDraft?.status === 'draft' && userRole !== 'user' && (
-                <button
-                  onClick={handleFinalizeDraft}
-                  disabled={!isReady || draftLoading}
-                  title={!isReady ? 'Wait until data gathering is complete' : ''}
-                  className="btn-primary bg-green-600 hover:bg-green-700 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  Finish Commission
+                  Delete Commission
                 </button>
               )}
             </div>
@@ -874,23 +864,16 @@ export default function BonusesCommissions() {
                 {selectedDraft && formatDateRange(selectedDraft.period_start, selectedDraft.period_end)}
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  selectedDraft?.status === 'finalized' 
-                    ? 'bg-green-900/30 text-green-200' 
-                    : selectedDraft?.calculation_status === 'calculating' 
-                    ? 'bg-blue-900/30 text-blue-200'
-                    : selectedDraft?.calculation_status === 'error'
-                    ? 'bg-red-900/30 text-red-200'
-                    : 'bg-yellow-900/30 text-yellow-200'
-                }`}>
-                  {selectedDraft?.status === 'finalized' 
-                    ? 'Finalized' 
-                    : selectedDraft?.calculation_status === 'calculating' 
-                    ? 'Gathering data…' 
-                    : selectedDraft?.calculation_status === 'error'
-                    ? 'Error'
-                    : 'Draft'}
-                </span>
+                {selectedDraft?.calculation_status === 'calculating' && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-900/30 text-blue-200">
+                    Gathering data…
+                  </span>
+                )}
+                {selectedDraft?.calculation_status === 'error' && (
+                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-200">
+                    Error
+                  </span>
+                )}
                 <span className="text-sm text-tahoe-text-muted">
                   {selectedDraft?.line_item_count} line item{selectedDraft?.line_item_count !== 1 ? 's' : ''}
                 </span>
@@ -1170,8 +1153,8 @@ export default function BonusesCommissions() {
       {!selectedDraft && commissionDrafts.length === 0 && !draftLoading && (
         <div className="card p-12 text-center">
           <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-xl font-semibold mb-2">No Commission Drafts Yet</h3>
-          <p className="text-tahoe-text-muted">Upload the 3 required files above to create your first commission draft.</p>
+          <h3 className="text-xl font-semibold mb-2">No Commissions Yet</h3>
+          <p className="text-tahoe-text-muted">Upload the 3 required files above to create your first commission.</p>
         </div>
       )}
     </div>

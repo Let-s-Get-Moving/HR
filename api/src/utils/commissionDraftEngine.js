@@ -47,14 +47,14 @@ export async function createDraftSkeleton(periodStart, periodEnd, createdBy) {
     try {
         await client.query('BEGIN');
 
-        // Guard: only one draft-in-progress per period
+        // Guard: only one commission per period
         const existing = await client.query(
             `SELECT id FROM commission_drafts
-             WHERE period_start = $1 AND period_end = $2 AND status = 'draft'`,
+             WHERE period_start = $1 AND period_end = $2`,
             [periodStart, periodEnd]
         );
         if (existing.rows.length > 0) {
-            throw new Error(`A draft already exists for period ${periodStart} to ${periodEnd}`);
+            throw new Error(`A commission already exists for period ${periodStart} to ${periodEnd}. Please delete it first.`);
         }
 
         // Count quotes that will need SmartMoving API calls
