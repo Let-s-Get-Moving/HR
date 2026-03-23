@@ -271,6 +271,22 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                     manager, agentData, adjById, pooledRevenue
                 );
 
+                // Calculate hourly_earned for manager from timecard_entries
+                const hoursResult = await client.query(`
+                    SELECT COALESCE(SUM(te.hours_worked), 0) AS total_hours
+                    FROM timecard_entries te
+                    JOIN timecards t ON te.timecard_id = t.id
+                    WHERE t.employee_id = $1
+                      AND te.work_date >= $2::date
+                      AND te.work_date <= $3::date
+                `, [manager.employee_id, periodStart, periodEnd]);
+
+                const totalHours = parseFloat(hoursResult.rows[0].total_hours) || 0;
+                const hourlyRate = parseFloat(manager.hourly_rate) || 0;
+                const hourlyEarned = round2(totalHours * hourlyRate);
+
+                console.log(`[enrichDraft] Updating manager ${manager.employee_id}: commission_pct=${managerCommission.rate || 0}%, commission_earned=$${managerCommission.amount}, hourly_earned=$${hourlyEarned} (${totalHours}h × $${hourlyRate})`);
+
                 await client.query(`
                     UPDATE commission_line_items
                     SET invoiced           = $1,
@@ -279,13 +295,14 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                         commission_earned  = $4,
                         revenue_add_ons    = 0,
                         revenue_deductions = 0,
-                        booking_pct        = 0
-                    WHERE draft_id = $5
-                      AND employee_id = $6
+                        booking_pct        = 0,
+                        hourly_earned      = $5
+                    WHERE draft_id = $6
+                      AND employee_id = $7
                       AND role = 'manager'
                 `, [
                     pooledRevenue, pooledRevenue,
-                    managerCommission.rate || 0, managerCommission.amount,
+                    managerCommission.rate || 0, managerCommission.amount, hourlyEarned,
                     draftId, manager.employee_id
                 ]);
             }

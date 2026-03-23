@@ -1073,6 +1073,7 @@ export default function BonusesCommissions() {
                       <th className="pb-2 px-2 text-right font-medium">Commission</th>
                       <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Spiff Bonus</th>
                       <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Rev Bonus</th>
+                      <th className="pb-2 px-2 text-right font-medium text-emerald-400">Hourly Earned</th>
                       <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Hourly Paid Out</th>
                       <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Sales Mgr</th>
                       <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Punch</th>
@@ -1102,23 +1103,54 @@ export default function BonusesCommissions() {
                           <td className="py-2 px-2 text-right"><SmPendingCell value={item.invoiced}          colorClass="text-gray-400" /></td>
                           <td className="py-2 px-2 text-right"><SmPendingCell value={item.commission_earned} colorClass="text-gray-400" /></td>
 
-                          {mgrManualFields.map(field => (
-                            <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
-                              {isEditable ? (
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editValues[item.id]?.[field] ?? 0}
-                                  onChange={e => handleLineItemChange(item.id, field, e.target.value)}
-                                  className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
-                                />
-                              ) : (
-                                <span className="block text-right text-gray-400 text-xs">
-                                  ${parseFloat(item[field] ?? 0).toFixed(2)}
-                                </span>
-                              )}
-                            </td>
-                          ))}
+                          {mgrManualFields.map(field => {
+                            // Hourly Earned comes before Hourly Paid Out
+                            if (field === 'hourly_paid_out') {
+                              return (
+                                <React.Fragment key="hourly-earned-wrapper">
+                                  {/* Hourly Earned - read-only display */}
+                                  <td className="py-2 px-2 text-right text-emerald-400">
+                                    {formatCurrencyDisplay(item.hourly_earned || 0)}
+                                  </td>
+                                  {/* Hourly Paid Out - editable */}
+                                  <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
+                                    {isEditable ? (
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        value={editValues[item.id]?.[field] ?? 0}
+                                        onChange={e => handleLineItemChange(item.id, field, e.target.value)}
+                                        className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                                      />
+                                    ) : (
+                                      <span className="block text-right text-gray-400 text-xs">
+                                        ${parseFloat(item[field] ?? 0).toFixed(2)}
+                                      </span>
+                                    )}
+                                  </td>
+                                </React.Fragment>
+                              );
+                            }
+                            
+                            // All other manual fields
+                            return (
+                              <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
+                                {isEditable ? (
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={editValues[item.id]?.[field] ?? 0}
+                                    onChange={e => handleLineItemChange(item.id, field, e.target.value)}
+                                    className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                                  />
+                                ) : (
+                                  <span className="block text-right text-gray-400 text-xs">
+                                    ${parseFloat(item[field] ?? 0).toFixed(2)}
+                                  </span>
+                                )}
+                              </td>
+                            );
+                          })}
 
                           <td className="py-2 px-2 text-right font-bold">
                             <SmPendingCell value={item.total_due} colorClass="text-purple-300" />
