@@ -203,9 +203,6 @@ r.patch(
             [draftId]
         );
         if (draftRow.rows.length === 0) return res.status(404).json({ error: 'Draft not found' });
-        if (draftRow.rows[0].status !== 'draft') {
-            return res.status(400).json({ error: 'Cannot edit a finalized draft' });
-        }
         if (draftRow.rows[0].calculation_status !== 'ready') {
             return res.status(400).json({ error: 'Cannot edit while data gathering is in progress' });
         }

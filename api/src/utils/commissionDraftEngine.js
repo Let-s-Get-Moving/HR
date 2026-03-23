@@ -214,7 +214,21 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                 const rateInfo = await computeAgentRate(agent.booking_pct, totalRevenue);
                 const commissionEarned = round2(totalRevenue * rateInfo.pct / 100);
 
-                console.log(`[enrichDraft] Updating agent ${agent.employee_id} (${agent.role}): commission_pct=${rateInfo.pct}%, commission_earned=$${commissionEarned}`);
+                // Calculate hourly_earned from timecard_entries
+                const hoursResult = await client.query(`
+                    SELECT COALESCE(SUM(te.hours_worked), 0) AS total_hours
+                    FROM timecard_entries te
+                    JOIN timecards t ON te.timecard_id = t.id
+                    WHERE t.employee_id = $1
+                      AND te.work_date >= $2::date
+                      AND te.work_date <= $3::date
+                `, [agent.employee_id, periodStart, periodEnd]);
+
+                const totalHours = parseFloat(hoursResult.rows[0].total_hours) || 0;
+                const hourlyRate = parseFloat(agent.hourly_rate) || 0;
+                const hourlyEarned = round2(totalHours * hourlyRate);
+
+                console.log(`[enrichDraft] Updating agent ${agent.employee_id} (${agent.role}): commission_pct=${rateInfo.pct}%, commission_earned=$${commissionEarned}, hourly_earned=$${hourlyEarned} (${totalHours}h × $${hourlyRate})`);
 
                 const updateResult = await client.query(`
                     UPDATE commission_line_items
@@ -222,13 +236,14 @@ export async function enrichDraftWithSmartMovingData(draftId, periodStart, perio
                         revenue_deductions  = $2,
                         total_revenue       = $3,
                         commission_pct      = $4,
-                        commission_earned   = $5
-                    WHERE draft_id = $6
-                      AND employee_id = $7
-                      AND role = $8
+                        commission_earned   = $5,
+                        hourly_earned       = $6
+                    WHERE draft_id = $7
+                      AND employee_id = $8
+                      AND role = $9
                 `, [
                     adj.revenue_add_ons, adj.revenue_deductions,
-                    totalRevenue, rateInfo.pct, commissionEarned,
+                    totalRevenue, rateInfo.pct, commissionEarned, hourlyEarned,
                     draftId, agent.employee_id, agent.role
                 ]);
                 

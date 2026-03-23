@@ -745,7 +745,7 @@ export default function BonusesCommissions() {
   const renderCommissionDrafts = () => {
     const isCalculating = selectedDraft?.calculation_status === 'calculating';
     const isReady       = selectedDraft?.calculation_status === 'ready';
-    const isEditable    = isReady && selectedDraft?.status === 'draft' && userRole !== 'user';
+    const isEditable    = isReady && userRole !== 'user';
 
     return (
     <div className="space-y-6">
@@ -823,7 +823,7 @@ export default function BonusesCommissions() {
         </div>
       )}
 
-      {/* ── Draft Selector + Finish button ── */}
+      {/* ── Draft Navigation ── */}
       {commissionDrafts.length > 0 && (
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
@@ -851,22 +851,67 @@ export default function BonusesCommissions() {
             </div>
           </div>
 
-          <select
-            value={selectedDraft?.id || ''}
-            onChange={e => loadDraft(parseInt(e.target.value, 10))}
-            className="form-input w-full"
-          >
-            <option value="">Select a draft…</option>
-            {commissionDrafts.map(d => (
-              <option key={d.id} value={d.id}>
-                {formatDateRange(d.period_start, d.period_end)}
-                {' · '}
-                {d.status === 'finalized' ? 'Finalized' : d.calculation_status === 'calculating' ? 'Gathering data…' : d.calculation_status === 'error' ? 'Error' : 'Draft'}
-                {' · '}
-                {d.line_item_count} line item{d.line_item_count !== 1 ? 's' : ''}
-              </option>
-            ))}
-          </select>
+          {/* Period Navigation */}
+          <div className="flex items-center justify-between bg-tahoe-panel/40 rounded-2xl p-4 border border-tahoe-border-primary">
+            {/* Previous Period Button */}
+            <button
+              onClick={() => {
+                const currentIndex = commissionDrafts.findIndex(d => d.id === selectedDraft?.id);
+                if (currentIndex < commissionDrafts.length - 1) {
+                  loadDraft(commissionDrafts[currentIndex + 1].id);
+                }
+              }}
+              disabled={!selectedDraft || commissionDrafts.findIndex(d => d.id === selectedDraft?.id) === commissionDrafts.length - 1}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-tahoe-panel hover:bg-tahoe-panel-hover border border-tahoe-border-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Previous period"
+            >
+              <span className="text-2xl">‹</span>
+            </button>
+
+            {/* Current Period Display */}
+            <div className="flex flex-col items-center flex-1 mx-4">
+              <div className="text-2xl font-semibold">
+                {selectedDraft && formatDateRange(selectedDraft.period_start, selectedDraft.period_end)}
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  selectedDraft?.status === 'finalized' 
+                    ? 'bg-green-900/30 text-green-200' 
+                    : selectedDraft?.calculation_status === 'calculating' 
+                    ? 'bg-blue-900/30 text-blue-200'
+                    : selectedDraft?.calculation_status === 'error'
+                    ? 'bg-red-900/30 text-red-200'
+                    : 'bg-yellow-900/30 text-yellow-200'
+                }`}>
+                  {selectedDraft?.status === 'finalized' 
+                    ? 'Finalized' 
+                    : selectedDraft?.calculation_status === 'calculating' 
+                    ? 'Gathering data…' 
+                    : selectedDraft?.calculation_status === 'error'
+                    ? 'Error'
+                    : 'Draft'}
+                </span>
+                <span className="text-sm text-tahoe-text-muted">
+                  {selectedDraft?.line_item_count} line item{selectedDraft?.line_item_count !== 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+
+            {/* Next Period Button */}
+            <button
+              onClick={() => {
+                const currentIndex = commissionDrafts.findIndex(d => d.id === selectedDraft?.id);
+                if (currentIndex > 0) {
+                  loadDraft(commissionDrafts[currentIndex - 1].id);
+                }
+              }}
+              disabled={!selectedDraft || commissionDrafts.findIndex(d => d.id === selectedDraft?.id) === 0}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-tahoe-panel hover:bg-tahoe-panel-hover border border-tahoe-border-primary transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Next period"
+            >
+              <span className="text-2xl">›</span>
+            </button>
+          </div>
         </div>
       )}
 
@@ -902,6 +947,7 @@ export default function BonusesCommissions() {
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>Rev Bonus</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>$5/$10 Bonus</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(59,130,246,0.08)'}}>$5/$10 Ded.</th>
+                    <th className="pb-2 px-2 text-right font-medium text-emerald-400">Hourly Earned</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Hourly Paid Out</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Sales Mgr</th>
                     <th className="pb-2 px-2 text-right font-medium" style={{background:'rgba(220,38,38,0.08)'}}>Ded: Punch</th>
@@ -953,23 +999,54 @@ export default function BonusesCommissions() {
                         <td className="py-2 px-2 text-right"><SmPendingCell value={item.commission_earned} colorClass="text-gray-400" /></td>
 
                         {/* Manual fields — only editable when isEditable */}
-                        {manualFieldDefs.map(({ field }) => (
-                          <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
-                            {isEditable ? (
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={editValues[item.id]?.[field] ?? 0}
-                                onChange={e => handleLineItemChange(item.id, field, e.target.value)}
-                                className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
-                              />
-                            ) : (
-                              <span className="block text-right text-gray-400 text-xs">
-                                ${parseFloat(item[field] ?? 0).toFixed(2)}
-                              </span>
-                            )}
-                          </td>
-                        ))}
+                        {manualFieldDefs.map(({ field }) => {
+                          // Hourly Earned comes before Hourly Paid Out
+                          if (field === 'hourly_paid_out') {
+                            return (
+                              <React.Fragment key="hourly-earned-wrapper">
+                                {/* Hourly Earned - read-only display */}
+                                <td className="py-2 px-2 text-right text-emerald-400">
+                                  {formatCurrencyDisplay(item.hourly_earned || 0)}
+                                </td>
+                                {/* Hourly Paid Out - editable */}
+                                <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
+                                  {isEditable ? (
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={editValues[item.id]?.[field] ?? 0}
+                                      onChange={e => handleLineItemChange(item.id, field, e.target.value)}
+                                      className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                                    />
+                                  ) : (
+                                    <span className="block text-right text-gray-400 text-xs">
+                                      ${parseFloat(item[field] ?? 0).toFixed(2)}
+                                    </span>
+                                  )}
+                                </td>
+                              </React.Fragment>
+                            );
+                          }
+                          
+                          // All other manual fields
+                          return (
+                            <td key={field} className="py-2 px-1" style={{background:'rgba(255,255,255,0.02)'}}>
+                              {isEditable ? (
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editValues[item.id]?.[field] ?? 0}
+                                  onChange={e => handleLineItemChange(item.id, field, e.target.value)}
+                                  className="w-20 px-1 py-0.5 text-right bg-tahoe-card-bg border border-tahoe-border-primary rounded text-xs focus:border-blue-400 focus:outline-none"
+                                />
+                              ) : (
+                                <span className="block text-right text-gray-400 text-xs">
+                                  ${parseFloat(item[field] ?? 0).toFixed(2)}
+                                </span>
+                              )}
+                            </td>
+                          );
+                        })}
 
                         {/* Total Due — SM-dependent */}
                         <td className="py-2 px-2 text-right font-bold">
