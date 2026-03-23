@@ -343,6 +343,7 @@ async function pullAgentData(client, periodStart, periodEnd) {
           AND e.sales_commission_enabled = true
           AND e.sales_role IN ('agent', 'international_closer')
           AND (e.nickname IS NOT NULL OR e.nickname_2 IS NOT NULL OR e.nickname_3 IS NOT NULL)
+          AND (e.termination_date IS NULL OR e.termination_date > $2)
     `, [periodStart, periodEnd]);
 
     return result.rows;
@@ -364,6 +365,7 @@ async function pullManagerData(client) {
         WHERE d.name ILIKE '%sales%'
           AND e.sales_commission_enabled = true
           AND e.sales_role = 'manager'
+          AND e.termination_date IS NULL
     `);
 
     return result.rows;
