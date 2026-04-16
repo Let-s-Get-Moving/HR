@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { DayPicker } from 'react-day-picker';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatYMD, parseLocalDate } from '../utils/timezone.js';
 import 'react-day-picker/style.css';
@@ -38,16 +38,37 @@ export default function DatePicker({
   className = '',
   required = false,
   minDate,
-  maxDate
+  maxDate,
+  minYear = 1900,
+  maxYear = new Date().getFullYear() + 20,
+  yearStep = 10
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0, minWidth: 280 });
+  const [manualInput, setManualInput] = useState(valueYmd || '');
+  const [inputError, setInputError] = useState('');
+  const [viewMonth, setViewMonth] = useState(() => {
+    const parsed = valueYmd ? parseLocalDate(valueYmd) : null;
+    return parsed && isValid(parsed) ? parsed : new Date();
+  });
+  const [yearJumpValue, setYearJumpValue] = useState(() => String(viewMonth.getFullYear()));
   
+  const inputRef = useRef(null);
   const triggerRef = useRef(null);
   const popoverRef = useRef(null);
 
   // Parse the YMD string to a Date object for DayPicker
   const selectedDate = valueYmd ? parseLocalDate(valueYmd) : undefined;
+
+  useEffect(() => {
+    setManualInput(valueYmd || '');
+    setInputError('');
+    const parsed = valueYmd ? parseLocalDate(valueYmd) : null;
+    if (parsed && isValid(parsed)) {
+      setViewMonth(parsed);
+      setYearJumpValue(String(parsed.getFullYear()));
+    }
+  }, [valueYmd]);
 
   // Compute popover position based on trigger element
   const updatePosition = useCallback(() => {
@@ -144,6 +165,10 @@ export default function DatePicker({
     if (onChangeYmd) {
       onChangeYmd(ymd);
     }
+    setManualInput(ymd);
+    setInputError('');
+    setViewMonth(date);
+    setYearJumpValue(String(date.getFullYear()));
     setIsOpen(false);
   };
 
@@ -155,6 +180,8 @@ export default function DatePicker({
     if (onClear) {
       onClear();
     }
+    setManualInput('');
+    setInputError('');
     setIsOpen(false);
   };
 
@@ -162,6 +189,117 @@ export default function DatePicker({
     if (disabled) return;
     setIsOpen(!isOpen);
   };
+
+  const clampYear = useCallback((year) => {
+    return Math.max(minYear, Math.min(maxYear, year));
+  }, [minYear, maxYear]);
+
+  const normalizeInputToYMD = useCallback((value) => {
+    const normalized = value.trim().replace(/\//g, '-').replace(/\./g, '-');
+    const directMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (directMatch) {
+      return `${directMatch[1]}-${directMatch[2]}-${directMatch[3]}`;
+    }
+    const shortMatch = normalized.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (shortMatch) {
+      return `${shortMatch[1]}-${shortMatch[2].padStart(2, '0')}-${shortMatch[3].padStart(2, '0')}`;
+    }
+    return null;
+  }, []);
+
+  const commitManualInput = useCallback(() => {
+    if (!manualInput.trim()) {
+      if (!required && onChangeYmd) {
+        onChangeYmd('');
+      }
+      setInputError(required ? 'Date is required' : '');
+      return;
+    }
+
+    const ymd = normalizeInputToYMD(manualInput);
+    if (!ymd) {
+      setInputError('Use YYYY-MM-DD');
+      return;
+    }
+
+    const parsed = parseLocalDate(ymd);
+    if (!parsed || !isValid(parsed)) {
+      setInputError('Invalid date');
+      return;
+    }
+
+    const year = parsed.getFullYear();
+    if (year < minYear || year > maxYear) {
+      setInputError(`Year must be between ${minYear} and ${maxYear}`);
+      return;
+    }
+
+    if (minDate && parsed < minDate) {
+      setInputError(`Date must be on or after ${format(minDate, 'yyyy-MM-dd')}`);
+      return;
+    }
+    if (maxDate && parsed > maxDate) {
+      setInputError(`Date must be on or before ${format(maxDate, 'yyyy-MM-dd')}`);
+      return;
+    }
+
+    setInputError('');
+    setManualInput(ymd);
+    setViewMonth(parsed);
+    setYearJumpValue(String(parsed.getFullYear()));
+    if (onChangeYmd) {
+      onChangeYmd(ymd);
+    }
+  }, [manualInput, maxDate, maxYear, minDate, minYear, normalizeInputToYMD, onChangeYmd, required]);
+
+  const handleInputKeyDown = (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commitManualInput();
+    }
+    if (event.key === 'ArrowDown' && !isOpen && !disabled) {
+      event.preventDefault();
+      setIsOpen(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    commitManualInput();
+  };
+
+  const handleMonthSelect = (event) => {
+    const newMonth = Number(event.target.value);
+    const nextMonth = new Date(viewMonth.getFullYear(), newMonth, 1);
+    setViewMonth(nextMonth);
+    setYearJumpValue(String(nextMonth.getFullYear()));
+  };
+
+  const handleYearSelect = (event) => {
+    const newYear = clampYear(Number(event.target.value));
+    const nextMonth = new Date(newYear, viewMonth.getMonth(), 1);
+    setViewMonth(nextMonth);
+    setYearJumpValue(String(newYear));
+  };
+
+  const handleYearJump = () => {
+    const year = Number(yearJumpValue);
+    if (!Number.isFinite(year)) {
+      return;
+    }
+    const clamped = clampYear(year);
+    const nextMonth = new Date(clamped, viewMonth.getMonth(), 1);
+    setViewMonth(nextMonth);
+    setYearJumpValue(String(clamped));
+  };
+
+  const monthOptions = Array.from({ length: 12 }, (_, idx) => ({
+    value: idx,
+    label: format(new Date(2024, idx, 1), 'MMMM')
+  }));
+  const yearOptions = Array.from(
+    { length: maxYear - minYear + 1 },
+    (_, idx) => minYear + idx
+  );
 
   // Build disabled matcher for DayPicker
   const disabledMatcher = [];
@@ -194,10 +332,66 @@ export default function DatePicker({
         >
           {/* Calendar */}
           <div className="p-3 date-range-picker-calendar">
+            <div className="mb-3 grid grid-cols-[1fr_1fr_auto] gap-2">
+              <select
+                value={viewMonth.getMonth()}
+                onChange={handleMonthSelect}
+                className="px-3 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary text-sm text-tahoe-text-primary focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+              >
+                {monthOptions.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={viewMonth.getFullYear()}
+                onChange={handleYearSelect}
+                className="px-3 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary text-sm text-tahoe-text-primary focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+              >
+                {yearOptions.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+              <div className="flex items-center gap-1">
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min={minYear}
+                  max={maxYear}
+                  step={yearStep}
+                  value={yearJumpValue}
+                  onChange={(event) => setYearJumpValue(event.target.value)}
+                  onBlur={handleYearJump}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      handleYearJump();
+                    }
+                  }}
+                  className="w-20 px-2 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary text-sm text-tahoe-text-primary focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
+                  aria-label="Jump to year"
+                />
+                <button
+                  type="button"
+                  onClick={handleYearJump}
+                  className="px-2 py-2 rounded-lg border border-tahoe-border-primary text-xs text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+                >
+                  Go
+                </button>
+              </div>
+            </div>
             <DayPicker
               mode="single"
               selected={selectedDate}
               onSelect={handleSelect}
+              month={viewMonth}
+              onMonthChange={(month) => {
+                setViewMonth(month);
+                setYearJumpValue(String(month.getFullYear()));
+              }}
               numberOfMonths={1}
               showOutsideDays
               disabled={disabledMatcher.length > 0 ? disabledMatcher : undefined}
@@ -246,34 +440,52 @@ export default function DatePicker({
 
   return (
     <div className="relative">
-      {/* Trigger Button */}
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={handleTriggerClick}
-        disabled={disabled}
-        className={`
-          w-full px-4 py-2.5 rounded-lg text-left
-          bg-tahoe-bg-secondary border border-tahoe-border-primary
-          hover:bg-tahoe-bg-hover focus:ring-2 focus:ring-tahoe-accent focus:outline-none
-          transition-all duration-tahoe
-          disabled:opacity-50 disabled:cursor-not-allowed
-          flex items-center justify-between gap-2
-          ${className}
-        `}
-      >
-        <span className={valueYmd ? 'text-tahoe-text-primary' : 'text-tahoe-text-muted'}>
-          {getDisplayLabel()}
-        </span>
-        <svg 
-          className={`w-5 h-5 text-tahoe-text-muted transition-transform duration-tahoe ${isOpen ? 'rotate-180' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
+      <div className="relative flex items-center">
+        <input
+          ref={inputRef}
+          type="text"
+          value={manualInput}
+          onChange={(event) => {
+            setManualInput(event.target.value);
+            if (inputError) {
+              setInputError('');
+            }
+          }}
+          onBlur={handleInputBlur}
+          onKeyDown={handleInputKeyDown}
+          placeholder={placeholder || getDisplayLabel()}
+          disabled={disabled}
+          aria-invalid={Boolean(inputError)}
+          className={`
+            w-full pl-4 pr-12 py-2.5 rounded-lg
+            bg-tahoe-bg-secondary border border-tahoe-border-primary
+            text-tahoe-text-primary placeholder:text-tahoe-text-muted
+            hover:bg-tahoe-bg-hover focus:ring-2 focus:ring-tahoe-accent focus:outline-none
+            transition-all duration-tahoe disabled:opacity-50 disabled:cursor-not-allowed
+            ${className}
+          `}
+        />
+        <button
+          ref={triggerRef}
+          type="button"
+          onClick={handleTriggerClick}
+          disabled={disabled}
+          className="absolute right-2 p-1.5 rounded-md text-tahoe-text-muted hover:text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe"
+          aria-label="Open date picker"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      </button>
+          <svg
+            className={`w-5 h-5 transition-transform duration-tahoe ${isOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </button>
+      </div>
+      {inputError && (
+        <p className="mt-1 text-xs text-red-400">{inputError}</p>
+      )}
 
       {/* Popover rendered via portal to escape stacking contexts */}
       {createPortal(popoverContent, document.body)}

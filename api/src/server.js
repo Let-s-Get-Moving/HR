@@ -1,6 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
+import { randomUUID } from "crypto";
 import { q } from "./db.js";
 import { sanitizeString, logSecurityEvent } from "./utils/security.js";
 import security from "./middleware/security.js";
@@ -50,6 +51,16 @@ const app = express();
 
 // Trust proxy for rate limiting (required for Render)
 app.set('trust proxy', 1);
+
+// Attach a request id to every request for cross-layer diagnostics
+app.use((req, res, next) => {
+  const incomingRequestId = req.headers['x-request-id'];
+  req.id = typeof incomingRequestId === 'string' && incomingRequestId.trim()
+    ? incomingRequestId.trim()
+    : randomUUID();
+  res.setHeader('x-request-id', req.id);
+  next();
+});
 
 // Debug configuration - DISABLED IN PRODUCTION FOR SECURITY
 const DEBUG_DATA_DRIFT = false; // FORCE DISABLED - was: (process.env.DEBUG_DATA_DRIFT || 'false').toLowerCase() === 'true';
@@ -338,7 +349,8 @@ app.post("/api/migrate-db", async (req, res) => {
     res.status(500).json({ 
       success: false, 
       error: "Database migration failed",
-      details: error.message
+      details: error.message,
+      requestId: req.id || 'unknown'
     });
   }
 });
@@ -358,9 +370,12 @@ app.get("/", (req, res) => {
 app.use("*", (req, res) => {
   res.status(404).json({
     error: "Endpoint not found",
+    code: "NOT_FOUND",
+    message: "Endpoint not found",
     path: req.originalUrl,
     method: req.method,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    requestId: req.id || 'unknown'
   });
 });
 
@@ -381,6 +396,9 @@ app.use((error, req, res, next) => {
   
   res.status(error.status || 500).json({
     error: error.message || "Internal server error",
+    code: error.code || "INTERNAL_ERROR",
+    message: error.message || "Internal server error",
+    details: error.details || null,
     timestamp: new Date().toISOString(),
     requestId: req.id || 'unknown'
   });

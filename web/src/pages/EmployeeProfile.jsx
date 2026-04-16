@@ -306,12 +306,21 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error("Error updating employee:", error);
+      const requestIdSuffix = error.requestId ? ` (request: ${error.requestId})` : '';
       
       // Check for nickname conflict error
       if (error.code === 'NICKNAME_CONFLICT' || (error.error && error.error.includes('ickname'))) {
-        alert(`Could not save: ${error.error || 'This nickname is already used by another employee.'}`);
+        const nicknameMessage =
+          error.error ||
+          error.message ||
+          'This nickname is already used by another employee.';
+        alert(`Could not save: ${nicknameMessage}${requestIdSuffix}`);
       } else {
-        alert(`Failed to save changes: ${error.error || error.message || 'Unknown error'}`);
+        const detailsText = Array.isArray(error.details)
+          ? ` ${error.details.map((d) => `${d.field || 'field'}: ${d.message || 'invalid'}`).join('; ')}`
+          : (typeof error.details === 'string' ? ` ${error.details}` : '');
+        const failureMessage = error.error || error.message || 'Unknown error';
+        alert(`Failed to save changes: ${failureMessage}${detailsText}${requestIdSuffix}`);
       }
     }
   };
@@ -877,6 +886,8 @@ export default function EmployeeProfile({ employeeId, onClose, onUpdate }) {
                         valueYmd={editData.birth_date || ''}
                         onChangeYmd={(ymd) => setEditData({...editData, birth_date: ymd})}
                         placeholder={t('employeeProfile.birthDate')}
+                        minYear={1900}
+                        maxYear={new Date().getFullYear()}
                       />
                     </div>
                   ) : (

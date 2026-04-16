@@ -237,8 +237,10 @@ describe('Security Integration Tests', () => {
         .set('Cookie', sessionCookie)
         .send({ data: 'test' });
       
-      // Should be rejected (403 or 401 depending on middleware order)
-      expect([401, 403]).toContain(response.status);
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe('CSRF_MISSING');
+      expect(response.body.requestId).toBeDefined();
+      expect(response.headers['x-request-id']).toBeDefined();
     });
 
     it('should accept POST with valid CSRF token', async () => {
@@ -269,7 +271,10 @@ describe('Security Integration Tests', () => {
         .set('X-CSRF-Token', 'invalid-token-12345')
         .send({ data: 'test' });
       
-      expect([401, 403]).toContain(response.status);
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe('CSRF_INVALID');
+      expect(response.body.requestId).toBeDefined();
+      expect(response.headers['x-request-id']).toBeDefined();
     });
   });
 

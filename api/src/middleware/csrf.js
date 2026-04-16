@@ -132,27 +132,58 @@ export const requireCSRFToken = async (req, res, next) => {
   
   // Get session ID from cookie (primary) or headers (for non-browser clients)
   const sessionId = req.cookies?.sessionId || req.headers['x-session-id'];
+  const requestId = req.id || req.headers['x-request-id'] || null;
   
   if (!sessionId) {
-    return res.status(401).json({ error: 'Session required for CSRF validation' });
+    console.warn('[CSRF] Session missing', {
+      requestId,
+      method: req.method,
+      path: req.originalUrl || req.path,
+      hasSession: false,
+      hasCsrfHeader: Boolean(req.headers['x-csrf-token'] || req.headers['X-CSRF-Token'])
+    });
+    return res.status(401).json({
+      error: 'Session required for CSRF validation',
+      code: 'CSRF_SESSION_REQUIRED',
+      message: 'Session required for CSRF validation',
+      requestId
+    });
   }
   
   // Get CSRF token from header
   const csrfToken = req.headers['x-csrf-token'] || req.headers['X-CSRF-Token'];
   
   if (!csrfToken) {
+    console.warn('[CSRF] Token missing', {
+      requestId,
+      method: req.method,
+      path: req.originalUrl || req.path,
+      hasSession: true,
+      hasCsrfHeader: false
+    });
     return res.status(403).json({ 
       error: 'CSRF token required',
-      message: 'Missing CSRF token in X-CSRF-Token header'
+      code: 'CSRF_MISSING',
+      message: 'Missing CSRF token in X-CSRF-Token header',
+      requestId
     });
   }
   
   // Validate token against DB
   const isValid = await CSRFProtection.validateToken(sessionId, csrfToken);
   if (!isValid) {
+    console.warn('[CSRF] Token invalid', {
+      requestId,
+      method: req.method,
+      path: req.originalUrl || req.path,
+      hasSession: true,
+      hasCsrfHeader: true
+    });
     return res.status(403).json({ 
       error: 'Invalid CSRF token',
-      message: 'CSRF token validation failed'
+      code: 'CSRF_INVALID',
+      message: 'CSRF token validation failed',
+      requestId
     });
   }
   

@@ -306,6 +306,8 @@ export default function EmployeeOnboarding({ onClose, onSuccess }) {
                   valueYmd={formData.birth_date}
                   onChangeYmd={(ymd) => setFormData({...formData, birth_date: ymd})}
                   placeholder={t('employeeOnboarding.birthDate')}
+                  minYear={1900}
+                  maxYear={new Date().getFullYear()}
                 />
               </div>
             </div>

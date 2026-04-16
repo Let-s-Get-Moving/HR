@@ -105,7 +105,7 @@ r.post("/login", checkAccountLockout, async (req, res) => {
     AccountLockout.clearFailedAttempts(username, ipAddress);
     
     // Generate CSRF token for this session
-    const csrfToken = CSRFProtection.generateToken(sessionId);
+    const csrfToken = await CSRFProtection.generateToken(sessionId);
     
     console.log('✅ Login successful:', user.username);
     

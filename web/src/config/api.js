@@ -43,6 +43,46 @@ export const clearCSRFToken = () => {
   csrfToken = null;
 };
 
+const parseErrorResponse = async (response) => {
+  const contentType = response.headers.get('content-type') || '';
+
+  if (contentType.includes('application/json')) {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    const text = await response.text();
+    return text ? { message: text } : null;
+  } catch {
+    return null;
+  }
+};
+
+const createApiError = ({ response, payload, url, method }) => {
+  const requestId = response.headers.get('x-request-id') || payload?.requestId || null;
+  const message =
+    payload?.message ||
+    payload?.error ||
+    `HTTP ${response.status} ${response.statusText || 'Request failed'}`;
+
+  const error = new Error(message);
+  error.name = 'APIError';
+  error.status = response.status;
+  error.code = payload?.code || null;
+  error.error = payload?.error || message;
+  error.details = payload?.details || null;
+  error.requestId = requestId;
+  error.url = url;
+  error.method = method;
+  error.response = payload || null;
+
+  return error;
+};
+
 export const API = (path, options = {}) => {
   const url = `${API_BASE_URL}${path}`;
   const method = (options.method || 'GET').toUpperCase();
@@ -68,22 +108,28 @@ export const API = (path, options = {}) => {
   }
   
   return fetch(url, {
+    ...options,
     credentials: 'include', // Required to send cookies cross-origin
     headers: finalHeaders,
-    ...options,
   }).then(async (response) => {
     if (import.meta.env.DEV) {
       console.log('API response status:', response.status);
     }
     
     if (!response.ok) {
-      const error = await response.text();
+      const errorPayload = await parseErrorResponse(response);
+      const errorMessage = errorPayload?.message || errorPayload?.error || '';
       if (import.meta.env.DEV) {
-        console.error('API error:', error);
+        console.error('API error:', errorPayload || `${response.status} ${response.statusText}`);
       }
       
       // If session expired, clear user data (but NOT sessionId - it's cookie-only now)
-      if (response.status === 401 && (error.includes('Invalid or expired session') || error.includes('No session') || error.includes('Authentication required'))) {
+      if (
+        response.status === 401 &&
+        (errorMessage.includes('Invalid or expired session') ||
+          errorMessage.includes('No session') ||
+          errorMessage.includes('Authentication required'))
+      ) {
         localStorage.removeItem('user');
         clearCSRFToken();
         if (import.meta.env.DEV) {
@@ -91,7 +137,12 @@ export const API = (path, options = {}) => {
         }
       }
       
-      throw new Error(`HTTP ${response.status}: ${error}`);
+      throw createApiError({
+        response,
+        payload: errorPayload,
+        url,
+        method
+      });
     }
     
     // Handle 204 No Content responses (no body to parse)
@@ -188,11 +239,11 @@ export const APIUpload = async (path, formData, options = {}) => {
   }
   
   const response = await fetch(url, {
+    ...options,
     method: 'POST',
     credentials: 'include',
     headers,
     body: formData,
-    ...options,
   });
   
   if (import.meta.env.DEV) {
