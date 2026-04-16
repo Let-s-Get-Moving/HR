@@ -40,8 +40,7 @@ export default function DatePicker({
   minDate,
   maxDate,
   minYear = 1900,
-  maxYear = new Date().getFullYear() + 20,
-  yearStep = 10
+  maxYear = new Date().getFullYear() + 20
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0, minWidth: 280 });
@@ -51,7 +50,6 @@ export default function DatePicker({
     const parsed = valueYmd ? parseLocalDate(valueYmd) : null;
     return parsed && isValid(parsed) ? parsed : new Date();
   });
-  const [yearJumpValue, setYearJumpValue] = useState(() => String(viewMonth.getFullYear()));
   
   const inputRef = useRef(null);
   const triggerRef = useRef(null);
@@ -66,7 +64,6 @@ export default function DatePicker({
     const parsed = valueYmd ? parseLocalDate(valueYmd) : null;
     if (parsed && isValid(parsed)) {
       setViewMonth(parsed);
-      setYearJumpValue(String(parsed.getFullYear()));
     }
   }, [valueYmd]);
 
@@ -168,7 +165,6 @@ export default function DatePicker({
     setManualInput(ymd);
     setInputError('');
     setViewMonth(date);
-    setYearJumpValue(String(date.getFullYear()));
     setIsOpen(false);
   };
 
@@ -246,7 +242,6 @@ export default function DatePicker({
     setInputError('');
     setManualInput(ymd);
     setViewMonth(parsed);
-    setYearJumpValue(String(parsed.getFullYear()));
     if (onChangeYmd) {
       onChangeYmd(ymd);
     }
@@ -271,25 +266,12 @@ export default function DatePicker({
     const newMonth = Number(event.target.value);
     const nextMonth = new Date(viewMonth.getFullYear(), newMonth, 1);
     setViewMonth(nextMonth);
-    setYearJumpValue(String(nextMonth.getFullYear()));
   };
 
   const handleYearSelect = (event) => {
     const newYear = clampYear(Number(event.target.value));
     const nextMonth = new Date(newYear, viewMonth.getMonth(), 1);
     setViewMonth(nextMonth);
-    setYearJumpValue(String(newYear));
-  };
-
-  const handleYearJump = () => {
-    const year = Number(yearJumpValue);
-    if (!Number.isFinite(year)) {
-      return;
-    }
-    const clamped = clampYear(year);
-    const nextMonth = new Date(clamped, viewMonth.getMonth(), 1);
-    setViewMonth(nextMonth);
-    setYearJumpValue(String(clamped));
   };
 
   const monthOptions = Array.from({ length: 12 }, (_, idx) => ({
@@ -332,7 +314,7 @@ export default function DatePicker({
         >
           {/* Calendar */}
           <div className="p-3 date-range-picker-calendar">
-            <div className="mb-3 grid grid-cols-[1fr_1fr_auto] gap-2">
+            <div className="mb-3 grid grid-cols-2 gap-2">
               <select
                 value={viewMonth.getMonth()}
                 onChange={handleMonthSelect}
@@ -355,33 +337,6 @@ export default function DatePicker({
                   </option>
                 ))}
               </select>
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  inputMode="numeric"
-                  min={minYear}
-                  max={maxYear}
-                  step={yearStep}
-                  value={yearJumpValue}
-                  onChange={(event) => setYearJumpValue(event.target.value)}
-                  onBlur={handleYearJump}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      event.preventDefault();
-                      handleYearJump();
-                    }
-                  }}
-                  className="w-20 px-2 py-2 rounded-lg bg-tahoe-bg-secondary border border-tahoe-border-primary text-sm text-tahoe-text-primary focus:outline-none focus:ring-2 focus:ring-tahoe-accent"
-                  aria-label="Jump to year"
-                />
-                <button
-                  type="button"
-                  onClick={handleYearJump}
-                  className="px-2 py-2 rounded-lg border border-tahoe-border-primary text-xs text-tahoe-text-primary hover:bg-tahoe-bg-hover transition-all duration-tahoe"
-                >
-                  Go
-                </button>
-              </div>
             </div>
             <DayPicker
               mode="single"
@@ -390,7 +345,6 @@ export default function DatePicker({
               month={viewMonth}
               onMonthChange={(month) => {
                 setViewMonth(month);
-                setYearJumpValue(String(month.getFullYear()));
               }}
               numberOfMonths={1}
               showOutsideDays
